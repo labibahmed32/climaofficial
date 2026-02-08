@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Signup - Clima Network</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <style>
+        :root{--accent:#0A6C80;--accent-dark:#085a6b;--accent-light:#E8F6F8;--navy:#1B2A4A;--navy-deep:#0F1923;--green:#22C55E;--red:#EF4444;--text-primary:#111827;--text-secondary:#4B5563;--text-muted:#9CA3AF;--border:#E5E7EB;--bg:#F9FAFB;--card:#FFFFFF;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;overflow-x:hidden;}
+
+        /* Wrapper */
+        .signup-wrapper{width:100%;max-width:1060px;display:grid;grid-template-columns:380px 1fr;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06),0 25px 65px rgba(0,0,0,.1);background:var(--card);}
+
+        /* Left panel - animated gradient */
+        .left-panel{background:linear-gradient(160deg,#0D7C8F,#085a6b,#1B2A4A,#0a5e6e);background-size:300% 300%;animation:gradShift 12s ease infinite,slideInL .7s ease forwards;padding:44px 32px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+        @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+        /* Floating orbs */
+        .orb{position:absolute;border-radius:50%;pointer-events:none;}
+        .orb-1{width:200px;height:200px;top:-50px;right:-70px;background:rgba(255,255,255,.04);animation:orbFloat 8s ease-in-out infinite;}
+        .orb-2{width:140px;height:140px;bottom:80px;left:-40px;background:rgba(255,255,255,.03);animation:orbFloat 10s ease-in-out infinite reverse;}
+        .orb-3{width:90px;height:90px;top:45%;right:30px;background:rgba(34,197,94,.06);animation:orbFloat 7s ease-in-out infinite 2s;}
+        .orb-4{width:60px;height:60px;bottom:30%;left:20%;background:rgba(255,255,255,.03);animation:orbFloat 9s ease-in-out infinite 1s;}
+        @keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.06)}}
+
+        .brand{display:flex;align-items:center;gap:3px;position:relative;z-index:1;}
+        .brand h1{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+        .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:4px;animation:pulse 2s ease infinite;}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+        .brand-sub{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-top:4px;position:relative;z-index:1;}
+
+        /* Dynamic left content per step */
+        .left-content{position:relative;z-index:1;margin-top:40px;}
+        .left-step-panel{display:none;}
+        .left-step-panel.active{display:block;animation:fadeUp .4s ease;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .left-heading{font-size:24px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.5px;}
+        .left-desc{font-size:13.5px;color:rgba(255,255,255,.45);line-height:1.7;margin-top:10px;font-weight:400;}
+        .left-features{margin-top:24px;}
+        .lf-item{display:flex;align-items:center;gap:10px;padding:8px 0;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;}
+        .lf-item .lf-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .lf-item .lf-icon i{font-size:11px;color:rgba(255,255,255,.7);}
+
+        /* Left stat row */
+        .left-stats-row{display:flex;gap:16px;margin-top:28px;position:relative;z-index:1;}
+        .ls-item{background:rgba(255,255,255,.06);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:10px;padding:14px 16px;border:1px solid rgba(255,255,255,.08);flex:1;text-align:center;}
+        .ls-item .ls-val{font-size:20px;font-weight:800;color:#fff;}
+        .ls-item .ls-lbl{font-size:9px;color:rgba(255,255,255,.35);font-weight:500;margin-top:2px;letter-spacing:.3px;text-transform:uppercase;}
+
+        .left-footer{padding-top:16px;border-top:1px solid rgba(255,255,255,.06);position:relative;z-index:1;}
+        .left-footer p{font-size:11px;color:rgba(255,255,255,.2);line-height:1.6;font-weight:400;}
+
+        /* Right panel - form */
+        .form-panel{background:var(--card);padding:40px 40px 24px;overflow-y:auto;max-height:96vh;animation:slideInR .7s ease .1s forwards;opacity:0;}
+        @keyframes slideInL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes slideInR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+        .form-header h2{font-size:22px;font-weight:700;color:var(--text-primary);letter-spacing:-.3px;}
+        .form-header p{font-size:13.5px;color:var(--text-muted);margin-top:5px;font-weight:400;}
+
+        /* ===== WIZARD PROGRESS BAR ===== */
+        .wizard-progress{display:flex;align-items:flex-start;justify-content:center;margin:28px 0 8px;padding:0 10px;gap:0;}
+        .wz-step-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:70px;}
+        .wz-dot{width:36px;height:36px;border-radius:50%;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-muted);transition:all .35s;background:#fff;position:relative;z-index:2;}
+        .wz-dot.active{border-color:var(--accent);color:#fff;background:var(--accent);box-shadow:0 0 0 4px rgba(10,108,128,.12);}
+        .wz-dot.done{border-color:var(--green);color:#fff;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.12);}
+        .wz-label{font-size:10px;color:var(--text-muted);font-weight:500;transition:color .3s;text-align:center;}
+        .wz-label.active{color:var(--accent);font-weight:600;}
+        .wz-label.done{color:var(--green);font-weight:600;}
+        .wz-line-wrap{display:flex;align-items:center;padding-top:18px;}
+        .wz-line{width:60px;height:2.5px;background:var(--border);border-radius:2px;transition:background .4s;}
+        .wz-line.done{background:var(--green);}
+
+        /* ===== STEP PANELS ===== */
+        .wz-panel{display:none;}
+        .wz-panel.active{display:block;animation:wzSlideIn .35s ease;}
+        @keyframes wzSlideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+        /* Form fields */
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0;}
+        .form-row.full{grid-template-columns:1fr;}
+
+        /* Floating label groups */
+        .fl-group{position:relative;margin-bottom:18px;}
+        .fl-group .form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:20px 14px 10px;font-size:14px;outline:none;background:var(--card);color:var(--text-primary);transition:border-color .2s,box-shadow .2s;font-family:'Inter',system-ui,sans-serif;}
+        .fl-group .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,108,128,.08);}
+        .fl-group label{position:absolute;left:14px;top:16px;font-size:14px;color:var(--text-muted);font-weight:400;transition:all .2s ease;pointer-events:none;background:transparent;}
+        .fl-group .form-input:focus+label,
+        .fl-group .form-input:not(:placeholder-shown)+label{top:6px;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
+        .fl-group label .req{color:var(--red);font-weight:700;}
+        select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-top:20px;padding-bottom:10px;}
+        /* Select always has value so label always floats */
+        .fl-group select+label{top:6px;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
+        textarea.form-input{min-height:70px;resize:vertical;}
+
+        /* Section title inside step */
+        .step-title{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+        .step-title .st-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0;}
+        .step-title h3{font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;}
+
+        /* Error */
+        .error-msg{display:none;background:#FEF2F2;color:#DC2626;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px;align-items:center;gap:8px;border:1px solid #FECACA;}
+        .error-msg i{flex-shrink:0;}
+        .error-msg.show{display:flex;}
+
+        /* Success */
+        .success-panel{display:none;text-align:center;padding:60px 20px;}
+        .success-panel.show{display:block;animation:fadeUp .4s ease;}
+        .success-check{width:80px;height:80px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:popIn .5s ease;}
+        .success-check i{font-size:36px;color:var(--green);animation:checkScale .3s ease .35s both;}
+        @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes checkScale{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+        .success-panel h3{font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:10px;letter-spacing:-.3px;}
+        .success-panel p{font-size:14px;color:var(--text-secondary);line-height:1.7;}
+        .success-panel .btn-login{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:12px 28px;border-radius:10px;background:var(--accent);color:#fff;text-decoration:none;font-size:14px;font-weight:600;transition:all .25s;}
+        .success-panel .btn-login:hover{background:var(--accent-dark);box-shadow:0 4px 20px rgba(10,108,128,.3);transform:translateY(-1px);}
+
+        /* Terms */
+        .terms{margin-bottom:20px;}
+        .terms label{font-size:13px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.6;font-weight:400;}
+        .terms input{accent-color:var(--accent);margin-top:3px;flex-shrink:0;}
+        .terms a{color:var(--accent);text-decoration:none;font-weight:500;}
+        .terms a:hover{text-decoration:underline;}
+
+        /* Nav buttons */
+        .wz-nav{display:flex;gap:12px;margin-top:4px;}
+        .btn-next{flex:1;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .btn-next:hover{background:var(--accent-dark);box-shadow:0 4px 20px rgba(10,108,128,.3);transform:translateY(-1px);}
+        .btn-next:active{transform:scale(.995) translateY(0);}
+        .btn-next:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none;}
+        .btn-next .spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+        .btn-next.loading .spinner{display:inline-block;}
+        .btn-next.loading .btn-text{opacity:.8;}
+        .btn-back{padding:13px 24px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:6px;}
+        .btn-back:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* Footer */
+        .form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+        .login-link{font-size:13px;color:var(--text-muted);text-decoration:none;font-weight:500;transition:color .2s;display:flex;align-items:center;gap:6px;}
+        .login-link:hover{color:var(--accent);}
+        .footer-copy{font-size:11px;color:var(--text-muted);font-weight:400;opacity:.5;}
+
+        /* Responsive */
+        @media(max-width:768px){
+            .signup-wrapper{grid-template-columns:1fr;max-width:560px;}
+            .left-panel{padding:28px 24px;}
+            .left-heading{font-size:20px;}
+            .left-features{display:none;}
+            .left-stats-row{display:none;}
+            .form-panel{padding:32px 24px 22px;opacity:1;animation:none;}
+            .wz-line{width:40px;}
+        }
+        @media(max-width:520px){
+            body{padding:12px;}
+            .signup-wrapper{border-radius:14px;}
+            .left-panel{padding:24px 20px;}
+            .form-panel{padding:28px 20px 20px;}
+            .form-row{grid-template-columns:1fr;}
+            .wz-line{width:28px;}
+            .wz-step-wrap{min-width:56px;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="signup-wrapper">
+    <!-- Left: Info Panel -->
+    <div class="left-panel">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+        <div>
+            <div class="brand">
+                <h1>CLIMA</h1>
+                <div class="brand-dot"></div>
+            </div>
+            <div class="brand-sub">Affiliate Network</div>
+
+            <div class="left-content">
+                <!-- Step 1 content -->
+                <div class="left-step-panel active" id="leftStep1">
+                    <div class="left-heading">Start Earning with Top-Converting Offers</div>
+                    <div class="left-desc">Join hundreds of affiliates generating revenue with exclusive offers and real-time tracking.</div>
+                    <div class="left-features">
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-shield-alt"></i></div> Secure & Verified Network</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-chart-line"></i></div> Real-time Analytics Dashboard</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-headset"></i></div> Dedicated Account Manager</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-bolt"></i></div> Fast Approval Process</div>
+                    </div>
+                </div>
+                <!-- Step 2 content -->
+                <div class="left-step-panel" id="leftStep2">
+                    <div class="left-heading">We Work with All Traffic Sources</div>
+                    <div class="left-desc">Whether you run social, native, search, or push traffic — we have high-converting offers for you.</div>
+                    <div class="left-features">
+                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-facebook"></i></div> Facebook & Instagram</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-google"></i></div> Google & YouTube</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-ad"></i></div> Native & Push Ads</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-envelope"></i></div> Email & SEO Traffic</div>
+                    </div>
+                </div>
+                <!-- Step 3 content -->
+                <div class="left-step-panel" id="leftStep3">
+                    <div class="left-heading">Get Paid On Time, Every Time</div>
+                    <div class="left-desc">Choose your preferred payment method. We support all major options with transparent invoicing.</div>
+                    <div class="left-features">
+                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-paypal"></i></div> PayPal Payments</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-university"></i></div> Wire Transfer / ACH</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-bitcoin"></i></div> USDT (Crypto)</div>
+                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-file-invoice-dollar"></i></div> Automated Invoices</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="left-stats-row">
+                <div class="ls-item"><div class="ls-val">500+</div><div class="ls-lbl">Affiliates</div></div>
+                <div class="ls-item"><div class="ls-val">50M+</div><div class="ls-lbl">Clicks</div></div>
+                <div class="ls-item"><div class="ls-val">99.9%</div><div class="ls-lbl">Uptime</div></div>
+            </div>
+        </div>
+        <div class="left-footer">
+            <p>Trusted by affiliates worldwide. Enterprise-grade tracking.</p>
+        </div>
+    </div>
+
+    <!-- Right: Form Panel -->
+    <div class="form-panel">
+        <div id="signupForm">
+            <div class="form-header">
+                <h2>Apply as an Affiliate</h2>
+                <p>Complete the steps below to submit your application.</p>
+            </div>
+
+            <!-- Wizard Progress -->
+            <div class="wizard-progress">
+                <div class="wz-step-wrap">
+                    <div class="wz-dot active" id="wzDot1">1</div>
+                    <div class="wz-label active" id="wzLbl1">Personal</div>
+                </div>
+                <div class="wz-line-wrap"><div class="wz-line" id="wzLine1"></div></div>
+                <div class="wz-step-wrap">
+                    <div class="wz-dot" id="wzDot2">2</div>
+                    <div class="wz-label" id="wzLbl2">Business</div>
+                </div>
+                <div class="wz-line-wrap"><div class="wz-line" id="wzLine2"></div></div>
+                <div class="wz-step-wrap">
+                    <div class="wz-dot" id="wzDot3">3</div>
+                    <div class="wz-label" id="wzLbl3">Payment</div>
+                </div>
+            </div>
+
+            <div class="error-msg" id="errorMsg"><i class="fas fa-exclamation-circle"></i><span id="errorText"></span></div>
+
+            <!-- STEP 1: Personal Info -->
+            <div class="wz-panel active" id="step1">
+                <div class="step-title">
+                    <div class="st-icon" style="background:var(--accent)"><i class="fas fa-user"></i></div>
+                    <h3>Personal Information</h3>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <input type="text" class="form-input" id="sName" placeholder=" ">
+                        <label>Full Name <span class="req">*</span></label>
+                    </div>
+                    <div class="fl-group">
+                        <input type="email" class="form-input" id="sEmail" placeholder=" ">
+                        <label>Email Address <span class="req">*</span></label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <input type="tel" class="form-input" id="sPhone" placeholder=" ">
+                        <label>Phone</label>
+                    </div>
+                    <div class="fl-group">
+                        <input type="text" class="form-input" id="sCountry" placeholder=" ">
+                        <label>Country <span class="req">*</span></label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <input type="password" class="form-input" id="sPassword" placeholder=" ">
+                        <label>Password <span class="req">*</span></label>
+                    </div>
+                    <div class="fl-group">
+                        <input type="password" class="form-input" id="sConfirmPass" placeholder=" ">
+                        <label>Confirm Password <span class="req">*</span></label>
+                    </div>
+                </div>
+                <div class="wz-nav">
+                    <button class="btn-next" onclick="goToStep(2)"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Business Details -->
+            <div class="wz-panel" id="step2">
+                <div class="step-title">
+                    <div class="st-icon" style="background:var(--navy)"><i class="fas fa-briefcase"></i></div>
+                    <h3>Business Details</h3>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <input type="text" class="form-input" id="sCompany" placeholder=" ">
+                        <label>Company Name</label>
+                    </div>
+                    <div class="fl-group">
+                        <input type="url" class="form-input" id="sWebsite" placeholder=" ">
+                        <label>Website</label>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="fl-group">
+                        <input type="text" class="form-input" id="sSources" placeholder=" ">
+                        <label>Traffic Sources <span class="req">*</span></label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <select class="form-input" id="sRevenue">
+                            <option value="">Select range</option>
+                            <option value="0-1000">$0 - $1,000</option>
+                            <option value="1000-5000">$1,000 - $5,000</option>
+                            <option value="5000-25000">$5,000 - $25,000</option>
+                            <option value="25000-100000">$25,000 - $100,000</option>
+                            <option value="100000+">$100,000+</option>
+                        </select>
+                        <label>Monthly Revenue</label>
+                    </div>
+                    <div class="fl-group">
+                        <textarea class="form-input" id="sNotes" placeholder=" "></textarea>
+                        <label>Experience / Notes</label>
+                    </div>
+                </div>
+                <div class="wz-nav">
+                    <button class="btn-back" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-next" onclick="goToStep(3)"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Payment & Submit -->
+            <div class="wz-panel" id="step3">
+                <div class="step-title">
+                    <div class="st-icon" style="background:var(--green)"><i class="fas fa-credit-card"></i></div>
+                    <h3>Payment & Submit</h3>
+                </div>
+                <div class="form-row">
+                    <div class="fl-group">
+                        <select class="form-input" id="sPayMethod">
+                            <option value="paypal">PayPal</option>
+                            <option value="wire">Wire Transfer</option>
+                            <option value="crypto">Crypto (USDT)</option>
+                        </select>
+                        <label>Payment Method</label>
+                    </div>
+                    <div class="fl-group">
+                        <input type="text" class="form-input" id="sPayDetails" placeholder=" ">
+                        <label>Payment Details</label>
+                    </div>
+                </div>
+                <div class="terms">
+                    <label><input type="checkbox" id="sTerms"> I agree to the Clima Affiliate Network <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>.</label>
+                </div>
+                <div class="wz-nav">
+                    <button class="btn-back" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-next" id="btnSignup" onclick="doSignup()"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Application</span><span class="spinner"></span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Panel -->
+        <div class="success-panel" id="successPanel">
+            <div class="success-check"><i class="fas fa-check"></i></div>
+            <h3>Application Submitted!</h3>
+            <p>Thank you for applying to the Clima Affiliate Network. Our team will review your application and get back to you within 24-48 hours.</p>
+            <p style="margin-top:8px;font-weight:600;color:var(--text-primary);">You will receive an email with your login credentials once approved.</p>
+            <a href="index.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+        </div>
+
+        <div class="form-footer">
+            <a class="login-link" href="index.html"><i class="fas fa-arrow-left"></i> Already have an account? Sign In</a>
+            <span class="footer-copy">CLIMA &copy; 2025</span>
+        </div>
+    </div>
+</div>
+
+<script>
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+var currentStep = 1;
+
+/* ===== WIZARD NAVIGATION ===== */
+function goToStep(n) {
+    hideError();
+    /* Validate current step before moving forward */
+    if (n > currentStep) {
+        var valid = validateStep(currentStep);
+        if (!valid) return;
+    }
+
+    /* Hide all panels */
+    for (var i = 1; i <= 3; i++) {
+        document.getElementById('step' + i).classList.remove('active');
+        document.getElementById('leftStep' + i).classList.remove('active');
+        document.getElementById('wzDot' + i).classList.remove('active', 'done');
+        document.getElementById('wzDot' + i).innerHTML = i;
+        document.getElementById('wzLbl' + i).classList.remove('active', 'done');
+    }
+    document.getElementById('wzLine1').classList.remove('done');
+    document.getElementById('wzLine2').classList.remove('done');
+
+    /* Mark completed steps */
+    for (var j = 1; j < n; j++) {
+        document.getElementById('wzDot' + j).classList.add('done');
+        document.getElementById('wzDot' + j).innerHTML = '<i class="fas fa-check" style="font-size:12px"></i>';
+        document.getElementById('wzLbl' + j).classList.add('done');
+    }
+    if (n > 1) document.getElementById('wzLine1').classList.add('done');
+    if (n > 2) document.getElementById('wzLine2').classList.add('done');
+
+    /* Activate current step */
+    document.getElementById('step' + n).classList.add('active');
+    document.getElementById('leftStep' + n).classList.add('active');
+    document.getElementById('wzDot' + n).classList.add('active');
+    document.getElementById('wzLbl' + n).classList.add('active');
+
+    currentStep = n;
+}
+
+function validateStep(step) {
+    if (step === 1) {
+        var name = document.getElementById('sName').value.trim();
+        var email = document.getElementById('sEmail').value.trim();
+        var country = document.getElementById('sCountry').value.trim();
+        var pw = document.getElementById('sPassword').value;
+        var cpw = document.getElementById('sConfirmPass').value;
+        if (!name || !email || !country) { showError('Please fill in Name, Email, and Country.'); return false; }
+        if (!validateEmail(email)) { showError('Please enter a valid email address.'); return false; }
+        if (!pw || pw.length < 6) { showError('Password must be at least 6 characters.'); return false; }
+        if (pw !== cpw) { showError('Passwords do not match.'); return false; }
+        return true;
+    }
+    if (step === 2) {
+        var sources = document.getElementById('sSources').value.trim();
+        if (!sources) { showError('Please enter your traffic sources.'); return false; }
+        return true;
+    }
+    return true;
+}
+
+function doSignup() {
+    hideError();
+    if (!validateStep(1) || !validateStep(2)) return;
+    var terms = document.getElementById('sTerms').checked;
+    if (!terms) { showError('Please agree to the Terms & Conditions.'); return; }
+
+    var name = document.getElementById('sName').value.trim();
+    var email = document.getElementById('sEmail').value.trim();
+    var phone = document.getElementById('sPhone').value.trim();
+    var country = document.getElementById('sCountry').value.trim();
+    var password = document.getElementById('sPassword').value;
+    var company = document.getElementById('sCompany').value.trim();
+    var website = document.getElementById('sWebsite').value.trim();
+    var sources = document.getElementById('sSources').value.trim();
+    var revenue = document.getElementById('sRevenue').value;
+    var notes = document.getElementById('sNotes').value.trim();
+    var payMethod = document.getElementById('sPayMethod').value;
+    var payDetails = document.getElementById('sPayDetails').value.trim();
+    var btn = document.getElementById('btnSignup');
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    getIP().then(function(ip) {
+        var signupData = {
+            name: name,
+            email: email,
+            password: password,
+            phone: phone,
+            country: country,
+            company: company,
+            website: website,
+            channels: sources,
+            experience: revenue,
+            notes: notes,
+            paymentMethod: payMethod,
+            paymentDetails: payDetails,
+            ip: ip || 'unknown',
+            userAgent: navigator.userAgent,
+            status: 'pending',
+            timestamp: Date.now()
+        };
+
+        var id = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+        return fetch(FB + '/signups/' + id + '.json', {
+            method: 'PUT',
+            body: JSON.stringify(signupData)
+        });
+    }).then(function(r) {
+        return r.json();
+    }).then(function() {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('successPanel').classList.add('show');
+        sendSignupConfirmEmail(name, email);
+    }).catch(function(err) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        showError('Something went wrong. Please try again.');
+    });
+}
+
+function getIP() {
+    return fetch('https://api.ipify.org?format=json')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return d.ip; })
+        .catch(function() { return 'unknown'; });
+}
+
+function validateEmail(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+function showError(msg) {
+    document.getElementById('errorText').textContent = msg;
+    document.getElementById('errorMsg').classList.add('show');
+    document.getElementById('errorMsg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideError() {
+    document.getElementById('errorMsg').classList.remove('show');
+}
+
+/* ===== EMAIL: signup confirmation (fire-and-forget) ===== */
+function sendSignupConfirmEmail(name, email) {
+    Promise.all([
+        fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }),
+        fetch(FB + '/settings/emailTemplates/signup_confirm.json').then(function(r) { return r.json(); }),
+        fetch(FB + '/settings/network.json').then(function(r) { return r.json(); })
+    ]).then(function(res) {
+        var smtp = res[0]; var tpl = res[1]; var network = res[2] || {};
+        if (!smtp || !smtp.host || !smtp.password) return;
+        if (!tpl || tpl.enabled === false || tpl.enabled === 'false') return;
+        var networkName = network.networkName || 'Clima Affiliate Network';
+        var logo = smtp.logoUrl || 'https://i.ibb.co/ZzqT56H0/image.png';
+        var vars = { name: name, email: email, networkName: networkName, loginUrl: window.location.origin, logo: logo };
+        var subject = tpl.subject || ''; var body = tpl.body || '';
+        Object.keys(vars).forEach(function(k) { var re = new RegExp('\\{\\{' + k + '\\}\\}', 'g'); subject = subject.replace(re, vars[k]); body = body.replace(re, vars[k]); });
+        Email.send({ SecureToken: smtp.password, To: email, From: smtp.fromEmail || smtp.username, Subject: subject, Body: body })
+            .then(function(msg) { console.log('Signup confirm email sent:', msg); })
+            .catch(function(err) { console.error('Email error:', err); });
+    }).catch(function() { /* Silently fail - email is not critical */ });
+}
+
+/* Enter key handlers */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentStep < 3) goToStep(currentStep + 1);
+        else doSignup();
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager - Clima Affiliate Network</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--sidebar-dark:#1B2A4A;--sidebar-hover:#243556;--sidebar-active:#2D4470;--sidebar-text:#8899B4;--accent:#0A6C80;--accent-dark:#085a6b;--content-bg:#F5F7FA;--card-bg:#FFFFFF;--text-primary:#1A2B3D;--text-muted:#A0AEC0;--border:#E2E8F0;--green:#22C55E;--red:#EF4444;--orange:#F59E0B;--blue:#3B82F6;--shadow-sm:0 1px 3px rgba(0,0,0,0.06);--radius:8px;--radius-sm:6px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--content-bg);color:#333;min-height:100vh;overflow-x:hidden;}
+.sidebar{width:256px;position:fixed;top:0;left:0;bottom:0;background:var(--sidebar-dark);color:var(--sidebar-text);z-index:1100;display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s;box-shadow:2px 0 8px rgba(0,0,0,0.15);}
+.sidebar-brand{padding:24px 20px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sidebar-brand .brand-icon{width:52px;height:52px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.sidebar-brand .brand-icon img{width:100%;height:100%;object-fit:contain;border-radius:12px;}
+.sidebar-brand h2{font-size:18px;font-weight:800;color:#fff;letter-spacing:.5px;}
+.sidebar-brand .brand-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:3px;vertical-align:middle;}
+.sidebar-brand .brand-sub{font-size:11px;color:var(--sidebar-text);margin-top:8px;font-weight:600;text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.sidebar-brand .brand-sub::before,.sidebar-brand .brand-sub::after{content:'';flex:1;max-width:30px;height:1px;background:rgba(255,255,255,0.1);}
+.sidebar-nav{flex:1;padding:8px 12px;}
+.nav-group{margin-bottom:6px;}.nav-group-label{font-size:10px;font-weight:700;color:var(--sidebar-text);text-transform:uppercase;letter-spacing:1.5px;padding:14px 12px 6px;opacity:.5;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;color:var(--sidebar-text);cursor:pointer;transition:all .15s;font-size:13.5px;font-weight:500;border-radius:8px;user-select:none;margin:1px 0;}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+.nav-item.active{background:var(--sidebar-active);color:#fff;font-weight:600;border-left:3px solid var(--accent);}
+.nav-item i{width:20px;text-align:center;font-size:14px;opacity:.6;}.nav-item.active i{opacity:1;color:var(--accent);}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;}
+.sidebar-footer .sf-email{font-size:11px;color:var(--sidebar-text);margin-bottom:8px;word-break:break-all;}
+.sidebar-footer .sf-logout{display:inline-flex;align-items:center;gap:5px;padding:6px 16px;border:1.5px solid rgba(255,255,255,0.12);border-radius:6px;background:transparent;color:var(--sidebar-text);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.sidebar-footer .sf-logout:hover{border-color:var(--red);color:var(--red);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
+.content-wrap{margin-left:256px;min-height:100vh;}
+.top-bar{background:#fff;padding:12px 24px;border-bottom:1px solid #e0e6e8;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;box-shadow:var(--shadow-sm);}
+.top-bar-left{display:flex;align-items:center;gap:12px;}
+.hamburger-btn{display:none;background:none;border:2px solid #ddd;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;color:#555;}
+.page-title{font-size:20px;font-weight:700;color:#1a2b30;}
+.top-bar-right{display:flex;align-items:center;gap:14px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+.page-content{padding:20px 24px 40px;}
+.page-section{display:none;}.page-section.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:14px;}
+.stat-card .sc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.stat-card .sc-info{flex:1;}.stat-card .sc-value{font-size:24px;font-weight:700;color:#1a2b30;}.stat-card .sc-label{font-size:12px;color:#888;margin-top:2px;font-weight:500;}
+.chart-box{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);margin-bottom:20px;}
+.chart-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.chart-controls h5{font-size:15px;font-weight:700;color:#333;}.chart-controls h5 i{color:var(--accent);margin-right:6px;}
+.chart-select{padding:6px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:#6B7A8D;background:#fff;outline:none;cursor:pointer;}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.toolbar-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.form-input-sm{padding:7px 12px;border:1.5px solid #d0d7da;border-radius:var(--radius-sm);font-size:13px;outline:none;background:#fff;min-width:140px;}
+.form-input-sm:focus{border-color:var(--accent);}
+.form-select-sm{padding:7px 12px;border:1.5px solid #d0d7da;border-radius:var(--radius-sm);font-size:13px;outline:none;background:#fff;cursor:pointer;}
+.btn-primary-sm{padding:8px 18px;border:none;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary-sm:hover{background:var(--accent-dark);}
+.btn-danger-sm{padding:5px 10px;border:none;background:var(--red);color:#fff;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;}
+.table-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;}
+.table-scroll{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
+.data-table thead th{background:#f5f8f9;padding:11px 12px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #e0e6e8;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+.data-table tbody td{padding:9px 12px;border-bottom:1px solid #f0f2f4;}
+.data-table tbody tr:hover{background:#f8fafb;}
+.pagination-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-top:1px solid #e8ecee;flex-wrap:wrap;gap:10px;}
+.page-info{font-size:13px;color:#888;}
+.pagination-controls{display:flex;align-items:center;gap:4px;}
+.pagination-controls button{padding:6px 12px;border:1.5px solid #d0d7da;border-radius:var(--radius-sm);background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#555;}
+.pagination-controls button:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.pagination-controls button:disabled{opacity:.4;cursor:default;}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;text-transform:capitalize;}
+.badge-active{background:#e8f5e9;color:#2e7d32;}.badge-pending{background:#fff3e0;color:#e65100;}.badge-approved{background:#e8f5e9;color:#2e7d32;}.badge-rejected{background:#fde8e8;color:#c62828;}.badge-blocked{background:#fde8e8;color:#c62828;}.badge-yes{background:#e8f5e9;color:#2e7d32;}.badge-no{background:#f5f5f5;color:#999;}
+.settings-card{background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);margin-bottom:20px;max-width:700px;}
+.settings-card h5{font-size:15px;font-weight:700;margin-bottom:16px;color:#333;padding-bottom:10px;border-bottom:2px solid #f0f2f4;}.settings-card h5 i{color:var(--accent);margin-right:8px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;}
+.form-group input{width:100%;padding:9px 12px;border:1.5px solid #d0d7da;border-radius:var(--radius-sm);font-size:13px;outline:none;font-family:inherit;}
+.form-group input:focus{border-color:var(--accent);}
+.no-data{text-align:center;padding:50px;color:#999;}.no-data i{font-size:40px;margin-bottom:12px;display:block;opacity:.3;}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}.toast.success{background:var(--green);}.toast.error{background:var(--red);}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.sidebar-overlay.open{display:block;}.content-wrap{margin-left:0;}.hamburger-btn{display:block;}.stat-cards{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon"><img src="https://i.ibb.co/ZzqT56H0/image.png" alt="Clima"></div>
+        <h2>CLIMA<span class="brand-dot"></span></h2>
+        <div class="brand-sub">Manager Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group"><div class="nav-group-label">Overview</div>
+            <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
+        </div>
+        <div class="nav-group"><div class="nav-group-label">Team</div>
+            <div class="nav-item" data-page="affiliates" onclick="goPage('affiliates')"><i class="fas fa-users"></i> My Affiliates</div>
+            <div class="nav-item" data-page="signups" onclick="goPage('signups')"><i class="fas fa-user-clock"></i> Signups</div>
+        </div>
+        <div class="nav-group"><div class="nav-group-label">Reports</div>
+            <div class="nav-item" data-page="clicks" onclick="goPage('clicks')"><i class="fas fa-mouse-pointer"></i> Click Reports</div>
+            <div class="nav-item" data-page="conversions" onclick="goPage('conversions')"><i class="fas fa-exchange-alt"></i> Conversions</div>
+        </div>
+        <div class="nav-group"><div class="nav-group-label">Account</div>
+            <div class="nav-item" data-page="settings" onclick="goPage('settings')"><i class="fas fa-cog"></i> Settings</div>
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="sf-email" id="mgrEmail">manager@clima.com</div>
+        <button class="sf-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+</div>
+<div class="content-wrap">
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="top-bar-right">
+            <span style="font-size:12px;color:#888" id="mgrWelcome">Welcome</span>
+            <div class="user-avatar" id="userAvatar">MG</div>
+        </div>
+    </div>
+    <div class="page-content">
+        <!-- DASHBOARD -->
+        <div class="page-section active" id="page-dashboard">
+            <div class="stat-cards" id="dashStats"></div>
+            <div class="chart-box">
+                <div class="chart-controls"><h5><i class="fas fa-chart-area"></i> Team Performance</h5>
+                    <select class="chart-select" id="chartRange" onchange="loadDashboard()"><option value="7">Last 7 Days</option><option value="14">Last 14 Days</option><option value="30" selected>Last 30 Days</option></select>
+                </div>
+                <canvas id="dashChart" height="80"></canvas>
+            </div>
+        </div>
+        <!-- MY AFFILIATES -->
+        <div class="page-section" id="page-affiliates">
+            <div class="toolbar"><div class="toolbar-left"><input type="text" id="affSearch" placeholder="Search..." class="form-input-sm" onkeyup="renderAffiliates()"></div></div>
+            <div class="table-wrap"><div class="table-scroll">
+                <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Status</th><th>Clicks</th><th>Conversions</th><th>Earnings</th></tr></thead><tbody id="affTbody"></tbody></table>
+            </div></div>
+        </div>
+        <!-- SIGNUPS -->
+        <div class="page-section" id="page-signups">
+            <div class="toolbar"><div class="toolbar-left"><select id="signupStatusFilter" class="form-select-sm" onchange="renderSignups()"><option value="pending">Pending</option><option value="">All</option></select></div></div>
+            <div class="table-wrap"><div class="table-scroll">
+                <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="signupsTbody"></tbody></table>
+            </div></div>
+        </div>
+        <!-- CLICKS -->
+        <div class="page-section" id="page-clicks">
+            <div class="toolbar"><div class="toolbar-left">
+                <input type="date" id="clickDateFrom" class="form-input-sm" onchange="renderClicks()">
+                <input type="date" id="clickDateTo" class="form-input-sm" onchange="renderClicks()">
+                <select id="clickAffFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Affiliates</option></select>
+            </div><span class="page-info" id="clickSummary"></span></div>
+            <div class="table-wrap"><div class="table-scroll">
+                <table class="data-table"><thead><tr><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>Device</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="clicksTbody"></tbody></table>
+            </div><div class="pagination-bar"><span class="page-info" id="clicksPageInfo"></span><div class="pagination-controls" id="clicksPagination"></div></div></div>
+        </div>
+        <!-- CONVERSIONS -->
+        <div class="page-section" id="page-conversions">
+            <div class="stat-cards" id="convStats"></div>
+            <div class="toolbar"><div class="toolbar-left">
+                <input type="date" id="convDateFrom" class="form-input-sm" onchange="renderConversions()">
+                <input type="date" id="convDateTo" class="form-input-sm" onchange="renderConversions()">
+                <select id="convStatusFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            </div></div>
+            <div class="table-wrap"><div class="table-scroll">
+                <table class="data-table"><thead><tr><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Payout</th><th>Status</th><th>Date</th></tr></thead><tbody id="convTbody"></tbody></table>
+            </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
+        </div>
+        <!-- SETTINGS -->
+        <div class="page-section" id="page-settings">
+            <div class="settings-card"><h5><i class="fas fa-key"></i> Change Password</h5>
+                <div class="form-group"><label>New Password</label><input type="password" id="setNewPass" placeholder="Min 6 characters"></div>
+                <div class="form-group"><label>Confirm Password</label><input type="password" id="setConfPass" placeholder="Confirm"></div>
+                <button class="btn-primary-sm" onclick="changePassword()"><i class="fas fa-lock"></i> Update Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+var currentUser = null, myUid = '';
+var allOffers = [], allUsers = [], myAffIds = [], myClicks = [], myConversions = [], allSignups = [];
+var dashChart = null, PAGE_SIZE = 20;
+
+function fbGet(path) { return fetch(FB + '/' + path + '.json').then(function(r) { return r.json(); }); }
+function fbPut(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PUT', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
+function fbPatch(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PATCH', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
+function objToArr(obj) { if (!obj) return []; return Object.keys(obj).map(function(k) { var item = typeof obj[k] === 'object' && obj[k] !== null ? obj[k] : { value: obj[k] }; item._id = k; return item; }); }
+function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function fmtDateTime(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+function fmtMoney(n) { return '$' + (parseFloat(n) || 0).toFixed(2); }
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function statusBadge(s) { return '<span class="badge badge-' + (s || 'pending') + '">' + escHtml(s || 'unknown') + '</span>'; }
+function dayStart(d) { var dt = new Date(d); dt.setHours(0,0,0,0); return dt.getTime(); }
+function dayEnd(d) { var dt = new Date(d); dt.setHours(23,59,59,999); return dt.getTime(); }
+function toast(msg, type) { var t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + (type || 'success') + ' show'; setTimeout(function() { t.className = 'toast'; }, 3000); }
+function getOfferName(id) { for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === id) return allOffers[i].name || id; } return id || '-'; }
+function getUserName(uid) { for (var i = 0; i < allUsers.length; i++) { if (allUsers[i]._id === uid) return allUsers[i].name || allUsers[i].email || uid; } return uid || '-'; }
+function statCard(icon, bg, color, value, label) { return '<div class="stat-card"><div class="sc-icon" style="background:' + bg + ';color:' + color + '"><i class="fas ' + icon + '"></i></div><div class="sc-info"><div class="sc-value">' + value + '</div><div class="sc-label">' + label + '</div></div></div>'; }
+function renderPagination(cId, iId, total, page, size, fn) {
+    var pages = Math.ceil(total / size) || 1;
+    var info = document.getElementById(iId), c = document.getElementById(cId);
+    if (info) info.textContent = 'Showing ' + (total ? ((page-1)*size+1) : 0) + '-' + Math.min(page*size, total) + ' of ' + total;
+    if (!c) return;
+    var h = '<button ' + (page<=1?'disabled':'') + ' onclick="' + fn + '(' + (page-1) + ')">Prev</button>';
+    for (var p = Math.max(1,page-2); p <= Math.min(pages,page+2); p++) h += '<button style="' + (p===page?'background:var(--accent);color:#fff;border-color:var(--accent)':'') + '" onclick="' + fn + '(' + p + ')">' + p + '</button>';
+    h += '<button ' + (page>=pages?'disabled':'') + ' onclick="' + fn + '(' + (page+1) + ')">Next</button>';
+    c.innerHTML = h;
+}
+
+/* AUTH */
+firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) { window.location.href = 'index.html'; return; }
+    myUid = user.uid;
+    fbGet('users/' + user.uid).then(function(data) {
+        if (!data || data.role !== 'manager' || data.status !== 'active') { firebase.auth().signOut(); window.location.href = 'index.html'; return; }
+        currentUser = data; currentUser._id = user.uid;
+        document.getElementById('mgrEmail').textContent = user.email || '';
+        document.getElementById('mgrWelcome').textContent = 'Welcome, ' + (data.name || 'Manager');
+        var initials = (data.name || 'MG').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substr(0, 2);
+        document.getElementById('userAvatar').textContent = initials;
+        loadAllData();
+    });
+});
+function doLogout() { firebase.auth().signOut().then(function() { window.location.href = 'index.html'; }); }
+
+/* NAV */
+var pageTitles = { dashboard:'Dashboard', affiliates:'My Affiliates', signups:'Signups', clicks:'Click Reports', conversions:'Conversions', settings:'Settings' };
+function goPage(page) {
+    document.querySelectorAll('.page-section').forEach(function(el) { el.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    var s = document.getElementById('page-' + page); if (s) s.classList.add('active');
+    var n = document.querySelector('.nav-item[data-page="' + page + '"]'); if (n) n.classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+    if (page === 'dashboard') loadDashboard();
+    else if (page === 'affiliates') renderAffiliates();
+    else if (page === 'signups') loadSignups();
+    else if (page === 'clicks') loadClicks();
+    else if (page === 'conversions') loadConversionsPage();
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+
+/* LOAD ALL */
+function loadAllData() {
+    Promise.all([fbGet('offers'), fbGet('users'), fbGet('clicks'), fbGet('conversions'), fbGet('signups')]).then(function(res) {
+        allOffers = objToArr(res[0]);
+        allUsers = objToArr(res[1]);
+        /* Find assigned affiliates */
+        myAffIds = allUsers.filter(function(u) { return u.role === 'affiliate' && u.managerId === myUid; }).map(function(u) { return u._id; });
+        var allClicks = objToArr(res[2]);
+        var allConvs = objToArr(res[3]);
+        allSignups = objToArr(res[4]);
+        myClicks = allClicks.filter(function(c) { return myAffIds.indexOf(c.affiliateId) !== -1; });
+        myConversions = allConvs.filter(function(c) { return myAffIds.indexOf(c.affiliateId) !== -1; });
+        loadDashboard();
+    });
+}
+
+/* DASHBOARD */
+function loadDashboard() {
+    var days = parseInt(document.getElementById('chartRange').value) || 30;
+    var fromTs = dayStart(new Date(Date.now() - days * 86400000));
+    var clicks = myClicks.filter(function(c) { return c.timestamp >= fromTs; });
+    var convs = myConversions.filter(function(c) { return (c.createdAt || 0) >= fromTs; });
+    var revenue = convs.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
+    var payout = convs.reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    document.getElementById('dashStats').innerHTML =
+        statCard('fa-users', '#e3f2fd', '#1565c0', myAffIds.length, 'Affiliates') +
+        statCard('fa-mouse-pointer', '#e8f5e9', '#2e7d32', clicks.length, 'Clicks') +
+        statCard('fa-exchange-alt', '#fff3e0', '#e65100', convs.length, 'Conversions') +
+        statCard('fa-dollar-sign', '#f3e5f5', '#7b1fa2', fmtMoney(revenue), 'Revenue') +
+        statCard('fa-hand-holding-usd', '#e8f5e9', '#2e7d32', fmtMoney(payout), 'Payout');
+    /* Chart */
+    var labels = [], cd = [], cvd = [];
+    for (var i = days-1; i >= 0; i--) {
+        var d = new Date(Date.now() - i*86400000), ds = dayStart(d), de = dayEnd(d);
+        labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+        cd.push(clicks.filter(function(c){return c.timestamp>=ds&&c.timestamp<=de;}).length);
+        cvd.push(convs.filter(function(c){return (c.createdAt||0)>=ds&&(c.createdAt||0)<=de;}).length);
+    }
+    if (dashChart) dashChart.destroy();
+    dashChart = new Chart(document.getElementById('dashChart').getContext('2d'), {
+        type:'line', data:{labels:labels,datasets:[{label:'Clicks',data:cd,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,.08)',tension:.3,fill:true,pointRadius:2},{label:'Conversions',data:cvd,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.08)',tension:.3,fill:true,pointRadius:2}]},
+        options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}
+    });
+}
+
+/* AFFILIATES */
+function renderAffiliates() {
+    var search = (document.getElementById('affSearch').value || '').toLowerCase();
+    var affs = allUsers.filter(function(u) { return u.role === 'affiliate' && myAffIds.indexOf(u._id) !== -1; });
+    if (search) affs = affs.filter(function(a) { return (a.name||'').toLowerCase().indexOf(search)!==-1 || (a.email||'').toLowerCase().indexOf(search)!==-1; });
+    var html = '';
+    affs.forEach(function(a) {
+        var clicks = myClicks.filter(function(c){return c.affiliateId===a._id;}).length;
+        var convs = myConversions.filter(function(c){return c.affiliateId===a._id&&c.status==='approved';});
+        var earn = convs.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+        html += '<tr><td><strong>'+escHtml(a.name)+'</strong></td><td>'+escHtml(a.email)+'</td><td>'+escHtml(a.country||'-')+'</td><td>'+statusBadge(a.status)+'</td><td>'+clicks+'</td><td>'+convs.length+'</td><td style="font-weight:700;color:var(--green)">'+fmtMoney(earn)+'</td></tr>';
+    });
+    document.getElementById('affTbody').innerHTML = html || '<tr><td colspan="7" class="no-data"><i class="fas fa-users"></i>No assigned affiliates</td></tr>';
+}
+
+/* SIGNUPS */
+function loadSignups() { fbGet('signups').then(function(data) { allSignups = objToArr(data); renderSignups(); }); }
+function renderSignups() {
+    var sf = document.getElementById('signupStatusFilter').value;
+    var filtered = allSignups.filter(function(s) { return !sf || s.status === sf; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
+    var html = '';
+    filtered.forEach(function(s) {
+        html += '<tr><td><strong>'+escHtml(s.name)+'</strong></td><td>'+escHtml(s.email)+'</td><td>'+escHtml(s.phone||'-')+'</td><td>'+escHtml(s.country||'-')+'</td><td>'+fmtDate(s.timestamp)+'</td><td>'+statusBadge(s.status)+'</td><td>';
+        if (s.status==='pending') html += '<button class="btn-primary-sm" style="padding:4px 10px;font-size:11px" onclick="approveSignup(\''+s._id+'\')"><i class="fas fa-check"></i></button> <button class="btn-danger-sm" onclick="rejectSignup(\''+s._id+'\')"><i class="fas fa-times"></i></button>';
+        else html += '-';
+        html += '</td></tr>';
+    });
+    document.getElementById('signupsTbody').innerHTML = html || '<tr><td colspan="7" class="no-data"><i class="fas fa-user-clock"></i>No signups</td></tr>';
+}
+function approveSignup(id) {
+    var s = allSignups.find(function(x){return x._id===id;});
+    if (!s || !confirm('Approve '+s.name+'?')) return;
+    toast('Signup approved! Admin will create the account.', 'info');
+    fbPatch('signups/' + id, { status: 'approved', approvedBy: myUid, approvedAt: Date.now() }).then(function() { loadSignups(); });
+}
+function rejectSignup(id) {
+    if (!confirm('Reject this signup?')) return;
+    fbPatch('signups/' + id, { status: 'rejected', rejectedBy: myUid, rejectedAt: Date.now() }).then(function() { toast('Signup rejected'); loadSignups(); });
+}
+
+/* CLICKS */
+var clicksPage = 1;
+function loadClicks() {
+    Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users')]).then(function(res) {
+        var allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
+        myClicks = allClicks.filter(function(c) { return myAffIds.indexOf(c.affiliateId) !== -1; });
+        var now = new Date(), from = new Date(now.getTime()-30*86400000);
+        if (!document.getElementById('clickDateFrom').value) document.getElementById('clickDateFrom').value = from.toISOString().split('T')[0];
+        if (!document.getElementById('clickDateTo').value) document.getElementById('clickDateTo').value = now.toISOString().split('T')[0];
+        var afHtml = '<option value="">All Affiliates</option>';
+        allUsers.filter(function(u){return myAffIds.indexOf(u._id)!==-1;}).forEach(function(a){ afHtml += '<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>'; });
+        document.getElementById('clickAffFilter').innerHTML = afHtml;
+        clicksPage = 1; renderClicks();
+    });
+}
+function renderClicks() {
+    var from = document.getElementById('clickDateFrom').value, to = document.getElementById('clickDateTo').value;
+    var affF = document.getElementById('clickAffFilter').value;
+    var fromTs = from?dayStart(new Date(from)):0, toTs = to?dayEnd(new Date(to)):Infinity;
+    var filtered = myClicks.filter(function(c) { if(c.timestamp<fromTs||c.timestamp>toTs) return false; if(affF&&c.affiliateId!==affF) return false; return true; }).sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);});
+    document.getElementById('clickSummary').textContent = filtered.length + ' clicks';
+    var start=(clicksPage-1)*PAGE_SIZE, page=filtered.slice(start,start+PAGE_SIZE);
+    var html = '';
+    page.forEach(function(c) {
+        html += '<tr><td style="font-family:monospace;font-size:11px">'+escHtml(c._id)+'</td><td>'+escHtml(getOfferName(c.offerId))+'</td><td>'+escHtml(getUserName(c.affiliateId))+'</td><td style="font-family:monospace;font-size:11px">'+escHtml(c.ip||'-')+'</td><td>'+escHtml(c.country||'-')+'</td><td>'+escHtml(c.device||'-')+'</td><td>'+fmtDateTime(c.timestamp)+'</td><td>'+(c.converted?'<span class="badge badge-yes">Yes</span>':'<span class="badge badge-no">No</span>')+'</td></tr>';
+    });
+    document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="8" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks</td></tr>';
+    renderPagination('clicksPagination','clicksPageInfo',filtered.length,clicksPage,PAGE_SIZE,'goClicksPage');
+}
+function goClicksPage(p) { clicksPage=p; renderClicks(); }
+
+/* CONVERSIONS */
+var convPage = 1;
+function loadConversionsPage() {
+    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('users')]).then(function(res) {
+        var allConvs = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
+        myConversions = allConvs.filter(function(c) { return myAffIds.indexOf(c.affiliateId) !== -1; });
+        var now = new Date(), from = new Date(now.getTime()-30*86400000);
+        if (!document.getElementById('convDateFrom').value) document.getElementById('convDateFrom').value = from.toISOString().split('T')[0];
+        if (!document.getElementById('convDateTo').value) document.getElementById('convDateTo').value = now.toISOString().split('T')[0];
+        convPage = 1; renderConversions();
+    });
+}
+function renderConversions() {
+    var from = document.getElementById('convDateFrom').value, to = document.getElementById('convDateTo').value;
+    var sf = document.getElementById('convStatusFilter').value;
+    var fromTs = from?dayStart(new Date(from)):0, toTs = to?dayEnd(new Date(to)):Infinity;
+    var filtered = myConversions.filter(function(c) { if((c.createdAt||0)<fromTs||(c.createdAt||0)>toTs) return false; if(sf&&c.status!==sf) return false; return true; }).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    var totalPay = filtered.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+    var approved = filtered.filter(function(c){return c.status==='approved';}).length;
+    document.getElementById('convStats').innerHTML =
+        statCard('fa-exchange-alt','#e3f2fd','#1565c0',filtered.length,'Total') +
+        statCard('fa-check-circle','#e8f5e9','#2e7d32',approved,'Approved') +
+        statCard('fa-dollar-sign','#f3e5f5','#7b1fa2',fmtMoney(totalPay),'Payout');
+    var start=(convPage-1)*PAGE_SIZE, page=filtered.slice(start,start+PAGE_SIZE);
+    var html = '';
+    page.forEach(function(c) {
+        html += '<tr><td style="font-family:monospace;font-size:11px">'+escHtml(c._id)+'</td><td style="font-family:monospace;font-size:11px">'+escHtml(c.clickId||'-')+'</td><td>'+escHtml(getOfferName(c.offerId))+'</td><td>'+escHtml(getUserName(c.affiliateId))+'</td><td style="font-weight:700;color:var(--green)">'+fmtMoney(c.payout)+'</td><td>'+statusBadge(c.status)+'</td><td>'+fmtDateTime(c.createdAt)+'</td></tr>';
+    });
+    document.getElementById('convTbody').innerHTML = html || '<tr><td colspan="7" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions</td></tr>';
+    renderPagination('convPagination','convPageInfo',filtered.length,convPage,PAGE_SIZE,'goConvPage');
+}
+function goConvPage(p) { convPage=p; renderConversions(); }
+
+/* SETTINGS */
+function changePassword() {
+    var np = document.getElementById('setNewPass').value, cp = document.getElementById('setConfPass').value;
+    if (!np||np.length<6) { toast('Password must be at least 6 characters','error'); return; }
+    if (np!==cp) { toast('Passwords do not match','error'); return; }
+    firebase.auth().currentUser.updatePassword(np).then(function() { toast('Password updated!'); document.getElementById('setNewPass').value=''; document.getElementById('setConfPass').value=''; }).catch(function(err) { toast('Error: '+(err.message||'Failed'),'error'); });
+}
+</script>
+</body>
+</html>

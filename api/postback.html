@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postback Handler - Clima Network</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <style>
+        :root{--primary:#0A6C80;--primary-dark:#085a6b;--green:#28a745;--red:#dc3545;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f5;color:#333;padding:20px;}
+        .container{max-width:900px;margin:0 auto;}
+        .header{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+        .header img{width:40px;height:40px;border-radius:10px;}
+        .header h1{font-size:22px;font-weight:800;color:#1a2b30;}
+        .header h1 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:3px;vertical-align:middle;}
+        .header .sub{font-size:12px;color:#888;font-weight:600;}
+        .card{background:#fff;border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px;}
+        .card h2{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--primary);}
+        .card h2 i{margin-right:8px;}
+        .info-box{background:#e3f2fd;border-radius:8px;padding:14px;font-size:13px;color:#1565c0;margin-bottom:16px;line-height:1.6;}
+        .info-box i{margin-right:6px;}
+        .warn-box{background:#fff3e0;border-radius:8px;padding:14px;font-size:13px;color:#e65100;margin-bottom:16px;line-height:1.6;}
+        .warn-box i{margin-right:6px;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+        .form-row.triple{grid-template-columns:1fr 1fr 1fr;}
+        .field{display:flex;flex-direction:column;gap:4px;}
+        .field label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.3px;}
+        .field input,.field select{padding:8px 12px;border:1.5px solid #d0d7da;border-radius:6px;font-size:13px;outline:none;}
+        .field input:focus,.field select:focus{border-color:var(--primary);}
+        .btn{padding:10px 20px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+        .btn.primary{background:var(--primary);color:#fff;}.btn.primary:hover{background:var(--primary-dark);}
+        .result{margin-top:16px;padding:14px;border-radius:8px;font-size:13px;display:none;line-height:1.6;}
+        .result.success{display:block;background:#e8f5e9;color:#2e7d32;}
+        .result.error{display:block;background:#fde8e8;color:#c62828;}
+        .url-box{background:#f5f8f9;border:2px dashed var(--primary);border-radius:6px;padding:12px;font-family:monospace;font-size:12px;color:var(--primary);word-break:break-all;margin-top:12px;}
+        .log-table{width:100%;border-collapse:collapse;font-size:12px;}
+        .log-table th{background:#f5f8f9;padding:8px 10px;text-align:left;font-weight:600;color:#555;font-size:11px;text-transform:uppercase;border-bottom:2px solid #e0e6e8;}
+        .log-table td{padding:8px 10px;border-bottom:1px solid #f0f2f4;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+        .badge.ok{background:#e8f5e9;color:#2e7d32;}.badge.fail{background:#fde8e8;color:#c62828;}
+        .param-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;}
+        .param-table th{background:#f5f8f9;padding:8px 12px;text-align:left;font-weight:600;color:#555;}
+        .param-table td{padding:8px 12px;border-bottom:1px solid #f0f2f4;}
+        .param-table code{background:#e8f4f8;padding:2px 6px;border-radius:4px;font-size:12px;color:var(--primary);}
+        .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:16px;}
+        .back-link:hover{text-decoration:underline;}
+        @media(max-width:768px){.form-row,.form-row.triple{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <a class="back-link" href="../admin.html"><i class="fas fa-arrow-left"></i> Back to Admin</a>
+    <div class="header">
+        <img src="https://i.ibb.co/ZzqT56H0/image.png" alt="Clima">
+        <div><h1>Postback Handler<span class="dot"></span></h1><div class="sub">Conversion Tracking API</div></div>
+    </div>
+
+    <!-- AUTO-PROCESS -->
+    <div class="card" id="autoProcessCard" style="display:none">
+        <h2><i class="fas fa-bolt"></i> Incoming Postback</h2>
+        <div id="autoProcessResult" class="result"></div>
+    </div>
+
+    <!-- DOCUMENTATION -->
+    <div class="card">
+        <h2><i class="fas fa-book"></i> Postback URL Documentation</h2>
+        <div class="info-box"><i class="fas fa-info-circle"></i>
+            <strong>How it works:</strong> When a conversion occurs, the advertiser fires a GET request to your postback URL with the click_id. This page looks up the click, finds the associated offer and affiliate, and creates a conversion record automatically.
+        </div>
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">Postback URL Format</h3>
+        <div class="url-box">https://YOUR-DOMAIN/api/postback?click_id={click_id}&secret=YOUR_SECRET&payout={payout}&txn_id={txn_id}</div>
+
+        <h3 style="font-size:14px;font-weight:700;margin:16px 0 10px">Parameters</h3>
+        <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>click_id</code></td><td>Yes</td><td>Click ID from the tracking link (passed to advertiser via {click_id} macro)</td></tr>
+                <tr><td><code>secret</code></td><td>Yes</td><td>Secret key (set in Admin > Settings > Postback)</td></tr>
+                <tr><td><code>payout</code></td><td>No</td><td>Custom payout amount (uses offer default if not set)</td></tr>
+                <tr><td><code>revenue</code></td><td>No</td><td>Custom revenue amount (uses offer default if not set)</td></tr>
+                <tr><td><code>txn_id</code></td><td>No</td><td>External transaction ID from the advertiser</td></tr>
+                <tr><td><code>status</code></td><td>No</td><td><code>approved</code> (default) or <code>pending</code></td></tr>
+            </tbody>
+        </table>
+
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">Example</h3>
+        <div class="url-box" style="font-size:11px">/api/postback?click_id=c1a2b3c4d5e6&secret=mysecretkey&payout=25.00&txn_id=TXN-12345</div>
+
+        <div class="warn-box" style="margin-top:16px"><i class="fas fa-exclamation-triangle"></i>
+            <strong>Note:</strong> This page processes postbacks client-side. For true server-to-server (S2S) postbacks, use a Cloudflare Worker or Cloud Function. Works for testing and browser-based calls.
+        </div>
+    </div>
+
+    <!-- MANUAL TEST -->
+    <div class="card">
+        <h2><i class="fas fa-flask"></i> Manual Test / Add Conversion</h2>
+        <div class="form-row triple">
+            <div class="field"><label>Click ID</label><input type="text" id="tClickId" placeholder="e.g. c1a2b3c4d5e6"></div>
+            <div class="field"><label>Offer ID *</label><input type="text" id="tOfferId" placeholder="e.g. off_abc123"></div>
+            <div class="field"><label>Affiliate UID *</label><input type="text" id="tAffId" placeholder="Firebase UID"></div>
+        </div>
+        <div class="form-row triple">
+            <div class="field"><label>Revenue ($)</label><input type="number" id="tRevenue" step="0.01" placeholder="From offer"></div>
+            <div class="field"><label>Payout ($)</label><input type="number" id="tPayout" step="0.01" placeholder="From offer"></div>
+            <div class="field"><label>Transaction ID</label><input type="text" id="tTxnId" placeholder="TXN-12345"></div>
+        </div>
+        <div class="form-row">
+            <div class="field"><label>Status</label><select id="tStatus"><option value="approved">Approved</option><option value="pending">Pending</option></select></div>
+            <div class="field"><label>Source</label><select id="tSource"><option value="manual">Manual</option><option value="postback">Postback</option></select></div>
+        </div>
+        <button class="btn primary" onclick="submitManualConversion()"><i class="fas fa-paper-plane"></i> Submit Conversion</button>
+        <div id="manualResult" class="result"></div>
+    </div>
+
+    <!-- RECENT LOG -->
+    <div class="card">
+        <h2><i class="fas fa-history"></i> Recent Postback Log</h2>
+        <div id="logLoading" style="text-align:center;padding:20px;color:#888">Loading...</div>
+        <div id="logTable" style="display:none;overflow-x:auto">
+            <table class="log-table">
+                <thead><tr><th>Time</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Revenue</th><th>Payout</th><th>Status</th></tr></thead>
+                <tbody id="logBody"></tbody>
+            </table>
+        </div>
+        <div id="logEmpty" style="display:none;text-align:center;padding:20px;color:#999"><i class="fas fa-inbox" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3"></i>No postback logs yet.</div>
+    </div>
+</div>
+
+<script>
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+
+function fbGet(path) { return fetch(FB + '/' + path + '.json').then(function(r) { return r.json(); }); }
+function fbPut(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PUT', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
+function fbPatch(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PATCH', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
+function esc(s) { if (s == null) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function ft(ts) { if (!ts) return '--'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+
+function showResult(el, type, msg) {
+    el.className = 'result ' + type;
+    el.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + esc(msg);
+}
+
+function logPostback(clickId, offerId, affId, revenue, payout, success, detail) {
+    var logId = genId();
+    fbPut('postback-log/' + logId, {
+        timestamp: Date.now(),
+        clickId: clickId || '',
+        offerId: offerId || '',
+        affiliateId: affId || '',
+        revenue: revenue || 0,
+        payout: payout || 0,
+        processed: success,
+        detail: detail,
+        rawQuery: window.location.search
+    });
+}
+
+/* ===== AUTO-PROCESS URL PARAMS ===== */
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var clickId = params.get('click_id');
+    var secret = params.get('secret');
+
+    if (clickId && secret) {
+        document.getElementById('autoProcessCard').style.display = 'block';
+        processPostback(clickId, secret, params.get('payout'), params.get('revenue'), params.get('txn_id'), params.get('status'));
+    }
+})();
+
+function processPostback(clickId, secret, customPayout, customRevenue, txnId, status) {
+    var resultEl = document.getElementById('autoProcessResult');
+
+    /* Validate secret key */
+    fbGet('settings/postback').then(function(settings) {
+        if (!settings || settings.secretKey !== secret) {
+            showResult(resultEl, 'error', 'Invalid secret key.');
+            logPostback(clickId, '', '', 0, 0, false, 'Invalid key');
+            return;
+        }
+
+        /* Look up the click */
+        fbGet('clicks/' + clickId).then(function(click) {
+            if (!click) {
+                showResult(resultEl, 'error', 'Click not found: ' + clickId);
+                logPostback(clickId, '', '', 0, 0, false, 'Click not found');
+                return;
+            }
+
+            if (click.converted) {
+                showResult(resultEl, 'error', 'Click already converted: ' + clickId);
+                logPostback(clickId, click.offerId, click.affiliateId, 0, 0, false, 'Already converted');
+                return;
+            }
+
+            /* Get offer + assignment for cap checking */
+            Promise.all([
+                fbGet('offers/' + click.offerId),
+                fbGet('offerAssignments/' + click.offerId + '/' + click.affiliateId),
+                fbGet('conversions')
+            ]).then(function(res2) {
+                var offer = res2[0];
+                var assignment = res2[1];
+                var allConvs = res2[2] || {};
+
+                /* Determine payout/revenue - assignment override takes priority */
+                var finalPayout = customPayout ? parseFloat(customPayout) : (assignment && assignment.payoutOverride ? parseFloat(assignment.payoutOverride) : (offer ? parseFloat(offer.payout) || 0 : 0));
+                var finalRevenue = customRevenue ? parseFloat(customRevenue) : (assignment && assignment.revenueOverride ? parseFloat(assignment.revenueOverride) : (offer ? parseFloat(offer.revenue) || 0 : 0));
+
+                /* Check daily cap (Pacific Time) */
+                var isOverCap = false;
+                var capNote = '';
+                var dailyCap = assignment ? (parseInt(assignment.dailyCap) || 0) : 0;
+
+                if (assignment && assignment.status === 'active' && dailyCap > 0) {
+                    /* Calculate Pacific day boundaries */
+                    var now = new Date();
+                    var pacificStr = now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+                    var pacificNow = new Date(pacificStr);
+                    var dayStartLocal = new Date(pacificNow.getFullYear(), pacificNow.getMonth(), pacificNow.getDate(), 0, 0, 0, 0);
+                    var dayEndLocal = new Date(pacificNow.getFullYear(), pacificNow.getMonth(), pacificNow.getDate(), 23, 59, 59, 999);
+                    var tzOffset = now.getTime() - pacificNow.getTime();
+                    var dayStartUtc = dayStartLocal.getTime() + tzOffset;
+                    var dayEndUtc = dayEndLocal.getTime() + tzOffset;
+
+                    /* Count today's non-overcap conversions for this affiliate+offer */
+                    var todayCount = 0;
+                    Object.keys(allConvs).forEach(function(k) {
+                        var c = allConvs[k];
+                        if (c && c.offerId === click.offerId && c.affiliateId === click.affiliateId && !c.overCap && (c.createdAt || 0) >= dayStartUtc && (c.createdAt || 0) <= dayEndUtc) {
+                            todayCount++;
+                        }
+                    });
+
+                    if (todayCount >= dailyCap) {
+                        isOverCap = true;
+                        capNote = 'Daily cap (' + dailyCap + ') hit. This is conv #' + (todayCount + 1) + ' today (Pacific Time).';
+                    }
+                }
+
+                var convId = 'conv_' + genId();
+                var conv = {
+                    clickId: clickId,
+                    offerId: click.offerId,
+                    affiliateId: click.affiliateId,
+                    revenue: finalRevenue,
+                    payout: finalPayout,
+                    status: status || 'approved',
+                    source: 'postback',
+                    transactionId: txnId || '',
+                    sub1: click.sub1 || '',
+                    sub2: click.sub2 || '',
+                    ip: click.ip || '',
+                    overCap: isOverCap,
+                    capNote: capNote,
+                    createdAt: Date.now()
+                };
+
+                Promise.all([
+                    fbPut('conversions/' + convId, conv),
+                    fbPatch('clicks/' + clickId, { converted: true })
+                ]).then(function() {
+                    var capInfo = isOverCap ? ' [OVER-CAP - Held by network]' : '';
+                    showResult(resultEl, isOverCap ? 'warning' : 'success', 'Conversion created! ID: ' + convId + ' | Offer: ' + (offer ? offer.name : click.offerId) + ' | Affiliate: ' + click.affiliateId + ' | Revenue: $' + finalRevenue.toFixed(2) + ' | Payout: $' + finalPayout.toFixed(2) + capInfo);
+                    logPostback(clickId, click.offerId, click.affiliateId, finalRevenue, finalPayout, true, convId + (isOverCap ? ' [OVER-CAP]' : ''));
+                    loadLog();
+
+                    /* Only fire affiliate postback if NOT over cap */
+                    if (!isOverCap) {
+                        fireAffiliatePostback(click.affiliateId, clickId, finalPayout, click.offerId, txnId);
+                    }
+                });
+            });
+        });
+    }).catch(function(err) {
+        showResult(resultEl, 'error', 'Error: ' + err.message);
+    });
+}
+
+/* Fire outgoing postback to affiliate */
+function fireAffiliatePostback(affId, clickId, payout, offerId, txnId) {
+    fbGet('users/' + affId + '/postbackUrl').then(function(url) {
+        if (!url) return;
+        var finalUrl = url
+            .replace(/\{click_id\}/g, encodeURIComponent(clickId || ''))
+            .replace(/\{payout\}/g, encodeURIComponent(payout || 0))
+            .replace(/\{offer_id\}/g, encodeURIComponent(offerId || ''))
+            .replace(/\{txn_id\}/g, encodeURIComponent(txnId || ''));
+        /* Fire and forget */
+        fetch(finalUrl, { mode: 'no-cors' }).catch(function() {});
+    });
+}
+
+/* ===== MANUAL CONVERSION ===== */
+function submitManualConversion() {
+    var clickId = document.getElementById('tClickId').value.trim();
+    var offerId = document.getElementById('tOfferId').value.trim();
+    var affId = document.getElementById('tAffId').value.trim();
+    var revenue = parseFloat(document.getElementById('tRevenue').value) || 0;
+    var payout = parseFloat(document.getElementById('tPayout').value) || 0;
+    var txnId = document.getElementById('tTxnId').value.trim();
+    var status = document.getElementById('tStatus').value;
+    var source = document.getElementById('tSource').value;
+    var resultEl = document.getElementById('manualResult');
+
+    if (!offerId && !clickId) { showResult(resultEl, 'error', 'Offer ID or Click ID is required.'); return; }
+    if (!affId && !clickId) { showResult(resultEl, 'error', 'Affiliate UID or Click ID is required.'); return; }
+
+    var proceed = function(finalOfferId, finalAffId) {
+        /* If no revenue/payout set, try to get from offer */
+        var offerPromise = (!revenue || !payout) ? fbGet('offers/' + finalOfferId) : Promise.resolve(null);
+        offerPromise.then(function(offer) {
+            var finalRevenue = revenue || (offer ? parseFloat(offer.revenue) || 0 : 0);
+            var finalPayout = payout || (offer ? parseFloat(offer.payout) || 0 : 0);
+
+            var convId = 'conv_' + genId();
+            var conv = {
+                clickId: clickId || '',
+                offerId: finalOfferId,
+                affiliateId: finalAffId,
+                revenue: finalRevenue,
+                payout: finalPayout,
+                status: status,
+                source: source,
+                transactionId: txnId,
+                createdAt: Date.now()
+            };
+
+            var promises = [fbPut('conversions/' + convId, conv)];
+            if (clickId) promises.push(fbPatch('clicks/' + clickId, { converted: true }));
+
+            Promise.all(promises).then(function() {
+                showResult(resultEl, 'success', 'Conversion created! ID: ' + convId + ' | Revenue: $' + finalRevenue.toFixed(2) + ' | Payout: $' + finalPayout.toFixed(2));
+                logPostback(clickId, finalOfferId, finalAffId, finalRevenue, finalPayout, true, convId);
+                loadLog();
+            });
+        });
+    };
+
+    if (clickId && (!offerId || !affId)) {
+        /* Look up click to get offer/affiliate info */
+        fbGet('clicks/' + clickId).then(function(click) {
+            if (!click) { showResult(resultEl, 'error', 'Click not found: ' + clickId); return; }
+            proceed(offerId || click.offerId, affId || click.affiliateId);
+        });
+    } else {
+        proceed(offerId, affId);
+    }
+}
+
+/* ===== RECENT LOG ===== */
+function loadLog() {
+    fbGet('postback-log').then(function(data) {
+        var loading = document.getElementById('logLoading');
+        var table = document.getElementById('logTable');
+        var empty = document.getElementById('logEmpty');
+        var body = document.getElementById('logBody');
+        loading.style.display = 'none';
+
+        if (!data) { empty.style.display = 'block'; table.style.display = 'none'; return; }
+
+        var logs = [];
+        Object.keys(data).forEach(function(k) { var l = data[k]; l._id = k; logs.push(l); });
+        logs.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+        logs = logs.slice(0, 50);
+
+        if (!logs.length) { empty.style.display = 'block'; table.style.display = 'none'; return; }
+
+        empty.style.display = 'none';
+        table.style.display = 'block';
+        body.innerHTML = logs.map(function(l) {
+            return '<tr>' +
+                '<td>' + esc(ft(l.timestamp)) + '</td>' +
+                '<td style="font-family:monospace;font-size:11px">' + esc(l.clickId || '--') + '</td>' +
+                '<td>' + esc(l.offerId || '--') + '</td>' +
+                '<td style="font-family:monospace;font-size:11px">' + esc(l.affiliateId || '--') + '</td>' +
+                '<td>$' + Number(l.revenue || 0).toFixed(2) + '</td>' +
+                '<td>$' + Number(l.payout || 0).toFixed(2) + '</td>' +
+                '<td><span class="badge ' + (l.processed ? 'ok' : 'fail') + '">' + (l.processed ? 'OK' : 'FAIL') + '</span></td>' +
+                '</tr>';
+        }).join('');
+    }).catch(function() {
+        document.getElementById('logLoading').style.display = 'none';
+        document.getElementById('logEmpty').style.display = 'block';
+    });
+}
+
+loadLog();
+</script>
+</body>
+</html>

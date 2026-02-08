@@ -1,0 +1,64 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      ".write": true
+    },
+    "affiliates": {
+      ".read": true,
+      ".write": true
+    },
+    "managers": {
+      ".read": true,
+      ".write": true
+    },
+    "offers": {
+      ".read": true,
+      ".write": true
+    },
+    "clicks": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["timestamp", "affiliateId", "offerId"]
+    },
+    "conversions": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["affiliateId", "offerId", "createdAt", "clickId"]
+    },
+    "signups": {
+      ".read": true,
+      ".write": true
+    },
+    "payments": {
+      ".read": true,
+      ".write": true
+    },
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+    "postback-log": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["timestamp"]
+    },
+    "offer_applications": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["affiliateId", "offerId", "status"]
+    },
+    "offerAssignments": {
+      ".read": true,
+      ".write": true
+    },
+    "affiliateIndex": {
+      ".read": true,
+      ".write": true
+    },
+    "advertisers": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

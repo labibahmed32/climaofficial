@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Portal - Clima Network</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--sb:#ffffff;--sb-hover:#f5f7fa;--sb-active:#eef2f8;--sb-text:#7b8694;--accent:#2c5282;--teal:#0a6c80;--bg:#edf0f4;--card:#fff;--td:#1a2332;--tm:#4a5568;--tl:#718096;--border:#e2e8f0;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--blue:#3b82f6;--shadow:0 1px 3px rgba(0,0,0,.04);--r:8px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--td);min-height:100vh;overflow-x:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:250px;position:fixed;top:0;left:0;bottom:0;background:var(--sb);display:flex;flex-direction:column;z-index:1100;transition:transform .3s;border-right:1px solid #e8ecf1;}
+.sb-brand{padding:24px 20px 18px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0f2f5;}
+.sb-brand h2{font-size:20px;font-weight:800;color:var(--td);letter-spacing:1.5px;}
+.sb-brand .dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-left:3px;vertical-align:middle;}
+.plat-label{padding:0 20px;margin:10px 0 4px;display:flex;align-items:center;gap:8px;font-size:8.5px;font-weight:600;color:var(--tl);text-transform:uppercase;letter-spacing:2.5px;}
+.plat-label::before,.plat-label::after{content:'';flex:1;height:1px;background:#edf0f4;}
+.sb-nav{flex:1;padding:4px 12px;overflow-y:auto;}
+.nav-sec{font-size:8px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:2px;padding:14px 10px 4px;opacity:.4;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;color:var(--tm);cursor:pointer;border-radius:7px;font-size:12.5px;font-weight:500;transition:all .15s;margin:1px 0;user-select:none;position:relative;}
+.nav-item:hover{background:var(--sb-hover);color:var(--td);}
+.nav-item.active{background:var(--sb-active);color:var(--accent);font-weight:600;border-left:3px solid var(--accent);padding-left:9px;}
+.nav-item i{width:17px;text-align:center;font-size:12.5px;opacity:.4;}
+.nav-item:hover i{opacity:.7;}
+.nav-item.active i{opacity:1;color:var(--accent);}
+
+/* ── Manager Box ── */
+.mgr-box{margin:8px 12px;padding:12px;background:#f8f9fb;border:1px solid #edf0f4;border-radius:8px;}
+.mgr-box .mgr-label{font-size:9px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px;}
+.mgr-box .mgr-row{display:flex;align-items:center;gap:10px;}
+.mgr-box .mgr-av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.mgr-box .mgr-av img{width:100%;height:100%;object-fit:cover;}
+.mgr-box .mgr-name{font-size:12.5px;font-weight:600;color:var(--td);}
+.mgr-box .mgr-det{font-size:10.5px;color:var(--tm);display:flex;align-items:center;gap:5px;margin-top:2px;}
+.mgr-box .mgr-det i{font-size:9.5px;width:13px;text-align:center;color:var(--tl);}
+.no-mgr{font-size:11px;color:var(--tl);text-align:center;padding:6px 0;}
+
+/* ── Sidebar Bottom ── */
+.sb-bottom{padding:10px 12px;border-top:1px solid #edf0f4;display:flex;align-items:center;justify-content:space-around;}
+.sb-btn{width:34px;height:34px;border-radius:8px;border:none;background:transparent;color:var(--tl);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;}
+.sb-btn:hover{background:var(--sb-hover);color:var(--accent);}
+.sb-btn .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid #fff;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1050;}
+
+/* ── Notification Panel ── */
+.notif-panel{display:none;position:absolute;bottom:50px;left:12px;width:220px;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);border:1px solid #edf0f4;z-index:1200;overflow:hidden;}
+.notif-panel.open{display:block;animation:fadeIn .15s ease;}
+.notif-hd{padding:10px 14px;border-bottom:1px solid #f0f2f5;font-size:11px;font-weight:700;color:var(--td);text-transform:uppercase;letter-spacing:.5px;}
+.notif-list{max-height:200px;overflow-y:auto;}
+.notif-item{padding:10px 14px;border-bottom:1px solid #f8f9fb;font-size:11px;color:var(--tm);display:flex;align-items:flex-start;gap:8px;transition:background .1s;}
+.notif-item:hover{background:#f8f9fb;}
+.notif-item i{font-size:10px;margin-top:2px;flex-shrink:0;}
+.notif-item .nt{font-weight:600;color:var(--td);font-size:10.5px;}
+.notif-item .nd{font-size:9.5px;color:var(--tl);margin-top:2px;}
+.notif-empty{padding:20px;text-align:center;font-size:11px;color:var(--tl);}
+
+/* ── Content ── */
+.content{margin-left:250px;min-height:100vh;opacity:0;transition:opacity .2s ease;}
+.content.ready{opacity:1;}
+.topbar{background:#fff;padding:11px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;box-shadow:0 1px 2px rgba(0,0,0,.02);}
+.topbar-l{display:flex;align-items:center;gap:12px;}
+.ham-btn{display:none;background:none;border:1.5px solid #ddd;border-radius:7px;padding:5px 9px;cursor:pointer;font-size:17px;color:#666;}
+.pg-title{font-size:17px;font-weight:700;color:var(--td);}
+.pg-title i{color:var(--accent);margin-right:8px;font-size:15px;}
+.topbar-r{display:flex;align-items:center;gap:12px;}
+.usr-av{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.pg-wrap{padding:20px 24px 40px;}
+.section{display:none;}
+.section.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Stat Cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px;}
+.astat{background:#fff;border-radius:10px;padding:22px 16px 18px;box-shadow:none;border:1px solid #dde2e8;position:relative;transition:border-color .2s;overflow:hidden;}
+.astat:hover{border-color:#bcc5d0;}
+.astat-ico{display:none;}
+.astat-t{font-size:13px;font-weight:700;color:var(--td);margin-bottom:12px;display:block;}
+.astat-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:0;}
+.astat-pct{font-size:10px;font-weight:600;color:var(--tl);}
+.astat-pct.up{color:#059669;}
+.astat-pct.down{color:#dc2626;}
+.astat-sub{font-size:9.5px;color:var(--tl);font-weight:500;letter-spacing:.3px;}
+.astat-val{font-size:26px;font-weight:800;color:#1a2744;margin:8px 0 18px;line-height:1;letter-spacing:-.3px;font-feature-settings:'tnum';}
+.astat-bar{height:2px;background:#e8ecf1;border-radius:2px;margin-bottom:18px;overflow:hidden;}
+.astat-bar-f{height:100%;border-radius:2px;background:var(--accent);transition:width .5s ease;}
+.astat-rows{font-size:11px;padding-top:0;}
+.astat-row{display:flex;justify-content:space-between;padding:6px 0;color:var(--tm);}
+.astat-row span:first-child{font-weight:500;font-size:11px;color:#5a6a80;}
+.astat-row span:last-child{font-weight:700;color:#1a2332;font-size:11.5px;font-feature-settings:'tnum';}
+.astat-payout{background:linear-gradient(135deg,#1a2744 0%,#2c5282 100%);border:none;color:#fff;}
+.astat-payout .astat-t{color:rgba(255,255,255,.7);}
+.astat-payout .astat-sub{color:rgba(255,255,255,.5);}
+.astat-payout .astat-pct{color:rgba(255,255,255,.6);}
+.astat-payout .astat-val{color:#fff;}
+.astat-payout .astat-bar{background:rgba(255,255,255,.15);}
+.astat-payout .astat-bar-f{background:rgba(255,255,255,.6);}
+.astat-payout .astat-row span:first-child{color:rgba(255,255,255,.5);}
+.astat-payout .astat-row span:last-child{color:#fff;}
+
+/* ── Chart ── */
+.chart-box{background:#fff;border-radius:10px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.02);margin-bottom:20px;}
+.chart-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.chart-hd h5{font-size:15px;font-weight:800;color:var(--td);letter-spacing:-.2px;}
+.ch-ctrls{display:flex;gap:8px;align-items:center;}
+.ch-sel{padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:11.5px;font-weight:600;color:var(--tm);background:#fff;outline:none;cursor:pointer;font-family:inherit;transition:border-color .15s;}
+.ch-sel:hover{border-color:var(--accent);}
+.ch-toggle{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;}
+.ch-toggle button{border:none;background:#fff;padding:6px 11px;font-size:13px;cursor:pointer;color:var(--tl);transition:all .15s;}
+.ch-toggle button:hover{color:var(--accent);}
+.ch-toggle button.active{background:var(--accent);color:#fff;}
+.ch-sum{text-align:center;margin-top:12px;font-size:13px;color:var(--tm);padding:8px;background:#f8f9fb;border-radius:8px;}
+.ch-sum b{color:var(--td);font-size:15px;}
+
+/* ── Apply Modal ── */
+.apply-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2000;}
+.apply-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;max-width:92vw;background:#fff;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.18);z-index:2001;padding:22px;max-height:85vh;overflow-y:auto;}
+.apply-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f0f2f5;}
+.apply-hd h4{font-size:15px;font-weight:700;color:var(--td);}
+
+/* ── Metric Dropdown ── */
+.metric-dd{position:relative;}
+.metric-list{display:none;position:absolute;top:100%;left:0;margin-top:4px;width:220px;background:#fff;border:1px solid #dde2e8;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.1);z-index:100;padding:4px 0;max-height:260px;overflow-y:auto;}
+.metric-dd.open .metric-list{display:block;animation:fadeIn .12s ease;}
+.metric-hint{padding:8px 12px;font-size:10px;color:var(--tl);border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:5px;}
+.metric-hint i{color:var(--accent);}
+.metric-clear{margin-left:auto;color:var(--accent);font-weight:600;cursor:pointer;}
+.metric-clear:hover{text-decoration:underline;}
+.metric-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:500;color:var(--td);cursor:pointer;transition:background .1s;}
+.metric-opt:hover{background:#f8f9fb;}
+.metric-opt input[type="checkbox"]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;}
+.metric-opt.disabled{opacity:.4;pointer-events:none;}
+
+/* ── Tables ── */
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.toolbar-l{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.f-inp{padding:6px 11px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;outline:none;background:#fff;font-family:inherit;min-width:130px;}
+.f-inp:focus{border-color:var(--accent);}
+.f-sel{padding:6px 11px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;outline:none;background:#fff;cursor:pointer;font-family:inherit;}
+.btn-p{padding:7px 16px;border:none;background:var(--teal);color:#fff;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit;}
+.btn-p:hover{opacity:.88;}
+.tbl-wrap{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.tbl-scroll{overflow-x:auto;}
+.dtbl{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
+.dtbl thead th{background:#f8f9fb;padding:10px 11px;text-align:left;font-weight:600;color:var(--tm);border-bottom:2px solid #edf0f4;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;}
+.dtbl tbody td{padding:8px 11px;border-bottom:1px solid #f3f5f7;}
+.dtbl tbody tr:hover{background:#f8f9fb;}
+.pag-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid #edf0f4;flex-wrap:wrap;gap:6px;}
+.pg-info{font-size:12px;color:var(--tl);}
+.pag-ctrls{display:flex;gap:3px;}
+.pag-ctrls button{padding:5px 10px;border:1.5px solid var(--border);border-radius:5px;background:#fff;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--tm);font-family:inherit;}
+.pag-ctrls button:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.pag-ctrls button:disabled{opacity:.35;cursor:default;}
+
+/* ── Badges / Offers / Settings ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10.5px;font-weight:700;text-transform:capitalize;}
+.badge-active,.badge-approved,.badge-yes,.badge-paid{background:#e8f5e9;color:#2e7d32;}
+.badge-pending{background:#fff3e0;color:#e65100;}
+.badge-rejected{background:#fde8e8;color:#c62828;}
+.badge-no{background:#f5f5f5;color:#999;}
+.ocard{background:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.ocard .oi h4{font-size:13.5px;font-weight:700;color:var(--td);margin-bottom:2px;}
+.ocard .oi p{font-size:11.5px;color:var(--tl);}
+.ocard .om{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.ocard .op{font-size:17px;font-weight:800;color:var(--green);}
+.ocard .oc{font-size:10.5px;padding:3px 9px;border-radius:10px;background:#e8f0fe;color:var(--accent);font-weight:600;}
+/* ── Visibility Badges ── */
+.vis-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:10.5px;font-weight:700;}
+.vis-action{background:#fff3e0;color:#e65100;}
+.vis-pending{background:#e3f2fd;color:#1565c0;}
+.vis-approved{background:#e8f5e9;color:#2e7d32;}
+.vis-rejected{background:#fde8e8;color:#c62828;}
+/* ── Offer Name Cell ── */
+.offer-name-cell{display:flex;align-items:center;gap:6px;}
+.offer-name-link{font-weight:700;font-size:12.5px;color:var(--accent);cursor:pointer;}
+.offer-name-link:hover{text-decoration:underline;}
+.offer-newtab{display:none;color:var(--tl);font-size:11px;text-decoration:none;padding:2px;}
+.offer-newtab:hover{color:var(--accent);}
+.offer-name-cell:hover .offer-newtab{display:inline-flex;}
+/* ── Rule Tags ── */
+.rule-tags{display:flex;flex-direction:column;gap:3px;}
+.rule-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 0;font-size:10px;font-weight:600;white-space:nowrap;}
+.rule-tag i{font-size:10px;width:12px;text-align:center;}
+.rule-tag.rule-allow{color:#2e7d32;}
+.rule-tag.rule-allow i{color:#2e7d32;}
+.rule-tag.rule-block{color:#c62828;}
+.rule-tag.rule-block i{color:#c62828;}
+.rule-tag.rule-info{color:var(--tm);}
+.rule-tag.rule-info i{color:var(--tl);}
+/* ── Apply Modal Offer Info ── */
+.apply-offer-info{display:flex;align-items:center;gap:12px;padding:12px;background:#f8f9fb;border-radius:8px;margin-bottom:14px;border:1px solid #edf0f4;}
+.apply-offer-info img{width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid #eee;}
+.aoi-name{font-size:13px;font-weight:700;color:var(--td);}
+.aoi-pay{font-size:12px;font-weight:700;color:var(--accent);margin-top:2px;}
+/* ── Today Rev ── */
+.today-rev{font-weight:700;font-size:12.5px;color:var(--green);font-feature-settings:'tnum';}
+.today-rev.zero{color:var(--tl);font-weight:500;}
+/* ── Offer Detail View (Hero + Tabs) ── */
+.od-hero{background:linear-gradient(135deg,#1a2744 0%,#2c5282 60%,#0a6c80 100%);border-radius:12px 12px 0 0;padding:26px 28px;display:flex;align-items:center;gap:20px;color:#fff;position:relative;overflow:hidden;}
+.od-hero::after{content:'';position:absolute;top:-50%;right:-8%;width:350px;height:350px;background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 70%);pointer-events:none;}
+.od-hero-thumb{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,.18);flex-shrink:0;}
+.od-hero-thumb-ph{width:64px;height:64px;border-radius:12px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,.35);flex-shrink:0;border:1.5px solid rgba(255,255,255,.1);}
+.od-hero-info{flex:1;min-width:0;}
+.od-hero-name{font-size:17px;font-weight:800;margin-bottom:7px;line-height:1.2;letter-spacing:-.2px;}
+.od-hero-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.od-hero-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:9.5px;font-weight:700;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);letter-spacing:.2px;}
+.od-hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;position:relative;z-index:1;}
+.od-hero-pay{text-align:right;}
+.od-hero-pay-type{font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px;}
+.od-hero-pay-amt{font-size:30px;font-weight:900;color:#fff;line-height:1;margin-top:3px;letter-spacing:-.5px;}
+.od-stats-bar{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;border-top:2px solid #edf0f4;overflow:hidden;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.03);}
+.od-sb-item{padding:16px 8px;text-align:center;border-right:1px solid #f0f2f5;position:relative;}
+.od-sb-item:last-child{border-right:none;}
+.od-sb-label{font-size:9px;font-weight:800;color:var(--tl);text-transform:uppercase;letter-spacing:.8px;}
+.od-sb-val{font-size:18px;font-weight:900;color:var(--td);margin-top:4px;font-feature-settings:'tnum';}
+.od-sb-val.green{color:var(--green);}
+.od-sb-val.link{color:var(--accent);cursor:pointer;text-decoration:underline;transition:opacity .15s;}
+.od-sb-val.link:hover{opacity:.7;}
+.od-tabs{display:flex;gap:0;background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:4px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.od-tab{padding:8px 18px;font-size:11.5px;font-weight:700;color:var(--tl);cursor:pointer;border-radius:7px;transition:all .15s;user-select:none;display:flex;align-items:center;gap:6px;}
+.od-tab:hover{color:var(--td);background:#f8f9fb;}
+.od-tab.active{color:#fff;background:var(--accent);box-shadow:0 1px 4px rgba(44,82,130,.2);}
+.od-tab.active i{color:#fff;}
+.od-tab i{font-size:11px;color:var(--tl);}
+.od-tab-panel{display:none;animation:fadeIn .2s ease;}
+.od-tab-panel.active{display:block;}
+.od-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.od-info-item{padding:18px 20px;border-right:1px solid #f0f2f5;border-bottom:1px solid #f0f2f5;}
+.od-info-item:nth-child(3n){border-right:none;}
+.od-info-item:nth-last-child(-n+3){border-bottom:none;}
+.od-ii-label{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;opacity:.6;}
+.od-ii-val{font-size:13.5px;font-weight:700;color:var(--td);}
+.od-desc{font-size:12.5px;line-height:1.7;color:var(--tm);padding:18px 20px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.od-tgt-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.od-tgt-card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.od-tgt-card h6{font-size:10px;font-weight:800;color:var(--td);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.od-tgt-row{display:flex;align-items:center;gap:7px;padding:6px 10px;font-size:12px;font-weight:600;border-radius:6px;margin-bottom:3px;}
+.od-tgt-row.allow{color:#2e7d32;background:#f0fdf4;}
+.od-tgt-row.allow i{color:#22c55e;}
+.od-tgt-row.block{color:#991b1b;background:#fef2f2;}
+.od-tgt-row.block i{color:#ef4444;}
+.od-tgt-row i{font-size:11px;width:14px;text-align:center;}
+.od-cap-row{display:flex;gap:14px;margin-top:16px;}
+.od-cap-item{flex:1;background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:20px 16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.od-cap-val{font-size:24px;font-weight:900;color:var(--td);letter-spacing:-.3px;}
+.od-cap-lbl{font-size:9px;font-weight:800;color:var(--tl);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
+.od-lg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.od-lg-output{background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1.5px solid #bbf7d0;border-radius:10px;padding:18px 20px;}
+.od-lg-label{font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.od-lg-url{font-size:11.5px;font-family:'Courier New',monospace;color:var(--td);word-break:break-all;line-height:1.6;background:#fff;padding:12px 14px;border-radius:8px;border:1px solid #d1fae5;box-shadow:inset 0 1px 2px rgba(0,0,0,.03);}
+.od-alert{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff8e1;border-radius:8px;margin-bottom:16px;border:1px solid #ffe082;font-size:12px;font-weight:600;color:#e65100;}
+.od-alert i{font-size:14px;}
+@media(max-width:900px){.od-info-grid{grid-template-columns:1fr 1fr;}.od-info-item:nth-child(3n){border-right:1px solid #f0f2f5;}.od-info-item:nth-child(2n){border-right:none;}}
+@media(max-width:768px){.od-hero{flex-direction:column;align-items:flex-start;gap:14px;padding:20px;}.od-hero-right{flex-direction:row-reverse;align-items:center;width:100%;justify-content:space-between;}.od-hero-pay{text-align:left;}.od-stats-bar{grid-template-columns:repeat(3,1fr);}.od-info-grid{grid-template-columns:1fr;}.od-info-item{border-right:none!important;}.od-tgt-wrap{grid-template-columns:1fr;}.od-cap-row{flex-direction:column;}.od-tabs{overflow-x:auto;}.od-lg-grid{grid-template-columns:1fr;}}
+.scard{background:#fff;border-radius:var(--r);padding:22px;box-shadow:var(--shadow);margin-bottom:14px;max-width:680px;}
+.scard h5{font-size:13.5px;font-weight:700;margin-bottom:12px;color:var(--td);padding-bottom:9px;border-bottom:2px solid #f3f5f7;}
+.scard h5 i{color:var(--teal);margin-right:7px;}
+/* Settings Hub */
+.sh-wrap{display:flex;max-width:800px;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05),0 12px 40px rgba(0,0,0,.06);border:1px solid #e2e6ea;min-height:420px;}
+.sh-sidebar{width:200px;background:linear-gradient(160deg,#1a2744 0%,#2c5282 60%,#0a6c80 100%);padding:28px 0;display:flex;flex-direction:column;flex-shrink:0;}
+.sh-sidebar-title{color:rgba(255,255,255,.45);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:0 20px;margin-bottom:16px;}
+.sh-menu-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;transition:all .2s;border-left:3px solid transparent;margin:1px 0;}
+.sh-menu-item:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);}
+.sh-menu-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:#34d058;font-weight:600;}
+.sh-menu-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.1);flex-shrink:0;transition:background .2s;}
+.sh-menu-item.active .sh-menu-icon{background:rgba(52,208,88,.25);}
+.sh-content{flex:1;background:#fff;padding:32px 36px;overflow-y:auto;}
+.sh-panel{display:none;animation:shFade .3s ease;}
+.sh-panel.active{display:block;}
+.sh-section-title{font-size:18px;font-weight:700;color:var(--td);margin-bottom:6px;letter-spacing:-.3px;}
+.sh-section-sub{font-size:12px;color:var(--tl);margin-bottom:24px;}
+@keyframes shFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.pay-method-bar{display:flex;gap:6px;background:linear-gradient(135deg,#f7f9fb,#eef1f5);border-radius:12px;padding:6px;margin-bottom:22px;border:1px solid #e2e6ea;}
+.pay-pill{flex:1;text-align:center;padding:12px 8px;font-size:11.5px;font-weight:600;color:var(--tl);cursor:pointer;border-radius:9px;transition:all .2s;border:none;background:transparent;}
+.pay-pill:hover{color:var(--td);background:rgba(255,255,255,.8);}
+.pay-pill.active{color:#fff;background:linear-gradient(135deg,#28a745,#34d058);box-shadow:0 2px 8px rgba(40,167,69,.25);}
+.pay-pill i{display:block;font-size:18px;margin-bottom:4px;}
+.pay-fields{display:none;animation:shFade .3s ease;}
+.pay-fields.active{display:block;}
+.pay-fields .f-grp:last-child{margin-bottom:0;}
+@media(max-width:700px){.sh-wrap{flex-direction:column;min-height:auto;}.sh-sidebar{width:100%;flex-direction:row;padding:12px 8px;gap:0;flex-wrap:wrap;justify-content:center;}.sh-sidebar-title{display:none;}.sh-menu-item{border-left:none;border-bottom:3px solid transparent;padding:10px 14px;flex-direction:column;gap:4px;font-size:11px;text-align:center;flex:1;min-width:80px;justify-content:center;}.sh-menu-item.active{border-bottom-color:#34d058;border-left-color:transparent;}.sh-menu-icon{width:28px;height:28px;font-size:12px;}.sh-content{padding:24px 20px;}.pay-method-bar{flex-wrap:wrap;gap:4px;}.pay-pill{min-width:45%;}}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.f-grp{margin-bottom:10px;}
+.f-grp label{display:block;font-size:10.5px;font-weight:600;color:var(--tl);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.f-grp input,.f-grp select,.f-grp textarea{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;outline:none;font-family:inherit;}
+.f-grp input:focus,.f-grp select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(44,82,130,.07);}
+.f-grp .req{color:#dc3545;font-weight:700;margin-left:2px;}
+.f-grp input.f-err,.f-grp select.f-err{border-color:#dc3545;box-shadow:0 0 0 2px rgba(220,53,69,.08);}
+.f-help{font-size:10.5px;color:var(--tl);margin-top:3px;}
+.lnk-out{background:#f8f9fb;border:2px dashed var(--border);border-radius:var(--r);padding:14px;margin-top:12px;word-break:break-all;font-family:'Courier New',monospace;font-size:12.5px;color:var(--td);position:relative;}
+.lnk-out .cp-btn{position:absolute;top:7px;right:7px;padding:3px 10px;border:1.5px solid var(--border);background:#fff;border-radius:4px;font-size:10.5px;cursor:pointer;font-weight:600;font-family:inherit;}
+.lnk-out .cp-btn:hover{border-color:var(--accent);color:var(--accent);}
+.no-data{text-align:center;padding:44px;color:var(--tl);}
+.no-data i{font-size:32px;margin-bottom:8px;display:block;opacity:.25;}
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:var(--r);color:#fff;font-size:12.5px;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+.toast.info{background:var(--blue);}
+
+@media(max-width:1280px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:1024px){.dash-split{grid-template-columns:1fr!important;}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);width:260px;}.sidebar.open{transform:translateX(0);}.sb-overlay.open{display:block;}.content{margin-left:0;}.ham-btn{display:block;}.stat-grid{grid-template-columns:repeat(2,1fr);}.f-row{grid-template-columns:1fr;}}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr;}}
+.impersonate-banner{background:linear-gradient(90deg,#f59e0b,#d97706);color:#fff;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;display:none;position:fixed;top:0;left:0;right:0;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.impersonate-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;margin-left:12px;}
+.impersonate-banner button:hover{background:rgba(255,255,255,.3);}
+body.impersonating .sidebar{top:40px;}
+body.impersonating .content{margin-top:40px;}
+body.impersonating .impersonate-banner{display:block;}
+</style>
+</head>
+<body>
+<div class="impersonate-banner" id="impersonateBanner"><i class="fas fa-eye" style="margin-right:6px;"></i> <span id="impersonateText">Viewing as affiliate</span><button onclick="exitImpersonation()"><i class="fas fa-times"></i> Exit</button></div>
+<div class="sb-overlay" id="sbOverlay" onclick="toggleSb()"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sb-brand">
+        <h2>CLIMA<span class="dot"></span></h2>
+    </div>
+    <div class="plat-label">Affiliate Platform</div>
+    <nav class="sb-nav">
+        <div class="nav-item" data-page="dashboard" onclick="goPage('dashboard')"><i class="fas fa-th-large"></i> Dashboard</div>
+        <div class="nav-sec">Manage</div>
+        <div class="nav-item" data-page="offers" onclick="goPage('offers')"><i class="fas fa-bullhorn"></i> Offers</div>
+        <div class="nav-item" data-page="postbacks" onclick="goPage('postbacks')"><i class="fas fa-exchange-alt"></i> Postbacks</div>
+        <div class="nav-sec">Analyze</div>
+        <div class="nav-item" data-page="reporting" onclick="goPage('reporting')"><i class="fas fa-chart-bar"></i> Reporting</div>
+        <div class="nav-item" data-page="analytics" onclick="goPage('analytics')"><i class="fas fa-chart-pie"></i> Analytics</div>
+        <div class="nav-sec">Finance</div>
+        <div class="nav-item" data-page="invoices" onclick="goPage('invoices')"><i class="fas fa-file-invoice-dollar"></i> Invoices</div>
+        <div class="nav-sec">Tools</div>
+        <div class="nav-item" data-page="linkgen" onclick="goPage('linkgen')"><i class="fas fa-link"></i> Tracking &amp; Asset Generator</div>
+        <div class="nav-sec">More</div>
+        <div class="nav-item" data-page="settings" onclick="goPage('settings')"><i class="fas fa-cog"></i> Company Settings</div>
+    </nav>
+    <div class="mgr-box" id="mgrBox">
+        <div class="mgr-label">Account Manager</div>
+        <div id="mgrInfo"><div class="no-mgr">No manager assigned</div></div>
+    </div>
+    <div class="sb-bottom" style="position:relative">
+        <button class="sb-btn" title="Notifications" onclick="toggleNotifs()"><i class="fas fa-bell"></i><span class="notif-dot" id="notifDot" style="display:none"></span></button>
+        <button class="sb-btn" title="My Account" onclick="goPage('settings')"><i class="fas fa-user"></i></button>
+        <button class="sb-btn" title="Logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
+        <div class="notif-panel" id="notifPanel">
+            <div class="notif-hd">Notifications</div>
+            <div class="notif-list" id="notifList"><div class="notif-empty">No notifications</div></div>
+        </div>
+    </div>
+</div>
+<div class="content">
+    <div class="topbar">
+        <div class="topbar-l">
+            <button class="ham-btn" onclick="toggleSb()"><i class="fas fa-bars"></i></button>
+            <h1 class="pg-title" id="pgTitle"></h1>
+        </div>
+        <div class="topbar-r">
+            <span style="font-size:11.5px;color:var(--tl)" id="affWelcome">Welcome</span>
+            <div class="usr-av" id="usrAv">AF</div>
+        </div>
+    </div>
+    <div class="pg-wrap">
+
+        <!-- DASHBOARD -->
+        <div class="section" id="pg-dashboard">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--td)">My Stats</h3>
+            <div class="stat-grid" id="dashStats"></div>
+            <div class="chart-box">
+                <div class="chart-hd">
+                    <h5>Performance</h5>
+                    <div class="ch-ctrls">
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <span style="font-size:11px;font-weight:700;color:var(--td)">Metrics</span>
+                            <div class="metric-dd" id="metricDd">
+                                <button class="ch-sel" id="metricBtn" onclick="toggleMetricDd()" style="min-width:160px;text-align:left;display:flex;justify-content:space-between;align-items:center"><span id="metricLabel">Clicks, Conversions</span> <i class="fas fa-caret-down" style="font-size:10px;margin-left:6px"></i></button>
+                                <div class="metric-list" id="metricList">
+                                    <div class="metric-hint"><i class="fas fa-info-circle"></i> Select up to 2 items <span class="metric-clear" onclick="clearMetrics()">Clear</span></div>
+                                    <label class="metric-opt"><input type="checkbox" value="clicks" checked onchange="onMetricChange()"> Clicks</label>
+                                    <label class="metric-opt"><input type="checkbox" value="conversions" checked onchange="onMetricChange()"> Conversions</label>
+                                    <label class="metric-opt"><input type="checkbox" value="revenue" onchange="onMetricChange()"> Revenue</label>
+                                    <label class="metric-opt"><input type="checkbox" value="cvr" onchange="onMetricChange()"> CVR</label>
+                                    <label class="metric-opt"><input type="checkbox" value="epc" onchange="onMetricChange()"> EPC</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <span style="font-size:11px;font-weight:700;color:var(--td)">Time</span>
+                            <select class="ch-sel" id="chRange" onchange="loadDashboard()"><option value="30" selected>Current Month vs Last Month</option><option value="7">Last 7 Days</option><option value="14">Last 14 Days</option></select>
+                        </div>
+                        <div class="ch-toggle"><button class="active" onclick="setChartType('line',this)"><i class="fas fa-chart-line"></i></button><button onclick="setChartType('bar',this)"><i class="fas fa-chart-bar"></i></button></div>
+                    </div>
+                </div>
+                <canvas id="dashChart" height="85"></canvas>
+                <div class="ch-sum" id="chSum"></div>
+            </div>
+            <div class="dash-split" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="chart-box" style="margin-bottom:0">
+                    <div class="chart-hd"><h5>My Offer Performance</h5><input type="text" class="f-inp" id="dashOfferSearch" placeholder="Search..." oninput="renderDashOffers()" style="max-width:160px"></div>
+                    <div class="tbl-scroll">
+                        <table class="dtbl"><thead><tr><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead><tbody id="dashOffersTb"></tbody></table>
+                    </div>
+                </div>
+                <div class="chart-box" style="margin-bottom:0">
+                    <div class="chart-hd"><h5>Top Network Offers</h5><span style="font-size:10px;color:var(--tl);font-weight:600;text-transform:uppercase;letter-spacing:.5px">By Performance</span></div>
+                    <div class="tbl-scroll">
+                        <table class="dtbl"><thead><tr><th>Offer</th><th>CPA</th><th>CR%</th><th>Status</th></tr></thead><tbody id="topOffersTb"></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OFFERS -->
+        <div class="section" id="pg-offers">
+            <!-- LIST VIEW -->
+            <div id="offerListView">
+                <div style="margin-bottom:6px"><span style="font-size:11px;color:var(--tl)"><i class="fas fa-bullhorn"></i> Offers / Marketplace</span></div>
+                <h3 style="font-size:18px;font-weight:800;color:var(--td);margin-bottom:14px">Offer Marketplace</h3>
+                <div class="toolbar">
+                    <div class="toolbar-l">
+                        <div style="position:relative"><i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--tl)"></i><input type="text" id="offerSearch" placeholder="Search offers..." class="f-inp" style="padding-left:30px;min-width:200px" onkeyup="filterOffers()"></div>
+                        <select id="offerCatF" class="f-sel" onchange="filterOffers()"><option value="">All Categories</option></select>
+                        <select id="offerStatusF" class="f-sel" onchange="filterOffers()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="paused">Paused</option>
+                            <option value="approved">Approved</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <span class="pg-info" id="offerCount" style="font-weight:700"></span>
+                </div>
+                <div class="tbl-wrap">
+                    <div class="tbl-scroll">
+                        <table class="dtbl">
+                            <thead><tr>
+                                <th style="width:60px">ID</th>
+                                <th style="width:50px"></th>
+                                <th>Offer Name</th>
+                                <th>Category</th>
+                                <th style="width:100px">Payout</th>
+                                <th style="width:110px">Today's Rev</th>
+                                <th style="width:200px">Rules</th>
+                                <th style="width:90px;text-align:center">Action</th>
+                            </tr></thead>
+                            <tbody id="offersTb"></tbody>
+                        </table>
+                    </div>
+                    <div class="pag-bar">
+                        <span class="pg-info" id="offerPgInfo"></span>
+                        <div class="pag-ctrls" id="offerPag"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- DETAIL VIEW -->
+            <div id="offerDetailView" style="display:none">
+                <!-- Breadcrumb -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                    <button onclick="backToOffers()" style="background:#fff;border:1.5px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--tm);font-size:11px;display:flex;align-items:center;gap:5px"><i class="fas fa-arrow-left"></i> Back</button>
+                    <span style="font-size:11px;color:var(--tl)"><i class="fas fa-bullhorn"></i> Offers / <span id="odBreadName">-</span></span>
+                </div>
+                <!-- Alert (unapproved) -->
+                <div class="od-alert" id="odAlert" style="display:none"><i class="fas fa-exclamation-triangle"></i> You must apply for access before you can promote this offer.</div>
+                <!-- Hero Banner -->
+                <div class="od-hero">
+                    <div id="odThumbWrap"></div>
+                    <div class="od-hero-info">
+                        <div class="od-hero-name" id="odTitle">-</div>
+                        <div class="od-hero-meta">
+                            <span class="od-hero-pill" id="odCategory"><i class="fas fa-tag"></i> -</span>
+                            <span class="od-hero-pill" id="odAppStatus"><i class="fas fa-circle"></i> -</span>
+                            <span class="od-hero-pill" id="odCurrency"><i class="fas fa-dollar-sign"></i> -</span>
+                        </div>
+                    </div>
+                    <div class="od-hero-right">
+                        <div id="odApplyBtnWrap"></div>
+                        <div class="od-hero-pay">
+                            <div class="od-hero-pay-type" id="odPayType">CPA</div>
+                            <div class="od-hero-pay-amt" id="odPayAmt">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Stats Bar -->
+                <div class="od-stats-bar" id="odStats">
+                    <div class="od-sb-item"><div class="od-sb-label">Revenue</div><div class="od-sb-val">$0.00</div></div>
+                    <div class="od-sb-item"><div class="od-sb-label">Clicks</div><div class="od-sb-val">0</div></div>
+                    <div class="od-sb-item"><div class="od-sb-label">Conversions</div><div class="od-sb-val">0</div></div>
+                    <div class="od-sb-item"><div class="od-sb-label">CVR</div><div class="od-sb-val">0.00%</div></div>
+                    <div class="od-sb-item"><div class="od-sb-label">RPC</div><div class="od-sb-val">$0.00</div></div>
+                </div>
+                <!-- Tab Bar -->
+                <div class="od-tabs">
+                    <div class="od-tab active" onclick="switchOdTab('overview')"><i class="fas fa-info-circle"></i> Overview</div>
+                    <div class="od-tab" onclick="switchOdTab('targeting')"><i class="fas fa-crosshairs"></i> Targeting</div>
+                    <div class="od-tab" id="odTabLink" style="display:none" onclick="switchOdTab('tracklink')"><i class="fas fa-link"></i> Tracking Link</div>
+                </div>
+                <!-- Tab: Overview -->
+                <div class="od-tab-panel active" id="odPanelOverview">
+                    <div class="od-info-grid" id="odInfoGrid"></div>
+                    <div class="od-desc" id="odDesc">No description available.</div>
+                </div>
+                <!-- Tab: Targeting -->
+                <div class="od-tab-panel" id="odPanelTargeting">
+                    <div class="od-tgt-wrap">
+                        <div class="od-tgt-card"><h6><i class="fas fa-check-circle" style="color:var(--green)"></i> Allowed</h6><div id="odInclusions"></div></div>
+                        <div class="od-tgt-card"><h6><i class="fas fa-ban" style="color:var(--red)"></i> Blocked</h6><div id="odExclusions"></div></div>
+                    </div>
+                    <div class="od-cap-row">
+                        <div class="od-cap-item"><div class="od-cap-val" id="odDailyCap">Unlimited</div><div class="od-cap-lbl">Daily Cap</div></div>
+                        <div class="od-cap-item"><div class="od-cap-val" id="odHourlyCap">Unlimited</div><div class="od-cap-lbl">Hourly Cap</div></div>
+                    </div>
+                </div>
+                <!-- Tab: Tracking Link (approved only) -->
+                <div class="od-tab-panel" id="odPanelTracklink">
+                    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:20px">
+                        <div class="od-lg-grid">
+                            <div class="f-grp"><label>Sub ID 1</label><input type="text" class="f-inp" id="odSub1" oninput="updateOdLink()" style="width:100%"></div>
+                            <div class="f-grp"><label>Sub ID 2</label><input type="text" class="f-inp" id="odSub2" oninput="updateOdLink()" style="width:100%"></div>
+                            <div class="f-grp"><label>Sub ID 3</label><input type="text" class="f-inp" id="odSub3" oninput="updateOdLink()" style="width:100%"></div>
+                            <div class="f-grp"><label>Sub ID 4</label><input type="text" class="f-inp" id="odSub4" oninput="updateOdLink()" style="width:100%"></div>
+                            <div class="f-grp" style="grid-column:1/-1"><label>Sub ID 5</label><input type="text" class="f-inp" id="odSub5" oninput="updateOdLink()" style="width:100%"></div>
+                        </div>
+                        <div class="od-lg-output">
+                            <div class="od-lg-label">Your Tracking Link</div>
+                            <div class="od-lg-url" id="odLinkTxt"></div>
+                            <button class="btn-p" style="margin-top:10px;padding:6px 16px" onclick="copyOdLink()"><i class="fas fa-copy"></i> Copy Link</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Apply Offer Modal -->
+        <div class="apply-overlay" id="applyOverlay" style="display:none" onclick="closeApply()"></div>
+        <div class="apply-modal" id="applyModal" style="display:none">
+            <div class="apply-hd"><h4 id="applyTitle">Apply for Offer</h4><button onclick="closeApply()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--tl)">&times;</button></div>
+            <div class="apply-offer-info" id="applyOfferInfo"></div>
+            <input type="hidden" id="applyOfferId">
+            <div class="f-grp"><label>Traffic Source *</label><select id="applySource"><option value="social">Social Media</option><option value="search">Search / SEO</option><option value="native">Native Ads</option><option value="display">Display Ads</option><option value="email">Email Marketing</option><option value="push">Push Notifications</option><option value="pop">Pop / Redirect</option><option value="other">Other</option></select></div>
+            <div class="f-grp"><label>Website / Channel URL *</label><input type="text" id="applyUrl"></div>
+            <div class="f-grp"><label>Daily Budget (estimated)</label><input type="text" id="applyBudget"></div>
+            <div class="f-grp"><label>Additional Notes</label><textarea id="applyNotes" rows="3" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;outline:none;font-family:inherit;resize:vertical"></textarea></div>
+            <button class="btn-p" id="applySubmitBtn" style="width:100%;justify-content:center;padding:10px;margin-top:8px" onclick="submitApply()"><i class="fas fa-paper-plane"></i> Submit Application</button>
+        </div>
+
+        <!-- POSTBACKS -->
+        <div class="section" id="pg-postbacks">
+            <!-- How It Works -->
+            <div class="scard" style="max-width:780px">
+                <h5><i class="fas fa-route"></i> How Conversion Tracking Works</h5>
+                <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-bottom:6px">
+                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#e8f0fe;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-mouse-pointer" style="color:var(--accent);font-size:14px"></i></div>
+                        <div style="font-size:11px;font-weight:700;color:var(--td)">1. User Clicks</div>
+                        <div style="font-size:10px;color:var(--tl);margin-top:2px">Your tracking link records the click with a unique click_id</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:var(--border);font-size:12px"></i>
+                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#e8f5e9;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-shopping-cart" style="color:var(--green);font-size:14px"></i></div>
+                        <div style="font-size:11px;font-weight:700;color:var(--td)">2. Sale Happens</div>
+                        <div style="font-size:10px;color:var(--tl);margin-top:2px">User converts on the advertiser's landing page</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:var(--border);font-size:12px"></i>
+                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#fff3e0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-satellite-dish" style="color:var(--orange);font-size:14px"></i></div>
+                        <div style="font-size:11px;font-weight:700;color:var(--td)">3. Postback Fires</div>
+                        <div style="font-size:10px;color:var(--tl);margin-top:2px">Network records conversion &amp; notifies you via your postback URL</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Your Domain -->
+            <div class="scard" style="max-width:780px">
+                <h5><i class="fas fa-globe"></i> Your Tracking Domain</h5>
+                <div style="background:#f0f7f4;border:1.5px solid #c6e6d0;border-radius:8px;padding:12px 16px;font-family:'Courier New',monospace;font-size:13px;color:#2e7d32;font-weight:700" id="pbDomain"></div>
+                <div style="font-size:10.5px;color:var(--tl);margin-top:6px">This is the base domain for all your tracking links and postback endpoints.</div>
+            </div>
+            <!-- Global Postback (for advertiser panels) -->
+            <div class="scard" style="max-width:780px">
+                <h5><i class="fas fa-satellite-dish"></i> Global Postback URL (For Advertisers)</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:10px">Give this URL to advertisers so they fire it when a conversion happens. Replace the macros with their dynamic values:</p>
+                <div style="background:#f8f9fb;border:2px dashed var(--accent);border-radius:8px;padding:14px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--accent);word-break:break-all;line-height:1.6;position:relative" id="pbGlobalUrl"></div>
+                <button class="btn-p" style="margin-top:10px;padding:6px 14px" onclick="copyGlobalPb()"><i class="fas fa-copy"></i> Copy Postback URL</button>
+            </div>
+            <!-- Macros Reference -->
+            <div class="scard" style="max-width:780px">
+                <h5><i class="fas fa-code"></i> Available Macros</h5>
+                <div style="overflow-x:auto">
+                    <table class="dtbl" style="font-size:12px">
+                        <thead><tr><th>Macro</th><th>Description</th><th>Used In</th></tr></thead>
+                        <tbody>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{click_id}</td><td>Unique click identifier (passed to advertiser via tracking link)</td><td>Postback</td></tr>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{payout}</td><td>Conversion payout amount</td><td>Postback / Your URL</td></tr>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{offer_id}</td><td>Offer ID for the conversion</td><td>Postback / Your URL</td></tr>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{txn_id}</td><td>Advertiser's transaction/order ID</td><td>Postback / Your URL</td></tr>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{sub1} - {sub5}</td><td>Your custom sub IDs from the tracking link</td><td>Your URL</td></tr>
+                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{aff_id}</td><td>Your affiliate ID</td><td>Tracking Link</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Your Outgoing Postback -->
+            <div class="scard" style="max-width:780px">
+                <h5><i class="fas fa-share"></i> Your Postback URL (Outgoing)</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:10px">When a conversion is recorded for you, the network will fire a GET request to your URL below with macros replaced. Use this if you run your own tracker (Voluum, Binom, RedTrack, etc).</p>
+                <div class="f-grp"><label>Your Postback URL</label><input type="text" id="affPbUrl"><div class="f-help">We'll replace {click_id}, {payout}, {offer_id}, {txn_id}, {sub1}, {sub2} with real values</div></div>
+                <button class="btn-p" onclick="savePbUrl()"><i class="fas fa-save"></i> Save Postback URL</button>
+            </div>
+        </div>
+
+        <!-- REPORTING (Clicks) -->
+        <div class="section" id="pg-reporting">
+            <div class="toolbar">
+                <div class="toolbar-l">
+                    <input type="date" id="ckFrom" class="f-inp" onchange="renderClicks()">
+                    <input type="date" id="ckTo" class="f-inp" onchange="renderClicks()">
+                    <select id="ckOfferF" class="f-sel" onchange="renderClicks()"><option value="">All Offers</option></select>
+                </div>
+                <span class="pg-info" id="ckSum"></span>
+            </div>
+            <div class="tbl-wrap">
+                <div class="tbl-scroll">
+                    <table class="dtbl"><thead><tr><th>Click ID</th><th>Offer</th><th>IP</th><th>Country</th><th>Device</th><th>Browser</th><th>Sub1</th><th>Sub2</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="ckTb"></tbody></table>
+                </div>
+                <div class="pag-bar"><span class="pg-info" id="ckPgInfo"></span><div class="pag-ctrls" id="ckPag"></div></div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS -->
+        <div class="section" id="pg-analytics">
+            <div class="stat-grid" id="anStats"></div>
+            <div class="toolbar">
+                <div class="toolbar-l">
+                    <input type="date" id="cvFrom" class="f-inp" onchange="renderAnalytics()">
+                    <input type="date" id="cvTo" class="f-inp" onchange="renderAnalytics()">
+                    <select id="cvOfferF" class="f-sel" onchange="renderAnalytics()"><option value="">All Offers</option></select>
+                    <select id="cvStatusF" class="f-sel" onchange="renderAnalytics()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+                </div>
+            </div>
+            <h5 style="font-size:13.5px;font-weight:700;margin:14px 0 8px;color:var(--td)">Conversions</h5>
+            <div class="tbl-wrap">
+                <div class="tbl-scroll">
+                    <table class="dtbl"><thead><tr><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Payout</th><th>Status</th><th>Source</th><th>Date</th></tr></thead><tbody id="cvTb"></tbody></table>
+                </div>
+                <div class="pag-bar"><span class="pg-info" id="cvPgInfo"></span><div class="pag-ctrls" id="cvPag"></div></div>
+            </div>
+            <h5 style="font-size:13.5px;font-weight:700;margin:22px 0 8px;color:var(--td)">Payment History</h5>
+            <div class="tbl-wrap">
+                <div class="tbl-scroll">
+                    <table class="dtbl"><thead><tr><th>Payment ID</th><th>Amount</th><th>Method</th><th>Period</th><th>Status</th><th>Date</th></tr></thead><tbody id="payTb"></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINK GENERATOR -->
+        <div class="section" id="pg-linkgen">
+            <div class="scard">
+                <h5><i class="fas fa-link"></i> Generate Tracking Link</h5>
+                <div class="f-grp"><label>Offer</label><select id="lgOffer" onchange="updateLinkPreview()"></select></div>
+                <div class="f-row">
+                    <div class="f-grp"><label>Sub1</label><input type="text" id="lgSub1" oninput="updateLinkPreview()"></div>
+                    <div class="f-grp"><label>Sub2</label><input type="text" id="lgSub2" oninput="updateLinkPreview()"></div>
+                </div>
+                <div class="f-row">
+                    <div class="f-grp"><label>Sub3</label><input type="text" id="lgSub3" oninput="updateLinkPreview()"></div>
+                    <div class="f-grp"><label>Sub4</label><input type="text" id="lgSub4" oninput="updateLinkPreview()"></div>
+                </div>
+                <div class="f-grp"><label>Sub5</label><input type="text" id="lgSub5" oninput="updateLinkPreview()"></div>
+                <div class="lnk-out" id="lnkOut" style="display:none;">
+                    <button class="cp-btn" onclick="copyLink()"><i class="fas fa-copy"></i> Copy</button>
+                    <span id="lnkTxt"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVOICES -->
+        <div class="section" id="pg-invoices">
+            <div class="card" style="border-radius:10px;padding:24px;margin-bottom:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                    <div>
+                        <h3 style="font-size:16px;font-weight:700;color:var(--td);margin-bottom:4px;">My Invoices</h3>
+                        <p style="font-size:12px;color:var(--tl);">View and download your invoices</p>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="data-table" style="width:100%;border-collapse:collapse;">
+                        <thead><tr>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Invoice #</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Period</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Conversions</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Amount</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Status</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Date</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">PDF</th>
+                        </tr></thead>
+                        <tbody id="myInvoiceTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS HUB -->
+        <div class="section" id="pg-settings">
+            <div class="sh-wrap">
+                <div class="sh-sidebar">
+                    <div class="sh-sidebar-title">Settings</div>
+                    <div class="sh-menu-item active" onclick="switchSettingsTab('profile')">
+                        <div class="sh-menu-icon"><i class="fas fa-user"></i></div>
+                        <span>My Profile</span>
+                    </div>
+                    <div class="sh-menu-item" onclick="switchSettingsTab('payment')">
+                        <div class="sh-menu-icon"><i class="fas fa-credit-card"></i></div>
+                        <span>Payment</span>
+                    </div>
+                    <div class="sh-menu-item" onclick="switchSettingsTab('security')">
+                        <div class="sh-menu-icon"><i class="fas fa-shield-alt"></i></div>
+                        <span>Security</span>
+                    </div>
+                </div>
+                <div class="sh-content">
+                    <!-- Profile Panel -->
+                    <div class="sh-panel active" id="shPanel-profile">
+                        <div class="sh-section-title">My Profile</div>
+                        <div class="sh-section-sub">Manage your personal information</div>
+                        <div class="f-row">
+                            <div class="f-grp"><label>Full Name <span class="req">*</span></label><input type="text" id="setName"></div>
+                            <div class="f-grp"><label>Email</label><input type="email" id="setEmail" disabled style="background:#f7f8fa;color:var(--tl)"></div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-grp"><label>Phone</label><input type="text" id="setPhone"></div>
+                            <div class="f-grp"><label>Country</label><input type="text" id="setCountry"></div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-grp"><label>City</label><input type="text" id="setCity"></div>
+                            <div class="f-grp"><label>State / Province</label><input type="text" id="setState"></div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-grp"><label>Street Address</label><input type="text" id="setAddress"></div>
+                            <div class="f-grp"><label>Zip / Postal Code</label><input type="text" id="setZip"></div>
+                        </div>
+                        <button class="btn-p" onclick="saveProfile()" style="margin-top:6px"><i class="fas fa-save"></i> Save Profile</button>
+                    </div>
+
+                    <!-- Payment Panel -->
+                    <div class="sh-panel" id="shPanel-payment">
+                        <div class="sh-section-title">Payment Methods</div>
+                        <div class="sh-section-sub">Choose how you want to receive your payouts</div>
+                        <div class="pay-method-bar">
+                            <div class="pay-pill active" onclick="switchPayMethod('paypal')"><i class="fab fa-paypal"></i> PayPal</div>
+                            <div class="pay-pill" onclick="switchPayMethod('wire')"><i class="fas fa-university"></i> Wire</div>
+                            <div class="pay-pill" onclick="switchPayMethod('ach')"><i class="fas fa-landmark"></i> ACH</div>
+                            <div class="pay-pill" onclick="switchPayMethod('usdt')"><i class="fas fa-coins"></i> USDT</div>
+                            <div class="pay-pill" onclick="switchPayMethod('payoneer')"><i class="fas fa-wallet"></i> Payoneer</div>
+                        </div>
+                        <!-- PayPal -->
+                        <div class="pay-fields active" id="payFields-paypal">
+                            <div class="f-grp"><label>PayPal Email <span class="req">*</span></label><input type="email" id="payPaypalEmail"></div>
+                        </div>
+                        <!-- Wire Transfer (International) -->
+                        <div class="pay-fields" id="payFields-wire">
+                            <div class="f-row">
+                                <div class="f-grp"><label>Bank Name <span class="req">*</span></label><input type="text" id="payWireBank"></div>
+                                <div class="f-grp"><label>Account Holder Name <span class="req">*</span></label><input type="text" id="payWireHolder"></div>
+                            </div>
+                            <div class="f-grp"><label>Account Number <span class="req">*</span></label><input type="text" id="payWireAccount"></div>
+                            <div class="f-row">
+                                <div class="f-grp"><label>IBAN</label><input type="text" id="payWireIban"></div>
+                                <div class="f-grp"><label>SWIFT / BIC Code <span class="req">*</span></label><input type="text" id="payWireSwift"></div>
+                            </div>
+                            <div class="f-row">
+                                <div class="f-grp"><label>Bank Address</label><input type="text" id="payWireBankAddr"></div>
+                                <div class="f-grp"><label>Country</label><input type="text" id="payWireCountry"></div>
+                            </div>
+                        </div>
+                        <!-- ACH (US Domestic) -->
+                        <div class="pay-fields" id="payFields-ach">
+                            <div class="f-row">
+                                <div class="f-grp"><label>Bank Name <span class="req">*</span></label><input type="text" id="payAchBank"></div>
+                                <div class="f-grp"><label>Account Holder Name <span class="req">*</span></label><input type="text" id="payAchHolder"></div>
+                            </div>
+                            <div class="f-row">
+                                <div class="f-grp"><label>Routing Number (ABA) <span class="req">*</span></label><input type="text" id="payAchRouting"></div>
+                                <div class="f-grp"><label>Account Number <span class="req">*</span></label><input type="text" id="payAchAccount"></div>
+                            </div>
+                            <div class="f-grp"><label>Account Type</label><select id="payAchType"><option value="checking">Checking</option><option value="savings">Savings</option></select></div>
+                        </div>
+                        <!-- USDT (Crypto) -->
+                        <div class="pay-fields" id="payFields-usdt">
+                            <div class="f-grp"><label>USDT Wallet Address <span class="req">*</span></label><input type="text" id="payUsdtWallet"></div>
+                            <div class="f-grp"><label>Network</label><select id="payUsdtNetwork"><option value="TRC20">TRC20 (Tron) - Low fees</option><option value="ERC20">ERC20 (Ethereum)</option><option value="BEP20">BEP20 (BSC)</option></select></div>
+                        </div>
+                        <!-- Payoneer -->
+                        <div class="pay-fields" id="payFields-payoneer">
+                            <div class="f-grp"><label>Payoneer Email <span class="req">*</span></label><input type="email" id="payPayoneerEmail"></div>
+                        </div>
+                        <input type="hidden" id="payActiveMethod" value="paypal">
+                        <button class="btn-p" onclick="savePayment()" style="margin-top:6px"><i class="fas fa-save"></i> Save Payment Info</button>
+                    </div>
+
+                    <!-- Security Panel -->
+                    <div class="sh-panel" id="shPanel-security">
+                        <div class="sh-section-title">Security</div>
+                        <div class="sh-section-sub">Update your account password</div>
+                        <div class="f-grp"><label>New Password</label><input type="password" id="setNewP"></div>
+                        <div class="f-grp"><label>Confirm Password</label><input type="password" id="setConfP"></div>
+                        <button class="btn-p" onclick="changePw()"><i class="fas fa-lock"></i> Update Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+var currentUser = null, myUid = '', myAffId = '';
+var allOffers = [], myClicks = [], myConversions = [], myPayments = [];
+var dashChart = null, chartType = 'line';
+var PAGE_SIZE = 20;
+var allApplications = {};
+var offerPage = 1;
+var offerTabFilter = '';
+var todayConvMap = {};
+var viewingOffer = null;
+var pendingOfferView = null;
+
+/* ── Utilities ── */
+function fbGet(p) { return fetch(FB + '/' + p + '.json').then(function(r) { return r.json(); }); }
+function fbPatch(p, d) { return fetch(FB + '/' + p + '.json', { method: 'PATCH', body: JSON.stringify(d) }).then(function(r) { return r.json(); }); }
+function fbPut(p, d) { return fetch(FB + '/' + p + '.json', { method: 'PUT', body: JSON.stringify(d) }).then(function(r) { return r.json(); }); }
+function genAppId() { return 'app_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
+function objToArr(obj) {
+    if (!obj) return [];
+    return Object.keys(obj).map(function(k) { var it = typeof obj[k] === 'object' && obj[k] !== null ? obj[k] : { value: obj[k] }; it._id = k; return it; });
+}
+function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function fmtDT(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+function fmtM(n) { return '$' + (parseFloat(n) || 0).toFixed(2); }
+function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function sBadge(s) { return '<span class="badge badge-' + (s || 'pending') + '">' + esc(s || 'unknown') + '</span>'; }
+function dayS(d) { var dt = new Date(d); dt.setHours(0,0,0,0); return dt.getTime(); }
+function dayE(d) { var dt = new Date(d); dt.setHours(23,59,59,999); return dt.getTime(); }
+function mStart(d) { var dt = new Date(d); dt.setDate(1); dt.setHours(0,0,0,0); return dt.getTime(); }
+function lmStart() { var d = new Date(); d.setMonth(d.getMonth() - 1); d.setDate(1); d.setHours(0,0,0,0); return d.getTime(); }
+function lmEnd() { var d = new Date(); d.setDate(0); d.setHours(23,59,59,999); return d.getTime(); }
+function toast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + (type || 'success') + ' show';
+    setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+function offerName(id) {
+    for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === id) return allOffers[i].name || id; }
+    return id || '-';
+}
+function renderPag(cId, iId, total, cur, ps, fn) {
+    var tp = Math.ceil(total / ps) || 1;
+    var info = document.getElementById(iId);
+    var cont = document.getElementById(cId);
+    if (info) info.textContent = 'Showing ' + (total ? ((cur - 1) * ps + 1) : 0) + '-' + Math.min(cur * ps, total) + ' of ' + total;
+    if (!cont) return;
+    var h = '<button ' + (cur <= 1 ? 'disabled' : '') + ' onclick="' + fn + '(' + (cur - 1) + ')">Prev</button>';
+    var s = Math.max(1, cur - 2), e = Math.min(tp, cur + 2);
+    for (var p = s; p <= e; p++) h += '<button style="' + (p === cur ? 'background:var(--accent);color:#fff;border-color:var(--accent)' : '') + '" onclick="' + fn + '(' + p + ')">' + p + '</button>';
+    h += '<button ' + (cur >= tp ? 'disabled' : '') + ' onclick="' + fn + '(' + (cur + 1) + ')">Next</button>';
+    cont.innerHTML = h;
+}
+
+/* ── Auth Guard ── */
+var isImpersonating = false;
+firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) { window.location.href = 'index.html'; return; }
+
+    /* Check for admin impersonation */
+    var impUid = localStorage.getItem('impersonate_uid');
+    localStorage.removeItem('impersonate_uid'); /* Clear immediately so refresh goes back to normal */
+
+    if (impUid) {
+        /* Verify the logged-in user is an admin */
+        fbGet('users/' + user.uid).then(function(adminData) {
+            if (!adminData || adminData.role !== 'admin') {
+                /* Not admin — fall through to normal auth */
+                normalAuth(user);
+                return;
+            }
+            /* Admin is impersonating — load affiliate data */
+            fbGet('users/' + impUid).then(function(affData) {
+                if (!affData || affData.role !== 'affiliate') { toast('Affiliate not found'); normalAuth(user); return; }
+                isImpersonating = true;
+                myUid = impUid;
+                currentUser = affData; currentUser._id = impUid;
+                myAffId = affData.affId || '';
+                document.body.classList.add('impersonating');
+                document.getElementById('impersonateText').textContent = 'Viewing as: ' + (affData.name || affData.email) + ' (ID: ' + (affData.affId || impUid) + ')';
+                document.getElementById('affWelcome').textContent = 'Viewing: ' + (affData.name || 'Affiliate');
+                var ini = (affData.name || 'AF').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substr(0, 2);
+                document.getElementById('usrAv').textContent = ini;
+                loadMgrInfo(affData.managerId);
+                document.querySelector('.content').classList.add('ready');
+                goPage('dashboard');
+            });
+        });
+    } else {
+        normalAuth(user);
+    }
+});
+
+function normalAuth(user) {
+    myUid = user.uid;
+    fbGet('users/' + user.uid).then(function(data) {
+        if (!data || data.role !== 'affiliate' || data.status !== 'active') { firebase.auth().signOut(); window.location.href = 'index.html'; return; }
+        currentUser = data; currentUser._id = user.uid;
+        myAffId = data.affId || '';
+        document.getElementById('affWelcome').textContent = 'Welcome, ' + (data.name || 'Affiliate');
+        var ini = (data.name || 'AF').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substr(0, 2);
+        document.getElementById('usrAv').textContent = ini;
+        loadMgrInfo(data.managerId);
+        loadNotifDot();
+        /* Restore page from URL hash or params */
+        document.querySelector('.content').classList.add('ready');
+        var urlParams = new URLSearchParams(window.location.search);
+        var pendingOffer = urlParams.get('offer');
+        var hash = window.location.hash.replace('#', '');
+        if (urlParams.get('page') === 'offers' && pendingOffer) {
+            pendingOfferView = pendingOffer;
+            goPage('offers');
+        } else if (hash && hash.indexOf('offers:') === 0) {
+            pendingOfferView = hash.split(':')[1];
+            goPage('offers');
+        } else if (hash && hash !== 'dashboard' && document.getElementById('pg-' + hash)) {
+            goPage(hash);
+        } else {
+            goPage('dashboard');
+        }
+    });
+}
+
+function exitImpersonation() {
+    isImpersonating = false;
+    document.body.classList.remove('impersonating');
+    window.close(); /* Close the tab — returns admin to their panel */
+}
+
+function doLogout() {
+    if (isImpersonating) { exitImpersonation(); return; }
+    firebase.auth().signOut().then(function() { window.location.href = 'index.html'; });
+}
+
+/* ── Invoices ── */
+function loadInvoices() {
+    fbGet('payments/invoices').then(function(data) {
+        var all = objToArr(data).filter(function(inv) { return inv.affiliateId === myUid; });
+        all.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+        var html = '';
+        all.forEach(function(inv) {
+            var sBadge = inv.status === 'paid'
+                ? '<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">Paid</span>'
+                : '<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">Pending</span>';
+            var pdfBtn = '<button onclick="downloadMyInvoicePDF(\'' + inv._id + '\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--accent);font-size:12px;" title="Download PDF"><i class="fas fa-download"></i></button>';
+            html += '<tr>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--td);">' + esc(inv.invoiceNumber || inv._id) + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);color:var(--tm);">' + esc(inv.period || '-') + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);color:var(--tm);">' + (inv.convCount || 0) + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:700;color:var(--td);">' + fmtM(inv.amount) + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' + sBadge + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);color:var(--tl);font-size:12px;">' + fmtDate(inv.createdAt) + '</td>' +
+                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' + pdfBtn + '</td>' +
+                '</tr>';
+        });
+        document.getElementById('myInvoiceTbody').innerHTML = html || '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--tl);font-size:13px;"><i class="fas fa-file-invoice" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3;"></i>No invoices yet</td></tr>';
+    });
+}
+
+function downloadMyInvoicePDF(invId) {
+    fbGet('payments/invoices/' + invId).then(function(inv) {
+        if (!inv) { toast('Invoice not found'); return; }
+        if (inv.affiliateId !== myUid) { toast('Access denied'); return; }
+        Promise.all([fbGet('users/' + myUid), fbGet('users/' + myUid + '/payment'), fbGet('settings/network')]).then(function(res) {
+            var aff = res[0] || {};
+            var pay = res[1] || {};
+            var net = res[2] || {};
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var w = doc.internal.pageSize.getWidth();
+
+            /* Header */
+            doc.setFillColor(10, 108, 128);
+            doc.rect(0, 0, w, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INVOICE', 15, 25);
+            doc.setFontSize(10);
+            doc.text(inv.invoiceNumber || invId, w - 15, 18, { align: 'right' });
+            doc.text('Date: ' + new Date(inv.createdAt || Date.now()).toLocaleDateString(), w - 15, 28, { align: 'right' });
+            if (inv.period) doc.text('Period: ' + inv.period, w - 15, 35, { align: 'right' });
+
+            /* From / To */
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(9);
+            doc.text('FROM:', 15, 52);
+            doc.text('TO:', w / 2 + 10, 52);
+            doc.setTextColor(30, 30, 30);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            var networkName = net.networkName || 'Clima Affiliate Network';
+            doc.text(networkName, 15, 60);
+            doc.text(aff.name || 'Affiliate', w / 2 + 10, 60);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text(net.supportEmail || '', 15, 66);
+            doc.text(aff.email || '', w / 2 + 10, 66);
+            if (aff.company) doc.text(aff.company, w / 2 + 10, 72);
+
+            /* Table */
+            var items = [['CPA Conversions', String(inv.convCount || 0), fmtM(inv.amount / (inv.convCount || 1)), fmtM(inv.amount)]];
+            doc.autoTable({
+                startY: 82,
+                head: [['Description', 'Qty', 'Rate', 'Amount']],
+                body: items,
+                foot: [['', '', 'TOTAL', fmtM(inv.amount)]],
+                theme: 'grid',
+                headStyles: { fillColor: [10, 108, 128], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+                footStyles: { fillColor: [245, 247, 250], textColor: [10, 108, 128], fontStyle: 'bold', fontSize: 11 },
+                styles: { fontSize: 10, cellPadding: 8 },
+                margin: { left: 15, right: 15 }
+            });
+
+            var finalY = doc.lastAutoTable.finalY + 12;
+
+            /* Payment method */
+            if (pay && pay.method) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 30, 30);
+                doc.text('Payment Method: ' + pay.method.toUpperCase(), 15, finalY);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                var pLine = '';
+                if (pay.method === 'paypal' && pay.paypal) pLine = 'PayPal: ' + (pay.paypal.email || '-');
+                else if (pay.method === 'wire' && pay.wire) pLine = 'Bank: ' + (pay.wire.bankName || '') + ' | IBAN: ' + (pay.wire.iban || pay.wire.accountNumber || '-');
+                else if (pay.method === 'usdt' && pay.usdt) pLine = 'Wallet: ' + (pay.usdt.walletAddress || '-') + ' (' + (pay.usdt.network || 'TRC20') + ')';
+                else if (pay.method === 'payoneer' && pay.payoneer) pLine = 'Payoneer: ' + (pay.payoneer.email || '-');
+                else if (pay.method === 'ach' && pay.ach) pLine = 'Bank: ' + (pay.ach.bankName || '') + ' | Routing: ' + (pay.ach.routingNumber || '-');
+                if (pLine) doc.text(pLine, 15, finalY + 7);
+                finalY += 18;
+            }
+
+            /* Status */
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            if (inv.status === 'paid') { doc.setTextColor(22, 101, 52); doc.text('STATUS: PAID', 15, finalY); }
+            else { doc.setTextColor(146, 64, 14); doc.text('STATUS: PENDING', 15, finalY); }
+
+            /* Footer */
+            doc.setTextColor(180, 180, 180);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text(networkName + ' | Generated on ' + new Date().toLocaleDateString(), w / 2, 285, { align: 'center' });
+
+            doc.save((inv.invoiceNumber || 'invoice') + '.pdf');
+            toast('PDF downloaded!');
+        });
+    });
+}
+
+/* ── Load Manager Info ── */
+function renderMgrBox(m) {
+    var ini = (m.name || 'MG').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substr(0, 2);
+    var av = m.photo ? '<img src="' + esc(m.photo) + '" alt="">' : ini;
+    return '<div class="mgr-row"><div class="mgr-av">' + av + '</div><div>' +
+        '<div class="mgr-name">' + esc(m.name || 'Manager') + '</div>' +
+        '<div class="mgr-det"><i class="fas fa-envelope"></i> ' + esc(m.email || '-') + '</div>' +
+        (m.telegram ? '<div class="mgr-det"><i class="fab fa-telegram"></i> ' + esc(m.telegram) + '</div>' : '') +
+        '</div></div>';
+}
+function loadMgrInfo(mgrId) {
+    var el = document.getElementById('mgrInfo');
+    if (!mgrId) {
+        /* Show sample/placeholder manager */
+        el.innerHTML = renderMgrBox({ name: 'Support Team', email: 'support@clima.network', telegram: '@clima_support' });
+        return;
+    }
+    fbGet('users/' + mgrId).then(function(m) {
+        if (!m) { el.innerHTML = renderMgrBox({ name: 'Support Team', email: 'support@clima.network', telegram: '@clima_support' }); return; }
+        el.innerHTML = renderMgrBox(m);
+    });
+}
+
+/* ── Navigation ── */
+var pgIcons = { dashboard:'fa-th-large', offers:'fa-bullhorn', postbacks:'fa-exchange-alt', reporting:'fa-chart-bar', analytics:'fa-chart-pie', invoices:'fa-file-invoice-dollar', linkgen:'fa-link', settings:'fa-cog' };
+var pgTitles = { dashboard:'Dashboard', offers:'Offers', postbacks:'Postbacks', reporting:'Reporting', analytics:'Analytics', invoices:'Invoices', linkgen:'Tracking & Asset Generator', settings:'Company Settings' };
+function goPage(pg) {
+    if (window.location.search) history.replaceState(null, '', window.location.pathname + '#' + pg);
+    else window.location.hash = pg;
+    document.querySelectorAll('.section').forEach(function(el) { el.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    var sec = document.getElementById('pg-' + pg);
+    if (sec) sec.classList.add('active');
+    var nav = document.querySelector('.nav-item[data-page="' + pg + '"]');
+    if (nav) nav.classList.add('active');
+    document.getElementById('pgTitle').innerHTML = '<i class="fas ' + (pgIcons[pg] || 'fa-th-large') + '"></i>' + (pgTitles[pg] || pg);
+    if (pg === 'dashboard') loadAllData();
+    else if (pg === 'offers') { if (!pendingOfferView) backToOffers(); loadOffers(); }
+    else if (pg === 'postbacks') loadPostbacks();
+    else if (pg === 'reporting') loadClicks();
+    else if (pg === 'analytics') loadAnalytics();
+    else if (pg === 'invoices') loadInvoices();
+    else if (pg === 'linkgen') loadLinkGen();
+    else if (pg === 'settings') loadSettings();
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sbOverlay').classList.remove('open');
+}
+function toggleSb() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sbOverlay').classList.toggle('open');
+}
+
+/* ── Load All Data ── */
+function loadAllData() {
+    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
+        allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
+        myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
+        myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
+        loadDashboard();
+    });
+}
+
+/* ── Build Stat Card ── */
+function buildStat(title, curVal, todayVal, yestVal, lastVal, isMoney) {
+    var cN = isMoney ? (parseFloat(curVal) || 0) : (typeof curVal === 'string' && curVal.indexOf('%') > -1 ? parseFloat(curVal) : (parseInt(curVal) || 0));
+    var lN = isMoney ? (parseFloat(lastVal) || 0) : (typeof lastVal === 'string' && lastVal.indexOf('%') > -1 ? parseFloat(lastVal) : (parseInt(lastVal) || 0));
+    var pct = 0;
+    if (lN > 0) pct = ((cN - lN) / lN * 100).toFixed(0);
+    var pCls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+    var pTxt = pct > 0 ? '+' + pct + '%' : (pct < 0 ? pct + '%' : '0%');
+    var bw = lN > 0 ? Math.min(100, Math.round(cN / lN * 100)) : (cN > 0 ? 100 : 0);
+    var dC = isMoney ? fmtM(curVal) : curVal;
+    var dT = isMoney ? fmtM(todayVal) : todayVal;
+    var dY = isMoney ? fmtM(yestVal) : yestVal;
+    var dL = isMoney ? fmtM(lastVal) : lastVal;
+    return '<div class="astat">' +
+        '<span class="astat-t">' + title + '</span>' +
+        '<div class="astat-hd"><span class="astat-sub">Current Month</span><span class="astat-pct ' + pCls + '">' + pTxt + '</span></div>' +
+        '<div class="astat-val">' + dC + '</div>' +
+        '<div class="astat-bar"><div class="astat-bar-f" style="width:' + bw + '%"></div></div>' +
+        '<div class="astat-rows"><div class="astat-row"><span>Today</span><span>' + dT + '</span></div>' +
+        '<div class="astat-row"><span>Yesterday</span><span>' + dY + '</span></div>' +
+        '<div class="astat-row"><span>Last Month</span><span>' + dL + '</span></div></div></div>';
+}
+
+/* ── Dashboard ── */
+function loadDashboard() {
+    var now = new Date();
+    var ms = mStart(now), ts = dayS(now);
+    var ys = dayS(new Date(now.getTime() - 86400000)), ye = dayE(new Date(now.getTime() - 86400000));
+    var ls = lmStart(), le = lmEnd();
+
+    var cmCk = myClicks.filter(function(c) { return c.timestamp >= ms; });
+    var cmCv = myConversions.filter(function(c) { return (c.createdAt || 0) >= ms; });
+    var cmRev = cmCv.filter(function(c) { return c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var cmPend = cmCv.filter(function(c) { return c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+
+    var tCk = myClicks.filter(function(c) { return c.timestamp >= ts; }).length;
+    var tCv = myConversions.filter(function(c) { return (c.createdAt || 0) >= ts; }).length;
+    var tRev = myConversions.filter(function(c) { return (c.createdAt || 0) >= ts && c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var tPend = myConversions.filter(function(c) { return (c.createdAt || 0) >= ts && c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+
+    var yCk = myClicks.filter(function(c) { return c.timestamp >= ys && c.timestamp <= ye; }).length;
+    var yCv = myConversions.filter(function(c) { return (c.createdAt || 0) >= ys && (c.createdAt || 0) <= ye; }).length;
+    var yRev = myConversions.filter(function(c) { return (c.createdAt || 0) >= ys && (c.createdAt || 0) <= ye && c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var yPend = myConversions.filter(function(c) { return (c.createdAt || 0) >= ys && (c.createdAt || 0) <= ye && c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+
+    var lCk = myClicks.filter(function(c) { return c.timestamp >= ls && c.timestamp <= le; }).length;
+    var lCv = myConversions.filter(function(c) { return (c.createdAt || 0) >= ls && (c.createdAt || 0) <= le; }).length;
+    var lRev = myConversions.filter(function(c) { return (c.createdAt || 0) >= ls && (c.createdAt || 0) <= le && c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var lPend = myConversions.filter(function(c) { return (c.createdAt || 0) >= ls && (c.createdAt || 0) <= le && c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+
+    var cmCVR = cmCk.length > 0 ? ((cmCv.length / cmCk.length) * 100).toFixed(2) + '%' : '0.00%';
+    var tCVR = tCk > 0 ? ((tCv / tCk) * 100).toFixed(2) + '%' : '0.00%';
+    var yCVR = yCk > 0 ? ((yCv / yCk) * 100).toFixed(2) + '%' : '0.00%';
+    var lCVR = lCk > 0 ? ((lCv / lCk) * 100).toFixed(2) + '%' : '0.00%';
+
+    var cmEPC = cmCk.length > 0 ? '$' + (cmRev / cmCk.length).toFixed(3) : '$0.000';
+    var tEPC = tCk > 0 ? '$' + (tRev / tCk).toFixed(3) : '$0.000';
+    var yEPC = yCk > 0 ? '$' + (yRev / yCk).toFixed(3) : '$0.000';
+    var lEPC = lCk > 0 ? '$' + (lRev / lCk).toFixed(3) : '$0.000';
+
+    /* Payout card data */
+    var totalEarned = myConversions.filter(function(c) { return c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var totalPending = myConversions.filter(function(c) { return c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var totalPaid = myPayments.filter(function(p) { return p.status === 'paid'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+    var pendingPayments = myPayments.filter(function(p) { return p.status === 'pending'; });
+    var pendingPayAmt = pendingPayments.reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+    var balance = totalEarned - totalPaid;
+
+    var payoutCard = '<div class="astat astat-payout">' +
+        '<span class="astat-t">Payout</span>' +
+        '<div class="astat-hd"><span class="astat-sub">Available Balance</span><span class="astat-pct">' + pendingPayments.length + ' pending</span></div>' +
+        '<div class="astat-val">' + fmtM(balance) + '</div>' +
+        '<div class="astat-bar"><div class="astat-bar-f" style="width:' + (totalEarned > 0 ? Math.round(totalPaid / totalEarned * 100) : 0) + '%"></div></div>' +
+        '<div class="astat-rows"><div class="astat-row"><span>Total Earned</span><span>' + fmtM(totalEarned) + '</span></div>' +
+        '<div class="astat-row"><span>Total Paid</span><span>' + fmtM(totalPaid) + '</span></div>' +
+        '<div class="astat-row"><span>Pending Payout</span><span>' + fmtM(pendingPayAmt) + '</span></div></div></div>';
+
+    document.getElementById('dashStats').innerHTML =
+        buildStat('Clicks', cmCk.length, tCk, yCk, lCk, false) +
+        buildStat('Conversions', cmCv.length, tCv, yCv, lCv, false) +
+        buildStat('CVR', cmCVR, tCVR, yCVR, lCVR, false) +
+        buildStat('EPC', cmEPC, tEPC, yEPC, lEPC, false) +
+        buildStat('Revenue', cmRev, tRev, yRev, lRev, true) +
+        payoutCard;
+
+    /* Chart */
+    buildChart();
+    renderDashOffers();
+}
+
+/* ── Metric Colors ── */
+var metricColors = { clicks:'#3b82f6', conversions:'#e6533c', revenue:'#22c55e', cvr:'#8b5cf6', epc:'#f59e0b' };
+var metricNames = { clicks:'Clicks', conversions:'Conversions', revenue:'Revenue', cvr:'CVR', epc:'EPC' };
+
+function getSelectedMetrics() {
+    var checks = document.querySelectorAll('#metricList input[type="checkbox"]');
+    var sel = [];
+    checks.forEach(function(c) { if (c.checked) sel.push(c.value); });
+    return sel;
+}
+
+function toggleMetricDd() {
+    document.getElementById('metricDd').classList.toggle('open');
+}
+function clearMetrics() {
+    document.querySelectorAll('#metricList input[type="checkbox"]').forEach(function(c) { c.checked = false; });
+    onMetricChange();
+}
+function onMetricChange() {
+    var sel = getSelectedMetrics();
+    /* Limit to 2 */
+    var checks = document.querySelectorAll('#metricList input[type="checkbox"]');
+    checks.forEach(function(c) {
+        var lbl = c.closest('.metric-opt');
+        if (sel.length >= 2 && !c.checked) { lbl.classList.add('disabled'); }
+        else { lbl.classList.remove('disabled'); }
+    });
+    /* Update label */
+    var names = sel.map(function(s) { return metricNames[s] || s; });
+    document.getElementById('metricLabel').textContent = names.length ? names.join(', ') : 'Select metrics';
+    buildChart();
+}
+/* Close dropdown when clicking outside */
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#metricDd')) document.getElementById('metricDd').classList.remove('open');
+});
+
+function getDailyData(metric, fromTs, toTs) {
+    var now = new Date();
+    var days = Math.round((toTs - fromTs) / 86400000) + 1;
+    var data = [];
+    for (var i = 0; i < days; i++) {
+        var d = new Date(fromTs + i * 86400000);
+        var ds = dayS(d), de = dayE(d);
+        var dayCk = myClicks.filter(function(c) { return c.timestamp >= ds && c.timestamp <= de; }).length;
+        var dayCv = myConversions.filter(function(c) { return (c.createdAt || 0) >= ds && (c.createdAt || 0) <= de; });
+        var dayCvCount = dayCv.length;
+        var dayRv = dayCv.filter(function(c) { return c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+        if (metric === 'clicks') data.push(dayCk);
+        else if (metric === 'conversions') data.push(dayCvCount);
+        else if (metric === 'revenue') data.push(dayRv);
+        else if (metric === 'cvr') data.push(dayCk > 0 ? parseFloat(((dayCvCount / dayCk) * 100).toFixed(2)) : 0);
+        else if (metric === 'epc') data.push(dayCk > 0 ? parseFloat((dayRv / dayCk).toFixed(3)) : 0);
+        else data.push(0);
+    }
+    return data;
+}
+
+function buildChart() {
+    var sel = getSelectedMetrics();
+    if (sel.length === 0) sel = ['clicks'];
+    var rangeVal = parseInt(document.getElementById('chRange').value) || 30;
+
+    /* Current month period */
+    var now = new Date();
+    var cmStart, cmEnd, lmS, lmE, labels;
+    if (rangeVal === 30) {
+        cmStart = mStart(now);
+        cmEnd = dayE(now);
+        var daysInMonth = now.getDate();
+        lmS = lmStart();
+        lmE = new Date(lmS); lmE.setDate(lmE.getDate() + daysInMonth - 1); lmE = dayE(lmE);
+        labels = [];
+        for (var i = 1; i <= daysInMonth; i++) labels.push(i < 10 ? '0' + i : '' + i);
+    } else {
+        cmStart = dayS(new Date(Date.now() - (rangeVal - 1) * 86400000));
+        cmEnd = dayE(now);
+        lmS = dayS(new Date(cmStart - rangeVal * 86400000));
+        lmE = dayE(new Date(cmStart - 86400000));
+        labels = [];
+        for (var i = 0; i < rangeVal; i++) {
+            var dd = new Date(cmStart + i * 86400000);
+            labels.push(dd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+    }
+
+    var datasets = [];
+    sel.forEach(function(metric) {
+        var color = metricColors[metric] || '#2c5282';
+        var cmData = getDailyData(metric, cmStart, cmEnd);
+        var lmData = getDailyData(metric, lmS, lmE);
+        /* Ensure same length */
+        while (lmData.length < labels.length) lmData.push(0);
+        while (cmData.length < labels.length) cmData.push(0);
+
+        /* Current month line - solid */
+        datasets.push({
+            label: metricNames[metric] + ' (Month)',
+            data: cmData,
+            borderColor: color,
+            backgroundColor: chartType === 'bar' ? color + '88' : 'transparent',
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: color,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+        });
+        /* Last month line - dashed, lighter */
+        datasets.push({
+            label: metricNames[metric] + ' (Last Month)',
+            data: lmData,
+            borderColor: color + '55',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [5, 4],
+            tension: 0.35,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: color + '88',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+        });
+    });
+
+    if (dashChart) dashChart.destroy();
+    var ctx = document.getElementById('dashChart').getContext('2d');
+    dashChart = new Chart(ctx, {
+        type: chartType,
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 18, font: { size: 11, weight: '600', family: 'Inter' }, filter: function(item) { return item.text.indexOf('Last Month') === -1; } } },
+                tooltip: { backgroundColor: '#1a2744', titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' }, padding: 10, cornerRadius: 8, displayColors: true, boxPadding: 4 }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f2f5', drawBorder: false }, ticks: { font: { size: 11, family: 'Inter' }, color: '#9ca8b8', padding: 8 } },
+                x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: '#9ca8b8', maxRotation: 0, autoSkipPadding: 12 } }
+            }
+        }
+    });
+
+    /* Summary */
+    var sumH = '';
+    sel.forEach(function(metric, idx) {
+        var cmData = getDailyData(metric, cmStart, cmEnd);
+        var lmData = getDailyData(metric, lmS, lmE);
+        var cmTotal = cmData.reduce(function(s, v) { return s + v; }, 0);
+        var lmTotal = lmData.reduce(function(s, v) { return s + v; }, 0);
+        var fmt = (metric === 'revenue' || metric === 'epc') ? fmtM(cmTotal) + ' vs ' + fmtM(lmTotal) : (metric === 'cvr' ? (cmTotal / (cmData.length || 1)).toFixed(2) + '% vs ' + (lmTotal / (lmData.length || 1)).toFixed(2) + '%' : cmTotal + ' vs ' + lmTotal);
+        if (idx > 0) sumH += '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;';
+        sumH += '<span style="color:' + (metricColors[metric] || '#2c5282') + ';font-weight:700">' + metricNames[metric] + ':</span> <b>' + fmt + '</b>';
+    });
+    document.getElementById('chSum').innerHTML = sumH;
+}
+
+function setChartType(type, btn) {
+    chartType = type;
+    btn.parentElement.querySelectorAll('button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    buildChart();
+}
+
+/* ── Dashboard Offers Tables ── */
+function renderDashOffers() {
+    var search = (document.getElementById('dashOfferSearch').value || '').toLowerCase();
+    var filtered = allOffers.filter(function(o) {
+        return !search || (o.name || '').toLowerCase().indexOf(search) !== -1;
+    });
+    var h = '';
+    filtered.forEach(function(o) {
+        var oCk = myClicks.filter(function(c) { return c.offerId === o._id; }).length;
+        var oCv = myConversions.filter(function(c) { return c.offerId === o._id; }).length;
+        var oRv = myConversions.filter(function(c) { return c.offerId === o._id && c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+        h += '<tr><td style="font-weight:600">' + esc(o.name) + '</td><td>' + oCk + '</td><td>' + oCv + '</td><td style="font-weight:700;color:var(--green)">' + fmtM(oRv) + '</td></tr>';
+    });
+    document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-bullhorn"></i><p>No offers</p></td></tr>';
+    renderTopOffers();
+}
+
+function renderTopOffers() {
+    /* Show only offers marked as topOffer by admin + calculate network-wide CR */
+    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions')]).then(function(r) {
+        var netOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active' && o.topOffer === true; });
+        var allCk = objToArr(r[1]);
+        var allCv = objToArr(r[2]);
+        var offerStats = [];
+        netOffers.forEach(function(o) {
+            var ck = allCk.filter(function(c) { return c.offerId === o._id; }).length;
+            var cv = allCv.filter(function(c) { return c.offerId === o._id && c.status === 'approved'; }).length;
+            var cr = ck > 0 ? ((cv / ck) * 100).toFixed(1) : '0.0';
+            offerStats.push({ name: o.name, payout: parseFloat(o.payout) || 0, cr: parseFloat(cr), crStr: cr + '%', status: o.status, ck: ck, cv: cv });
+        });
+        offerStats.sort(function(a, b) { return b.cv - a.cv || b.cr - a.cr; });
+        var h = '';
+        offerStats.forEach(function(o) {
+            var crColor = o.cr >= 5 ? 'var(--green)' : (o.cr >= 1 ? 'var(--orange)' : 'var(--tl)');
+            h += '<tr><td style="font-weight:600">' + esc(o.name) + '</td>' +
+                '<td style="font-weight:700;color:var(--accent)">' + fmtM(o.payout) + '</td>' +
+                '<td style="font-weight:700;color:' + crColor + '">' + o.crStr + '</td>' +
+                '<td>' + (o.status === 'active' ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-pending">' + esc(o.status) + '</span>') + '</td></tr>';
+        });
+        document.getElementById('topOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p>No top offers set</p></td></tr>';
+    });
+}
+
+/* ── Offers ── */
+function loadOffers() {
+    Promise.all([
+        fbGet('offers'),
+        fbGet('offer_applications'),
+        fbGet('conversions')
+    ]).then(function(r) {
+        allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active' || o.status === 'paused'; });
+        /* Build application status map for current affiliate */
+        allApplications = {};
+        var appsData = r[1] || {};
+        Object.keys(appsData).forEach(function(appId) {
+            var app = appsData[appId];
+            if (app && app.affiliateId === myUid) {
+                allApplications[app.offerId] = { status: app.status || 'pending', appId: appId, appliedAt: app.appliedAt };
+            }
+        });
+        /* Build today's revenue map */
+        todayConvMap = {};
+        var todayStart = dayS(new Date());
+        var convs = objToArr(r[2]).filter(function(c) {
+            return c.affiliateId === myUid && !c.overCap && (c.createdAt || 0) >= todayStart && c.status === 'approved';
+        });
+        convs.forEach(function(c) {
+            if (!todayConvMap[c.offerId]) todayConvMap[c.offerId] = 0;
+            todayConvMap[c.offerId] += parseFloat(c.payout) || 0;
+        });
+        /* Build category filter */
+        var cats = {};
+        allOffers.forEach(function(o) { if (o.category) cats[o.category] = true; });
+        var catH = '<option value="">All Categories</option>';
+        Object.keys(cats).sort().forEach(function(c) { catH += '<option value="' + esc(c) + '">' + esc(c) + '</option>'; });
+        document.getElementById('offerCatF').innerHTML = catH;
+        updateStatusCounts();
+        offerPage = 1;
+        renderOffers();
+        if (pendingOfferView) { viewOffer(pendingOfferView); pendingOfferView = null; }
+    });
+}
+function updateStatusCounts() {
+    var counts = { active: 0, paused: 0, approved: 0, pending: 0, rejected: 0 };
+    allOffers.forEach(function(o) {
+        if (o.status === 'active') counts.active++;
+        if (o.status === 'paused') counts.paused++;
+        var app = allApplications[o._id];
+        if (app && counts[app.status] !== undefined) counts[app.status]++;
+    });
+    var sel = document.getElementById('offerStatusF');
+    sel.options[0].textContent = 'All Status (' + allOffers.length + ')';
+    sel.options[1].textContent = 'Active (' + counts.active + ')';
+    sel.options[2].textContent = 'Paused (' + counts.paused + ')';
+    sel.options[3].textContent = 'Approved (' + counts.approved + ')';
+    sel.options[4].textContent = 'Pending (' + counts.pending + ')';
+    sel.options[5].textContent = 'Rejected (' + counts.rejected + ')';
+}
+function filterOffers() { offerPage = 1; renderOffers(); }
+function renderOffers() {
+    var s = (document.getElementById('offerSearch').value || '').toLowerCase();
+    var catF = document.getElementById('offerCatF').value;
+    var stF = document.getElementById('offerStatusF').value;
+    var f = allOffers.filter(function(o) {
+        if (s && (o.name || '').toLowerCase().indexOf(s) === -1 && (o.category || '').toLowerCase().indexOf(s) === -1) return false;
+        if (catF && (o.category || '') !== catF) return false;
+        if (stF) {
+            if (stF === 'active' || stF === 'paused') { if ((o.status || '') !== stF) return false; }
+            else { var app = allApplications[o._id]; if (!app || app.status !== stF) return false; }
+        }
+        return true;
+    });
+    document.getElementById('offerCount').textContent = f.length + ' Total';
+    var st = (offerPage - 1) * PAGE_SIZE, pg = f.slice(st, st + PAGE_SIZE);
+    var h = '';
+    pg.forEach(function(o) {
+        var app = allApplications[o._id];
+        var todayRev = todayConvMap[o._id] || 0;
+        /* Rules */
+        var rulesHtml = '<div class="rule-tags">';
+        if (o.allowedCountries && o.allowedCountries.trim()) {
+            var countries = o.allowedCountries.split(',');
+            countries.forEach(function(c) { rulesHtml += '<span class="rule-tag rule-allow"><i class="fas fa-check-square"></i> Country: ' + esc(c.trim()) + '</span>'; });
+        } else { rulesHtml += '<span class="rule-tag rule-info"><i class="fas fa-globe"></i> All Countries</span>'; }
+        if (o.deviceTargeting && o.deviceTargeting !== 'all') {
+            var devLabel = o.deviceTargeting === 'mobile' ? 'Mobile Only' : (o.deviceTargeting === 'desktop' ? 'Desktop Only' : 'Tablet Only');
+            rulesHtml += '<span class="rule-tag rule-allow"><i class="fas fa-check-square"></i> Device: ' + devLabel + '</span>';
+        }
+        rulesHtml += '<span class="rule-tag rule-block"><i class="fas fa-minus-square"></i> Block Proxy: Proxy traffic</span>';
+        rulesHtml += '</div>';
+        /* Action */
+        var actionHtml = '';
+        if (!app) actionHtml = '<button class="btn-p" style="font-size:11px;padding:5px 12px" onclick="openApply(\'' + o._id + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
+        else if (app.status === 'approved') actionHtml = '<span class="vis-badge vis-approved" style="font-size:10.5px;padding:4px 10px"><i class="fas fa-check-circle"></i> Approved</span>';
+        else if (app.status === 'pending') actionHtml = '<span style="font-size:10.5px;color:var(--tl);font-weight:600"><i class="fas fa-hourglass-half"></i> Awaiting</span>';
+        else if (app.status === 'rejected') actionHtml = '<button class="btn-p" style="font-size:11px;padding:5px 12px;background:var(--orange)" onclick="openApply(\'' + o._id + '\')"><i class="fas fa-redo"></i> Reapply</button>';
+        /* Payout */
+        var payType = (o.payoutModel || 'cpa').toUpperCase();
+        /* Thumbnail */
+        var thumbHtml = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid #eee">' : '<div style="width:36px;height:36px;border-radius:6px;background:#edf0f4;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--tl)"><i class="fas fa-bullhorn"></i></div>';
+        h += '<tr>' +
+            '<td style="font-size:10.5px;color:var(--tl);font-family:monospace">' + esc(o._id) + '</td>' +
+            '<td>' + thumbHtml + '</td>' +
+            '<td><div class="offer-name-cell"><span class="offer-name-link" onclick="viewOffer(\'' + o._id + '\')">' + esc(o.name || 'Untitled') + '</span><a class="offer-newtab" href="#" onclick="event.preventDefault();openOfferNewTab(\'' + o._id + '\')" title="Open in new tab"><i class="fas fa-external-link-alt"></i></a></div></td>' +
+            '<td><span style="font-size:11px;padding:3px 8px;background:#f0f2f5;border-radius:4px;font-weight:600;color:var(--tm)">' + esc(o.category || 'Other') + '</span></td>' +
+            '<td><div style="font-weight:800;color:var(--td);font-size:10.5px">' + payType + '</div><div style="font-weight:700;color:var(--accent);font-size:13px">' + fmtM(o.payout) + '</div></td>' +
+            '<td><span class="today-rev' + (todayRev === 0 ? ' zero' : '') + '">' + fmtM(todayRev) + '</span></td>' +
+            '<td>' + rulesHtml + '</td>' +
+            '<td style="text-align:center">' + actionHtml + '</td>' +
+            '</tr>';
+    });
+    document.getElementById('offersTb').innerHTML = h || '<tr><td colspan="8" class="no-data" style="padding:30px"><i class="fas fa-bullhorn"></i><p>No offers found</p></td></tr>';
+    renderPag('offerPag', 'offerPgInfo', f.length, offerPage, PAGE_SIZE, 'goOfferPg');
+}
+function goOfferPg(p) { offerPage = p; renderOffers(); }
+
+/* ── Offer Detail View ── */
+function viewOffer(oid) {
+    var offer = null;
+    for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === oid) { offer = allOffers[i]; break; } }
+    if (!offer) { toast('Offer not found', 'error'); return; }
+    viewingOffer = offer;
+    var app = allApplications[oid];
+    var isApproved = app && app.status === 'approved';
+    /* Breadcrumb */
+    document.getElementById('odBreadName').textContent = offer.name || 'Untitled';
+    /* Alert */
+    document.getElementById('odAlert').style.display = !app ? 'flex' : 'none';
+    /* Hero Banner */
+    document.getElementById('odTitle').textContent = offer.name || 'Untitled';
+    var thumbWrap = document.getElementById('odThumbWrap');
+    if (offer.thumbnail) thumbWrap.innerHTML = '<img class="od-hero-thumb" src="' + esc(offer.thumbnail) + '" alt="">';
+    else thumbWrap.innerHTML = '<div class="od-hero-thumb-ph"><i class="fas fa-bullhorn"></i></div>';
+    document.getElementById('odCategory').innerHTML = '<i class="fas fa-tag"></i> ' + esc(offer.category || 'Other');
+    var cur = (offer.currency || 'USD');
+    document.getElementById('odCurrency').innerHTML = '<i class="fas fa-coins"></i> ' + cur;
+    /* Application status pill */
+    var statusPill = document.getElementById('odAppStatus');
+    if (!app) statusPill.innerHTML = '<i class="fas fa-circle" style="font-size:6px"></i> Not Applied';
+    else if (isApproved) statusPill.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80"></i> Approved';
+    else if (app.status === 'pending') statusPill.innerHTML = '<i class="fas fa-clock"></i> Pending';
+    else statusPill.innerHTML = '<i class="fas fa-times-circle" style="color:#f87171"></i> Rejected';
+    /* Payout in hero */
+    var payType = (offer.payoutModel || 'cpa').toUpperCase();
+    document.getElementById('odPayType').textContent = payType;
+    document.getElementById('odPayAmt').textContent = fmtM(offer.payout);
+    /* Action button */
+    var btnWrap = document.getElementById('odApplyBtnWrap');
+    if (!app) btnWrap.innerHTML = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
+    else if (isApproved) btnWrap.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(74,222,128,.2);color:#4ade80;border:1px solid rgba(74,222,128,.3)"><i class="fas fa-check-circle"></i> Approved</span>';
+    else if (app.status === 'rejected') btnWrap.innerHTML = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(251,146,60,.3);border:1.5px solid rgba(251,146,60,.4)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-redo"></i> Reapply</button>';
+    else btnWrap.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(96,165,250,.2);color:#93c5fd;border:1px solid rgba(96,165,250,.3)"><i class="fas fa-clock"></i> Pending</span>';
+    /* Stats Bar */
+    var offerClicks = myClicks.filter(function(c) { return c.offerId === oid; });
+    var offerConvsAll = myConversions.filter(function(c) { return c.offerId === oid; });
+    var offerConvsApproved = offerConvsAll.filter(function(c) { return c.status === 'approved'; });
+    var revenue = offerConvsApproved.reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var clicks = offerClicks.length;
+    var cv = offerConvsAll.length;
+    var cvr = clicks > 0 ? ((cv / clicks) * 100).toFixed(2) : '0.00';
+    var rpc = clicks > 0 ? (revenue / clicks).toFixed(2) : '0.00';
+    document.getElementById('odStats').innerHTML =
+        '<div class="od-sb-item"><div class="od-sb-label">Revenue</div><div class="od-sb-val green">' + fmtM(revenue) + '</div></div>' +
+        '<div class="od-sb-item"><div class="od-sb-label">Clicks</div><div class="od-sb-val link" onclick="goOfferReport(\'reporting\',\'' + oid + '\')">' + clicks + '</div></div>' +
+        '<div class="od-sb-item"><div class="od-sb-label">Conversions</div><div class="od-sb-val link" onclick="goOfferReport(\'analytics\',\'' + oid + '\')">' + cv + '</div></div>' +
+        '<div class="od-sb-item"><div class="od-sb-label">CVR</div><div class="od-sb-val">' + cvr + '%</div></div>' +
+        '<div class="od-sb-item"><div class="od-sb-label">RPC</div><div class="od-sb-val">' + fmtM(rpc) + '</div></div>';
+    /* Overview - Info Grid */
+    var curLabel = cur === 'USD' ? '$ US Dollar' : (cur === 'EUR' ? '€ Euro' : '£ GBP');
+    document.getElementById('odInfoGrid').innerHTML =
+        '<div class="od-info-item"><div class="od-ii-label">Offer ID</div><div class="od-ii-val" style="font-family:monospace;font-size:11.5px">' + esc(offer._id) + '</div></div>' +
+        '<div class="od-info-item"><div class="od-ii-label">Category</div><div class="od-ii-val">' + esc(offer.category || 'Other') + '</div></div>' +
+        '<div class="od-info-item"><div class="od-ii-label">Payout Model</div><div class="od-ii-val">' + payType + ' &mdash; ' + fmtM(offer.payout) + '</div></div>' +
+        '<div class="od-info-item"><div class="od-ii-label">Currency</div><div class="od-ii-val">' + curLabel + '</div></div>' +
+        '<div class="od-info-item"><div class="od-ii-label">Status</div><div class="od-ii-val"><span class="badge badge-' + offer.status + '">' + (offer.status || 'active') + '</span></div></div>' +
+        '<div class="od-info-item"><div class="od-ii-label">Created</div><div class="od-ii-val">' + (offer.createdAt ? fmtDT(offer.createdAt) : '-') + '</div></div>';
+    document.getElementById('odDesc').textContent = offer.description || 'No description available for this offer.';
+    /* Targeting */
+    var inclHtml = '', exclHtml = '';
+    if (offer.allowedCountries && offer.allowedCountries.trim()) {
+        offer.allowedCountries.split(',').forEach(function(c) {
+            inclHtml += '<div class="od-tgt-row allow"><i class="fas fa-check-circle"></i> ' + esc(c.trim()) + '</div>';
+        });
+    } else { inclHtml = '<div class="od-tgt-row allow"><i class="fas fa-globe"></i> All Countries (Global)</div>'; }
+    var devLabel = offer.deviceTargeting === 'mobile' ? 'Mobile Only' : (offer.deviceTargeting === 'desktop' ? 'Desktop Only' : (offer.deviceTargeting === 'tablet' ? 'Tablet Only' : 'All Devices'));
+    inclHtml += '<div class="od-tgt-row allow"><i class="fas fa-' + (offer.deviceTargeting === 'mobile' ? 'mobile-alt' : (offer.deviceTargeting === 'desktop' ? 'desktop' : 'tablet-alt')) + '"></i> ' + devLabel + '</div>';
+    exclHtml = '<div class="od-tgt-row block"><i class="fas fa-shield-alt"></i> Proxy / VPN traffic</div><div class="od-tgt-row block"><i class="fas fa-robot"></i> Bot / Automated traffic</div>';
+    document.getElementById('odInclusions').innerHTML = inclHtml;
+    document.getElementById('odExclusions').innerHTML = exclHtml;
+    /* Caps */
+    document.getElementById('odDailyCap').textContent = (parseInt(offer.dailyCap) || 0) > 0 ? offer.dailyCap + '/day' : 'Unlimited';
+    document.getElementById('odHourlyCap').textContent = (parseInt(offer.hourlyCap) || 0) > 0 ? offer.hourlyCap + '/hour' : 'Unlimited';
+    /* Tracking Link tab (approved only) */
+    var tabLink = document.getElementById('odTabLink');
+    if (isApproved) {
+        tabLink.style.display = 'flex';
+        ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id) { document.getElementById(id).value = ''; });
+        updateOdLink();
+    } else { tabLink.style.display = 'none'; }
+    /* Reset to overview tab */
+    switchOdTab('overview');
+    /* Show detail, hide list */
+    document.getElementById('offerListView').style.display = 'none';
+    document.getElementById('offerDetailView').style.display = 'block';
+    /* Save offer ID in hash for reload persistence */
+    history.replaceState(null, '', window.location.pathname + '#offers:' + oid);
+}
+function switchOdTab(tab) {
+    var tabs = document.querySelectorAll('.od-tab');
+    var panels = document.querySelectorAll('.od-tab-panel');
+    for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+    for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+    var tabMap = { overview: 0, targeting: 1, tracklink: 2 };
+    var panelMap = { overview: 'odPanelOverview', targeting: 'odPanelTargeting', tracklink: 'odPanelTracklink' };
+    if (tabMap[tab] !== undefined) tabs[tabMap[tab]].classList.add('active');
+    document.getElementById(panelMap[tab]).classList.add('active');
+}
+function backToOffers() {
+    viewingOffer = null;
+    document.getElementById('offerDetailView').style.display = 'none';
+    document.getElementById('offerListView').style.display = 'block';
+    history.replaceState(null, '', window.location.pathname + '#offers');
+}
+function updateOdLink() {
+    if (!viewingOffer) return;
+    var url = window.location.origin + '/api/click?offer_id=' + viewingOffer._id + '&aff_id=' + (myAffId || myUid);
+    ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id, i) {
+        var v = document.getElementById(id).value.trim();
+        if (v) url += '&sub' + (i + 1) + '=' + encodeURIComponent(v);
+    });
+    document.getElementById('odLinkTxt').textContent = url;
+}
+function copyOdLink() {
+    var txt = document.getElementById('odLinkTxt').textContent;
+    navigator.clipboard.writeText(txt).then(function() { toast('Tracking link copied!'); });
+}
+function openOfferNewTab(oid) {
+    var url = window.location.pathname + '?page=offers&offer=' + encodeURIComponent(oid);
+    window.open(url, '_blank');
+}
+function goOfferReport(page, oid) {
+    goPage(page);
+    setTimeout(function() {
+        if (page === 'reporting') {
+            var ckSel = document.getElementById('ckOfferF');
+            if (ckSel) { ckSel.value = oid; renderClicks(); }
+        } else if (page === 'analytics') {
+            document.getElementById('cvFrom').value = '';
+            document.getElementById('cvTo').value = '';
+            var cvSel = document.getElementById('cvOfferF');
+            if (cvSel) { cvSel.value = oid; renderAnalytics(); }
+        }
+    }, 500);
+}
+function toggleOdCard(hd) {
+    hd.classList.toggle('collapsed');
+    var body = hd.nextElementSibling;
+    body.style.display = body.style.display === 'none' ? 'block' : (hd.classList.contains('collapsed') ? 'none' : 'block');
+}
+
+/* ── Apply Flow ── */
+function openApply(oid) {
+    var offer = null;
+    for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === oid) { offer = allOffers[i]; break; } }
+    if (!offer) { toast('Offer not found', 'error'); return; }
+    document.getElementById('applyOfferId').value = oid;
+    var app = allApplications[oid];
+    document.getElementById('applyTitle').textContent = (app && app.status === 'rejected') ? 'Reapply for Offer' : 'Apply for Offer';
+    var thumbHtml = offer.thumbnail ? '<img src="' + esc(offer.thumbnail) + '" alt="">' : '<div style="width:40px;height:40px;border-radius:6px;background:#edf0f4;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--tl)"><i class="fas fa-bullhorn"></i></div>';
+    document.getElementById('applyOfferInfo').innerHTML = thumbHtml + '<div><div class="aoi-name">' + esc(offer.name) + '</div><div class="aoi-pay">' + (offer.payoutModel || 'cpa').toUpperCase() + ' ' + fmtM(offer.payout) + '</div></div>';
+    document.getElementById('applySource').value = 'social';
+    document.getElementById('applyUrl').value = '';
+    document.getElementById('applyBudget').value = '';
+    document.getElementById('applyNotes').value = '';
+    document.getElementById('applySubmitBtn').disabled = false;
+    document.getElementById('applyOverlay').style.display = 'block';
+    document.getElementById('applyModal').style.display = 'block';
+}
+function closeApply() {
+    document.getElementById('applyOverlay').style.display = 'none';
+    document.getElementById('applyModal').style.display = 'none';
+}
+function submitApply() {
+    var oid = document.getElementById('applyOfferId').value;
+    var source = document.getElementById('applySource').value;
+    var url = document.getElementById('applyUrl').value.trim();
+    var budget = document.getElementById('applyBudget').value.trim();
+    var notes = document.getElementById('applyNotes').value.trim();
+    if (!oid) { toast('No offer selected', 'error'); return; }
+    if (!url) { toast('Website/Channel URL is required', 'error'); return; }
+    document.getElementById('applySubmitBtn').disabled = true;
+    var appId = genAppId();
+    var appData = {
+        offerId: oid,
+        affiliateId: myUid,
+        affiliateName: (currentUser && currentUser.name) || '',
+        affiliateEmail: (currentUser && currentUser.email) || '',
+        trafficSource: source,
+        websiteUrl: url,
+        dailyBudget: budget,
+        notes: notes,
+        status: 'pending',
+        appliedAt: Date.now(),
+        reviewedAt: null,
+        reviewedBy: null
+    };
+    fbPut('offer_applications/' + appId, appData).then(function() {
+        allApplications[oid] = { status: 'pending', appId: appId, appliedAt: Date.now() };
+        toast('Application submitted successfully!');
+        closeApply();
+        updateStatusCounts();
+        renderOffers();
+        if (viewingOffer && viewingOffer._id === oid) viewOffer(oid);
+    }).catch(function() {
+        toast('Error submitting application', 'error');
+        document.getElementById('applySubmitBtn').disabled = false;
+    });
+}
+function quickLink(oid) {
+    goPage('linkgen');
+    setTimeout(function() {
+        var sel = document.getElementById('lgOffer');
+        if (sel) { sel.value = oid; updateLinkPreview(); }
+    }, 500);
+}
+
+/* ── Postbacks ── */
+function loadPostbacks() {
+    fbGet('users/' + myUid + '/postbackUrl').then(function(url) { if (url) document.getElementById('affPbUrl').value = url; });
+    /* Show domain and global postback URL */
+    var domain = window.location.origin;
+    document.getElementById('pbDomain').textContent = domain;
+    document.getElementById('pbGlobalUrl').textContent = domain + '/api/postback?click_id={click_id}&secret=YOUR_SECRET&payout={payout}&txn_id={txn_id}';
+}
+function savePbUrl() {
+    var url = document.getElementById('affPbUrl').value.trim();
+    fbPatch('users/' + myUid, { postbackUrl: url }).then(function() { toast('Postback URL saved!'); });
+}
+function copyGlobalPb() {
+    var txt = document.getElementById('pbGlobalUrl').textContent;
+    navigator.clipboard.writeText(txt).then(function() { toast('Global postback URL copied!'); });
+}
+
+/* ── Reporting (Clicks) ── */
+var ckPage = 1;
+function loadClicks() {
+    Promise.all([fbGet('clicks'), fbGet('offers')]).then(function(r) {
+        allOffers = objToArr(r[1]);
+        myClicks = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid; });
+        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
+        if (!document.getElementById('ckFrom').value) document.getElementById('ckFrom').value = from.toISOString().split('T')[0];
+        if (!document.getElementById('ckTo').value) document.getElementById('ckTo').value = now.toISOString().split('T')[0];
+        var oh = '<option value="">All Offers</option>';
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        document.getElementById('ckOfferF').innerHTML = oh;
+        ckPage = 1;
+        renderClicks();
+    });
+}
+function renderClicks() {
+    var fD = document.getElementById('ckFrom').value, tD = document.getElementById('ckTo').value, oF = document.getElementById('ckOfferF').value;
+    var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
+    var fil = myClicks.filter(function(c) {
+        if (c.timestamp < fTs || c.timestamp > tTs) return false;
+        if (oF && c.offerId !== oF) return false;
+        return true;
+    }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+    document.getElementById('ckSum').textContent = fil.length + ' clicks';
+    var st = (ckPage - 1) * PAGE_SIZE, pg = fil.slice(st, st + PAGE_SIZE);
+    var h = '';
+    pg.forEach(function(c) {
+        h += '<tr><td style="font-family:monospace;font-size:10.5px">' + esc(c._id) + '</td>' +
+            '<td>' + esc(offerName(c.offerId)) + '</td>' +
+            '<td style="font-family:monospace;font-size:10.5px">' + esc(c.ip || '-') + '</td>' +
+            '<td>' + esc(c.country || '-') + '</td><td>' + esc(c.device || '-') + '</td><td>' + esc(c.browser || '-') + '</td>' +
+            '<td>' + esc(c.sub1 || '-') + '</td><td>' + esc(c.sub2 || '-') + '</td>' +
+            '<td>' + fmtDT(c.timestamp) + '</td>' +
+            '<td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td></tr>';
+    });
+    document.getElementById('ckTb').innerHTML = h || '<tr><td colspan="10" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks</td></tr>';
+    renderPag('ckPag', 'ckPgInfo', fil.length, ckPage, PAGE_SIZE, 'goCkPg');
+}
+function goCkPg(p) { ckPage = p; renderClicks(); }
+
+/* ── Analytics (Conversions + Earnings) ── */
+var cvPage = 1;
+function loadAnalytics() {
+    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('payments/records')]).then(function(r) {
+        allOffers = objToArr(r[1]);
+        myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        myPayments = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid; });
+        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
+        if (!document.getElementById('cvFrom').value) document.getElementById('cvFrom').value = from.toISOString().split('T')[0];
+        if (!document.getElementById('cvTo').value) document.getElementById('cvTo').value = now.toISOString().split('T')[0];
+        var oh = '<option value="">All Offers</option>';
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        document.getElementById('cvOfferF').innerHTML = oh;
+        cvPage = 1;
+        renderAnalytics();
+    });
+}
+function renderAnalytics() {
+    var fD = document.getElementById('cvFrom').value, tD = document.getElementById('cvTo').value, sF = document.getElementById('cvStatusF').value;
+    var oF = document.getElementById('cvOfferF').value;
+    var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
+    var fil = myConversions.filter(function(c) {
+        if ((c.createdAt || 0) < fTs || (c.createdAt || 0) > tTs) return false;
+        if (sF && c.status !== sF) return false;
+        if (oF && c.offerId !== oF) return false;
+        return true;
+    }).sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var totP = fil.reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var appr = fil.filter(function(c) { return c.status === 'approved'; });
+    var pend = fil.filter(function(c) { return c.status === 'pending'; });
+    var totalEarned = myConversions.filter(function(c) { return c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var totalPaid = myPayments.filter(function(p) { return p.status === 'paid'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+
+    document.getElementById('anStats').innerHTML =
+        '<div class="astat"><div class="astat-hd"><span class="astat-t">Total Conversions</span></div><div class="astat-val">' + fil.length + '</div><div class="astat-rows"><div class="astat-row"><span>Approved</span><span>' + appr.length + '</span></div><div class="astat-row"><span>Pending</span><span>' + pend.length + '</span></div></div></div>' +
+        '<div class="astat"><div class="astat-hd"><span class="astat-t">Total Payout</span></div><div class="astat-val">' + fmtM(totP) + '</div><div class="astat-rows"><div class="astat-row"><span>Approved</span><span>' + fmtM(appr.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0)) + '</span></div><div class="astat-row"><span>Pending</span><span>' + fmtM(pend.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0)) + '</span></div></div></div>' +
+        '<div class="astat"><div class="astat-hd"><span class="astat-t">Total Earned</span></div><div class="astat-val">' + fmtM(totalEarned) + '</div><div class="astat-rows"><div class="astat-row"><span>Total Paid</span><span>' + fmtM(totalPaid) + '</span></div><div class="astat-row"><span>Balance</span><span>' + fmtM(totalEarned - totalPaid) + '</span></div></div></div>';
+
+    var st = (cvPage - 1) * PAGE_SIZE, pg = fil.slice(st, st + PAGE_SIZE);
+    var h = '';
+    pg.forEach(function(c) {
+        h += '<tr><td style="font-family:monospace;font-size:10.5px">' + esc(c._id) + '</td>' +
+            '<td style="font-family:monospace;font-size:10.5px">' + esc(c.clickId || '-') + '</td>' +
+            '<td>' + esc(offerName(c.offerId)) + '</td>' +
+            '<td style="font-weight:700;color:var(--green)">' + fmtM(c.payout) + '</td>' +
+            '<td>' + sBadge(c.status) + '</td><td>' + esc(c.source || '-') + '</td><td>' + fmtDT(c.createdAt) + '</td></tr>';
+    });
+    document.getElementById('cvTb').innerHTML = h || '<tr><td colspan="7" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions</td></tr>';
+    renderPag('cvPag', 'cvPgInfo', fil.length, cvPage, PAGE_SIZE, 'goCvPg');
+
+    /* Payment History */
+    myPayments.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var ph = '';
+    myPayments.forEach(function(p) {
+        ph += '<tr><td style="font-family:monospace;font-size:10.5px">' + esc(p._id) + '</td>' +
+            '<td style="font-weight:700">' + fmtM(p.amount) + '</td><td>' + esc(p.method || '-') + '</td>' +
+            '<td>' + esc(p.period || '-') + '</td><td>' + sBadge(p.status) + '</td><td>' + fmtDate(p.createdAt) + '</td></tr>';
+    });
+    document.getElementById('payTb').innerHTML = ph || '<tr><td colspan="6" class="no-data"><i class="fas fa-wallet"></i>No payments</td></tr>';
+}
+function goCvPg(p) { cvPage = p; renderAnalytics(); }
+
+/* ── Link Generator ── */
+function loadLinkGen() {
+    Promise.all([fbGet('offers'), fbGet('offer_applications')]).then(function(r) {
+        allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active' || o.status === 'paused'; });
+        var appsData = r[1] || {};
+        var approvedOffers = {};
+        Object.keys(appsData).forEach(function(appId) {
+            var app = appsData[appId];
+            if (app && app.affiliateId === myUid && app.status === 'approved') approvedOffers[app.offerId] = true;
+        });
+        allOffers = allOffers.filter(function(o) { return approvedOffers[o._id]; });
+        var oh = '<option value="">Select Offer</option>';
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + ' (' + fmtM(o.payout) + ')</option>'; });
+        document.getElementById('lgOffer').innerHTML = oh;
+        updateLinkPreview();
+    });
+}
+function updateLinkPreview() {
+    var oid = document.getElementById('lgOffer').value;
+    var out = document.getElementById('lnkOut');
+    if (!oid) { out.style.display = 'none'; return; }
+    var url = window.location.origin + '/api/click?offer_id=' + oid + '&aff_id=' + (myAffId || myUid);
+    ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) {
+        var v = document.getElementById(id).value.trim();
+        if (v) url += '&sub' + (i + 1) + '=' + encodeURIComponent(v);
+    });
+    document.getElementById('lnkTxt').textContent = url;
+    out.style.display = 'block';
+}
+function copyLink() {
+    var txt = document.getElementById('lnkTxt').textContent;
+    navigator.clipboard.writeText(txt).then(function() { toast('Link copied!'); });
+}
+
+/* ── Settings ── */
+function loadSettings() {
+    if (currentUser) {
+        document.getElementById('setName').value = currentUser.name || '';
+        document.getElementById('setEmail').value = currentUser.email || '';
+        document.getElementById('setPhone').value = currentUser.phone || '';
+        document.getElementById('setCountry').value = currentUser.country || '';
+        document.getElementById('setCity').value = currentUser.city || '';
+        document.getElementById('setState').value = currentUser.state || '';
+        document.getElementById('setAddress').value = currentUser.address || '';
+        document.getElementById('setZip').value = currentUser.zip || '';
+    }
+    /* Load payment details */
+    fbGet('users/' + myUid + '/payment').then(function(pay) {
+        if (!pay) return;
+        var method = pay.method || 'paypal';
+        switchPayMethod(method);
+        if (pay.paypal) document.getElementById('payPaypalEmail').value = pay.paypal.email || '';
+        if (pay.wire) {
+            document.getElementById('payWireBank').value = pay.wire.bankName || '';
+            document.getElementById('payWireHolder').value = pay.wire.accountHolder || '';
+            document.getElementById('payWireAccount').value = pay.wire.accountNumber || '';
+            document.getElementById('payWireIban').value = pay.wire.iban || '';
+            document.getElementById('payWireSwift').value = pay.wire.swift || '';
+            document.getElementById('payWireBankAddr').value = pay.wire.bankAddress || '';
+            document.getElementById('payWireCountry').value = pay.wire.country || '';
+        }
+        if (pay.ach) {
+            document.getElementById('payAchBank').value = pay.ach.bankName || '';
+            document.getElementById('payAchHolder').value = pay.ach.accountHolder || '';
+            document.getElementById('payAchRouting').value = pay.ach.routingNumber || '';
+            document.getElementById('payAchAccount').value = pay.ach.accountNumber || '';
+            document.getElementById('payAchType').value = pay.ach.accountType || 'checking';
+        }
+        if (pay.usdt) {
+            document.getElementById('payUsdtWallet').value = pay.usdt.walletAddress || '';
+            document.getElementById('payUsdtNetwork').value = pay.usdt.network || 'TRC20';
+        }
+        if (pay.payoneer) document.getElementById('payPayoneerEmail').value = pay.payoneer.email || '';
+    });
+}
+function saveProfile() {
+    var name = document.getElementById('setName').value.trim();
+    if (!name) { toast('Name is required', 'error'); return; }
+    var data = { name: name, phone: document.getElementById('setPhone').value.trim(), country: document.getElementById('setCountry').value.trim(), city: document.getElementById('setCity').value.trim(), state: document.getElementById('setState').value.trim(), address: document.getElementById('setAddress').value.trim(), zip: document.getElementById('setZip').value.trim() };
+    fbPatch('users/' + myUid, data).then(function() { currentUser.name = name; toast('Profile saved!'); });
+}
+function switchPayMethod(method) {
+    document.getElementById('payActiveMethod').value = method;
+    var pills = document.querySelectorAll('.pay-pill');
+    var fields = document.querySelectorAll('.pay-fields');
+    for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
+    for (var i = 0; i < fields.length; i++) fields[i].classList.remove('active');
+    var methodMap = { paypal: 0, wire: 1, ach: 2, usdt: 3, payoneer: 4 };
+    if (methodMap[method] !== undefined) pills[methodMap[method]].classList.add('active');
+    var panel = document.getElementById('payFields-' + method);
+    if (panel) panel.classList.add('active');
+}
+function clearPayErrors() {
+    var errs = document.querySelectorAll('.f-err');
+    for (var i = 0; i < errs.length; i++) errs[i].classList.remove('f-err');
+}
+function validatePayFields(ids) {
+    clearPayErrors();
+    var ok = true;
+    for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (!el || !el.value.trim()) { if (el) el.classList.add('f-err'); ok = false; }
+    }
+    return ok;
+}
+function savePayment() {
+    var method = document.getElementById('payActiveMethod').value;
+    var reqMap = {
+        paypal: ['payPaypalEmail'],
+        wire: ['payWireBank', 'payWireHolder', 'payWireAccount', 'payWireSwift'],
+        ach: ['payAchBank', 'payAchHolder', 'payAchRouting', 'payAchAccount'],
+        usdt: ['payUsdtWallet'],
+        payoneer: ['payPayoneerEmail']
+    };
+    if (!validatePayFields(reqMap[method] || [])) {
+        toast('Please fill all required fields', 'error');
+        return;
+    }
+    var payData = { method: method };
+    payData.paypal = { email: document.getElementById('payPaypalEmail').value.trim() };
+    payData.wire = {
+        bankName: document.getElementById('payWireBank').value.trim(),
+        accountHolder: document.getElementById('payWireHolder').value.trim(),
+        accountNumber: document.getElementById('payWireAccount').value.trim(),
+        iban: document.getElementById('payWireIban').value.trim(),
+        swift: document.getElementById('payWireSwift').value.trim(),
+        bankAddress: document.getElementById('payWireBankAddr').value.trim(),
+        country: document.getElementById('payWireCountry').value.trim()
+    };
+    payData.ach = {
+        bankName: document.getElementById('payAchBank').value.trim(),
+        accountHolder: document.getElementById('payAchHolder').value.trim(),
+        routingNumber: document.getElementById('payAchRouting').value.trim(),
+        accountNumber: document.getElementById('payAchAccount').value.trim(),
+        accountType: document.getElementById('payAchType').value
+    };
+    payData.usdt = { walletAddress: document.getElementById('payUsdtWallet').value.trim(), network: document.getElementById('payUsdtNetwork').value };
+    payData.payoneer = { email: document.getElementById('payPayoneerEmail').value.trim() };
+    fbPut('users/' + myUid + '/payment', payData).then(function() { toast('Payment details saved!'); }).catch(function() { toast('Error saving payment', 'error'); });
+}
+function changePw() {
+    var np = document.getElementById('setNewP').value, cp = document.getElementById('setConfP').value;
+    if (!np || np.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+    if (np !== cp) { toast('Passwords do not match', 'error'); return; }
+    firebase.auth().currentUser.updatePassword(np)
+        .then(function() { toast('Password updated!'); document.getElementById('setNewP').value = ''; document.getElementById('setConfP').value = ''; })
+        .catch(function(err) { toast('Error: ' + (err.message || 'Failed'), 'error'); });
+}
+function switchSettingsTab(tab) {
+    var items = document.querySelectorAll('.sh-menu-item');
+    var panels = document.querySelectorAll('.sh-panel');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+    for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+    var tabMap = { profile: 0, payment: 1, security: 2 };
+    if (tabMap[tab] !== undefined) items[tabMap[tab]].classList.add('active');
+    var panel = document.getElementById('shPanel-' + tab);
+    if (panel) panel.classList.add('active');
+}
+
+/* ── Notifications ── */
+function loadNotifDot() {
+    fbGet('conversions').then(function(data) {
+        var weekAgo = Date.now() - 7 * 86400000;
+        var hasPending = objToArr(data).some(function(c) { return c.affiliateId === myUid && !c.overCap && c.status === 'pending' && (c.createdAt || 0) >= weekAgo; });
+        document.getElementById('notifDot').style.display = hasPending ? 'block' : 'none';
+    });
+}
+var notifOpen = false;
+function toggleNotifs() {
+    var panel = document.getElementById('notifPanel');
+    notifOpen = !notifOpen;
+    if (notifOpen) {
+        panel.classList.add('open');
+        loadNotifications();
+    } else {
+        panel.classList.remove('open');
+    }
+}
+/* Close notif panel when clicking outside */
+document.addEventListener('click', function(e) {
+    if (notifOpen && !e.target.closest('.sb-bottom')) {
+        document.getElementById('notifPanel').classList.remove('open');
+        notifOpen = false;
+    }
+});
+
+function loadNotifications() {
+    var list = document.getElementById('notifList');
+    var dot = document.getElementById('notifDot');
+    list.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    Promise.all([fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
+        var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        var pays = objToArr(r[1]).filter(function(p) { return p.affiliateId === myUid; });
+        var notifs = [];
+
+        /* Recent conversions (last 7 days) */
+        var weekAgo = Date.now() - 7 * 86400000;
+        convs.forEach(function(c) {
+            if ((c.createdAt || 0) >= weekAgo) {
+                var icon, color;
+                if (c.status === 'approved') { icon = 'fa-check-circle'; color = 'var(--green)'; }
+                else if (c.status === 'rejected') { icon = 'fa-times-circle'; color = 'var(--red)'; }
+                else { icon = 'fa-clock'; color = 'var(--orange)'; }
+                notifs.push({
+                    ts: c.createdAt,
+                    icon: icon,
+                    color: color,
+                    title: 'Conversion ' + (c.status || 'pending'),
+                    desc: offerName(c.offerId) + ' - ' + fmtM(c.payout)
+                });
+            }
+        });
+
+        /* Recent payment updates (last 30 days) */
+        var monthAgo = Date.now() - 30 * 86400000;
+        pays.forEach(function(p) {
+            if ((p.createdAt || 0) >= monthAgo) {
+                var icon = p.status === 'paid' ? 'fa-wallet' : 'fa-hourglass-half';
+                var color = p.status === 'paid' ? 'var(--green)' : 'var(--orange)';
+                notifs.push({
+                    ts: p.createdAt,
+                    icon: icon,
+                    color: color,
+                    title: 'Payment ' + (p.status || 'pending'),
+                    desc: fmtM(p.amount) + (p.period ? ' - ' + p.period : '')
+                });
+            }
+        });
+
+        /* Sort newest first */
+        notifs.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+
+        /* Show max 10 */
+        notifs = notifs.slice(0, 10);
+
+        if (notifs.length === 0) {
+            list.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:16px;opacity:.3;display:block;margin-bottom:6px"></i>No recent notifications</div>';
+            dot.style.display = 'none';
+            return;
+        }
+
+        var h = '';
+        notifs.forEach(function(n) {
+            h += '<div class="notif-item"><i class="fas ' + n.icon + '" style="color:' + n.color + '"></i><div><div class="nt">' + esc(n.title) + '</div><div class="nd">' + esc(n.desc) + '</div></div></div>';
+        });
+        list.innerHTML = h;
+
+        /* Show dot if there are new conversions pending */
+        var hasPending = convs.some(function(c) { return c.status === 'pending' && (c.createdAt || 0) >= weekAgo; });
+        dot.style.display = hasPending ? 'block' : 'none';
+    }).catch(function() {
+        list.innerHTML = '<div class="notif-empty">Failed to load</div>';
+    });
+}
+</script>
+</body>
+</html>

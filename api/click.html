@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <style>
+        body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;color:#333;}
+        .box{text-align:center;padding:40px;}
+        .spinner{width:32px;height:32px;border:3px solid #e0e6e8;border-top-color:#0A6C80;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .msg{font-size:14px;color:#888;}
+        .err{color:#dc3545;font-weight:600;}
+    </style>
+</head>
+<body>
+<div class="box">
+    <div class="spinner" id="spinner"></div>
+    <div class="msg" id="msg">Redirecting...</div>
+</div>
+<script>
+(function(){
+'use strict';
+
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+
+function fbGet(path) { return fetch(FB + '/' + path + '.json').then(function(r) { return r.json(); }); }
+function fbPut(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PUT', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
+
+function genClickId() {
+    return 'c' + Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
+}
+
+function showError(msg) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('msg').className = 'msg err';
+    document.getElementById('msg').textContent = msg;
+}
+
+function parseUA() {
+    var ua = navigator.userAgent || '';
+    var device = 'desktop';
+    if (/Mobi|Android|iPhone|iPod/i.test(ua)) device = 'mobile';
+    else if (/Tablet|iPad/i.test(ua)) device = 'tablet';
+
+    var browser = 'Other';
+    if (/Edg\//i.test(ua)) browser = 'Edge';
+    else if (/Chrome/i.test(ua)) browser = 'Chrome';
+    else if (/Firefox/i.test(ua)) browser = 'Firefox';
+    else if (/Safari/i.test(ua)) browser = 'Safari';
+    else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
+
+    var os = 'Other';
+    if (/Windows/i.test(ua)) os = 'Windows';
+    else if (/Mac OS/i.test(ua)) os = 'macOS';
+    else if (/Linux/i.test(ua)) os = 'Linux';
+    else if (/Android/i.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+
+    return { device: device, browser: browser, os: os, userAgent: ua };
+}
+
+function getIP() {
+    return fetch('https://api.ipify.org?format=json')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return d.ip || ''; })
+        .catch(function() { return ''; });
+}
+
+function getCountry(ip) {
+    if (!ip) return Promise.resolve('');
+    return fetch('https://ip-api.com/json/' + ip + '?fields=countryCode')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return d.countryCode || ''; })
+        .catch(function() { return ''; });
+}
+
+function buildRedirectUrl(template, clickId, affId, subs) {
+    var url = template;
+    url = url.replace(/\{click_id\}/g, encodeURIComponent(clickId));
+    url = url.replace(/\{aff_id\}/g, encodeURIComponent(affId));
+    url = url.replace(/\{sub1\}/g, encodeURIComponent(subs.sub1 || ''));
+    url = url.replace(/\{sub2\}/g, encodeURIComponent(subs.sub2 || ''));
+    url = url.replace(/\{sub3\}/g, encodeURIComponent(subs.sub3 || ''));
+    url = url.replace(/\{sub4\}/g, encodeURIComponent(subs.sub4 || ''));
+    url = url.replace(/\{sub5\}/g, encodeURIComponent(subs.sub5 || ''));
+    return url;
+}
+
+/* ===== MAIN ===== */
+var params = new URLSearchParams(window.location.search);
+var offerId = params.get('offer_id') || '';
+var affId = params.get('aff_id') || '';
+var sub1 = params.get('sub1') || '';
+var sub2 = params.get('sub2') || '';
+var sub3 = params.get('sub3') || '';
+var sub4 = params.get('sub4') || '';
+var sub5 = params.get('sub5') || '';
+var isTest = params.get('test') === '1';
+
+if (!offerId || !affId) {
+    showError('Missing required parameters: offer_id and aff_id');
+} else {
+    processClick();
+}
+
+function resolveAffId(id) {
+    /* If numeric, look up the real Firebase UID from affiliateIndex */
+    if (/^\d+$/.test(id)) {
+        return fbGet('affiliateIndex/' + id).then(function(uid) { return uid || id; });
+    }
+    return Promise.resolve(id);
+}
+
+function processClick() {
+    var uaInfo = parseUA();
+
+    resolveAffId(affId).then(function(realAffUid) {
+    affId = realAffUid;
+    return Promise.all([
+        fbGet('offers/' + offerId),
+        fbGet('users/' + affId),
+        getIP()
+    ]);
+    }).then(function(results) {
+        var offer = results[0];
+        var user = results[1];
+        var ip = results[2];
+
+        /* Validate offer */
+        if (!offer) { showError('Offer not found.'); return; }
+        if (offer.status !== 'active') { showError('Offer is not active.'); return; }
+        if (!offer.finalUrl) { showError('Offer has no destination URL.'); return; }
+
+        /* Validate affiliate */
+        if (!user) { showError('Affiliate not found.'); return; }
+        if (user.role !== 'affiliate') { showError('Invalid affiliate.'); return; }
+        if (user.status !== 'active') { showError('Affiliate account is not active.'); return; }
+
+        /* Check device targeting */
+        if (offer.deviceTargeting && offer.deviceTargeting !== 'all') {
+            if (offer.deviceTargeting !== uaInfo.device) {
+                /* Still redirect but don't track (or redirect to preview) */
+            }
+        }
+
+        /* Get country for the click */
+        getCountry(ip).then(function(country) {
+            /* Check country targeting */
+            if (offer.allowedCountries && offer.allowedCountries.trim()) {
+                var allowed = offer.allowedCountries.toUpperCase().split(',').map(function(c) { return c.trim(); });
+                if (allowed.length > 0 && allowed[0] !== '' && country && allowed.indexOf(country.toUpperCase()) === -1) {
+                    /* Country not allowed - still redirect but could show warning */
+                }
+            }
+
+            /* Generate click ID and record */
+            var clickId = genClickId();
+            var clickData = {
+                offerId: offerId,
+                affiliateId: affId,
+                ip: ip,
+                userAgent: uaInfo.userAgent,
+                country: country,
+                device: uaInfo.device,
+                browser: uaInfo.browser,
+                os: uaInfo.os,
+                referer: document.referrer || '',
+                sub1: sub1,
+                sub2: sub2,
+                sub3: sub3,
+                sub4: sub4,
+                sub5: sub5,
+                timestamp: Date.now(),
+                converted: false,
+                test: isTest || false
+            };
+
+            /* Save click and redirect */
+            fbPut('clicks/' + clickId, clickData).then(function() {
+                var subs = { sub1: sub1, sub2: sub2, sub3: sub3, sub4: sub4, sub5: sub5 };
+                var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
+                window.location.replace(redirectUrl);
+            }).catch(function() {
+                /* Even if save fails, still redirect */
+                var subs = { sub1: sub1, sub2: sub2, sub3: sub3, sub4: sub4, sub5: sub5 };
+                var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
+                window.location.replace(redirectUrl);
+            });
+        });
+    }).catch(function(err) {
+        showError('Error processing click: ' + (err.message || 'Unknown error'));
+    });
+}
+
+})();
+</script>
+</body>
+</html>
