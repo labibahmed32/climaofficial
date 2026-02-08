@@ -2,7 +2,7 @@ name: Deploy to Hosting via FTP
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
