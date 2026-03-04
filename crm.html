@@ -155,6 +155,18 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 .toggle-slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
 .toggle-switch input:checked+.toggle-slider{background:var(--primary);}
 .toggle-switch input:checked+.toggle-slider:before{transform:translateX(18px);}
+.stool{background:#fff;border:1px solid var(--card-border);border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .2s;}
+.stool:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.stool-head{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;user-select:none;transition:background .15s;}
+.stool-head:hover{background:#f8fafc;}
+.stool-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.stool-info{flex:1;min-width:0;}
+.stool-title{font-size:14px;font-weight:700;color:var(--text-dark);}
+.stool-desc{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.stool-arrow{font-size:11px;color:#94a3b8;transition:transform .25s;flex-shrink:0;}
+.stool.open .stool-arrow{transform:rotate(90deg);}
+.stool-body{display:none;padding:0 18px 18px;border-top:1px solid var(--card-border);}
+.stool.open .stool-body{display:block;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 /* Script generator */
 .sg-section{margin-bottom:20px;border:1px solid var(--card-border);border-radius:var(--radius);overflow:hidden;}
@@ -831,53 +843,52 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 
 <!-- Settings Page -->
 <div id="pg-settings" class="page">
-<div style="max-width:720px;">
+<div style="max-width:740px;">
 
-<!-- General Settings -->
-<div class="card" style="margin-bottom:16px;border-left:4px solid var(--primary);">
-<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
-<h3 style="font-size:14px;"><i class="fas fa-sliders-h" style="margin-right:8px;color:var(--primary);"></i>General Settings</h3>
-<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+<!-- Tool: General -->
+<div class="stool" data-stool="general">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#e0f7fa;color:var(--primary);"><i class="fas fa-sliders-h"></i></div>
+<div class="stool-info"><div class="stool-title">General</div><div class="stool-desc">Domain, CPA, Postback, Shaver API</div></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
 </div>
-<div class="card-body">
+<div class="stool-body">
 <div class="form-row">
 <div class="form-group"><label>Tracking Domain</label><input id="setDomain" type="text" placeholder="https://plan1.climaofficial.com"></div>
 <div class="form-group"><label>Default CPA ($)</label><input id="setDefaultCPA" type="number" value="80" step="0.01"></div>
 </div>
 <div class="form-row">
-<div class="form-group"><label>Postback Secret</label><input id="setPostbackSecret" type="text" placeholder="my_secret_key"><small>Used to verify incoming postback requests</small></div>
+<div class="form-group"><label>Postback Secret</label><input id="setPostbackSecret" type="text" placeholder="my_secret_key"></div>
 <div class="form-group"><label>Shaver API URL</label><input id="setShaverApiUrl" type="text" placeholder="https://plan1.climaofficial.com/shaver/api.php"></div>
 </div>
 </div>
 </div>
 
-<!-- Fraud API Keys -->
-<div class="card" style="margin-bottom:16px;border-left:4px solid #7c3aed;">
-<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
-<h3 style="font-size:14px;"><i class="fas fa-key" style="margin-right:8px;color:#7c3aed;"></i>Fraud API Keys</h3>
-<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+<!-- Tool: Fraud API -->
+<div class="stool" data-stool="fraud">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#f3e8ff;color:#7c3aed;"><i class="fas fa-shield-alt"></i></div>
+<div class="stool-info"><div class="stool-title">Fraud Detection</div><div class="stool-desc">IPQS, Proxycheck, AbuseIPDB keys</div></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
 </div>
-<div class="card-body">
-<div class="form-group"><label>IPQS API Key</label><input id="setIpqsKey" type="text" placeholder="Enter your IPQualityScore API key"><small>Free: 200 IP + 100 email + 100 phone checks/day at <a href="https://www.ipqualityscore.com" target="_blank">ipqualityscore.com</a></small></div>
-<div class="form-group"><label>Proxycheck.io API Key</label><input id="setProxycheckKey" type="text" placeholder="Enter your proxycheck.io API key"><small>Free: 1,000 checks/day at <a href="https://proxycheck.io" target="_blank">proxycheck.io</a></small></div>
-<div class="form-group"><label>AbuseIPDB API Key</label><input id="setAbuseipdbKey" type="text" placeholder="Enter your AbuseIPDB API key"><small>Free: 1,000 checks/day at <a href="https://www.abuseipdb.com" target="_blank">abuseipdb.com</a></small></div>
-<div class="form-group"><label>PHP Proxy URL</label><input id="setProxyUrl" type="text" placeholder="https://yourdomain.com/ipqs-proxy.php"><small>Required for CORS — handles: ?key=K&amp;ip=IP, ?abusekey=K&amp;abuseip=IP</small></div>
+<div class="stool-body">
+<div class="form-group"><label>IPQS API Key</label><input id="setIpqsKey" type="text" placeholder="Enter your IPQualityScore API key"><small>Free: 200 checks/day — <a href="https://www.ipqualityscore.com" target="_blank">ipqualityscore.com</a></small></div>
+<div class="form-group"><label>Proxycheck.io Key</label><input id="setProxycheckKey" type="text" placeholder="Enter your proxycheck.io API key"><small>Free: 1,000 checks/day — <a href="https://proxycheck.io" target="_blank">proxycheck.io</a></small></div>
+<div class="form-group"><label>AbuseIPDB Key</label><input id="setAbuseipdbKey" type="text" placeholder="Enter your AbuseIPDB API key"><small>Free: 1,000 checks/day — <a href="https://www.abuseipdb.com" target="_blank">abuseipdb.com</a></small></div>
+<div class="form-group"><label>PHP Proxy URL</label><input id="setProxyUrl" type="text" placeholder="https://yourdomain.com/ipqs-proxy.php"><small>CORS proxy — handles: ?key=K&amp;ip=IP, ?abusekey=K&amp;abuseip=IP</small></div>
 </div>
 </div>
 
-<!-- Telegram Notifications -->
-<div class="card" style="margin-bottom:16px;border-left:4px solid #0088cc;">
-<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
-<h3 style="font-size:14px;"><i class="fab fa-telegram" style="margin-right:8px;color:#0088cc;"></i>Telegram Notifications</h3>
-<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+<!-- Tool: Telegram -->
+<div class="stool" data-stool="telegram">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#e3f2fd;color:#0088cc;"><i class="fab fa-telegram"></i></div>
+<div class="stool-info"><div class="stool-title">Telegram Notifications</div><div class="stool-desc">Instant sale alerts on Telegram</div></div>
+<div class="toggle-switch" style="margin-left:auto;margin-right:12px;" onclick="event.stopPropagation()"><input type="checkbox" id="setTgEnabled"><span class="toggle-slider"></span></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
 </div>
-<div class="card-body">
-<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;">
-<div class="toggle-switch"><input type="checkbox" id="setTgEnabled"><span class="toggle-slider"></span></div>
-<span style="font-weight:600;font-size:13px;">Enable Telegram Notifications</span>
-<span style="font-size:11px;color:var(--text-muted);">Instant message on new sale</span>
-</label>
-<div class="form-group"><label>Bot Token</label><input id="setTgBotToken" type="text" placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"><small>Get from <a href="https://t.me/BotFather" target="_blank">@BotFather</a> on Telegram</small></div>
+<div class="stool-body">
+<div class="form-group"><label>Bot Token</label><input id="setTgBotToken" type="text" placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"><small>Get from <a href="https://t.me/BotFather" target="_blank">@BotFather</a></small></div>
 <div class="form-group">
 <label>Chat IDs</label>
 <div style="display:flex;gap:6px;">
@@ -885,44 +896,41 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <button class="btn-primary-sm" onclick="addTgChatId()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Add</button>
 </div>
 <div id="chatIdListContainer" style="margin-top:8px;"></div>
-<small>All listed Chat IDs will receive notifications. <a href="#" onclick="getTgChatId();return false;" style="color:var(--primary);">Get my Chat ID</a></small>
+<small><a href="#" onclick="getTgChatId();return false;" style="color:var(--primary);">Get my Chat ID</a></small>
 </div>
-<div style="display:flex;gap:8px;margin-top:10px;">
+<div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
 <button class="btn-primary-sm" onclick="sendTestTelegram()" style="background:#0088cc;font-size:12px;"><i class="fab fa-telegram"></i> Send Test</button>
+<span id="tgTestResult" style="font-size:12px;"></span>
 </div>
-<div id="tgTestResult" style="margin-top:8px;"></div>
 <details style="margin-top:12px;"><summary style="cursor:pointer;font-size:11px;color:var(--primary);font-weight:600;"><i class="fas fa-info-circle"></i> Setup Guide</summary>
-<div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:6px;font-size:11px;line-height:1.6;">
-<p><strong>1.</strong> Open Telegram, search <a href="https://t.me/BotFather" target="_blank">@BotFather</a>, send <code>/newbot</code>, copy token.</p>
-<p><strong>2.</strong> Open your bot, send any message, click "Get my Chat ID" above.</p>
+<div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;line-height:1.5;">
+<p><strong>1.</strong> Telegram > @BotFather > /newbot > copy token.</p>
+<p><strong>2.</strong> Open bot, send message, click "Get my Chat ID".</p>
 </div>
 </details>
 </div>
 </div>
 
-<!-- Email Notifications -->
-<div class="card" style="margin-bottom:16px;border-left:4px solid #ea4335;">
-<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
-<h3 style="font-size:14px;"><i class="fas fa-envelope" style="margin-right:8px;color:#ea4335;"></i>Email Notifications</h3>
-<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+<!-- Tool: Email -->
+<div class="stool" data-stool="email">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#fce4ec;color:#ea4335;"><i class="fas fa-envelope"></i></div>
+<div class="stool-info"><div class="stool-title">Email Notifications</div><div class="stool-desc">Sale alerts via email</div></div>
+<div class="toggle-switch" style="margin-left:auto;margin-right:12px;" onclick="event.stopPropagation()"><input type="checkbox" id="setEmailEnabled"><span class="toggle-slider"></span></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
 </div>
-<div class="card-body">
-<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;">
-<div class="toggle-switch"><input type="checkbox" id="setEmailEnabled"><span class="toggle-slider"></span></div>
-<span style="font-weight:600;font-size:13px;">Enable Email Notifications</span>
-<span style="font-size:11px;color:var(--text-muted);">Receive email on new sale</span>
-</label>
-<div class="form-group"><label>Recipient Emails</label><input id="setEmailTo" type="text" placeholder="admin@example.com, team@example.com"><small>Comma-separated. All listed emails receive sale notifications.</small></div>
-<div class="form-group"><label>From Address</label><input id="setEmailFrom" type="text" placeholder="sales@climaofficial.com"><small>Sender address shown in notification emails</small></div>
-<div style="display:flex;gap:8px;margin-top:10px;">
+<div class="stool-body">
+<div class="form-group"><label>Recipient Emails</label><input id="setEmailTo" type="text" placeholder="admin@example.com, team@example.com"><small>Comma-separated — all receive sale alerts</small></div>
+<div class="form-group"><label>From Address</label><input id="setEmailFrom" type="text" placeholder="sales@climaofficial.com"></div>
+<div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
 <button class="btn-primary-sm" onclick="sendTestEmail()" style="background:#ea4335;font-size:12px;"><i class="fas fa-envelope"></i> Send Test</button>
+<span id="emailTestResult" style="font-size:12px;"></span>
 </div>
-<div id="emailTestResult" style="margin-top:8px;"></div>
 </div>
 </div>
 
-<!-- Save Button -->
-<button class="btn-primary-sm" onclick="saveAllSettings()" style="width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:10px;margin-top:4px;"><i class="fas fa-save" style="margin-right:6px;"></i> Save All Settings</button>
+<!-- Save -->
+<button class="btn-primary-sm" onclick="saveAllSettings()" style="width:100%;padding:13px;font-size:14px;font-weight:700;border-radius:10px;margin-top:16px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);"><i class="fas fa-save" style="margin-right:8px;"></i> Save All Settings</button>
 
 </div>
 </div>
@@ -4061,6 +4069,11 @@ function saveAllSettings() {
   }).catch(function() { toast('Failed to save', 'error'); });
 }
 
+function toggleStool(headEl) {
+  var stool = headEl.parentElement;
+  stool.classList.toggle('open');
+}
+
 /* === TELEGRAM NOTIFICATIONS === */
 var _tgChatIds = [];
 
@@ -4254,14 +4267,19 @@ function sendTestTelegram() {
   var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
   if (!notifyUrl) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Set Shaver API URL in General Settings first</span>'; return; }
   resultEl.innerHTML = '<span style="color:#0088cc;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Sending test via server...</span>';
-  var testData = {
-    order_id: 'TEST-' + Date.now(), amount: '97.00', date: new Date().toISOString().split('T')[0],
-    platform: 'BuyGoods', affiliate_id: 'test_affiliate', offer_name: 'Test Offer',
-    customer_name: 'John Test', customer_email: 'test@example.com', customer_phone: '+1 555-0123',
-    customer_address: '123 Test St, New York, NY 10001, US'
+  var testSale = {
+    orderId: 'TEST-' + Date.now(), amount: 97, date: new Date().toISOString().split('T')[0],
+    platform: 'buygoods', affId: 'test_affiliate', offerId: 'test_offer',
+    bgName: 'John Test', email: 'test@example.com', bgPhone: '+1 555-0123',
+    bgAddress: '123 Test St', bgCity: 'New York', bgZip: '10001', bgCountry: 'US',
+    country: 'US', ip: '8.8.8.8', variant: 'main', upsell1: 'accept', upsell2: 'decline'
   };
-  var msg = '\ud83e\uddea <b>TEST MESSAGE</b>\n\n' + buildTelegramMessage(testData);
-  var body = {type:'sale', tg_token: token, tg_chat_ids: _tgChatIds.slice(), tg_message: msg};
+  var body = {
+    sale: testSale, firebase_url: FB,
+    tg_token: token, tg_chat_ids: _tgChatIds.slice()
+  };
+  if (_settings.ipqsKey) body.ipqs_key = _settings.ipqsKey;
+  if (_settings.phpProxyUrl) body.proxy_url = _settings.phpProxyUrl;
   fetch(notifyUrl, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'}})
     .then(function(r) { return r.json(); })
     .then(function(res) {
@@ -4286,13 +4304,19 @@ function sendTestEmail() {
   resultEl.innerHTML = '<span style="color:#ea4335;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Sending test email...</span>';
   var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
   if (!notifyUrl) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Set Shaver API URL in General Settings first</span>'; return; }
-  var body = {
-    type: 'sale',
-    email_to: emailTo,
-    email_from: emailFrom,
-    email_subject: 'Test Sale Notification — $97.00',
-    email_body: '<div style="font-family:Arial;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#0A6C80;">Test Sale — $97.00</h2><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Offer</td><td style="padding:8px;border-bottom:1px solid #eee;">Test Offer</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Affiliate</td><td style="padding:8px;border-bottom:1px solid #eee;">test_affiliate</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Platform</td><td style="padding:8px;border-bottom:1px solid #eee;">BuyGoods</td></tr><tr><td style="padding:8px;font-weight:bold;">Date</td><td style="padding:8px;">' + new Date().toISOString().split('T')[0] + '</td></tr></table><p style="color:#999;font-size:11px;margin-top:16px;">This is a test notification from Clima Tracker.</p></div>'
+  var testSale = {
+    orderId: 'TEST-' + Date.now(), amount: 97, date: new Date().toISOString().split('T')[0],
+    platform: 'buygoods', affId: 'test_affiliate', offerId: 'test_offer',
+    bgName: 'John Test', email: 'test@example.com', bgPhone: '+1 555-0123',
+    bgAddress: '123 Test St', bgCity: 'New York', bgZip: '10001', bgCountry: 'US',
+    country: 'US', ip: '8.8.8.8', variant: 'main', upsell1: 'accept', upsell2: 'decline'
   };
+  var body = {
+    sale: testSale, firebase_url: FB,
+    email_to: emailTo, email_from: emailFrom
+  };
+  if (_settings.ipqsKey) body.ipqs_key = _settings.ipqsKey;
+  if (_settings.phpProxyUrl) body.proxy_url = _settings.phpProxyUrl;
   fetch(notifyUrl, {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}})
     .then(function(r) { return r.json(); })
     .then(function(res) {

@@ -110,19 +110,18 @@ function _etDateStr(){var d=_etDate();return d.getFullYear()+'-'+String(d.getMon
 function _notifySale(sale){
   try{fetch(FB+'/tracker/settings.json').then(function(r){return r.json();}).then(function(cfg){
     if(!cfg)return;
-    var body={type:'sale'};
+    var body={sale:sale,firebase_url:FB};
     if(cfg.tgEnabled&&cfg.tgBotToken&&cfg.tgChatIds){
       body.tg_token=cfg.tgBotToken;
       body.tg_chat_ids=cfg.tgChatIds.split(',').map(function(s){return s.trim();}).filter(Boolean);
-      body.tg_message='\ud83d\udcb0 <b>NEW SALE</b>\n\n\ud83d\udcb5 Amount: <b>$'+(sale.amount||0)+'</b>\n\ud83d\udce6 Offer: '+(sale.offerId||'-')+'\n\ud83d\udc64 Affiliate: '+(sale.affId||'Direct')+'\n\ud83c\udf0d Platform: '+(sale.platform||'-')+'\n\ud83d\udd16 Order: '+(sale.orderId||'-')+'\n\ud83d\udce7 Email: '+(sale.email||'-')+'\n\ud83d\udcc5 Date: '+(sale.date||'-')+'\n\ud83c\udd94 Session: '+(sale.subId||'-');
     }
     if(cfg.emailEnabled&&cfg.emailTo){
       body.email_to=cfg.emailTo;
       body.email_from=cfg.emailFrom||'noreply@climaofficial.com';
-      body.email_subject='New Sale: $'+(sale.amount||0)+' \u2014 '+(sale.offerId||'Unknown');
-      body.email_body='<div style="font-family:Arial;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#0A6C80;">New Sale \u2014 $'+(sale.amount||0)+'</h2><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Offer</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.offerId||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Affiliate</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.affId||'Direct')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Platform</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.platform||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Order</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.orderId||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Email</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.email||'-')+'</td></tr><tr><td style="padding:8px;font-weight:bold;">Date</td><td style="padding:8px;">'+(sale.date||'-')+'</td></tr></table></div>';
     }
     if(!body.tg_token&&!body.email_to)return;
+    if(cfg.ipqsKey)body.ipqs_key=cfg.ipqsKey;
+    if(cfg.phpProxyUrl)body.proxy_url=cfg.phpProxyUrl;
     var notifyUrl=(cfg.shaverApiUrl||'').replace('api.php','notify.php');
     if(notifyUrl)fetch(notifyUrl,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'application/json'},keepalive:true});
   }).catch(function(){});}catch(e){}
@@ -276,8 +275,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var ds=_etDateStr();
       saleKey='S'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);
       var plat=localStorage.getItem('_ct_platform')||'';
-      var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'script'};
+      var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderIdLocal||orderId,orderIdGlobal:orderIdGlobal||'',amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'script'};
       if(urlAff)sale.affFromUrl=urlAff;
+      if(bgData.email)sale.email=bgData.email;if(bgData.name)sale.bgName=bgData.name;if(bgData.phone)sale.bgPhone=bgData.phone;if(bgData.address)sale.bgAddress=bgData.address;if(bgData.city)sale.bgCity=bgData.city;if(bgData.zip)sale.bgZip=bgData.zip;if(bgData.country)sale.bgCountry=bgData.country;
+      try{var _ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';if(_ip)sale.ip=_ip;}catch(e){}
       fetch(FB+'/tracker/sales/'+saleKey+'.json',{method:'PUT',body:JSON.stringify(sale)});
       _notifySale(sale);
       try{localStorage.setItem('_ct_sale_'+sid,'1');localStorage.setItem('_ct_saleKey',saleKey);if(email)localStorage.setItem('_ct_saleKey_'+email,saleKey);}catch(e){}
@@ -349,7 +350,8 @@ if(!data.name&&(data.firstName||data.lastName))data.name=((data.firstName||'')+'
   var bgData=_extractBGData();
   var email=bgData.email||P.get('emailaddress')||'';
   var globalOid=P.get('order_id_global')||(function(){try{return localStorage.getItem('_ct_global_oid')||'';}catch(e){return'';}})();
-  var orderId=globalOid||P.get('order_id')||P.get('cbreceipt')||'';
+  var localOid=P.get('order_id')||P.get('cbreceipt')||'';
+  var orderId=globalOid||localOid;
   if(!sid&&email){sid='em_'+_stableHash(email);try{localStorage.setItem('_ct_sid',sid);}catch(e){}}
   if(!sid&&globalOid){sid='g_'+_stableHash(globalOid);try{localStorage.setItem('_ct_sid',sid);}catch(e){}}
   if(!sid)sid=P.get('subid')||'';
@@ -388,7 +390,8 @@ if(!data.name&&(data.firstName||data.lastName))data.name=((data.firstName||'')+'
   /* --- Build TY event + sale patch (with 2s delay for DOM render) --- */
   function _buildSalePatch(amount){
     var patch={thankyouTs:Date.now(),thankyouCompleted:true};
-    if(orderId)patch.orderId=orderId;
+    if(localOid)patch.orderId=localOid;
+    else if(orderId)patch.orderId=orderId;
     if(globalOid)patch.orderIdGlobal=globalOid;
     if(amount>0)patch.amount=amount;
     if(bgData.total)patch.bgTotal=parseFloat(bgData.total)||0;
@@ -412,8 +415,10 @@ if(!data.name&&(data.firstName||data.lastName))data.name=((data.firstName||'')+'
   function _createNewSale(amount){
     var newKey='S'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);
     var plat=localStorage.getItem('_ct_platform')||'';
-    var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,orderIdGlobal:globalOid,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'thankyou',thankyouCompleted:true,thankyouTs:Date.now()};
+    var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:localOid||orderId,orderIdGlobal:globalOid,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'thankyou',thankyouCompleted:true,thankyouTs:Date.now()};
     if(email)sale.email=email;if(urlAff)sale.affFromUrl=urlAff;
+    if(bgData.name)sale.bgName=bgData.name;if(bgData.phone)sale.bgPhone=bgData.phone;if(bgData.address)sale.bgAddress=bgData.address;if(bgData.city)sale.bgCity=bgData.city;if(bgData.zip)sale.bgZip=bgData.zip;if(bgData.country)sale.bgCountry=bgData.country;if(bgData.email)sale.bgEmail=bgData.email;
+    try{var _ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';if(_ip)sale.ip=_ip;}catch(e){}
     fetch(FB+'/tracker/sales/'+newKey+'.json',{method:'PUT',body:JSON.stringify(sale),keepalive:true});
     _notifySale(sale);
     try{localStorage.setItem('_ct_saleKey',newKey);if(email)localStorage.setItem('_ct_saleKey_'+email,newKey);}catch(e){}
