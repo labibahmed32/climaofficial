@@ -1806,6 +1806,11 @@ function onSgDomainChange() {
   }).catch(function() { generateScripts(); });
 }
 
+/* Base64url encode a config object (safe for URL params) */
+function _b64cfg(obj) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
 function generateScripts() {
   var offerId = document.getElementById('sgOffer').value;
   if (!offerId) { document.getElementById('sgOutput').style.display = 'none'; document.getElementById('sgTestPanel').style.display = 'none'; return; }
@@ -1837,97 +1842,70 @@ function buildLandingScript(offer) {
   var vmap = {};
   variants.forEach(function(v) { vmap[v.code] = { amount: v.amount || 0, name: v.name || v.code }; });
   var linkDomain = platform === 'buygoods' ? 'buygoods.com/secure/' : platform === 'digistore' ? 'digistore24.com' : platform === 'clickbank' ? 'pay.clickbank.net' : '';
-  var ctUrl = (_settings.trackingDomain || location.origin) + '/ct.js?v=3';
+  var ctBase = (_settings.trackingDomain || location.origin) + '/ct.php';
 
-  /* Check if Shaver mode is selected */
   var modeEl = document.querySelector('input[name="sgLandingMode"]:checked');
   var mode = modeEl ? modeEl.value : 'buygoods';
-
-  if (mode === 'shaver') {
-    var domainKey = document.getElementById('sgShaverDomain').value;
-    if (!domainKey) {
-      return '<!-- Select a Shaver Domain above to generate combined script -->';
-    }
-    var apiBase = (_settings && _settings.shaverApiUrl) || 'https://plan1.climaofficial.com/shaver/api.php';
-    var checkUrl = apiBase.replace(/api\.php$/, 'check.php');
-    /* Landing description update */
-    var descEl = document.querySelector('#sgOutput .sg-section:first-child .sg-desc');
-    if (descEl) descEl.innerHTML = 'Includes <b>Shaver</b> (traffic shaving + BuyGoods injection) and <b>Clima Tracker</b>. Add to &lt;head&gt; of your landing page. <b>BuyGoods script is injected automatically by Shaver.</b>';
-    return '<!-- Clima Tracker + Shaver - Landing Page -->\n' +
-'<script src="' + checkUrl + '?d=' + domainKey + '"><\/script>\n' +
-'<script>var _ct={type:"landing",fb:"' + FB + '",oid:"' + offer._id + '",vcodes:"' + varCodes + '",linkDomain:"' + linkDomain + '",vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
-  }
-
-  /* Default: BuyGoods Only mode — include BuyGoods tracking + tracker pixel */
+  var domainKey = document.getElementById('sgShaverDomain').value;
   var descEl = document.querySelector('#sgOutput .sg-section:first-child .sg-desc');
-  if (_sgSelectedDomainBGScript) {
-    if (descEl) descEl.innerHTML = 'Includes <b>BuyGoods tracking</b> and <b>Clima Tracker</b>. Add to &lt;head&gt; of your landing page. No shaving — direct BuyGoods tracking.';
-    return '<!-- Clima Tracker + BuyGoods - Landing Page -->\n' +
-_sgSelectedDomainBGScript + '\n' +
-'<script>var _ct={type:"landing",fb:"' + FB + '",oid:"' + offer._id + '",vcodes:"' + varCodes + '",linkDomain:"' + linkDomain + '",vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
+
+  var cfg = { fb: FB, oid: offer._id, vcodes: varCodes, vmap: vmap, linkDomain: linkDomain };
+  var c = _b64cfg(cfg);
+
+  if (mode === 'shaver' && domainKey) {
+    if (descEl) descEl.innerHTML = 'Includes traffic filtering, BuyGoods injection, and Clima Tracker. Add to &lt;head&gt; of your landing page.';
+    return '<!-- Clima Tracker - Landing Page -->\n<script src="' + ctBase + '?t=lp&c=' + c + '&d=' + domainKey + '"><\/script>';
   }
-  /* No domain selected — tracker only */
-  if (descEl) descEl.innerHTML = 'Add this to the &lt;head&gt; of your landing page. <b>Select a Shaver Domain above</b> to also include BuyGoods tracking script.';
-  return '<!-- Clima Tracker - Landing Page -->\n' +
-'<script>var _ct={type:"landing",fb:"' + FB + '",oid:"' + offer._id + '",vcodes:"' + varCodes + '",linkDomain:"' + linkDomain + '",vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
+
+  if (mode === 'shaver' && !domainKey) {
+    return '<!-- Select a Domain above to generate the landing page script -->';
+  }
+
+  if (descEl) descEl.innerHTML = 'Add to &lt;head&gt; of your landing page.';
+  return '<!-- Clima Tracker - Landing Page -->\n<script src="' + ctBase + '?t=lp&c=' + c + '"><\/script>';
 }
 
 function buildCheckoutScript(offer) {
-  var proxyUrl = _settings.phpProxyUrl || '';
-  var ipqsKey = _settings.ipqsKey || '';
-  var pcKey = _settings.proxycheckKey || '';
-  var abuseKey = _settings.abuseipdbKey || '';
-  var ctUrl = (_settings.trackingDomain || location.origin) + '/ct.js?v=3';
-  return '<!-- Clima Tracker - Checkout (Fraud Detection) -->\n' +
-'<script>var _ct={type:"checkout",fb:"' + FB + '",proxy:"' + proxyUrl + '",ipqsKey:"' + ipqsKey + '",pcKey:"' + pcKey + '",abuseKey:"' + abuseKey + '"};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
+  var ctBase = (_settings.trackingDomain || location.origin) + '/ct.php';
+  var cfg = { fb: FB, proxy: _settings.phpProxyUrl || '', ipqsKey: _settings.ipqsKey || '', pcKey: _settings.proxycheckKey || '', abuseKey: _settings.abuseipdbKey || '' };
+  var c = _b64cfg(cfg);
+  return '<!-- Clima Tracker - Checkout Page -->\n<script src="' + ctBase + '?t=co&c=' + c + '"><\/script>';
 }
 
 function buildUpsellScripts(offer) {
   var variants = getOfferVariants(offer);
   var vmap = {};
   variants.forEach(function(v) { vmap[v.code] = { amount: v.amount || 0, name: v.name || v.code }; });
-  var ctUrl = (_settings.trackingDomain || location.origin) + '/ct.js?v=3';
-  var upsells = getOfferUpsells(offer);
-  var count = upsells.length || 1;
+  var ctBase = (_settings.trackingDomain || location.origin) + '/ct.php';
+  var cfg = { fb: FB, oid: offer._id, vmap: vmap };
+  var c = _b64cfg(cfg);
+  var script = '<!-- Clima Tracker - Upsell Page -->\n<script src="' + ctBase + '?t=up&c=' + c + '"><\/script>';
+
   var container = document.getElementById('sgUpsellList');
-  var html = '';
-  for (var i = 1; i <= count; i++) {
-    var label = i === 1 ? 'Upsell 1 — Sale Capture (creates sale record)' : 'Upsell ' + i;
-    var script = '<!-- Clima Tracker - Upsell ' + i + (i === 1 ? ' (Sale Capture)' : '') + ' -->\n' +
-'<script>var _ct={type:"upsell",fb:"' + FB + '",unum:' + i + ',vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
-    html += '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
-      '<span style="font-size:12px;font-weight:700;color:' + (i === 1 ? 'var(--green)' : 'var(--text-muted)') + ';">' +
-      '<i class="fas fa-' + (i === 1 ? 'star' : 'arrow-right') + '"></i> ' + label + '</span>' +
-      '<button class="btn-sm" onclick="copyUpsellScript(' + i + ')"><i class="fas fa-copy"></i> Copy</button></div>' +
-      '<pre class="code-block" id="sgUpsell' + i + '"></pre></div>';
-  }
-  container.innerHTML = html;
-  for (var j = 1; j <= count; j++) {
-    var s = '<!-- Clima Tracker - Upsell ' + j + (j === 1 ? ' (Sale Capture)' : '') + ' -->\n' +
-'<script>var _ct={type:"upsell",fb:"' + FB + '",unum:' + j + ',vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
-    document.getElementById('sgUpsell' + j).textContent = s;
-  }
+  container.innerHTML =
+    '<div style="background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.25);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--green);">' +
+    '<i class="fas fa-info-circle"></i> <b>Ek hi script — sab upsell pages pe same script lagao.</b> Auto-detect karta hai kaun sa upsell hai.</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+    '<span style="font-size:12px;font-weight:700;color:var(--green);"><i class="fas fa-star"></i> All Upsell Pages (1, 2, 3...)</span>' +
+    '<button class="btn-sm" onclick="copyUpsellScript()"><i class="fas fa-copy"></i> Copy</button></div>' +
+    '<pre class="code-block" id="sgUpsell1"></pre>';
+
+  document.getElementById('sgUpsell1').textContent = script;
 }
 
-function copyUpsellScript(num) {
-  var el = document.getElementById('sgUpsell' + num);
-  if (el) navigator.clipboard.writeText(el.textContent).then(function() { toast('Upsell ' + num + ' script copied!', 'success'); });
+function copyUpsellScript() {
+  var el = document.getElementById('sgUpsell1');
+  if (el) navigator.clipboard.writeText(el.textContent).then(function() { toast('Upsell script copied!', 'success'); });
 }
 
 function buildThankYouScript(offer) {
   var variants = getOfferVariants(offer);
   var vmap = {};
   variants.forEach(function(v) { vmap[v.code] = { amount: v.amount || 0, name: v.name || v.code }; });
-  var ctUrl = (_settings.trackingDomain || location.origin) + '/ct.js?v=3';
-  return '<!-- Clima Tracker - Thank You Page -->\n' +
-'<script>var _ct={type:"thankyou",fb:"' + FB + '",vmap:' + JSON.stringify(vmap) + '};<\/script>\n' +
-'<script src="' + ctUrl + '"><\/script>';
+  var ctBase = (_settings.trackingDomain || location.origin) + '/ct.php';
+  var cfg = { fb: FB, oid: offer._id, vmap: vmap };
+  var c = _b64cfg(cfg);
+  return '<!-- Clima Tracker - Thank You Page -->\n<script src="' + ctBase + '?t=ty&c=' + c + '"><\/script>';
 }
 
 function buildPostbackUrl(offer) {
