@@ -4027,8 +4027,13 @@ function loadCheckouts() {
 
 function getCheckoutList() {
   var list = [];
+  var fromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : 0;
+  var toTs = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : Date.now();
   Object.keys(_checkouts).forEach(function(sid) {
     var c = _checkouts[sid];
+    /* Filter by date range using timestamp */
+    var ts = c.ts || 0;
+    if (ts < fromTs || ts > toTs) return;
     c._sid = sid;
     /* Find matching visitor */
     var visitor = null;
