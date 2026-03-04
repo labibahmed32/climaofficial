@@ -35,17 +35,17 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 /* Layout */
 .app-shell{display:flex;min-height:100vh;}
 .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#0c1e24 0%,#0a1820 100%);color:#c0cdd3;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s;}
-.sidebar-logo{padding:20px 22px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06);}
-.sidebar-logo img{width:34px;height:34px;border-radius:8px;}
-.sidebar-logo span{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.sidebar-logo{padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);}
+.sidebar-logo img{width:28px;height:28px;border-radius:7px;}
+.sidebar-logo span{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;}
 .sidebar nav{flex:1;padding:14px 0;overflow-y:auto;}
-.nav-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#4a6070;padding:18px 22px 6px;font-weight:700;}
-.nav-item{display:flex;align-items:center;gap:11px;padding:10px 22px;font-size:13px;color:#8da3af;cursor:pointer;transition:all .2s;border-left:3px solid transparent;margin:1px 0;}
+.nav-label{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:#4a6070;padding:12px 18px 4px;font-weight:700;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 18px;font-size:12.5px;color:#8da3af;cursor:pointer;transition:all .2s;border-left:3px solid transparent;margin:0;}
 .nav-item:hover{background:rgba(255,255,255,.04);color:#d0dce2;}
 .nav-item.active{background:rgba(10,108,128,.2);color:#fff;border-left-color:#0ea5b6;font-weight:600;}
 .nav-item i{width:18px;text-align:center;font-size:14px;}
-.sidebar-footer{padding:14px 22px;border-top:1px solid rgba(255,255,255,.06);}
-.sidebar-footer button{width:100%;padding:9px;background:rgba(255,255,255,.05);color:#8da3af;border:none;border-radius:8px;font-size:13px;cursor:pointer;transition:all .2s;}
+.sidebar-footer{padding:10px 18px;border-top:1px solid rgba(255,255,255,.06);}
+.sidebar-footer button{width:100%;padding:7px;background:rgba(255,255,255,.05);color:#8da3af;border:none;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s;}
 .sidebar-footer button:hover{background:rgba(255,255,255,.1);color:#fff;}
 .main-content{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
 /* Topbar */
@@ -149,6 +149,12 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;font-size:13px;color:var(--text-dark);outline:none;font-family:inherit;transition:border-color .2s,box-shadow .2s;}
 .form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,108,128,.08);}
 .form-group small{font-size:11px;color:var(--text-muted);display:block;margin-top:4px;}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:22px;transition:.3s;}
+.toggle-slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.toggle-switch input:checked+.toggle-slider{background:var(--primary);}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(18px);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 /* Script generator */
 .sg-section{margin-bottom:20px;border:1px solid var(--card-border);border-radius:var(--radius);overflow:hidden;}
@@ -825,32 +831,52 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 
 <!-- Settings Page -->
 <div id="pg-settings" class="page">
-<div class="card" style="max-width:600px;">
-<div class="card-header"><h3><i class="fas fa-cog" style="margin-right:8px;"></i>Tracker Settings</h3></div>
+<div style="max-width:720px;">
+
+<!-- General Settings -->
+<div class="card" style="margin-bottom:16px;border-left:4px solid var(--primary);">
+<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
+<h3 style="font-size:14px;"><i class="fas fa-sliders-h" style="margin-right:8px;color:var(--primary);"></i>General Settings</h3>
+<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+</div>
+<div class="card-body">
+<div class="form-row">
+<div class="form-group"><label>Tracking Domain</label><input id="setDomain" type="text" placeholder="https://plan1.climaofficial.com"></div>
+<div class="form-group"><label>Default CPA ($)</label><input id="setDefaultCPA" type="number" value="80" step="0.01"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Postback Secret</label><input id="setPostbackSecret" type="text" placeholder="my_secret_key"><small>Used to verify incoming postback requests</small></div>
+<div class="form-group"><label>Shaver API URL</label><input id="setShaverApiUrl" type="text" placeholder="https://plan1.climaofficial.com/shaver/api.php"></div>
+</div>
+</div>
+</div>
+
+<!-- Fraud API Keys -->
+<div class="card" style="margin-bottom:16px;border-left:4px solid #7c3aed;">
+<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
+<h3 style="font-size:14px;"><i class="fas fa-key" style="margin-right:8px;color:#7c3aed;"></i>Fraud API Keys</h3>
+<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+</div>
 <div class="card-body">
 <div class="form-group"><label>IPQS API Key</label><input id="setIpqsKey" type="text" placeholder="Enter your IPQualityScore API key"><small>Free: 200 IP + 100 email + 100 phone checks/day at <a href="https://www.ipqualityscore.com" target="_blank">ipqualityscore.com</a></small></div>
 <div class="form-group"><label>Proxycheck.io API Key</label><input id="setProxycheckKey" type="text" placeholder="Enter your proxycheck.io API key"><small>Free: 1,000 checks/day at <a href="https://proxycheck.io" target="_blank">proxycheck.io</a></small></div>
 <div class="form-group"><label>AbuseIPDB API Key</label><input id="setAbuseipdbKey" type="text" placeholder="Enter your AbuseIPDB API key"><small>Free: 1,000 checks/day at <a href="https://www.abuseipdb.com" target="_blank">abuseipdb.com</a></small></div>
-<div class="form-group"><label>PHP Proxy URL</label><input id="setProxyUrl" type="text" placeholder="https://yourdomain.com/ipqs-proxy.php"><small>Required for IPQS + AbuseIPDB checks (CORS). Handles: ?key=K&amp;ip=IP, ?key=K&amp;email=E, ?key=K&amp;phone=P, ?abusekey=K&amp;abuseip=IP</small></div>
-<div class="form-group"><label>Tracking Domain</label><input id="setDomain" type="text" placeholder="https://plan1.climaofficial.com"></div>
-<div class="form-group"><label>Shaver API URL</label><input id="setShaverApiUrl" type="text" placeholder="https://plan1.climaofficial.com/shaver/api.php"><small>URL to your Shaver api.php backend for traffic shaving management</small></div>
-<div class="form-group"><label>Default CPA ($)</label><input id="setDefaultCPA" type="number" value="80" step="0.01"></div>
-<div class="form-group"><label>Postback Secret</label><input id="setPostbackSecret" type="text" placeholder="my_secret_key"><small>Used to verify incoming postback requests</small></div>
-<button class="btn-primary-sm" onclick="saveSettings()" style="margin-top:8px;"><i class="fas fa-save"></i> Save Settings</button>
+<div class="form-group"><label>PHP Proxy URL</label><input id="setProxyUrl" type="text" placeholder="https://yourdomain.com/ipqs-proxy.php"><small>Required for CORS — handles: ?key=K&amp;ip=IP, ?abusekey=K&amp;abuseip=IP</small></div>
 </div>
 </div>
 
-<!-- Telegram Notification Settings -->
-<div class="card" style="max-width:600px;margin-top:20px;">
-<div class="card-header"><h3><i class="fab fa-telegram" style="margin-right:8px;color:#0088cc;"></i>Sale Notifications (Telegram)</h3></div>
-<div class="card-body">
-<div class="form-group" style="display:flex;align-items:center;gap:10px;">
-<label style="margin:0;cursor:pointer;display:flex;align-items:center;gap:8px;">
-<input type="checkbox" id="setTgEnabled" style="width:18px;height:18px;cursor:pointer;">
-<span style="font-weight:600;">Enable Telegram Notifications</span>
-</label>
-<small style="color:var(--text-muted);">Instant message on Telegram when new sale comes in</small>
+<!-- Telegram Notifications -->
+<div class="card" style="margin-bottom:16px;border-left:4px solid #0088cc;">
+<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
+<h3 style="font-size:14px;"><i class="fab fa-telegram" style="margin-right:8px;color:#0088cc;"></i>Telegram Notifications</h3>
+<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
 </div>
+<div class="card-body">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;">
+<div class="toggle-switch"><input type="checkbox" id="setTgEnabled"><span class="toggle-slider"></span></div>
+<span style="font-weight:600;font-size:13px;">Enable Telegram Notifications</span>
+<span style="font-size:11px;color:var(--text-muted);">Instant message on new sale</span>
+</label>
 <div class="form-group"><label>Bot Token</label><input id="setTgBotToken" type="text" placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"><small>Get from <a href="https://t.me/BotFather" target="_blank">@BotFather</a> on Telegram</small></div>
 <div class="form-group">
 <label>Chat IDs</label>
@@ -859,33 +885,45 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <button class="btn-primary-sm" onclick="addTgChatId()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Add</button>
 </div>
 <div id="chatIdListContainer" style="margin-top:8px;"></div>
-<small>Add multiple Chat IDs - all will receive sale notifications. <a href="#" onclick="getTgChatId();return false;" style="color:var(--primary);">Get my Chat ID</a></small>
+<small>All listed Chat IDs will receive notifications. <a href="#" onclick="getTgChatId();return false;" style="color:var(--primary);">Get my Chat ID</a></small>
 </div>
-<div style="display:flex;gap:10px;margin-top:12px;">
-<button class="btn-primary-sm" onclick="saveTgSettings()"><i class="fas fa-save"></i> Save Settings</button>
-<button class="btn-primary-sm" onclick="sendTestTelegram()" style="background:#0088cc;"><i class="fab fa-telegram"></i> Send Test Message</button>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-primary-sm" onclick="sendTestTelegram()" style="background:#0088cc;font-size:12px;"><i class="fab fa-telegram"></i> Send Test</button>
 </div>
-<div id="tgTestResult" style="margin-top:10px;"></div>
-<details style="margin-top:16px;"><summary style="cursor:pointer;font-size:12px;color:var(--primary);font-weight:600;"><i class="fas fa-info-circle"></i> Telegram Bot Setup Guide (2 min)</summary>
-<div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:8px;font-size:11px;line-height:1.6;">
-<p><strong>Step 1: Create Bot</strong></p>
-<ol style="padding-left:18px;">
-<li>Open Telegram &rarr; Search <a href="https://t.me/BotFather" target="_blank">@BotFather</a></li>
-<li>Send <code>/newbot</code></li>
-<li>Enter bot name (e.g. "Clima Sales")</li>
-<li>Enter username (e.g. "clima_sales_bot")</li>
-<li>Copy the <strong>Bot Token</strong> and paste above</li>
-</ol>
-<p style="margin-top:10px;"><strong>Step 2: Get Chat ID</strong></p>
-<ol style="padding-left:18px;">
-<li>Open your bot in Telegram and send any message (e.g. "hi")</li>
-<li>Click "<strong>Get my Chat ID</strong>" link above - it will auto-detect</li>
-<li>Or send to a <strong>group</strong>: add bot to group, send message, then get Chat ID</li>
-</ol>
-<p style="margin-top:10px;color:var(--green);"><strong>Done!</strong> Free, unlimited messages, instant delivery.</p>
+<div id="tgTestResult" style="margin-top:8px;"></div>
+<details style="margin-top:12px;"><summary style="cursor:pointer;font-size:11px;color:var(--primary);font-weight:600;"><i class="fas fa-info-circle"></i> Setup Guide</summary>
+<div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:6px;font-size:11px;line-height:1.6;">
+<p><strong>1.</strong> Open Telegram, search <a href="https://t.me/BotFather" target="_blank">@BotFather</a>, send <code>/newbot</code>, copy token.</p>
+<p><strong>2.</strong> Open your bot, send any message, click "Get my Chat ID" above.</p>
 </div>
 </details>
 </div>
+</div>
+
+<!-- Email Notifications -->
+<div class="card" style="margin-bottom:16px;border-left:4px solid #ea4335;">
+<div class="card-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.card-body').style.display=this.parentElement.querySelector('.card-body').style.display==='none'?'block':'none'">
+<h3 style="font-size:14px;"><i class="fas fa-envelope" style="margin-right:8px;color:#ea4335;"></i>Email Notifications</h3>
+<i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted);"></i>
+</div>
+<div class="card-body">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;">
+<div class="toggle-switch"><input type="checkbox" id="setEmailEnabled"><span class="toggle-slider"></span></div>
+<span style="font-weight:600;font-size:13px;">Enable Email Notifications</span>
+<span style="font-size:11px;color:var(--text-muted);">Receive email on new sale</span>
+</label>
+<div class="form-group"><label>Recipient Emails</label><input id="setEmailTo" type="text" placeholder="admin@example.com, team@example.com"><small>Comma-separated. All listed emails receive sale notifications.</small></div>
+<div class="form-group"><label>From Address</label><input id="setEmailFrom" type="text" placeholder="sales@climaofficial.com"><small>Sender address shown in notification emails</small></div>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<button class="btn-primary-sm" onclick="sendTestEmail()" style="background:#ea4335;font-size:12px;"><i class="fas fa-envelope"></i> Send Test</button>
+</div>
+<div id="emailTestResult" style="margin-top:8px;"></div>
+</div>
+</div>
+
+<!-- Save Button -->
+<button class="btn-primary-sm" onclick="saveAllSettings()" style="width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:10px;margin-top:4px;"><i class="fas fa-save" style="margin-right:6px;"></i> Save All Settings</button>
+
 </div>
 </div>
 
@@ -3984,46 +4022,47 @@ function loadSettings() {
     document.getElementById('setShaverApiUrl').value = _settings.shaverApiUrl || '';
     document.getElementById('setDefaultCPA').value = _settings.defaultCPA || 80;
     document.getElementById('setPostbackSecret').value = _settings.postbackSecret || '';
-    /* Telegram notification settings */
+    /* Telegram */
     document.getElementById('setTgEnabled').checked = !!_settings.tgEnabled;
     document.getElementById('setTgBotToken').value = _settings.tgBotToken || '';
     _tgChatIds = _settings.tgChatIds ? _settings.tgChatIds.split(',').map(function(e) { return e.trim(); }).filter(Boolean) : [];
     renderChatIdList();
+    /* Email */
+    document.getElementById('setEmailEnabled').checked = !!_settings.emailEnabled;
+    document.getElementById('setEmailTo').value = _settings.emailTo || '';
+    document.getElementById('setEmailFrom').value = _settings.emailFrom || '';
   });
 }
 
-function saveSettings() {
+function saveAllSettings() {
   var data = {}, v;
-  v = document.getElementById('setIpqsKey').value.trim(); if (v) data.ipqsKey = v;
-  v = document.getElementById('setProxycheckKey').value.trim(); if (v) data.proxycheckKey = v;
-  v = document.getElementById('setAbuseipdbKey').value.trim(); if (v) data.abuseipdbKey = v;
-  v = document.getElementById('setProxyUrl').value.trim(); if (v) data.phpProxyUrl = v;
-  v = document.getElementById('setDomain').value.trim(); if (v) data.trackingDomain = v;
-  v = document.getElementById('setShaverApiUrl').value.trim(); if (v) data.shaverApiUrl = v;
+  /* General */
+  v = document.getElementById('setDomain').value.trim(); data.trackingDomain = v;
   data.defaultCPA = parseFloat(document.getElementById('setDefaultCPA').value) || 80;
-  v = document.getElementById('setPostbackSecret').value.trim(); if (v) data.postbackSecret = v;
+  v = document.getElementById('setPostbackSecret').value.trim(); data.postbackSecret = v;
+  v = document.getElementById('setShaverApiUrl').value.trim(); data.shaverApiUrl = v;
+  /* Fraud API */
+  v = document.getElementById('setIpqsKey').value.trim(); data.ipqsKey = v;
+  v = document.getElementById('setProxycheckKey').value.trim(); data.proxycheckKey = v;
+  v = document.getElementById('setAbuseipdbKey').value.trim(); data.abuseipdbKey = v;
+  v = document.getElementById('setProxyUrl').value.trim(); data.phpProxyUrl = v;
+  /* Telegram */
+  data.tgEnabled = document.getElementById('setTgEnabled').checked;
+  data.tgBotToken = document.getElementById('setTgBotToken').value.trim().replace(/[\s\r\n]+/g, '');
+  data.tgChatIds = _tgChatIds.join(',');
+  /* Email */
+  data.emailEnabled = document.getElementById('setEmailEnabled').checked;
+  data.emailTo = document.getElementById('setEmailTo').value.trim();
+  data.emailFrom = document.getElementById('setEmailFrom').value.trim();
+
   fbPatch('tracker/settings', data).then(function() {
     Object.keys(data).forEach(function(k) { _settings[k] = data[k]; });
-    toast('Settings saved!', 'success');
-  });
+    toast('All settings saved!', 'success');
+  }).catch(function() { toast('Failed to save', 'error'); });
 }
 
 /* === TELEGRAM NOTIFICATIONS === */
 var _tgChatIds = [];
-
-function saveTgSettings() {
-  var data = {};
-  data.tgEnabled = document.getElementById('setTgEnabled').checked;
-  data.tgBotToken = document.getElementById('setTgBotToken').value.trim().replace(/[\s\r\n]+/g, '');
-  data.tgChatIds = _tgChatIds.join(',');
-  if (data.tgEnabled && (!data.tgBotToken || !_tgChatIds.length)) {
-    toast('Enter Bot Token and add at least one Chat ID', 'error'); return;
-  }
-  fbPatch('tracker/settings', data).then(function() {
-    Object.keys(data).forEach(function(k) { _settings[k] = data[k]; });
-    toast('Telegram settings saved!', 'success');
-  });
-}
 
 function addTgChatId() {
   var input = document.getElementById('addChatIdInput');
@@ -4256,6 +4295,35 @@ function sendTestTelegram() {
     }
     resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Telegram API tak connect nahi ho saka (Network Error)' + hint + '</span>';
   });
+}
+
+function sendTestEmail() {
+  var resultEl = document.getElementById('emailTestResult');
+  var emailTo = document.getElementById('setEmailTo').value.trim();
+  var emailFrom = document.getElementById('setEmailFrom').value.trim() || 'noreply@climaofficial.com';
+  if (!emailTo) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-exclamation-circle"></i> Enter at least one recipient email</span>'; return; }
+  resultEl.innerHTML = '<span style="color:#ea4335;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Sending test email...</span>';
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  if (!notifyUrl) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Set Shaver API URL in General Settings first</span>'; return; }
+  var body = {
+    type: 'sale',
+    email_to: emailTo,
+    email_from: emailFrom,
+    email_subject: 'Test Sale Notification — $97.00',
+    email_body: '<div style="font-family:Arial;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#0A6C80;">Test Sale — $97.00</h2><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Offer</td><td style="padding:8px;border-bottom:1px solid #eee;">Test Offer</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Affiliate</td><td style="padding:8px;border-bottom:1px solid #eee;">test_affiliate</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Platform</td><td style="padding:8px;border-bottom:1px solid #eee;">BuyGoods</td></tr><tr><td style="padding:8px;font-weight:bold;">Date</td><td style="padding:8px;">' + new Date().toISOString().split('T')[0] + '</td></tr></table><p style="color:#999;font-size:11px;margin-top:16px;">This is a test notification from Clima Tracker.</p></div>'
+  };
+  fetch(notifyUrl, {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success && res.email_sent > 0) {
+        resultEl.innerHTML = '<span style="color:var(--green);font-size:12px;"><i class="fas fa-check-circle"></i> Test email sent to ' + res.email_sent + ' recipient(s)!</span>';
+      } else {
+        resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> ' + escHtml(res.error || 'Failed to send email') + '</span>';
+      }
+    })
+    .catch(function(err) {
+      resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Network error: ' + escHtml(err.message) + '</span>';
+    });
 }
 
 /* === CHECKOUT REPORTS === */

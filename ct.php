@@ -106,6 +106,28 @@ function _stableHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i
 function _etDate(){try{var s=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});return new Date(s);}catch(e){return new Date();}}
 function _etDateStr(){var d=_etDate();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
+/* Sale notification helper — sends Telegram + Email via notify.php */
+function _notifySale(sale){
+  try{fetch(FB+'/tracker/settings.json').then(function(r){return r.json();}).then(function(cfg){
+    if(!cfg)return;
+    var body={type:'sale'};
+    if(cfg.tgEnabled&&cfg.tgBotToken&&cfg.tgChatIds){
+      body.tg_token=cfg.tgBotToken;
+      body.tg_chat_ids=cfg.tgChatIds.split(',').map(function(s){return s.trim();}).filter(Boolean);
+      body.tg_message='\ud83d\udcb0 <b>NEW SALE</b>\n\n\ud83d\udcb5 Amount: <b>$'+(sale.amount||0)+'</b>\n\ud83d\udce6 Offer: '+(sale.offerId||'-')+'\n\ud83d\udc64 Affiliate: '+(sale.affId||'Direct')+'\n\ud83c\udf0d Platform: '+(sale.platform||'-')+'\n\ud83d\udd16 Order: '+(sale.orderId||'-')+'\n\ud83d\udce7 Email: '+(sale.email||'-')+'\n\ud83d\udcc5 Date: '+(sale.date||'-')+'\n\ud83c\udd94 Session: '+(sale.subId||'-');
+    }
+    if(cfg.emailEnabled&&cfg.emailTo){
+      body.email_to=cfg.emailTo;
+      body.email_from=cfg.emailFrom||'noreply@climaofficial.com';
+      body.email_subject='New Sale: $'+(sale.amount||0)+' \u2014 '+(sale.offerId||'Unknown');
+      body.email_body='<div style="font-family:Arial;max-width:500px;margin:0 auto;padding:20px;"><h2 style="color:#0A6C80;">New Sale \u2014 $'+(sale.amount||0)+'</h2><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Offer</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.offerId||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Affiliate</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.affId||'Direct')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Platform</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.platform||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Order</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.orderId||'-')+'</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">Email</td><td style="padding:8px;border-bottom:1px solid #eee;">'+(sale.email||'-')+'</td></tr><tr><td style="padding:8px;font-weight:bold;">Date</td><td style="padding:8px;">'+(sale.date||'-')+'</td></tr></table></div>';
+    }
+    if(!body.tg_token&&!body.email_to)return;
+    var notifyUrl=(cfg.shaverApiUrl||'').replace('api.php','notify.php');
+    if(notifyUrl)fetch(notifyUrl,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'application/json'},keepalive:true});
+  }).catch(function(){});}catch(e){}
+}
+
 <?php if ($type === 'lp'): ?>
 /* ===== LANDING PAGE ===== */
 /* Traffic filtering sessions */
@@ -257,6 +279,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'script'};
       if(urlAff)sale.affFromUrl=urlAff;
       fetch(FB+'/tracker/sales/'+saleKey+'.json',{method:'PUT',body:JSON.stringify(sale)});
+      _notifySale(sale);
       try{localStorage.setItem('_ct_sale_'+sid,'1');localStorage.setItem('_ct_saleKey',saleKey);if(email)localStorage.setItem('_ct_saleKey_'+email,saleKey);}catch(e){}
     }
   }
@@ -392,6 +415,7 @@ if(!data.name&&(data.firstName||data.lastName))data.name=((data.firstName||'')+'
     var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,orderIdGlobal:globalOid,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'thankyou',thankyouCompleted:true,thankyouTs:Date.now()};
     if(email)sale.email=email;if(urlAff)sale.affFromUrl=urlAff;
     fetch(FB+'/tracker/sales/'+newKey+'.json',{method:'PUT',body:JSON.stringify(sale),keepalive:true});
+    _notifySale(sale);
     try{localStorage.setItem('_ct_saleKey',newKey);if(email)localStorage.setItem('_ct_saleKey_'+email,newKey);}catch(e){}
   }
 
