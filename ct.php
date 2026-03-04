@@ -102,6 +102,9 @@ function _detectAff(){return P.get('aff_id')||P.get('affid')||P.get('hop')||P.ge
 function _allParams(){var o={};P.forEach(function(v,k){if(v)o[k]=v.substr(0,200);});return o;}
 function _extractBGData(){return{email:P.get('emailaddress')||'',name:P.get('creditcards_name')||'',address:P.get('address')||'',city:P.get('city')||'',zip:P.get('zip')||'',phone:P.get('phone')||'',country:P.get('country')||'',orderId:P.get('order_id')||'',orderIdGlobal:P.get('order_id_global')||'',total:P.get('total')||''};}
 function _stableHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h=((h<<5)-h)+c;h=h&h;}return Math.abs(h).toString(36);}
+/* Eastern Time date helper (America/New_York — Florida) */
+function _etDate(){try{var s=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});return new Date(s);}catch(e){return new Date();}}
+function _etDateStr(){var d=_etDate();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 <?php if ($type === 'lp'): ?>
 /* ===== LANDING PAGE ===== */
@@ -190,7 +193,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   var br=(/Chrome/i.test(ua)?'Chrome':/Firefox/i.test(ua)?'Firefox':/Safari/i.test(ua)?'Safari':'Other');
   var os=(/Windows/i.test(ua)?'Windows':/Mac/i.test(ua)?'Mac':/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Linux/i.test(ua)?'Linux':'Other');
   var scrollMax=0,startTime=Date.now(),buyClicked=false,variant='';
-  var today=new Date(),ds=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var ds=_etDateStr();
   var ipData={ip:'',ipv4:'',ipv6:'',country:'',city:'',isp:'',countryCode:'',region:'',zip:'',lat:0,lon:0,timezone:'',asn:'',languages:''};
   function _setGeo(d){ipData.ip=d.ip||ipData.ip;ipData.country=d.country||'';ipData.countryCode=d.countryCode||d.country_code||'';ipData.region=d.region||'';ipData.city=d.city||'';ipData.zip=d.zip||d.postal||'';ipData.lat=d.lat||d.latitude||0;ipData.lon=d.lon||d.longitude||0;ipData.timezone=d.timezone||((d.timezone&&d.timezone.id)?d.timezone.id:'');ipData.isp=d.isp||d.org||'';ipData.asn=d.asn||'';if(d.ip&&d.ip.indexOf(':')>-1)ipData.ipv6=d.ip;else if(d.ip)ipData.ipv4=d.ip;}
   fetch(WORKER+'?geo=1').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.country){_setGeo(d);try{localStorage.setItem('_ct_ip',d.ip);if(d.ip.indexOf(':')===-1)localStorage.setItem('_ct_ipv4',d.ip);}catch(e){}_ctSend();return;}throw 'no geo';}).catch(function(){fetch('https://ipwho.is/').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.success!==false){ipData.ip=d.ip;ipData.country=d.country||'';ipData.countryCode=d.country_code||'';ipData.region=d.region||'';ipData.city=d.city||'';ipData.timezone=(d.timezone&&d.timezone.id)?d.timezone.id:'';ipData.isp=(d.connection&&d.connection.isp)?d.connection.isp:'';ipData.asn=(d.connection&&d.connection.asn)?'AS'+d.connection.asn:'';if(d.ip.indexOf(':')>-1)ipData.ipv6=d.ip;else ipData.ipv4=d.ip;try{localStorage.setItem('_ct_ip',d.ip);if(d.ip.indexOf(':')===-1)localStorage.setItem('_ct_ipv4',d.ip);}catch(e){}}_ctSend();}).catch(function(){_ctSend();});});
@@ -248,7 +251,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!amount)amount=parseFloat(localStorage.getItem('_ct_amount'))||0;
       if(!amount&&bgData.total)amount=parseFloat(bgData.total)||0;
       if(!amount)amount=parseFloat(P.get('total'))||0;
-      var today=new Date(),ds=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+      var ds=_etDateStr();
       saleKey='S'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);
       var plat=localStorage.getItem('_ct_platform')||'';
       var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'script'};
@@ -334,7 +337,7 @@ if(!data.name&&(data.firstName||data.lastName))data.name=((data.firstName||'')+'
   var variant=localStorage.getItem('_ct_var')||P.get('product_codename')||'';
   var urlAff=_detectAff();
   if(urlAff){aff=urlAff;try{localStorage.setItem('_ct_aff',urlAff);}catch(e){}}
-  var today=new Date(),ds=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var ds=_etDateStr();
 
   /* --- DOM Amount Extraction --- */
   function _extractPageAmount(){
