@@ -1244,6 +1244,8 @@ function getDateRange() {
 
 /* === DATA LOADING === */
 function loadVisitorData() {
+  _visitors = {};
+  clearVisitorCache();
   var dates = getDateRange();
   var promises = dates.map(function(d) {
     return fbGet('tracker/visitors/' + d).then(function(data) { _visitors[d] = data || {}; });
