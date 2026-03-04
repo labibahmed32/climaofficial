@@ -89,6 +89,11 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 .table-wrap{background:#fff;border:1px solid var(--card-border);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);}
 .data-table{width:100%;border-collapse:collapse;table-layout:auto;}
 .data-table th{padding:10px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700;background:#f8fafc;border-bottom:2px solid var(--card-border);white-space:nowrap;}
+.th-sort{cursor:pointer;user-select:none;transition:background .15s,color .15s;}
+.th-sort:hover{background:#e0f2fe;color:var(--primary);}
+.th-sort.sort-active{color:var(--primary);}
+.sort-ic{font-size:9px;margin-left:3px;opacity:.4;}
+.th-sort.sort-active .sort-ic{opacity:1;color:var(--primary);}
 .data-table td{padding:9px 12px;font-size:12.5px;border-bottom:1px solid #f1f5f9;white-space:nowrap;}
 .data-table tbody tr:hover{background:#f0f9fb;}
 .data-table tbody tr:last-child td{border-bottom:none;}
@@ -547,15 +552,30 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <!-- Sales Page -->
 <div id="pg-sales" class="page">
 <div class="table-toolbar">
-<div class="table-search"><i class="fas fa-search"></i><input id="salesSearch" placeholder="Search affiliate, order, IP..." oninput="renderSalesTable()"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;">
-<select id="salesFraudFilter" onchange="renderSalesTable()" style="font-size:11px;padding:4px 8px;border:1px solid var(--card-border);border-radius:4px;"><option value="all">All Fraud</option><option value="clean">Clean (0-15)</option><option value="suspect">Suspect (16-35)</option><option value="risky">Risky (36-60)</option><option value="fraud">Fraud (61+)</option></select>
-<select id="salesStatusFilter" onchange="renderSalesTable()" style="font-size:11px;padding:4px 8px;border:1px solid var(--card-border);border-radius:4px;"><option value="all">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="flagged">Flagged</option></select>
+<div class="table-search"><i class="fas fa-search"></i><input id="salesSearch" placeholder="Search affiliate, order, IP, email..." oninput="salesPageNum=0;renderSalesTable()"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+<select id="salesPlatformFilter" onchange="salesPageNum=0;renderSalesTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Platforms</option><option value="buygoods">BuyGoods</option><option value="digistore">Digistore</option><option value="clickbank">ClickBank</option></select>
+<select id="salesStatusFilter" onchange="salesPageNum=0;renderSalesTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="flagged">Flagged</option></select>
+<select id="salesFraudFilter" onchange="salesPageNum=0;renderSalesTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Fraud</option><option value="clean">Clean (0-15)</option><option value="suspect">Suspect (16-35)</option><option value="risky">Risky (36-60)</option><option value="fraud">Fraud (61+)</option></select>
+<select id="salesCountryFilter" onchange="salesPageNum=0;renderSalesTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Countries</option></select>
 <button class="btn-sm" onclick="exportCSV('sales')"><i class="fas fa-download"></i> Export</button>
 </div>
 </div>
 <div class="table-wrap">
-<table class="data-table" id="salesTable"><thead><tr><th>Date</th><th>Order ID</th><th>IP</th><th>Affiliate</th><th>Platform</th><th>Variant</th><th>Amount</th><th>CPA</th><th>Country</th><th>Fraud</th><th>Status</th><th>Actions</th></tr></thead><tbody id="salesBody"></tbody></table>
+<table class="data-table" id="salesTable"><thead><tr>
+<th class="th-sort" id="th-s-ts" onclick="sortSales('ts')">Date <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-orderId" onclick="sortSales('orderId')">Order ID <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-ip" onclick="sortSales('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-affId" onclick="sortSales('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-platform" onclick="sortSales('platform')">Platform <i class="fas fa-sort sort-ic"></i></th>
+<th>Variant</th>
+<th class="th-sort" id="th-s-amount" onclick="sortSales('amount')">Amount <i class="fas fa-sort sort-ic"></i></th>
+<th>CPA</th>
+<th class="th-sort" id="th-s-country" onclick="sortSales('country')">Country <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-fraud" onclick="sortSales('fraud')">Fraud <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-status" onclick="sortSales('status')">Status <i class="fas fa-sort sort-ic"></i></th>
+<th>Actions</th>
+</tr></thead><tbody id="salesBody"></tbody></table>
 </div>
 <div class="pagination" id="salesPag"></div>
 </div>
@@ -563,15 +583,31 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <!-- Visitors Page -->
 <div id="pg-visitors" class="page">
 <div class="table-toolbar">
-<div class="table-search"><i class="fas fa-search"></i><input id="visitorsSearch" placeholder="Search visitors..." oninput="renderVisitorsTable()"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;">
-<select id="visitorsPlatformFilter" onchange="renderVisitorsTable()" style="font-size:11px;padding:5px 10px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;"><option value="all">All Platforms</option><option value="buygoods">BuyGoods</option><option value="digistore">Digistore</option><option value="clima">Clima</option></select>
-<select id="visitorsQualityFilter" onchange="renderVisitorsTable()" style="font-size:11px;padding:5px 10px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;"><option value="all">All Quality</option><option value="good">Good (0-15)</option><option value="suspect">Suspect (16-35)</option><option value="risky">Risky (36-60)</option><option value="fraud">Fraud (61+)</option></select>
+<div class="table-search"><i class="fas fa-search"></i><input id="visitorsSearch" placeholder="Search IP, country, affiliate, URL..." oninput="visitorsPageNum=0;renderVisitorsTable()"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+<select id="visitorsPlatformFilter" onchange="visitorsPageNum=0;renderVisitorsTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Platforms</option><option value="buygoods">BuyGoods</option><option value="digistore">Digistore</option><option value="clima">Clima</option></select>
+<select id="visitorsBuyFilter" onchange="visitorsPageNum=0;renderVisitorsTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Buy</option><option value="yes">Buy Clicked</option><option value="no">Not Clicked</option></select>
+<select id="visitorsQualityFilter" onchange="visitorsPageNum=0;renderVisitorsTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Quality</option><option value="good">Good (0-15)</option><option value="suspect">Suspect (16-35)</option><option value="risky">Risky (36-60)</option><option value="fraud">Fraud (61+)</option></select>
+<select id="visitorsCountryFilter" onchange="visitorsPageNum=0;renderVisitorsTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Countries</option></select>
+<select id="visitorsConvertedFilter" onchange="visitorsPageNum=0;renderVisitorsTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All</option><option value="converted">Converted</option><option value="not_converted">Not Converted</option></select>
 <button class="btn-sm" onclick="exportCSV('visitors')"><i class="fas fa-download"></i> Export</button>
 </div>
 </div>
 <div class="table-wrap">
-<table class="data-table"><thead><tr><th>Date</th><th>IP</th><th>Country</th><th>Platform</th><th>Affiliate</th><th>Offer</th><th>Landing Page</th><th>Scroll</th><th>Time</th><th>Buy</th><th>Quality</th><th></th></tr></thead><tbody id="visitorsBody"></tbody></table>
+<table class="data-table"><thead><tr>
+<th class="th-sort" id="th-v-ts" onclick="sortVisitors('ts')">Date <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-ip" onclick="sortVisitors('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-country" onclick="sortVisitors('country')">Country <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-platform" onclick="sortVisitors('platform')">Platform <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-affId" onclick="sortVisitors('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
+<th>Offer</th>
+<th>Landing Page</th>
+<th class="th-sort" id="th-v-scroll" onclick="sortVisitors('scroll')">Scroll <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-time" onclick="sortVisitors('time')">Time <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-buy" onclick="sortVisitors('buy')">Buy <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-quality" onclick="sortVisitors('quality')">Quality <i class="fas fa-sort sort-ic"></i></th>
+<th></th>
+</tr></thead><tbody id="visitorsBody"></tbody></table>
 </div>
 <div class="pagination" id="visitorsPag"></div>
 </div>
@@ -1413,6 +1449,25 @@ function loadFraudCheckData() {
 
 var _visitorsCache = null;
 var _visitorsByIdCache = null;
+var visitorsSortField = 'ts'; var visitorsSortDir = -1;
+var salesSortField = 'ts'; var salesSortDir = -1;
+
+function sortVisitors(f) { if(visitorsSortField===f) visitorsSortDir*=-1; else{visitorsSortField=f;visitorsSortDir=-1;} visitorsPageNum=0; renderVisitorsTable(); }
+function sortSales(f) { if(salesSortField===f) salesSortDir*=-1; else{salesSortField=f;salesSortDir=-1;} salesPageNum=0; renderSalesTable(); }
+function updateSortHeaders(prefix, field, dir) {
+  var cols = ['ts','ip','country','platform','affId','scroll','time','buy','quality','orderId','amount','fraud','status'];
+  cols.forEach(function(c) {
+    var el = document.getElementById('th-'+prefix+'-'+c);
+    if (!el) return;
+    el.classList.remove('sort-active');
+    var ic = el.querySelector('.sort-ic');
+    if (ic) { ic.className = 'fas fa-sort sort-ic'; }
+    if (c === field) {
+      el.classList.add('sort-active');
+      if (ic) ic.className = (dir === -1 ? 'fas fa-sort-down' : 'fas fa-sort-up') + ' sort-ic';
+    }
+  });
+}
 var _visitorDateCache = {}; /* persistent per-date cache across date changes */
 var _salesCache = null;
 var _salesCacheTs = 0;
@@ -2253,24 +2308,43 @@ function detectSalePlatform(sale) {
 }
 
 function renderVisitorsTable() {
+  updateSortHeaders('v', visitorsSortField, visitorsSortDir);
   var all = getAllVisitors();
   var search = (document.getElementById('visitorsSearch').value || '').toLowerCase();
   var platformF = (document.getElementById('visitorsPlatformFilter') || {}).value || 'all';
   var qualityF = (document.getElementById('visitorsQualityFilter') || {}).value || 'all';
-  if (search) {
-    all = all.filter(function(v) {
-      return (v.ip || '').toLowerCase().indexOf(search) > -1 ||
-        (v.country || '').toLowerCase().indexOf(search) > -1 ||
-        (v.affId || '').toLowerCase().indexOf(search) > -1 ||
-        (v.ref || '').toLowerCase().indexOf(search) > -1 ||
-        (v.url || '').toLowerCase().indexOf(search) > -1 ||
-        (v.offerId || '').toLowerCase().indexOf(search) > -1;
+  var buyF = (document.getElementById('visitorsBuyFilter') || {}).value || 'all';
+  var countryF = (document.getElementById('visitorsCountryFilter') || {}).value || 'all';
+  var convertedF = (document.getElementById('visitorsConvertedFilter') || {}).value || 'all';
+
+  /* Populate country dropdown */
+  var cEl = document.getElementById('visitorsCountryFilter');
+  if (cEl && cEl.options.length <= 1) {
+    var countries = {};
+    all.forEach(function(v) { if (v.country) countries[v.country] = true; });
+    Object.keys(countries).sort().forEach(function(c) {
+      var o = document.createElement('option'); o.value = c; o.textContent = c; cEl.appendChild(o);
     });
   }
-  if (platformF !== 'all') {
+
+  if (search) {
     all = all.filter(function(v) {
-      var platform = detectPlatform(v.url, v.affId);
-      return platform === platformF;
+      var affId = extractAffiliateId(v.url, v.affId) || '';
+      return (v.ip||'').toLowerCase().indexOf(search)>-1||
+        (v.country||'').toLowerCase().indexOf(search)>-1||
+        affId.toLowerCase().indexOf(search)>-1||
+        (v.ref||'').toLowerCase().indexOf(search)>-1||
+        (v.url||'').toLowerCase().indexOf(search)>-1||
+        (v.offerId||'').toLowerCase().indexOf(search)>-1;
+    });
+  }
+  if (platformF !== 'all') all = all.filter(function(v) { return detectPlatform(v.url, v.affId) === platformF; });
+  if (buyF !== 'all') all = all.filter(function(v) { return buyF === 'yes' ? !!v.buyClicked : !v.buyClicked; });
+  if (countryF !== 'all') all = all.filter(function(v) { return (v.country||'') === countryF; });
+  if (convertedF !== 'all') {
+    all = all.filter(function(v) {
+      var hasSale = !!_sales.find(function(s) { return s.subId === v._id; });
+      return convertedF === 'converted' ? hasSale : !hasSale;
     });
   }
   if (qualityF !== 'all') {
@@ -2283,6 +2357,26 @@ function renderVisitorsTable() {
       return true;
     });
   }
+
+  /* Sort */
+  all.sort(function(a, b) {
+    var va, vb;
+    switch(visitorsSortField) {
+      case 'ip': va=a.ip||''; vb=b.ip||''; break;
+      case 'country': va=a.country||''; vb=b.country||''; break;
+      case 'platform': va=detectPlatform(a.url,a.affId); vb=detectPlatform(b.url,b.affId); break;
+      case 'affId': va=extractAffiliateId(a.url,a.affId)||''; vb=extractAffiliateId(b.url,b.affId)||''; break;
+      case 'scroll': va=a.scrollMax||0; vb=b.scrollMax||0; break;
+      case 'time': va=a.timeOnPage||0; vb=b.timeOnPage||0; break;
+      case 'buy': va=a.buyClicked?1:0; vb=b.buyClicked?1:0; break;
+      case 'quality': va=calcFraudScore(a); vb=calcFraudScore(b); break;
+      default: va=a.ts||0; vb=b.ts||0;
+    }
+    if (va < vb) return -1 * visitorsSortDir;
+    if (va > vb) return visitorsSortDir;
+    return 0;
+  });
+
   var total = all.length;
   var start = visitorsPageNum * PER_PAGE;
   var page = all.slice(start, start + PER_PAGE);
@@ -2477,19 +2571,38 @@ function loadSales() {
 }
 
 function renderSalesTable() {
+  updateSortHeaders('s', salesSortField, salesSortDir);
   var search = (document.getElementById('salesSearch').value || '').toLowerCase();
   var fraudF = (document.getElementById('salesFraudFilter') || {}).value || 'all';
   var statusF = (document.getElementById('salesStatusFilter') || {}).value || 'all';
+  var platformF = (document.getElementById('salesPlatformFilter') || {}).value || 'all';
+  var countryF = (document.getElementById('salesCountryFilter') || {}).value || 'all';
+
+  /* Populate country dropdown */
+  var cEl = document.getElementById('salesCountryFilter');
+  if (cEl && cEl.options.length <= 1) {
+    var countries = {};
+    _sales.forEach(function(s) { var c = s.country||s.bgCountry||''; if(c) countries[c]=true; });
+    Object.keys(countries).sort().forEach(function(c) {
+      var o = document.createElement('option'); o.value=c; o.textContent=c; cEl.appendChild(o);
+    });
+  }
+
   var filtered = _sales.filter(function(s) {
-    /* Search */
     if (search) {
       var chkS = _checkouts[s.subId] || {};
-      var haystack = ((s.affId || '') + ' ' + (s.offerId || '') + ' ' + (s.orderId || '') + ' ' + (s.country || '') + ' ' + (s.ip || '') + ' ' + (s.upsell1OrderId || '') + ' ' + (s.upsell2OrderId || '') + ' ' + (s.upsell3OrderId || '') + ' ' + (chkS.email || '') + ' ' + (chkS.name || '')).toLowerCase();
+      var haystack = ((s.affId||'')+' '+(s.offerId||'')+' '+(s.orderId||'')+' '+(s.country||'')+' '+(s.ip||'')+' '+(s.upsell1OrderId||'')+' '+(s.upsell2OrderId||'')+' '+(s.upsell3OrderId||'')+' '+(chkS.email||'')+' '+(chkS.name||'')).toLowerCase();
       if (haystack.indexOf(search) === -1) return false;
     }
-    /* Status filter */
-    if (statusF !== 'all' && (s.status || 'pending') !== statusF) return false;
-    /* Fraud filter */
+    if (statusF !== 'all' && (s.status||'pending') !== statusF) return false;
+    if (platformF !== 'all') {
+      var sp = (s.platform||'').toLowerCase();
+      if (sp.indexOf(platformF) === -1) return false;
+    }
+    if (countryF !== 'all') {
+      var sc2 = s.country||s.bgCountry||'';
+      if (sc2 !== countryF) return false;
+    }
     if (fraudF !== 'all') {
       var visitor = (s.date && s.subId && _visitors[s.date]) ? _visitors[s.date][s.subId] : null;
       var chk = _checkouts[s.subId] || null;
@@ -2501,6 +2614,31 @@ function renderSalesTable() {
       if (fraudF === 'fraud' && sc <= 60) return false;
     }
     return true;
+  });
+
+  /* Sort */
+  filtered.sort(function(a, b) {
+    var va, vb;
+    switch(salesSortField) {
+      case 'orderId': va=a.orderId||''; vb=b.orderId||''; break;
+      case 'ip': va=a.ip||''; vb=b.ip||''; break;
+      case 'affId': va=a.affId||''; vb=b.affId||''; break;
+      case 'platform': va=a.platform||''; vb=b.platform||''; break;
+      case 'amount': va=parseFloat(a.amount)||0; vb=parseFloat(b.amount)||0; break;
+      case 'country': va=a.country||''; vb=b.country||''; break;
+      case 'status': va=a.status||''; vb=b.status||''; break;
+      case 'fraud':
+        var va_fc=_fraudChecks[a.subId]||{}, vb_fc=_fraudChecks[b.subId]||{};
+        var va_v=(a.date&&_visitors[a.date])?_visitors[a.date][a.subId]:null;
+        var vb_v=(b.date&&_visitors[b.date])?_visitors[b.date][b.subId]:null;
+        va=calcFraudScore(va_v||{},_checkouts[a.subId]||null,va_fc);
+        vb=calcFraudScore(vb_v||{},_checkouts[b.subId]||null,vb_fc);
+        break;
+      default: va=a.ts||0; vb=b.ts||0;
+    }
+    if (va < vb) return -1 * salesSortDir;
+    if (va > vb) return salesSortDir;
+    return 0;
   });
   var total = filtered.length;
   var start = salesPageNum * PER_PAGE;
