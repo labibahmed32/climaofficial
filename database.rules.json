@@ -59,6 +59,52 @@
     "advertisers": {
       ".read": true,
       ".write": true
+    },
+    "dashboard": {
+      ".read": true,
+      ".write": true
+    },
+    "tracker": {
+      "visitors": {
+        ".read": "auth != null",
+        ".write": true,
+        "$date": {
+          ".indexOn": [".value"]
+        }
+      },
+      "checkout-sessions": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "upsell-events": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "thankyou-events": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "fraud-checks": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "sales": {
+        ".read": "auth != null",
+        ".write": true,
+        ".indexOn": ["date", "affId", "offerId", "status"]
+      },
+      "offers": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "settings": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "ipqs": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     }
   }
 }

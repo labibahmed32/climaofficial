@@ -26,3 +26,5 @@ jobs:
             **/.firebase/**
             **/launch-plan.html
             **/affiliate-tracker.html
+            **/shaver/database-setup.sql
+            **/shaver/1.zip
