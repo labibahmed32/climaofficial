@@ -4251,50 +4251,31 @@ function sendTestTelegram() {
     resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-exclamation-circle"></i> Enter Bot Token and add at least one Chat ID</span>';
     return;
   }
-  resultEl.innerHTML = '<span style="color:#0088cc;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Checking connection to Telegram API...</span>';
-  /* First verify API is reachable */
-  fetch('https://api.telegram.org/bot' + token + '/getMe')
-  .then(function(r) { return r.json(); })
-  .then(function(me) {
-    if (!me.ok) {
-      resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Invalid Bot Token: ' + escHtml(me.description || 'Check your token') + '</span>';
-      return;
-    }
-    resultEl.innerHTML = '<span style="color:#0088cc;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Bot verified (' + escHtml(me.result.username) + '). Sending test message...</span>';
-    var testData = {
-      order_id: 'TEST-' + Date.now(), amount: '97.00', date: new Date().toISOString().split('T')[0],
-      platform: 'BuyGoods', affiliate_id: 'test_affiliate', offer_name: 'Test Offer',
-      customer_name: 'John Test', customer_email: 'test@example.com', customer_phone: '+1 555-0123',
-      customer_address: '123 Test St, New York, NY 10001, US',
-      fraud_score: '12', fraud_label: 'Clean', fraud_details: 'IPQS: 8 | No VPN | No Proxy',
-      upsell_summary: 'Upsell 1: ✅ | Upsell 2: ❌', ip_address: '192.168.1.1', country: 'US'
-    };
-    var msg = '🧪 <b>TEST MESSAGE</b>\n\n' + buildTelegramMessage(testData);
-    var sent = 0, failed = 0, total = _tgChatIds.length, errors = [];
-    _tgChatIds.forEach(function(cid) {
-      _tgSend(cid, msg, token, function(err) {
-        if (err) { failed++; errors.push(cid + ': ' + err); } else { sent++; }
-        if (sent + failed === total) {
-          if (failed === 0) {
-            resultEl.innerHTML = '<span style="color:var(--green);font-size:12px;"><i class="fas fa-check-circle"></i> Test sent to ' + sent + ' chat(s)! Check Telegram.</span>';
-          } else {
-            var errMsg = escHtml(errors.join(', '));
-            if (errMsg.indexOf('Forbidden') > -1) errMsg += '<br><small>Bot ko pehle Telegram mein open karein aur /start send karein</small>';
-            resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Failed: ' + errMsg + '</span>';
-          }
-        }
-      });
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  if (!notifyUrl) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Set Shaver API URL in General Settings first</span>'; return; }
+  resultEl.innerHTML = '<span style="color:#0088cc;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Sending test via server...</span>';
+  var testData = {
+    order_id: 'TEST-' + Date.now(), amount: '97.00', date: new Date().toISOString().split('T')[0],
+    platform: 'BuyGoods', affiliate_id: 'test_affiliate', offer_name: 'Test Offer',
+    customer_name: 'John Test', customer_email: 'test@example.com', customer_phone: '+1 555-0123',
+    customer_address: '123 Test St, New York, NY 10001, US'
+  };
+  var msg = '\ud83e\uddea <b>TEST MESSAGE</b>\n\n' + buildTelegramMessage(testData);
+  var body = {type:'sale', tg_token: token, tg_chat_ids: _tgChatIds.slice(), tg_message: msg};
+  fetch(notifyUrl, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.tg_sent > 0) {
+        resultEl.innerHTML = '<span style="color:var(--green);font-size:12px;"><i class="fas fa-check-circle"></i> Test sent to ' + res.tg_sent + ' chat(s)! Check Telegram.</span>';
+      } else {
+        var errMsg = (res.errors && res.errors.length) ? escHtml(res.errors.join(', ')) : 'No messages sent';
+        if (errMsg.indexOf('Forbidden') > -1) errMsg += '<br><small>Bot ko pehle Telegram mein open karein aur /start bhejein</small>';
+        resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> ' + errMsg + '</span>';
+      }
+    })
+    .catch(function(err) {
+      resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Server error: ' + escHtml(err.message) + '</span>';
     });
-  })
-  .catch(function(err) {
-    var hint = '';
-    if (window.location.protocol === 'file:') {
-      hint = '<br><br><b>Fix:</b> Aap local file se open kar rahe ho. Firebase Hosting URL se open karein (firebase deploy karein)';
-    } else {
-      hint = '<br><br><b>Fix:</b> VPN use karein ya doosra network try karein - api.telegram.org shayad blocked hai';
-    }
-    resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Telegram API tak connect nahi ho saka (Network Error)' + hint + '</span>';
-  });
 }
 
 function sendTestEmail() {
