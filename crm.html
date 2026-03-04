@@ -512,7 +512,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <button class="df-btn" id="df-30d" onclick="setDateRange('30d')">30 Days</button>
 <input type="date" id="dfFrom">
 <input type="date" id="dfTo">
-<button class="btn-primary-sm" onclick="setDateRange('custom')" style="padding:6px 16px;font-size:12px;border-radius:20px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+<button class="btn-primary-sm" onclick="setDateRange('custom')" style="padding:6px 16px;font-size:12px;border-radius:20px;"><i class="fas fa-check"></i> Apply</button>
 </div>
 </div>
 <div class="page-content">
@@ -1248,14 +1248,25 @@ function loadVisitorData() {
   clearVisitorCache();
   var dates = getDateRange();
   var promises = dates.map(function(d) {
-    return fbGet('tracker/visitors/' + d).then(function(data) { _visitors[d] = data || {}; });
+    if (_visitorDateCache[d]) {
+      _visitors[d] = _visitorDateCache[d];
+      return Promise.resolve();
+    }
+    return fbGet('tracker/visitors/' + d).then(function(data) {
+      _visitorDateCache[d] = data || {};
+      _visitors[d] = _visitorDateCache[d];
+    });
   });
   return Promise.all(promises).then(function() {
     clearVisitorCache();
   });
 }
 function loadSaleData() {
-  return fbGet('tracker/sales').then(function(data) {
+  var now = Date.now();
+  var fetchPromise = (!_salesCache || (now - _salesCacheTs) >= _CACHE_TTL)
+    ? fbGet('tracker/sales').then(function(d) { _salesCache = d; _salesCacheTs = Date.now(); return d; })
+    : Promise.resolve(_salesCache);
+  return fetchPromise.then(function(data) {
     if (!data) { _sales = []; return; }
     var rawSales = Object.keys(data).map(function(k) { var s = data[k]; s._id = k; return s; });
 
@@ -1386,7 +1397,9 @@ function mergeSalesBySubId(salesArray) {
   return merged;
 }
 function loadCheckoutData() {
-  return fbGet('tracker/checkout-sessions').then(function(data) { _checkouts = data || {}; });
+  var now = Date.now();
+  if (_checkoutsCache && (now - _checkoutsCacheTs) < _CACHE_TTL) { _checkouts = _checkoutsCache; return Promise.resolve(); }
+  return fbGet('tracker/checkout-sessions').then(function(data) { _checkouts = data || {}; _checkoutsCache = _checkouts; _checkoutsCacheTs = Date.now(); });
 }
 function loadUpsellData() {
   return fbGet('tracker/upsell-events').then(function(data) { _upsells = data || {}; });
@@ -1400,6 +1413,13 @@ function loadFraudCheckData() {
 
 var _visitorsCache = null;
 var _visitorsByIdCache = null;
+var _visitorDateCache = {}; /* persistent per-date cache across date changes */
+var _salesCache = null;
+var _salesCacheTs = 0;
+var _checkoutsCache = null;
+var _checkoutsCacheTs = 0;
+var _fraudCacheTs = 0;
+var _CACHE_TTL = 60000; /* 60 seconds */
 
 function getAllVisitors() {
   if (_visitorsCache) return _visitorsCache;
