@@ -695,6 +695,11 @@ function getTrafficLog($pdo) {
         $whereConditions[] = "aff_id = ?";
         $params[] = $affId;
     }
+    $wasShaved = $data['was_shaved'] ?? $_GET['was_shaved'] ?? '';
+    if ($wasShaved !== '') {
+        $whereConditions[] = "was_shaved = ?";
+        $params[] = (int)$wasShaved;
+    }
 
     $where = implode(' AND ', $whereConditions);
 

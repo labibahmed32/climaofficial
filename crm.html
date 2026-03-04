@@ -1036,7 +1036,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <div class="card"><div class="card-header"><h3>Devices</h3></div><div class="card-body" id="shvBdDevices"><div class="empty-state"><i class="fas fa-mobile-alt"></i><p>No data</p></div></div></div>
 </div>
 <div class="card" style="margin-top:16px;">
-<div class="card-header"><h3>Traffic Log</h3><div style="display:flex;gap:8px;"><button class="btn-primary-sm" onclick="loadShaverTrafficLog()" style="font-size:11px;padding:4px 10px;"><i class="fas fa-sync-alt"></i></button></div></div>
+<div class="card-header"><h3>Shaved Traffic Log <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:10px;vertical-align:middle;">Shaved Only</span></h3><div style="display:flex;gap:8px;"><button class="btn-primary-sm" onclick="loadShaverTrafficLog()" style="font-size:11px;padding:4px 10px;" title="Refresh"><i class="fas fa-sync-alt"></i></button></div></div>
 <div class="card-body" style="overflow-x:auto;">
 <table class="data-table">
 <thead><tr><th>Time</th><th>Aff ID</th><th>Sub ID</th><th>Page</th><th>Country</th><th>Device</th><th>Shaved</th><th>Checkout</th></tr></thead>
@@ -1109,6 +1109,17 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
     <div class="fr-detail-header" id="fraudDetailHeader"></div>
     <div class="fr-detail-body" id="fraudDetailBody"></div>
   </div>
+</div>
+
+<!-- Traffic Log Detail Modal -->
+<div class="modal-overlay" id="trafficLogDetailModal">
+<div class="modal" style="max-width:760px;">
+<div id="tldHeader" style="padding:20px 28px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);color:#fff;display:flex;align-items:center;justify-content:space-between;">
+<div style="display:flex;align-items:center;gap:14px;"><i class="fas fa-cut" style="font-size:24px;opacity:.6;"></i><div><div style="font-size:16px;font-weight:800;" id="tldTitle">Shaved Traffic Detail</div><div style="font-size:11px;opacity:.7;" id="tldSubtitle"></div></div></div>
+<div style="display:flex;align-items:center;gap:14px;"><div id="tldBadges"></div><button onclick="closeModal('trafficLogDetailModal')" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;"><i class="fas fa-times"></i></button></div>
+</div>
+<div class="modal-body" id="tldBody" style="padding:24px 28px;max-height:70vh;overflow-y:auto;"></div>
+</div>
 </div>
 
 <!-- Toast Container -->
@@ -5359,7 +5370,7 @@ function renderShaverChart(data) {
 
 function loadShaverTrafficLog() {
   var domainId = document.getElementById('shvAnalyticsDomain').value;
-  var params = {period: _shaverPeriod, limit: 25, offset: _shaverTrafficPage * 25};
+  var params = {period: _shaverPeriod, limit: 25, offset: _shaverTrafficPage * 25, was_shaved: 1};
   if (domainId) params.domain_id = domainId;
   shaverAPI('get_traffic_log', params).then(function(res) {
     if (!res.success) return;
@@ -5368,30 +5379,33 @@ function loadShaverTrafficLog() {
   });
 }
 
+var _trafficLogItems = [];
+
 function renderShaverTrafficTable(items) {
+  _trafficLogItems = items;
   var tbody = document.getElementById('shvTrafficBody');
   if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">No traffic data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">No shaved traffic data</td></tr>';
     document.getElementById('shvTrafficPagination').innerHTML = '';
     return;
   }
   var html = '';
-  items.forEach(function(t) {
-    var shavedBadge = t.wasShaved
-      ? '<span class="badge" style="background:#dcfce7;color:#166534;">YES</span>'
-      : '<span class="badge" style="background:#f1f5f9;color:#64748b;">No</span>';
+  items.forEach(function(t, idx) {
+    var timeStr = t.timestamp ? new Date(t.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '-';
+    var dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString() : '';
     var checkoutBadge = t.reachedCheckout
-      ? '<span class="badge" style="background:#dbeafe;color:#1d4ed8;">YES</span>'
-      : '<span class="badge" style="background:#f1f5f9;color:#64748b;">No</span>';
-    var pageShort = (t.pageUrl || '').replace(/https?:\/\/[^\/]+/, '').substring(0, 30);
-    html += '<tr>';
-    html += '<td style="font-size:12px;">' + (t.timestamp ? new Date(t.timestamp).toLocaleString() : '-') + '</td>';
-    html += '<td><strong>' + escHtml(t.affId || '-') + '</strong></td>';
-    html += '<td>' + escHtml(t.subId || '-') + '</td>';
-    html += '<td style="font-size:11px;" title="' + escHtml(t.pageUrl || '') + '">' + escHtml(pageShort || '-') + '</td>';
-    html += '<td>' + escHtml(t.country || '-') + '</td>';
-    html += '<td>' + escHtml(t.device || '-') + '</td>';
-    html += '<td>' + shavedBadge + '</td>';
+      ? '<span class="badge badge-green" style="font-size:10px;">YES</span>'
+      : '<span class="badge badge-gray" style="font-size:10px;">No</span>';
+    var pageShort = (t.pageUrl || '').replace(/https?:\/\/[^\/]+/, '').substring(0, 28) || '/';
+    var devIcon = t.device === 'Mobile' ? 'fa-mobile-alt' : t.device === 'Tablet' ? 'fa-tablet-alt' : 'fa-desktop';
+    html += '<tr style="cursor:pointer;" onclick="openTrafficDetail(' + idx + ')" title="Click for full detail">';
+    html += '<td style="font-size:11px;white-space:nowrap;"><div style="font-weight:600;color:var(--text-dark);">' + timeStr + '</div><div style="font-size:10px;color:var(--text-muted);">' + dateStr + '</div></td>';
+    html += '<td><span class="badge badge-blue" style="font-size:10px;">' + escHtml(t.affId || '-') + '</span></td>';
+    html += '<td style="font-size:11px;font-family:monospace;color:#475569;">' + escHtml((t.subId || '-').substring(0, 14)) + '</td>';
+    html += '<td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escHtml(t.pageUrl || '') + '">' + escHtml(pageShort) + '</td>';
+    html += '<td style="font-size:12px;">' + escHtml(t.country || '-') + '</td>';
+    html += '<td style="font-size:12px;"><i class="fas ' + devIcon + '" style="margin-right:4px;color:var(--text-muted);"></i>' + escHtml(t.device || '-') + '</td>';
+    html += '<td><span class="badge" style="background:#fef9c3;color:#854d0e;font-size:10px;font-weight:700;">SHAVED</span></td>';
     html += '<td>' + checkoutBadge + '</td>';
     html += '</tr>';
   });
@@ -5413,6 +5427,59 @@ function renderShaverTrafficTable(items) {
 function shaverTrafficPage(page) {
   _shaverTrafficPage = page;
   loadShaverTrafficLog();
+}
+
+function openTrafficDetail(idx) {
+  var t = _trafficLogItems[idx];
+  if (!t) return;
+  var devIcon = t.device === 'Mobile' ? 'fa-mobile-alt' : t.device === 'Tablet' ? 'fa-tablet-alt' : 'fa-desktop';
+  document.getElementById('tldTitle').textContent = (t.ip || 'Unknown') + '  —  ' + (t.country || '?');
+  document.getElementById('tldSubtitle').textContent = (t.timestamp ? new Date(t.timestamp).toLocaleString() : '') + '  |  Aff: ' + (t.affId || '-');
+  var badges = '<span style="background:#fef08a;color:#854d0e;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;">SHAVED</span> ';
+  if (t.reachedCheckout) badges += '<span style="background:#bbf7d0;color:#166534;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;">Checkout Reached</span>';
+  document.getElementById('tldBadges').innerHTML = badges;
+
+  var html = '';
+  /* Stats row */
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px;">';
+  var stats = [
+    ['Session', (t.sessionDuration ? t.sessionDuration + 's' : '-')],
+    ['Scroll', (t.maxScrollDepth != null ? t.maxScrollDepth + '%' : '-')],
+    ['Clicks', (t.totalClicks != null ? t.totalClicks : '-')],
+    ['Bounce', (t.bounce ? 'Yes' : 'No')],
+    ['Checkout', (t.reachedCheckout ? 'Yes' : 'No')]
+  ];
+  stats.forEach(function(s) {
+    html += '<div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;text-align:center;">';
+    html += '<div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:.5px;">' + s[0] + '</div>';
+    html += '<div style="font-size:20px;font-weight:800;color:var(--text-dark);margin-top:2px;">' + s[1] + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  /* Visitor Info */
+  html += '<div class="se-card" style="margin-bottom:14px;"><div class="se-card-header"><i class="fas fa-globe"></i> Visitor Information</div><div class="se-card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">';
+  html += seRow('IP Address', escHtml(t.ip || '-'));
+  html += seRow('Country', escHtml(t.country || '-') + (t.countryCode ? ' (' + escHtml(t.countryCode) + ')' : ''));
+  html += seRow('Device', '<i class="fas ' + devIcon + '" style="margin-right:5px;"></i>' + escHtml(t.device || '-'));
+  html += seRow('Browser', escHtml(t.browser || '-'));
+  html += seRow('Aff ID', t.affId ? '<span class="badge badge-blue">' + escHtml(t.affId) + '</span>' : '-');
+  html += seRow('Sub ID', '<span style="font-family:monospace;font-size:11px;">' + escHtml(t.subId || '-') + '</span>');
+  html += '</div></div></div>';
+  /* Page Info */
+  html += '<div class="se-card" style="margin-bottom:14px;"><div class="se-card-header"><i class="fas fa-link"></i> Page Info</div><div class="se-card-body"><div style="display:grid;grid-template-columns:1fr;gap:0;">';
+  html += seRow('Page URL', '<a href="' + escHtml(t.pageUrl || '#') + '" target="_blank" style="font-size:11px;word-break:break-all;color:var(--primary);">' + escHtml(t.pageUrl || '-') + '</a>');
+  html += seRow('Referrer', t.referrer ? '<span style="font-size:11px;word-break:break-all;">' + escHtml(t.referrer) + '</span>' : '<span style="color:var(--text-muted);">Direct</span>');
+  html += '</div></div></div>';
+  /* Shaver Info */
+  html += '<div class="se-card"><div class="se-card-header"><i class="fas fa-cut"></i> Shaver Status</div><div class="se-card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">';
+  html += seRow('Was Shaved', '<span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:700;">YES — Traffic Redirected</span>');
+  html += seRow('Reached Checkout', t.reachedCheckout ? '<span class="badge badge-green">YES</span>' : '<span class="badge badge-gray">No</span>');
+  html += seRow('Domain ID', escHtml(String(t.domainId || '-')));
+  html += seRow('Record ID', escHtml(String(t.id || '-')));
+  html += '</div></div></div>';
+
+  document.getElementById('tldBody').innerHTML = html;
+  openModal('trafficLogDetailModal');
 }
 
 </script>
