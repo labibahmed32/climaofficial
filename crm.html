@@ -1055,23 +1055,26 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 
 <!-- Shaved Logs Page -->
 <div id="pg-shaved-logs" class="page">
-<div class="card">
-<div class="card-header">
-  <h3>Shaved Traffic Log <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:10px;vertical-align:middle;">Shaved Only</span></h3>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:11px;padding:5px 12px;">Shaved Only</span>
+    <span style="font-size:13px;color:var(--text-muted);" id="shvLogsCount"></span>
+  </div>
   <div style="display:flex;align-items:center;gap:8px;">
-    <select id="shvLogsAnalyticsDomain" onchange="loadShavedLogs()" style="font-size:12px;padding:5px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;">
+    <select id="shvLogsAnalyticsDomain" onchange="loadShavedLogs()" style="font-size:12px;padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;">
       <option value="">All Domains</option>
     </select>
-    <button class="btn-primary-sm" onclick="loadShavedLogs()" style="font-size:11px;padding:4px 10px;" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+    <button class="btn-primary-sm" onclick="loadShavedLogs()" style="font-size:11px;padding:5px 12px;" title="Refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
   </div>
 </div>
-<div class="card-body" style="overflow-x:auto;">
-<table class="data-table">
-<thead><tr><th>Time</th><th>Aff ID</th><th>Sub ID</th><th>Page</th><th>Country</th><th>Device</th><th>Shaved</th><th>Checkout</th></tr></thead>
+<div class="card">
+<div class="card-body" style="padding:0;overflow-x:auto;">
+<table class="data-table" style="margin:0;">
+<thead><tr><th style="padding:12px 16px;">Time</th><th style="padding:12px 16px;">Aff ID</th><th style="padding:12px 16px;">Sub ID</th><th style="padding:12px 16px;">Page</th><th style="padding:12px 16px;">Country</th><th style="padding:12px 16px;">Device</th><th style="padding:12px 16px;">Shaved</th><th style="padding:12px 16px;">Checkout</th></tr></thead>
 <tbody id="shvLogsBody"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody>
 </table>
 </div>
-<div id="shvLogsPagination" style="display:flex;justify-content:center;gap:8px;padding:12px;"></div>
+<div id="shvLogsPagination" style="display:flex;justify-content:center;gap:8px;padding:12px;border-top:1px solid var(--card-border);"></div>
 </div>
 </div>
 
@@ -4977,6 +4980,8 @@ function loadShavedLogs() {
   shaverAPI('get_traffic_log', params).then(function(res) {
     if (!res.success) { document.getElementById('shvLogsBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:30px;">Failed to load</td></tr>'; return; }
     _shavedLogsTotal = res.total || 0;
+    var cntEl = document.getElementById('shvLogsCount');
+    if (cntEl) cntEl.textContent = _shavedLogsTotal + ' entries';
     renderShavedLogsTable(res.data || []);
   });
 }
