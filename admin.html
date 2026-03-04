@@ -347,7 +347,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .tracker-badge-offer18{background:#e3f2fd;color:#1565c0;}
 .tracker-badge-cake{background:#fff3e0;color:#e65100;}
 .tracker-badge-tune{background:#f3e5f5;color:#7b1fa2;}
+.tracker-badge-buygoods{background:#e0f7fa;color:#00695c;}
+.tracker-badge-digistore{background:#fce4ec;color:#c62828;}
+.tracker-badge-clickbank{background:#e8eaf6;color:#283593;}
 .tracker-badge-custom{background:#f5f5f5;color:#666;}
+
+/* Wizard footer */
+.wz-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-top:1px solid var(--card-border);}
+.wz-footer-left,.wz-footer-right{display:flex;gap:8px;}
+.wz-step-indicator{font-size:12px;color:var(--text-muted);font-weight:600;}
+/* Setup Complete tab */
+.wz-success-banner{text-align:center;padding:24px 20px 20px;margin-bottom:20px;}
+.wz-check-circle{width:56px;height:56px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:wzPop .4s ease;}
+.wz-check-circle i{font-size:24px;color:var(--green);}
+@keyframes wzPop{from{transform:scale(0)}to{transform:scale(1)}}
+.wz-success-banner h4{font-size:16px;color:var(--text-dark);margin-bottom:4px;}
+.wz-success-banner p{font-size:13px;color:var(--text-muted);}
+.wz-section{padding:16px;background:#f9fafb;border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:14px;}
+.wz-section-label{font-size:13px;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.wz-section-label i{color:var(--primary);}
+.wz-section-desc{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
+.wz-url-box{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all;position:relative;}
+.wz-instructions{margin-top:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;}
+.wz-instructions ol{margin:6px 0 0;padding-left:18px;}
 .tracker-section{margin-top:12px;}
 .tracker-section-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
 .tracker-postback-url{background:#eff6ff;border:2px dashed var(--blue);border-radius:var(--radius);padding:12px;word-break:break-all;font-family:monospace;font-size:12px;color:var(--text-dark);}
@@ -778,7 +800,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;">Select an offer and tracker to generate the correct S2S postback URL with the advertiser's macros.</p>
                 <div class="form-row">
                     <div class="form-group"><label>Select Offer</label><select id="pbOfferSelect" onchange="onPbOfferChange()"><option value="">-- Choose Offer --</option></select></div>
-                    <div class="form-group"><label>Advertiser Tracker</label><select id="pbTrackerSelect" onchange="onPbTrackerChange()"><option value="">-- Select Tracker --</option><option value="everflow">Everflow</option><option value="offer18">Offer18</option><option value="cake">CAKE</option><option value="tune">HasOffers / TUNE</option><option value="custom">Custom / Other</option></select></div>
+                    <div class="form-group"><label>Advertiser Tracker</label><select id="pbTrackerSelect" onchange="onPbTrackerChange()"><option value="">-- Select Tracker --</option><option value="everflow">Everflow</option><option value="offer18">Offer18</option><option value="cake">CAKE</option><option value="tune">HasOffers / TUNE</option><option value="buygoods">BuyGoods</option><option value="digistore">Digistore24</option><option value="clickbank">ClickBank</option><option value="custom">Custom / Other</option></select></div>
                 </div>
                 <!-- Generated Result -->
                 <div class="pb-s2s-result" id="pbS2sResult">
@@ -1042,6 +1064,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="offer-tab" onclick="switchOfferTab('tracking')"><i class="fas fa-link"></i> Tracking</button>
             <button class="offer-tab" onclick="switchOfferTab('targeting')"><i class="fas fa-crosshairs"></i> Targeting</button>
             <button class="offer-tab" onclick="switchOfferTab('creatives')"><i class="fas fa-image"></i> Creatives</button>
+            <button class="offer-tab" onclick="switchOfferTab('complete')" id="ofTabBtn-complete" style="display:none;"><i class="fas fa-check-circle"></i> Setup Complete</button>
         </div>
 
         <!-- Tab 1: General -->
@@ -1078,6 +1101,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="profit-box"><div class="val" id="ofProfitVal">$0.00</div><div class="lbl">Profit per Conversion</div></div>
                 <div class="profit-box"><div class="val" id="ofMarginVal">0%</div><div class="lbl">Margin</div></div>
             </div>
+
+            <!-- Upsell Pricing Section -->
+            <div style="margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
+                <h4 style="font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;">
+                    <i class="fas fa-arrow-up" style="margin-right:8px;"></i> Upsell Pricing (Optional)
+                </h4>
+                <div class="form-help" style="margin-bottom:16px;">Set individual prices for each upsell. Leave 0 if not applicable.</div>
+                <div class="form-row">
+                    <div class="form-group"><label>Upsell 1 Price</label><input type="number" id="ofUpsell1Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"><label>Upsell 2 Price</label><input type="number" id="ofUpsell2Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"><label>Upsell 3 Price</label><input type="number" id="ofUpsell3Price" step="0.01" value="0" placeholder="29.99"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Upsell 4 Price</label><input type="number" id="ofUpsell4Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"><label>Upsell 5 Price</label><input type="number" id="ofUpsell5Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"></div>
+                </div>
+            </div>
+
             <div style="margin-top:16px;">
                 <div class="form-row">
                     <div class="form-group"><label>Daily Cap</label><input type="number" id="ofDailyCap" value="0" placeholder="0 = unlimited"><div class="form-help">0 = unlimited conversions per day</div></div>
@@ -1096,6 +1138,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <option value="offer18">Offer18</option>
                     <option value="cake">CAKE</option>
                     <option value="tune">HasOffers / TUNE</option>
+                    <option value="buygoods">BuyGoods</option>
+                    <option value="digistore">Digistore24</option>
+                    <option value="clickbank">ClickBank</option>
                     <option value="custom">Custom / Other</option>
                 </select>
                 <div class="form-help">Select which tracking platform the advertiser uses</div>
@@ -1170,8 +1215,62 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div id="creativesContainer"></div>
             <div id="noCreatives" style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px;"><i class="fas fa-image" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3;"></i>No creatives added yet. Click "Add Creative" to start.</div>
         </div>
+
+        <!-- Tab 6: Setup Complete -->
+        <div class="offer-tab-pane" id="ofTab-complete">
+            <div class="wz-success-banner">
+                <div class="wz-check-circle"><i class="fas fa-check"></i></div>
+                <h4>Offer Created Successfully!</h4>
+                <p>Offer ID: <strong id="wzOfferId"></strong></p>
+            </div>
+            <div class="wz-section" id="wzPostbackSection">
+                <label class="wz-section-label"><i class="fas fa-satellite-dish"></i> Postback URL for Advertiser</label>
+                <p class="wz-section-desc">Give this URL to the advertiser to set in their tracker panel.</p>
+                <div class="wz-url-box">
+                    <button class="pb-copy-lg" onclick="copyWzPostback()"><i class="fas fa-copy"></i> Copy</button>
+                    <span id="wzPostbackUrl"></span>
+                </div>
+            </div>
+            <div class="wz-section" id="wzTestSection">
+                <label class="wz-section-label"><i class="fas fa-flask" style="color:var(--orange);"></i> Test Click URL</label>
+                <p class="wz-section-desc">Use this to verify the tracking setup end-to-end.</p>
+                <div class="form-row">
+                    <div class="form-group"><label>Test Affiliate</label><select id="wzTestAff" onchange="updateWzTestUrl()"><option value="">-- Select Affiliate --</option></select></div>
+                </div>
+                <div id="wzTestUrlBox" style="display:none;">
+                    <div class="wz-url-box" style="background:#fef3c7;border-color:#f59e0b;">
+                        <button class="pb-copy-lg" style="background:#d97706;" onclick="copyWzTestUrl()"><i class="fas fa-copy"></i> Copy</button>
+                        <span id="wzTestUrlText"></span>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="btn-primary-sm" onclick="openWzTestUrl()"><i class="fas fa-external-link-alt"></i> Open in Browser</button>
+                    </div>
+                    <div class="wz-instructions">
+                        <strong>Instructions for advertiser:</strong>
+                        <ol>
+                            <li>Set the postback URL above in your tracker panel</li>
+                            <li>Open the test click URL in your browser</li>
+                            <li>Fire a test conversion from your tracker</li>
+                            <li>Check Postback Log for confirmation</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('offerModal')">Cancel</button><button class="btn-primary-sm" onclick="saveOffer()"><i class="fas fa-save"></i> Save Offer</button></div>
+    <div class="wz-footer" id="offerWzFooter">
+        <div class="wz-footer-left">
+            <button class="btn-secondary" id="wzBackBtn" onclick="wzBack()" style="display:none;"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-secondary" onclick="closeModal('offerModal')">Cancel</button>
+        </div>
+        <span class="wz-step-indicator" id="wzStepText">Step 1 of 5</span>
+        <div class="wz-footer-right">
+            <button class="btn-primary-sm" id="wzSaveBtn" onclick="saveOffer()" style="display:none;"><i class="fas fa-save"></i> Save</button>
+            <button class="btn-primary-sm" id="wzNextBtn" onclick="wzNext()"><i class="fas fa-save"></i> Save & Next <i class="fas fa-arrow-right"></i></button>
+            <button class="btn-primary-sm" id="wzFinishBtn" onclick="wzFinish()" style="display:none;"><i class="fas fa-save"></i> Save & Finish</button>
+            <button class="btn-primary-sm" id="wzDoneBtn" onclick="closeModal('offerModal');loadOffers();" style="display:none;"><i class="fas fa-check"></i> Done</button>
+        </div>
+    </div>
 </div></div>
 
 <div class="modal-overlay" id="affModal"><div class="modal-panel">
@@ -1425,6 +1524,61 @@ var TRACKER_PROFILES = {
             ['Sub 1', '{aff_sub}', '{sub1}', ''], ['Sub 2', '{aff_sub2}', '{sub2}', ''],
             ['Sub 3', '{aff_sub3}', '{sub3}', ''], ['Sub 4', '{aff_sub4}', '{sub4}', ''], ['Sub 5', '{aff_sub5}', '{sub5}', '']
         ]
+    },
+    buygoods: {
+        name: 'BuyGoods', icon: 'fas fa-shopping-bag', badgeClass: 'tracker-badge-buygoods',
+        domains: ['buygoods.com', 'bgdlinks.com', 'hop.buygoods.com'],
+        signatureMacros: ['{SUBID}', '{ORDERID}'],
+        macroMap: {
+            '{click_id}': '{click_id}', '{aff_id}': '{aff_id}',
+            '{sub1}': '{sub1}', '{sub2}': '{sub2}', '{sub3}': '{sub3}', '{sub4}': '{sub4}', '{sub5}': '{sub5}'
+        },
+        postbackMacros: { click_id: '{SUBID}', payout: '{COMMISSION_AMOUNT}', txn_id: '{ORDERID}', status: 'approved' },
+        macroRef: [
+            ['Click ID', 'subid=', '{click_id}', 'Append &subid={click_id} to BuyGoods hoplink'],
+            ['Affiliate ID', 'subid2=', '{aff_id}', 'Append &subid2={aff_id} to hoplink'],
+            ['Sub 1', 'subid3=', '{sub1}', 'Optional: &subid3={sub1}'],
+            ['Sub 2', 'subid4=', '{sub2}', 'Optional: &subid4={sub2}'],
+            ['Sub 3', 'subid5=', '{sub3}', 'Optional: &subid5={sub3}'],
+            ['Postback: Click ID', '{SUBID}', '-', 'BuyGoods returns your subid value'],
+            ['Postback: Payout', '{COMMISSION_AMOUNT}', '-', 'Commission amount'],
+            ['Postback: Order ID', '{ORDERID}', '-', 'Unique order/transaction ID'],
+            ['Postback: Type', '{CONV_TYPE}', '-', 'frontend or upsell']
+        ]
+    },
+    digistore: {
+        name: 'Digistore24', icon: 'fas fa-store', badgeClass: 'tracker-badge-digistore',
+        domains: ['digistore24.com'],
+        signatureMacros: ['{custom}', '{affiliate_name}'],
+        macroMap: {
+            '{click_id}': '{click_id}', '{aff_id}': '{aff_id}',
+            '{sub1}': '{sub1}', '{sub2}': '{sub2}'
+        },
+        postbackMacros: { click_id: '{custom}', payout: '{amount}', txn_id: '{order_id}', status: 'approved' },
+        macroRef: [
+            ['Click ID', 'custom=', '{click_id}', 'Append ?custom={click_id} to Digistore link'],
+            ['Affiliate ID', 'affiliate_name=', '{aff_id}', 'Usually set in Digistore dashboard'],
+            ['Postback: Click ID', '{custom}', '-', 'Digistore sends back your custom value'],
+            ['Postback: Payout', '{amount}', '-', 'Sale amount'],
+            ['Postback: Order ID', '{order_id}', '-', 'Digistore order ID']
+        ]
+    },
+    clickbank: {
+        name: 'ClickBank', icon: 'fas fa-money-check-alt', badgeClass: 'tracker-badge-clickbank',
+        domains: ['clickbank.net', 'hop.clickbank.net', 'clickbank.com'],
+        signatureMacros: ['{tid}', '{affiliate}'],
+        macroMap: {
+            '{click_id}': '{click_id}', '{aff_id}': '{aff_id}',
+            '{sub1}': '{sub1}', '{sub2}': '{sub2}'
+        },
+        postbackMacros: { click_id: '{tid}', payout: '{amount}', txn_id: '{receipt}', status: 'approved' },
+        macroRef: [
+            ['Click ID', 'tid=', '{click_id}', 'Append &tid={click_id} to ClickBank hoplink'],
+            ['Affiliate ID', 'affiliate=', '{aff_id}', 'Usually your CB nickname'],
+            ['Postback: Click ID', '{tid}', '-', 'ClickBank sends back your tid value'],
+            ['Postback: Payout', '{amount}', '-', 'Commission amount'],
+            ['Postback: Receipt', '{receipt}', '-', 'ClickBank receipt/transaction ID']
+        ]
     }
 };
 
@@ -1435,7 +1589,23 @@ function fbPatch(path, data) { return fetch(FB + '/' + path + '.json', { method:
 function fbDelete(path) { return fetch(FB + '/' + path + '.json', { method: 'DELETE' }); }
 function objToArr(obj) {
     if (!obj) return [];
-    return Object.keys(obj).map(function(k) { var item = typeof obj[k] === 'object' && obj[k] !== null ? obj[k] : { value: obj[k] }; item._id = k; return item; });
+    var result = [];
+    if (Array.isArray(obj)) {
+        obj.forEach(function(item, i) {
+            if (item !== null && item !== undefined) {
+                if (typeof item === 'object') { item._id = String(i); } else { item = { value: item, _id: String(i) }; }
+                result.push(item);
+            }
+        });
+        return result;
+    }
+    Object.keys(obj).forEach(function(k) {
+        if (obj[k] !== null && obj[k] !== undefined) {
+            var item = typeof obj[k] === 'object' ? obj[k] : { value: obj[k] };
+            item._id = k; result.push(item);
+        }
+    });
+    return result;
 }
 function genId(prefix) { return (prefix || '') + Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
 function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
@@ -1866,7 +2036,7 @@ function switchOfferTab(tab) {
     document.querySelectorAll('.offer-tab-pane').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('ofTab-' + tab).classList.add('active');
     var tabs = document.querySelectorAll('.offer-tab');
-    var tabNames = ['general','revenue','tracking','targeting','creatives'];
+    var tabNames = ['general','revenue','tracking','targeting','creatives','complete'];
     var idx = tabNames.indexOf(tab);
     if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
 }
@@ -2146,6 +2316,11 @@ function openOfferModal(id) {
     document.getElementById('ofCurrency').value = 'USD';
     document.getElementById('ofDailyCap').value = '0';
     document.getElementById('ofHourlyCap').value = '0';
+    document.getElementById('ofUpsell1Price').value = '0';
+    document.getElementById('ofUpsell2Price').value = '0';
+    document.getElementById('ofUpsell3Price').value = '0';
+    document.getElementById('ofUpsell4Price').value = '0';
+    document.getElementById('ofUpsell5Price').value = '0';
     document.getElementById('ofFinalUrl').value = '';
     document.getElementById('ofTrackerType').value = '';
     document.getElementById('trackerMacroRef').style.display = 'none';
@@ -2180,6 +2355,11 @@ function openOfferModal(id) {
             document.getElementById('ofCurrency').value = o.currency || 'USD';
             document.getElementById('ofDailyCap').value = o.dailyCap || '0';
             document.getElementById('ofHourlyCap').value = o.hourlyCap || '0';
+            document.getElementById('ofUpsell1Price').value = o.upsell1Price || '0';
+            document.getElementById('ofUpsell2Price').value = o.upsell2Price || '0';
+            document.getElementById('ofUpsell3Price').value = o.upsell3Price || '0';
+            document.getElementById('ofUpsell4Price').value = o.upsell4Price || '0';
+            document.getElementById('ofUpsell5Price').value = o.upsell5Price || '0';
             document.getElementById('ofFinalUrl').value = o.finalUrl || '';
             /* Restore tracker type */
             document.getElementById('ofTrackerType').value = o.detectedTracker || '';
@@ -2207,6 +2387,13 @@ function openOfferModal(id) {
 
     renderCreatives();
     calcOfferProfit();
+
+    /* Initialize wizard state */
+    wzCurrentStep = 0;
+    wzSavedOfferId = id || null;
+    document.getElementById('ofTabBtn-complete').style.display = 'none';
+    wzUpdateFooter();
+
     openModal('offerModal');
 }
 
@@ -2239,7 +2426,12 @@ function saveOffer() {
         countryMode: countryMode,
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
-        detectedTracker: document.getElementById('ofTrackerType').value || ''
+        detectedTracker: document.getElementById('ofTrackerType').value || '',
+        upsell1Price: parseFloat(document.getElementById('ofUpsell1Price').value) || 0,
+        upsell2Price: parseFloat(document.getElementById('ofUpsell2Price').value) || 0,
+        upsell3Price: parseFloat(document.getElementById('ofUpsell3Price').value) || 0,
+        upsell4Price: parseFloat(document.getElementById('ofUpsell4Price').value) || 0,
+        upsell5Price: parseFloat(document.getElementById('ofUpsell5Price').value) || 0
     };
 
     if (editId) {
@@ -2262,7 +2454,170 @@ function saveOffer() {
     }
 }
 
-function deleteOffer(id) { if (!confirm('Delete this offer? This cannot be undone.')) return; fbDelete('offers/' + id).then(function() { toast('Offer deleted'); loadOffers(); }); }
+/* ===== OFFER WIZARD (Save & Next) ===== */
+var wzTabs = ['general','revenue','tracking','targeting','creatives','complete'];
+var wzCurrentStep = 0;
+var wzSavedOfferId = null;
+
+function wzUpdateFooter() {
+    var isComplete = wzTabs[wzCurrentStep] === 'complete';
+    var isLast = wzTabs[wzCurrentStep] === 'creatives';
+    var isFirst = wzCurrentStep === 0;
+    document.getElementById('wzBackBtn').style.display = (isFirst || isComplete) ? 'none' : '';
+    document.getElementById('wzNextBtn').style.display = (!isLast && !isComplete) ? '' : 'none';
+    document.getElementById('wzFinishBtn').style.display = isLast ? '' : 'none';
+    document.getElementById('wzDoneBtn').style.display = isComplete ? '' : 'none';
+    document.getElementById('wzSaveBtn').style.display = 'none';
+    document.getElementById('wzStepText').textContent = isComplete ? 'Setup Complete' : 'Step ' + (wzCurrentStep + 1) + ' of 5';
+}
+
+function wzNext() {
+    if (!wzValidateStep(wzCurrentStep)) return;
+    wzSaveAndGo(wzCurrentStep + 1);
+}
+
+function wzBack() {
+    if (wzCurrentStep > 0) {
+        wzCurrentStep--;
+        switchOfferTab(wzTabs[wzCurrentStep]);
+        wzUpdateFooter();
+    }
+}
+
+function wzFinish() {
+    if (!wzValidateStep(wzCurrentStep)) return;
+    wzSaveAndGo(5);
+}
+
+function wzValidateStep(step) {
+    var tab = wzTabs[step];
+    if (tab === 'general') {
+        if (!document.getElementById('ofName').value.trim()) { toast('Offer name is required', 'error'); return false; }
+    }
+    if (tab === 'tracking') {
+        if (!document.getElementById('ofFinalUrl').value.trim()) { toast('Final URL is required', 'error'); return false; }
+    }
+    return true;
+}
+
+function wzCollectData() {
+    var countryMode = document.getElementById('ofCountryMode').value;
+    return {
+        name: document.getElementById('ofName').value.trim(),
+        description: document.getElementById('ofDescription').value.trim(),
+        advertiser: document.getElementById('ofAdvertiser').value.trim(),
+        category: document.getElementById('ofCategory').value,
+        status: document.getElementById('ofStatus').value,
+        thumbnail: document.getElementById('ofThumbnail').value.trim(),
+        previewUrl: document.getElementById('ofPreviewUrl').value.trim(),
+        finalUrl: document.getElementById('ofFinalUrl').value.trim(),
+        payoutModel: document.getElementById('ofPayoutModel').value,
+        payout: parseFloat(document.getElementById('ofPayout').value) || 0,
+        revenue: parseFloat(document.getElementById('ofRevenue').value) || 0,
+        currency: document.getElementById('ofCurrency').value,
+        deviceTargeting: document.getElementById('ofDevice').value,
+        dailyCap: parseInt(document.getElementById('ofDailyCap').value) || 0,
+        hourlyCap: parseInt(document.getElementById('ofHourlyCap').value) || 0,
+        countryMode: countryMode,
+        allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
+        creatives: offerCreatives.filter(function(c) { return c.url; }),
+        detectedTracker: document.getElementById('ofTrackerType').value || ''
+    };
+}
+
+function wzSaveAndGo(nextStep) {
+    var data = wzCollectData();
+    if (wzSavedOfferId) {
+        fbPatch('offers/' + wzSavedOfferId, data).then(function() {
+            toast('Saved!');
+            wzCurrentStep = nextStep;
+            if (wzTabs[nextStep] === 'complete') wzShowComplete();
+            switchOfferTab(wzTabs[wzCurrentStep]);
+            wzUpdateFooter();
+        }).catch(function() { toast('Error saving', 'error'); });
+    } else {
+        data.createdAt = Date.now();
+        getNextOfferId().then(function(newId) {
+            wzSavedOfferId = newId;
+            document.getElementById('offerEditId').value = newId;
+            return fbPut('offers/' + newId, data);
+        }).then(function() {
+            toast('Offer created! ID: ' + wzSavedOfferId);
+            wzCurrentStep = nextStep;
+            if (wzTabs[nextStep] === 'complete') wzShowComplete();
+            switchOfferTab(wzTabs[wzCurrentStep]);
+            wzUpdateFooter();
+        }).catch(function(err) { toast('Error: ' + (err.message || ''), 'error'); });
+    }
+}
+
+function wzShowComplete() {
+    document.getElementById('wzOfferId').textContent = wzSavedOfferId;
+    document.getElementById('ofTabBtn-complete').style.display = '';
+    /* Postback URL */
+    var trackerKey = document.getElementById('ofTrackerType').value;
+    var pbSection = document.getElementById('wzPostbackSection');
+    if (trackerKey && trackerKey !== 'custom') {
+        document.getElementById('wzPostbackUrl').textContent = generateAdvPostback(trackerKey);
+        pbSection.style.display = '';
+    } else if (trackerKey === 'custom') {
+        var domain = window._cachedDefaultDomain || window.location.origin;
+        var secret = window._cachedPostbackSecret || 'YOUR_SECRET';
+        document.getElementById('wzPostbackUrl').textContent = domain + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&status=approved&secret=' + secret;
+        pbSection.style.display = '';
+    } else {
+        pbSection.style.display = 'none';
+    }
+    /* Test affiliate dropdown */
+    var sel = document.getElementById('wzTestAff');
+    sel.innerHTML = '<option value="">-- Select Affiliate --</option>';
+    var affs = allUsers.filter(function(u) { return u.role === 'affiliate' && u.status === 'active'; });
+    affs.forEach(function(a) {
+        sel.innerHTML += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + ' (#' + (a.affiliateId || a._id) + ')</option>';
+    });
+    document.getElementById('wzTestUrlBox').style.display = 'none';
+}
+
+function updateWzTestUrl() {
+    var offerId = wzSavedOfferId;
+    var affId = document.getElementById('wzTestAff').value;
+    var box = document.getElementById('wzTestUrlBox');
+    if (!offerId || !affId) { box.style.display = 'none'; return; }
+    var domain = window._cachedDefaultDomain || window.location.origin;
+    document.getElementById('wzTestUrlText').textContent = domain + '/api/click?offer_id=' + encodeURIComponent(offerId) + '&aff_id=' + encodeURIComponent(affId) + '&sub1=TEST_VERIFY&test=1';
+    box.style.display = 'block';
+}
+
+function copyWzPostback() {
+    navigator.clipboard.writeText(document.getElementById('wzPostbackUrl').textContent).then(function() { toast('Postback URL copied!'); });
+}
+function copyWzTestUrl() {
+    navigator.clipboard.writeText(document.getElementById('wzTestUrlText').textContent).then(function() { toast('Test URL copied!'); });
+}
+function openWzTestUrl() {
+    var url = document.getElementById('wzTestUrlText').textContent;
+    if (url) window.open(url, '_blank');
+}
+
+function deleteOffer(id) {
+    if (!confirm('Delete this offer? This cannot be undone.')) return;
+    fbGet('offers').then(function(data) {
+        if (!data) return;
+        /* Build clean object without the deleted offer (avoids Firebase array null holes) */
+        var clean = {};
+        var keys = Array.isArray(data) ? Object.keys(data) : Object.keys(data);
+        keys.forEach(function(k) {
+            if (String(k) !== String(id) && data[k] !== null && data[k] !== undefined) {
+                clean[k] = data[k];
+            }
+        });
+        /* Overwrite entire offers node with clean data (no nulls) */
+        return fbPut('offers', Object.keys(clean).length > 0 ? clean : null);
+    }).then(function() {
+        toast('Offer deleted');
+        loadOffers();
+    }).catch(function() { toast('Error deleting offer', 'error'); });
+}
 
 /* Migrate old off_xxx IDs to sequential OFF-001 format */
 function migrateOfferIds() {

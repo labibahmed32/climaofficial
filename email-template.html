@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@media only screen and (max-width: 620px) {
+  .outer-table { width: 100% !important; }
+  .main-table { width: 100% !important; border-radius: 0 !important; }
+  .pad { padding-left: 16px !important; padding-right: 16px !important; }
+  .amount-text { font-size: 28px !important; }
+  .row-label { display: block !important; width: 100% !important; padding-bottom: 2px !important; border-bottom: none !important; }
+  .row-value { display: block !important; width: 100% !important; text-align: left !important; padding-top: 0 !important; padding-bottom: 12px !important; }
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<table class="outer-table" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:16px 0;">
+<tr><td align="center" style="padding:0 8px;">
+<table class="main-table" width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+
+<!-- Header -->
+<tr><td class="pad" style="background:linear-gradient(135deg,#0A6C80 0%,#085a6b 100%);padding:24px 28px;text-align:center;">
+<img src="https://i.ibb.co/ZzqT56H0/image.png" alt="Clima" width="36" height="36" style="border-radius:8px;margin-bottom:6px;">
+<h1 style="color:#fff;margin:0;font-size:20px;font-weight:800;">New Sale Alert!</h1>
+<p style="color:rgba(255,255,255,0.8);margin:4px 0 0;font-size:12px;">{{date}} &bull; {{platform}}</p>
+</td></tr>
+
+<!-- Sale Amount -->
+<tr><td class="pad" style="background:#059669;padding:18px 28px;text-align:center;">
+<p style="color:rgba(255,255,255,0.7);margin:0 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Sale Amount</p>
+<h2 class="amount-text" style="color:#fff;margin:0;font-size:32px;font-weight:900;">${{amount}}</h2>
+<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:12px;">Order: <strong style="word-break:break-all;">{{order_id}}</strong></p>
+</td></tr>
+
+<!-- Sale Details -->
+<tr><td class="pad" style="padding:16px 20px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;overflow:hidden;">
+<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">
+<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;">Sale Details</p>
+</td></tr>
+<tr><td style="padding:4px 16px 8px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;width:35%;"><span style="color:#64748b;font-size:13px;">Offer</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><strong style="color:#1e293b;font-size:13px;">{{offer_name}}</strong></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Platform</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><span style="background:#0A6C80;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">{{platform}}</span></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Affiliate</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><span style="background:#e0f2fe;color:#0369a1;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">{{affiliate_id}}</span></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;"><span style="color:#64748b;font-size:13px;">Country</span></td>
+<td class="row-value" style="padding:10px 0;text-align:right;"><strong style="color:#1e293b;font-size:13px;">{{country}}</strong></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+
+<!-- Customer Info -->
+<tr><td class="pad" style="padding:12px 20px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;overflow:hidden;">
+<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">
+<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;">Customer Info</p>
+</td></tr>
+<tr><td style="padding:4px 16px 8px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;width:35%;"><span style="color:#64748b;font-size:13px;">Name</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><strong style="color:#1e293b;font-size:13px;">{{customer_name}}</strong></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Email</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><a href="mailto:{{customer_email}}" style="color:#0369a1;font-size:12px;text-decoration:none;word-break:break-all;">{{customer_email}}</a></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Phone</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><strong style="color:#1e293b;font-size:13px;">{{customer_phone}}</strong></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><span style="color:#64748b;font-size:13px;">Address</span></td>
+<td class="row-value" style="padding:10px 0;border-bottom:1px solid #e2e8f0;text-align:right;"><span style="color:#1e293b;font-size:12px;word-break:break-word;">{{customer_address}}</span></td>
+</tr>
+<tr>
+<td class="row-label" style="padding:10px 0;"><span style="color:#64748b;font-size:13px;">IP</span></td>
+<td class="row-value" style="padding:10px 0;text-align:right;"><code style="background:#e2e8f0;padding:2px 8px;border-radius:4px;font-size:11px;color:#1e293b;">{{ip_address}}</code></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+
+<!-- Fraud Check -->
+<tr><td class="pad" style="padding:12px 20px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">
+<tr><td style="padding:14px 16px;background:#fefce8;border-bottom:1px solid #e2e8f0;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td><p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;">Fraud Check</p></td>
+<td style="text-align:right;"><span style="font-size:18px;font-weight:900;color:#1e293b;">{{fraud_score}}</span><span style="font-size:11px;color:#64748b;">/100</span></td>
+</tr>
+</table>
+</td></tr>
+<tr><td style="padding:12px 16px;background:#fff;">
+<p style="margin:0 0 4px;"><strong style="font-size:13px;color:#1e293b;">{{fraud_label}}</strong></p>
+<p style="margin:0;color:#64748b;font-size:12px;word-break:break-word;">{{fraud_details}}</p>
+</td></tr>
+</table>
+</td></tr>
+
+<!-- Upsells -->
+<tr><td class="pad" style="padding:12px 20px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border-radius:8px;overflow:hidden;">
+<tr><td style="padding:12px 16px;">
+<p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#92400e;font-weight:700;">Upsells</p>
+<p style="margin:0;color:#78350f;font-size:12px;">{{upsell_summary}}</p>
+</td></tr>
+</table>
+</td></tr>
+
+<!-- Footer -->
+<tr><td class="pad" style="padding:20px 20px;text-align:center;">
+<a href="https://clima-dashboard.web.app/affiliate-tracker.html" style="display:inline-block;background:#0A6C80;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">Open Dashboard</a>
+<p style="margin:12px 0 0;color:#94a3b8;font-size:10px;">Clima Network</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
