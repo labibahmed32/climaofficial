@@ -88,13 +88,13 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 .table-search input{border:none;outline:none;font-size:13px;flex:1;color:var(--text-dark);font-family:inherit;}
 .table-wrap{background:#fff;border:1px solid var(--card-border);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);}
 .data-table{width:100%;border-collapse:collapse;table-layout:auto;}
-.data-table th{padding:10px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700;background:#f8fafc;border-bottom:2px solid var(--card-border);white-space:nowrap;}
+.data-table th{padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700;background:#f8fafc;border-bottom:2px solid var(--card-border);white-space:nowrap;}
 .th-sort{cursor:pointer;user-select:none;transition:background .15s,color .15s;}
 .th-sort:hover{background:#e0f2fe;color:var(--primary);}
 .th-sort.sort-active{color:var(--primary);}
 .sort-ic{font-size:9px;margin-left:3px;opacity:.4;}
 .th-sort.sort-active .sort-ic{opacity:1;color:var(--primary);}
-.data-table td{padding:9px 12px;font-size:12.5px;border-bottom:1px solid #f1f5f9;white-space:nowrap;}
+.data-table td{padding:7px 10px;font-size:12.5px;border-bottom:1px solid #f1f5f9;white-space:nowrap;}
 .data-table tbody tr:hover{background:#f0f9fb;}
 .data-table tbody tr:last-child td{border-bottom:none;}
 /* Buttons */
@@ -621,7 +621,18 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 </div>
 <div class="table-wrap">
-<table class="data-table"><thead><tr><th>Affiliate</th><th>Platform</th><th>Visitors</th><th>Sales</th><th>CR%</th><th>Revenue</th><th>Earnings</th><th>Profit</th><th>Avg Fraud</th><th></th></tr></thead><tbody id="affiliatesBody"></tbody></table>
+<table class="data-table" style="table-layout:fixed;"><thead><tr>
+<th style="width:160px;">Affiliate</th>
+<th style="width:100px;">Platform</th>
+<th style="width:80px;">Visitors</th>
+<th style="width:60px;">Sales</th>
+<th style="width:60px;">CR%</th>
+<th style="width:100px;">Revenue</th>
+<th style="width:100px;">Earnings</th>
+<th style="width:100px;">Profit</th>
+<th style="width:90px;">Avg Fraud</th>
+<th style="width:40px;"></th>
+</tr></thead><tbody id="affiliatesBody"></tbody></table>
 </div>
 <div id="affDrilldown"></div>
 </div>
@@ -710,11 +721,25 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <!-- Click Reports Page -->
 <div id="pg-clicks" class="page">
 <div class="table-toolbar">
-<div class="table-search"><i class="fas fa-search"></i><input id="clicksSearch" placeholder="Search clicks..." oninput="renderClicksTable()"></div>
-<div style="display:flex;gap:8px;"><button class="btn-sm" onclick="exportCSV('clicks')"><i class="fas fa-download"></i> Export</button></div>
+<div class="table-search"><i class="fas fa-search"></i><input id="clicksSearch" placeholder="Search IP, affiliate, element, text..." oninput="clicksPageNum=0;renderClicksTable()"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+<select id="clicksAffFilter" onchange="clicksPageNum=0;renderClicksTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Affiliates</option></select>
+<select id="clicksCountryFilter" onchange="clicksPageNum=0;renderClicksTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Countries</option></select>
+<select id="clicksElFilter" onchange="clicksPageNum=0;renderClicksTable()" style="font-size:11px;padding:5px 8px;border:1px solid var(--card-border);border-radius:6px;"><option value="all">All Elements</option></select>
+<button class="btn-sm" onclick="exportCSV('clicks')"><i class="fas fa-download"></i> Export</button>
+</div>
 </div>
 <div class="table-wrap">
-<table class="data-table"><thead><tr><th>Date/Time</th><th>Session</th><th>IP</th><th>Country</th><th>Affiliate</th><th>Element</th><th>Click Text</th><th></th></tr></thead><tbody id="clicksBody"></tbody></table>
+<table class="data-table"><thead><tr>
+<th class="th-sort" id="th-cl-ts" onclick="sortClicks('ts')">Date/Time <i class="fas fa-sort sort-ic"></i></th>
+<th>Session</th>
+<th class="th-sort" id="th-cl-ip" onclick="sortClicks('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-cl-country" onclick="sortClicks('country')">Country <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-cl-affId" onclick="sortClicks('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-cl-el" onclick="sortClicks('el')">Element <i class="fas fa-sort sort-ic"></i></th>
+<th>Click Text</th>
+<th></th>
+</tr></thead><tbody id="clicksBody"></tbody></table>
 </div>
 <div class="pagination" id="clicksPag"></div>
 </div>
@@ -738,7 +763,19 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 </div>
 <div class="table-wrap">
-<table class="data-table"><thead><tr><th>Date</th><th>Email</th><th>Name</th><th>IP</th><th>Country</th><th>Affiliate</th><th>Platform</th><th>Fraud</th><th>VPN</th><th>Sale</th><th>Actions</th></tr></thead><tbody id="checkoutsBody"></tbody></table>
+<table class="data-table"><thead><tr>
+<th class="th-sort" id="th-ch-ts" onclick="sortCheckouts('ts')">Date <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-email" onclick="sortCheckouts('email')">Email <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-name" onclick="sortCheckouts('name')">Name <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-ip" onclick="sortCheckouts('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-country" onclick="sortCheckouts('country')">Country <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-affId" onclick="sortCheckouts('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-platform" onclick="sortCheckouts('platform')">Platform <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-ch-fraud" onclick="sortCheckouts('fraud')">Fraud <i class="fas fa-sort sort-ic"></i></th>
+<th>VPN</th>
+<th class="th-sort" id="th-ch-sale" onclick="sortCheckouts('sale')">Sale <i class="fas fa-sort sort-ic"></i></th>
+<th>Actions</th>
+</tr></thead><tbody id="checkoutsBody"></tbody></table>
 </div>
 <div class="pagination" id="checkoutsPag"></div>
 </div>
@@ -1451,11 +1488,15 @@ var _visitorsCache = null;
 var _visitorsByIdCache = null;
 var visitorsSortField = 'ts'; var visitorsSortDir = -1;
 var salesSortField = 'ts'; var salesSortDir = -1;
+var clicksSortField = 'ts'; var clicksSortDir = -1;
+var checkoutsSortField = 'ts'; var checkoutsSortDir = -1;
 
 function sortVisitors(f) { if(visitorsSortField===f) visitorsSortDir*=-1; else{visitorsSortField=f;visitorsSortDir=-1;} visitorsPageNum=0; renderVisitorsTable(); }
 function sortSales(f) { if(salesSortField===f) salesSortDir*=-1; else{salesSortField=f;salesSortDir=-1;} salesPageNum=0; renderSalesTable(); }
+function sortClicks(f) { if(clicksSortField===f) clicksSortDir*=-1; else{clicksSortField=f;clicksSortDir=-1;} clicksPageNum=0; renderClicksTable(); }
+function sortCheckouts(f) { if(checkoutsSortField===f) checkoutsSortDir*=-1; else{checkoutsSortField=f;checkoutsSortDir=-1;} chkPageNum=0; renderCheckoutsTable(); }
 function updateSortHeaders(prefix, field, dir) {
-  var cols = ['ts','ip','country','platform','affId','scroll','time','buy','quality','orderId','amount','fraud','status'];
+  var cols = ['ts','ip','country','platform','affId','scroll','time','buy','quality','orderId','amount','fraud','status','el','email','name','sale'];
   cols.forEach(function(c) {
     var el = document.getElementById('th-'+prefix+'-'+c);
     if (!el) return;
@@ -3223,17 +3264,53 @@ function loadClickReports() {
 }
 
 function renderClicksTable() {
+  updateSortHeaders('cl', clicksSortField, clicksSortDir);
   var search = (document.getElementById('clicksSearch').value || '').toLowerCase();
-  var filtered = _allClicks;
-  if (search) {
-    filtered = _allClicks.filter(function(c) {
-      return (c.ip || '').toLowerCase().indexOf(search) > -1 ||
-        (c.text || '').toLowerCase().indexOf(search) > -1 ||
-        (c.href || '').toLowerCase().indexOf(search) > -1 ||
-        (c.affId || '').toLowerCase().indexOf(search) > -1 ||
-        (c.sid || '').toLowerCase().indexOf(search) > -1;
+  var affF = (document.getElementById('clicksAffFilter') || {}).value || 'all';
+  var countryF = (document.getElementById('clicksCountryFilter') || {}).value || 'all';
+  var elF = (document.getElementById('clicksElFilter') || {}).value || 'all';
+
+  /* Populate dropdowns once */
+  var aEl = document.getElementById('clicksAffFilter');
+  if (aEl && aEl.options.length <= 1) {
+    var affs = {}, cntrs = {}, els = {};
+    _allClicks.forEach(function(c) {
+      if (c.affId && c.affId !== 'direct') affs[c.affId] = true;
+      if (c.country) cntrs[c.country] = true;
+      if (c.el) els[c.el] = true;
     });
+    Object.keys(affs).sort().forEach(function(a) { var o=document.createElement('option');o.value=a;o.textContent=a;aEl.appendChild(o); });
+    var cEl2=document.getElementById('clicksCountryFilter');
+    Object.keys(cntrs).sort().forEach(function(c) { var o=document.createElement('option');o.value=c;o.textContent=c;cEl2.appendChild(o); });
+    var eEl=document.getElementById('clicksElFilter');
+    Object.keys(els).sort().forEach(function(e) { var o=document.createElement('option');o.value=e;o.textContent=e;eEl.appendChild(o); });
   }
+
+  var filtered = _allClicks.filter(function(c) {
+    if (search) {
+      var h = ((c.ip||'')+' '+(c.text||'')+' '+(c.href||'')+' '+(c.affId||'')+' '+(c.sid||'')+' '+(c.country||'')+' '+(c.el||'')).toLowerCase();
+      if (h.indexOf(search) === -1) return false;
+    }
+    if (affF !== 'all' && (c.affId||'direct') !== affF) return false;
+    if (countryF !== 'all' && (c.country||'') !== countryF) return false;
+    if (elF !== 'all' && (c.el||'') !== elF) return false;
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    var va, vb;
+    switch(clicksSortField) {
+      case 'ip': va=a.ip||''; vb=b.ip||''; break;
+      case 'country': va=a.country||''; vb=b.country||''; break;
+      case 'affId': va=a.affId||''; vb=b.affId||''; break;
+      case 'el': va=a.el||''; vb=b.el||''; break;
+      default: va=a.ts||0; vb=b.ts||0;
+    }
+    if (va<vb) return -1*clicksSortDir;
+    if (va>vb) return clicksSortDir;
+    return 0;
+  });
+
   var total = filtered.length;
   var start = clicksPageNum * PER_PAGE;
   var page = filtered.slice(start, start + PER_PAGE);
@@ -4246,6 +4323,26 @@ function renderCheckoutsTable() {
       if (plat.indexOf(platF) === -1) return false;
     }
     return true;
+  });
+
+  /* Sort */
+  updateSortHeaders('ch', checkoutsSortField, checkoutsSortDir);
+  filtered.sort(function(a, b) {
+    var va, vb;
+    switch(checkoutsSortField) {
+      case 'email': va=a.email||''; vb=b.email||''; break;
+      case 'name': va=a.name||''; vb=b.name||''; break;
+      case 'ip': va=(a._visitor?a._visitor.ip:'')||''; vb=(b._visitor?b._visitor.ip:'')||''; break;
+      case 'country': va=(a._visitor?a._visitor.country:'')||''; vb=(b._visitor?b._visitor.country:'')||''; break;
+      case 'affId': va=(a._visitor?a._visitor.affId:'')||''; vb=(b._visitor?b._visitor.affId:'')||''; break;
+      case 'platform': va=(a._visitor?a._visitor.platform:'')||''; vb=(b._visitor?b._visitor.platform:'')||''; break;
+      case 'fraud': va=calcFraudScore(a._visitor||{},a,a._fc); vb=calcFraudScore(b._visitor||{},b,b._fc); break;
+      case 'sale': va=a._sale?1:0; vb=b._sale?1:0; break;
+      default: va=a.ts||0; vb=b.ts||0;
+    }
+    if (va<vb) return -1*checkoutsSortDir;
+    if (va>vb) return checkoutsSortDir;
+    return 0;
   });
 
   /* Stats */
