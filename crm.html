@@ -1133,30 +1133,34 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 
 <!-- Data Cleanup -->
-<div class="tool-card" style="border-color:#fee2e2;">
+<div class="tool-card" style="border:1px solid #fca5a5;background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);">
 <div class="tool-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.tool-body').style.display=this.parentElement.querySelector('.tool-body').style.display==='none'?'':'none'">
 <div class="tool-title"><i class="fas fa-trash-alt" style="color:var(--red);"></i> Data Cleanup</div>
 <i class="fas fa-chevron-down" style="color:var(--text-muted);font-size:11px;"></i>
 </div>
 <div class="tool-body" style="display:none;">
-<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Delete tracking data by date range. This cannot be undone.</p>
-<div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
-<div class="form-group" style="margin:0;flex:1;min-width:130px;"><label>From Date</label><input id="cleanupFrom" type="date"></div>
-<div class="form-group" style="margin:0;flex:1;min-width:130px;"><label>To Date</label><input id="cleanupTo" type="date"></div>
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;">
+<h4 style="margin:0 0 12px;font-size:13px;color:#991b1b;"><i class="fas fa-calendar-times" style="margin-right:6px;"></i>Delete by Date Range</h4>
+<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
+<div class="form-group" style="margin:0;flex:1;min-width:140px;"><label style="font-size:11px;font-weight:600;">From</label><input id="cleanupFrom" type="date" style="padding:8px 10px;border-radius:8px;"></div>
+<div class="form-group" style="margin:0;flex:1;min-width:140px;"><label style="font-size:11px;font-weight:600;">To</label><input id="cleanupTo" type="date" style="padding:8px 10px;border-radius:8px;"></div>
 </div>
-<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanVisitors" checked> Visitors</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanSales" checked> Sales</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanCheckouts" checked> Checkouts</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanThankyou" checked> Thank You</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanFraud" checked> Fraud Checks</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanUpsells" checked> Upsells</label>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanVisitors" checked> <i class="fas fa-eye" style="color:var(--primary);font-size:10px;"></i> Visitors</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanSales" checked> <i class="fas fa-dollar-sign" style="color:var(--green);font-size:10px;"></i> Sales</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanCheckouts" checked> <i class="fas fa-cash-register" style="color:var(--orange);font-size:10px;"></i> Checkouts</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanThankyou" checked> <i class="fas fa-file-invoice" style="color:#6366f1;font-size:10px;"></i> Thank You</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanFraud" checked> <i class="fas fa-shield-alt" style="color:var(--red);font-size:10px;"></i> Fraud</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanUpsells" checked> <i class="fas fa-layer-group" style="color:#8b5cf6;font-size:10px;"></i> Upsells</label>
 </div>
-<div style="margin-top:12px;display:flex;gap:8px;">
-<button class="btn-sm" style="background:var(--red);color:#fff;border:none;" onclick="cleanupData()"><i class="fas fa-trash"></i> Delete Selected Data</button>
-<button class="btn-sm" style="background:var(--red);color:#fff;border:none;" onclick="cleanupAllData()"><i class="fas fa-bomb"></i> Delete ALL Data</button>
+<button onclick="cleanupData()" style="padding:9px 20px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-trash" style="margin-right:6px;"></i>Delete by Date Range</button>
 </div>
-<div id="cleanupStatus" style="margin-top:8px;font-size:12px;color:var(--text-muted);"></div>
+<div style="background:#fff;border:1px solid #fca5a5;border-radius:10px;padding:16px;">
+<h4 style="margin:0 0 8px;font-size:13px;color:#991b1b;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Danger Zone</h4>
+<p style="font-size:11px;color:#6b7280;margin:0 0 12px;">Wipe ALL tracking data permanently. Settings and offers will NOT be deleted.</p>
+<button onclick="cleanupAllData()" style="padding:9px 20px;background:#991b1b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-bomb" style="margin-right:6px;"></i>Delete ALL Tracking Data</button>
+</div>
+<div id="cleanupStatus" style="margin-top:10px;font-size:12px;"></div>
 </div>
 </div>
 
@@ -4272,38 +4276,23 @@ function cleanupData() {
   var doThankyou = document.getElementById('cleanThankyou').checked;
   var doFraud = document.getElementById('cleanFraud').checked;
   var doUpsells = document.getElementById('cleanUpsells').checked;
-  /* Visitors are stored by date key */
   if (doVisitors) {
-    dates.forEach(function(d) {
-      promises.push(fetch(FB + '/tracker/visitors/' + d + '.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-    });
+    dates.forEach(function(d) { promises.push(fbDel('tracker/visitors/' + d)); });
   }
-  /* Sales/checkouts/etc need to be fetched then filtered by date */
   if (doSales) {
     promises.push(fbGet('tracker/sales').then(function(sales) {
       if (!sales) return;
       var deletes = [];
       Object.keys(sales).forEach(function(k) {
-        var s = sales[k];
-        if (s.date >= from && s.date <= to) {
-          deletes.push(fetch(FB + '/tracker/sales/' + k + '.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-        }
+        if (sales[k] && sales[k].date >= from && sales[k].date <= to) deletes.push(fbDel('tracker/sales/' + k));
       });
       return Promise.all(deletes);
     }));
   }
-  if (doCheckouts) {
-    promises.push(fetch(FB + '/tracker/checkout-sessions.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-  }
-  if (doThankyou) {
-    promises.push(fetch(FB + '/tracker/thankyou-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-  }
-  if (doFraud) {
-    promises.push(fetch(FB + '/tracker/fraud-checks.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-  }
-  if (doUpsells) {
-    promises.push(fetch(FB + '/tracker/upsell-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
-  }
+  if (doCheckouts) promises.push(fbDel('tracker/checkout-sessions'));
+  if (doThankyou) promises.push(fbDel('tracker/thankyou-events'));
+  if (doFraud) promises.push(fbDel('tracker/fraud-checks'));
+  if (doUpsells) promises.push(fbDel('tracker/upsell-events'));
   Promise.all(promises).then(function() {
     status.innerHTML = '<span style="color:var(--green);"><i class="fas fa-check"></i> Data deleted successfully!</span>';
     toast('Data cleaned up for ' + from + ' to ' + to, 'success');
@@ -4319,12 +4308,12 @@ function cleanupAllData() {
   var status = document.getElementById('cleanupStatus');
   status.textContent = 'Deleting all data...';
   Promise.all([
-    fetch(FB + '/tracker/visitors.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
-    fetch(FB + '/tracker/sales.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
-    fetch(FB + '/tracker/checkout-sessions.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
-    fetch(FB + '/tracker/thankyou-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
-    fetch(FB + '/tracker/fraud-checks.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
-    fetch(FB + '/tracker/upsell-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } })
+    fbDel('tracker/visitors'),
+    fbDel('tracker/sales'),
+    fbDel('tracker/checkout-sessions'),
+    fbDel('tracker/thankyou-events'),
+    fbDel('tracker/fraud-checks'),
+    fbDel('tracker/upsell-events')
   ]).then(function() {
     status.innerHTML = '<span style="color:var(--green);"><i class="fas fa-check"></i> All data deleted!</span>';
     toast('All tracking data has been wiped', 'success');
