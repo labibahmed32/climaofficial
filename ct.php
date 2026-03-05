@@ -224,7 +224,7 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
   fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   fetch('https://api64.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.ip.indexOf(':')>-1)ipData.ipv6=d.ip;else if(!ipData.ipv4)ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   var _fp={tz:(typeof Intl!=='undefined')?Intl.DateTimeFormat().resolvedOptions().timeZone:'',lang:navigator.language||'',scr:screen.width+'x'+screen.height,plat:navigator.platform||'',cores:navigator.hardwareConcurrency||0,touch:'ontouchstart' in window,cookies:navigator.cookieEnabled,dnt:navigator.doNotTrack||''};
-  window.addEventListener('scroll',function(){var h=document.documentElement,b=document.body;var st=h.scrollTop||b.scrollTop,sh=h.scrollHeight||b.scrollHeight,ch=h.clientHeight;var pct=Math.round(st/(sh-ch)*100)||0;if(pct>scrollMax)scrollMax=pct;});
+  window.addEventListener('scroll',function(){var sy=window.scrollY||window.pageYOffset||0;var dh=document.documentElement.scrollHeight||document.body.scrollHeight;var vh=window.innerHeight;if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax)scrollMax=pct;}});
   var platform=localStorage.getItem('_ct_platform')||'';
   if(!platform){if(P.get('aff_id')||P.get('affid'))platform='buygoods';else if(location.hash.indexOf('aff=')>-1)platform='digistore';}
   if(platform)localStorage.setItem('_ct_platform',platform);
@@ -507,6 +507,9 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
           var patch=_buildSalePatch(amount);
           if(!existing.ip){try{var _ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';if(_ip)patch.ip=_ip;}catch(e){}}
           fetch(FB+'/tracker/sales/'+sk+'.json',{method:'PATCH',body:JSON.stringify(patch),keepalive:true});
+          /* Send notification with merged sale data */
+          var merged={};for(var k in existing)merged[k]=existing[k];for(var k in patch)merged[k]=patch[k];
+          _notifySale(merged);
         } else {
           /* Sale key stale (deleted data) — clear and create new */
           try{localStorage.removeItem('_ct_saleKey');if(email)localStorage.removeItem('_ct_saleKey_'+email);}catch(e){}

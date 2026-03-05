@@ -796,7 +796,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 </div>
 <div class="table-wrap">
-<table class="data-table"><thead><tr><th>Date</th><th>Order ID</th><th>Receipt ID</th><th>Amount</th><th>IP</th><th>Country</th><th>Affiliate</th><th>Status</th><th></th></tr></thead><tbody id="tyBody"></tbody></table>
+<table class="data-table"><thead><tr><th>Date</th><th>Order ID</th><th>Receipt ID</th><th>Email</th><th>Amount</th><th>IP</th><th>Country</th><th>Affiliate</th><th>Status</th><th></th></tr></thead><tbody id="tyBody"></tbody></table>
 </div>
 <div class="pagination" id="tyPag"></div>
 <div id="tyPreview" style="display:none;margin-top:20px;"></div>
@@ -5332,9 +5332,11 @@ function getThankYouList() {
       receiptId: ty.receiptId || '',
       pageTotal: ty.pageTotal || ty.amount || (sale ? sale.bgTotal : '') || '',
       amount: totalAmount || parseFloat(ty.amount) || 0,
-      ip: (visitor ? visitor.ip : '') || (sale ? sale.ip : '') || (chk ? (chk.ipGeo ? chk.ipGeo.ip : '') : '') || '',
+      email: ty.email || (sale ? sale.email || sale.bgEmail : '') || (chk ? chk.email : '') || '',
+      ip: (visitor ? visitor.ip : '') || (sale ? sale.ip : '') || ty.ip || (chk ? (chk.ipGeo ? chk.ipGeo.ip : '') : '') || '',
       country: (visitor ? visitor.country : '') || (sale ? sale.bgCountry : '') || (chk ? (chk.ipGeo ? chk.ipGeo.country : '') : '') || '',
-      affId: (visitor ? (visitor.affId || '') : '') || (sale ? sale.affId : '') || 'direct',
+      product: ty.product || (sale ? sale.bgProduct : '') || '',
+      affId: (visitor ? (visitor.affId || '') : '') || (sale ? sale.affId : '') || ty.affId || 'direct',
       pageText: ty.pageText || '',
       hasSale: !!sale,
       saleStatus: sale ? (sale.status || 'pending') : '-'
@@ -5396,13 +5398,14 @@ function renderThankYouTable() {
   var start = tyPageNum * PER_PAGE;
   var page = list.slice(start, start + PER_PAGE);
   var body = document.getElementById('tyBody');
-  if (!page.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state"><p>No thank you pages captured</p></td></tr>'; document.getElementById('tyPag').innerHTML = ''; return; }
+  if (!page.length) { body.innerHTML = '<tr><td colspan="10" class="empty-state"><p>No thank you pages captured</p></td></tr>'; document.getElementById('tyPag').innerHTML = ''; return; }
   body.innerHTML = page.map(function(t) {
     var statusBadge = t.hasSale ? '<span class="badge badge-green" style="font-size:10px;">Converted</span>' : '<span class="badge badge-gray" style="font-size:10px;">No Sale</span>';
     return '<tr>' +
       '<td style="font-size:11px;">' + formatDate(t.ts) + '</td>' +
       '<td>' + (t.orderId ? '<code style="font-size:11px;background:#e2e8f0;padding:2px 6px;border-radius:4px;">' + escHtml(t.orderId) + '</code>' : '<span style="color:var(--text-muted);">-</span>') + '</td>' +
       '<td>' + (t.receiptId ? '<code style="font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 5px;border-radius:3px;">' + escHtml(t.receiptId) + '</code>' : '-') + '</td>' +
+      '<td style="font-size:11px;">' + (t.email ? escHtml(t.email) : '<span style="color:var(--text-muted);">-</span>') + '</td>' +
       '<td>' + (t.amount ? '<strong style="color:var(--green);">' + formatMoney(t.amount) + '</strong>' : (t.pageTotal ? '$' + t.pageTotal : '-')) + '</td>' +
       '<td title="' + escHtml(t.ip) + '"><code style="font-size:11px;">' + escHtml(t.ip || '-') + '</code></td>' +
       '<td>' + escHtml(t.country || '-') + '</td>' +
