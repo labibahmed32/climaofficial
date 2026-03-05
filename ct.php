@@ -224,7 +224,31 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
   fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   fetch('https://api64.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.ip.indexOf(':')>-1)ipData.ipv6=d.ip;else if(!ipData.ipv4)ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   var _fp={tz:(typeof Intl!=='undefined')?Intl.DateTimeFormat().resolvedOptions().timeZone:'',lang:navigator.language||'',scr:screen.width+'x'+screen.height,plat:navigator.platform||'',cores:navigator.hardwareConcurrency||0,touch:'ontouchstart' in window,cookies:navigator.cookieEnabled,dnt:navigator.doNotTrack||''};
-  function _checkScroll(){var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0,document.documentElement.offsetHeight||0,document.body.offsetHeight||0);var vh=window.innerHeight||document.documentElement.clientHeight||0;if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax)scrollMax=pct;}}
+  var _scrollEl=null;
+  function _findScrollEl(){
+    if(_scrollEl)return;
+    /* Check common scrollable containers */
+    var candidates=document.querySelectorAll('div,main,section,article');
+    for(var i=0;i<candidates.length;i++){
+      var el=candidates[i];
+      if(el.scrollHeight>el.clientHeight+50){
+        var ov=getComputedStyle(el).overflowY;
+        if(ov==='auto'||ov==='scroll'){_scrollEl=el;el.addEventListener('scroll',_checkScroll);return;}
+      }
+    }
+  }
+  function _checkScroll(){
+    /* Try window scroll */
+    var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+    var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0);
+    var vh=window.innerHeight||0;
+    /* If window scroll is 0, check inner scrollable element */
+    if(sy===0){
+      _findScrollEl();
+      if(_scrollEl){sy=_scrollEl.scrollTop;dh=_scrollEl.scrollHeight;vh=_scrollEl.clientHeight;}
+    }
+    if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax){scrollMax=pct;console.log('[CT] scroll:',pct+'%','sy:'+sy,'dh:'+dh,'vh:'+vh,_scrollEl?'(inner el)':'(window)');}}
+  }
   window.addEventListener('scroll',_checkScroll,true);
   document.addEventListener('scroll',_checkScroll,true);
   setInterval(_checkScroll,2000);
