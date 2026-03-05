@@ -930,39 +930,51 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <div id="ecPanelTemplates" class="ec-panel" style="display:none;">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;">
 
-<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('sale_notification')">
+<div class="card" style="transition:box-shadow .2s;">
 <div style="padding:20px;text-align:center;">
 <div style="width:50px;height:50px;border-radius:12px;background:#dcfce7;color:#16a34a;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-dollar-sign"></i></div>
 <h4 style="margin:0 0 6px;font-size:14px;">Sale Notification</h4>
-<p style="margin:0;font-size:12px;color:#64748b;">Auto-triggered on new sales. Rich details with fraud check.</p>
-<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;">Use Template</button>
+<p style="margin:0 0 12px;font-size:12px;color:#64748b;">Auto-triggered on new sales. Rich details with fraud check.</p>
+<div style="display:flex;gap:6px;justify-content:center;">
+<button class="btn-primary-sm" onclick="previewTemplateCard('sale_notification')" style="font-size:11px;padding:6px 14px;background:#64748b;"><i class="fas fa-eye"></i> Preview</button>
+<button class="btn-primary-sm" onclick="useTemplate('sale_notification')" style="font-size:11px;padding:6px 14px;">Use Template</button>
+</div>
 </div>
 </div>
 
-<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('packing_slip')">
+<div class="card" style="transition:box-shadow .2s;">
 <div style="padding:20px;text-align:center;">
 <div style="width:50px;height:50px;border-radius:12px;background:#dbeafe;color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-box"></i></div>
 <h4 style="margin:0 0 6px;font-size:14px;">Packing Slip</h4>
-<p style="margin:0;font-size:12px;color:#64748b;">Order confirmation with tracking, product details, buy again link.</p>
-<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#2563eb;">Use Template</button>
+<p style="margin:0 0 12px;font-size:12px;color:#64748b;">Order confirmation with tracking, product details, buy again link.</p>
+<div style="display:flex;gap:6px;justify-content:center;">
+<button class="btn-primary-sm" onclick="previewTemplateCard('packing_slip')" style="font-size:11px;padding:6px 14px;background:#64748b;"><i class="fas fa-eye"></i> Preview</button>
+<button class="btn-primary-sm" onclick="useTemplate('packing_slip')" style="font-size:11px;padding:6px 14px;background:#2563eb;">Use Template</button>
+</div>
 </div>
 </div>
 
-<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('review_reminder')">
+<div class="card" style="transition:box-shadow .2s;">
 <div style="padding:20px;text-align:center;">
 <div style="width:50px;height:50px;border-radius:12px;background:#fef9c3;color:#ca8a04;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-star"></i></div>
 <h4 style="margin:0 0 6px;font-size:14px;">Product Reminder</h4>
-<p style="margin:0;font-size:12px;color:#64748b;">Review request with product tips and feedback CTA.</p>
-<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#ca8a04;">Use Template</button>
+<p style="margin:0 0 12px;font-size:12px;color:#64748b;">Review request with product tips and feedback CTA.</p>
+<div style="display:flex;gap:6px;justify-content:center;">
+<button class="btn-primary-sm" onclick="previewTemplateCard('review_reminder')" style="font-size:11px;padding:6px 14px;background:#64748b;"><i class="fas fa-eye"></i> Preview</button>
+<button class="btn-primary-sm" onclick="useTemplate('review_reminder')" style="font-size:11px;padding:6px 14px;background:#ca8a04;">Use Template</button>
+</div>
 </div>
 </div>
 
-<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('new_offer')">
+<div class="card" style="transition:box-shadow .2s;">
 <div style="padding:20px;text-align:center;">
 <div style="width:50px;height:50px;border-radius:12px;background:#fce4ec;color:#e11d48;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-fire"></i></div>
 <h4 style="margin:0 0 6px;font-size:14px;">New Offer</h4>
-<p style="margin:0;font-size:12px;color:#64748b;">Affiliate offer announcement with CPA, images, manager contact.</p>
-<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#e11d48;">Use Template</button>
+<p style="margin:0 0 12px;font-size:12px;color:#64748b;">Affiliate offer announcement with CPA, images, manager contact.</p>
+<div style="display:flex;gap:6px;justify-content:center;">
+<button class="btn-primary-sm" onclick="previewTemplateCard('new_offer')" style="font-size:11px;padding:6px 14px;background:#64748b;"><i class="fas fa-eye"></i> Preview</button>
+<button class="btn-primary-sm" onclick="useTemplate('new_offer')" style="font-size:11px;padding:6px 14px;background:#e11d48;">Use Template</button>
+</div>
 </div>
 </div>
 
@@ -4877,6 +4889,30 @@ function getSelectedSmtp() {
 }
 
 /* --- Preview --- */
+function previewTemplateCard(tpl) {
+  var sampleData = {
+    sale_notification: {order_id:'SAMPLE-12345', amount:'97.00', offer_name:'Premium Weight Loss Formula'},
+    packing_slip: {customer_name:'John Smith', customer_address:'123 Main St, New York, NY 10001, US', product_name:'Premium Weight Loss Formula', product_price:'97.00', order_id:'ORD-12345', tracking_number:'9400111899223100001234', tracking_carrier:'USPS', buy_again_url:'https://example.com/buy', thank_you_message:'Thank you for your purchase! We appreciate your business.'},
+    review_reminder: {customer_name:'John Smith', product_name:'Premium Weight Loss Formula', days_since_purchase:'14', review_url:'https://example.com/review', tips:'Take daily with meals\nResults improve over 30 days\nStay hydrated\nBe consistent!'},
+    new_offer: {offer_name:'NeuroBoost Brain Formula', offer_description:'Top-converting brain health supplement. 3% conversion rate, proven funnel with 5 upsells.', payout_cpa:'85', commission_type:'CPA', offer_image_url:'', landing_url:'https://example.com/offer', manager_name:'David Jordan', manager_email:'david@climaofficial.com', manager_telegram:'@davidjordan'}
+  };
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  if (!notifyUrl) { toast('Set Shaver API URL in Settings', 'error'); return; }
+  var body = {action:'preview', template:tpl, data:sampleData[tpl] || {}, compliance:getComplianceData()};
+  document.getElementById('ecPreviewContent').innerHTML = '<p style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Building preview...</p>';
+  document.getElementById('ecPreviewModal').style.display = 'flex';
+  fetch(notifyUrl, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success && res.html) {
+        document.getElementById('ecPreviewContent').innerHTML = '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">' + res.html + '</div>';
+      } else {
+        document.getElementById('ecPreviewContent').innerHTML = '<p style="color:var(--red);">' + escHtml(res.error || 'Preview failed') + '</p>';
+      }
+    })
+    .catch(function(err) { document.getElementById('ecPreviewContent').innerHTML = '<p style="color:var(--red);">Network error: ' + escHtml(err.message) + '</p>'; });
+}
+
 function previewEmail() {
   var tpl = document.getElementById('ecTemplateSelect').value;
   if (!tpl) { toast('Select a template first', 'error'); return; }
