@@ -234,25 +234,85 @@ if ($tgToken && !empty($tgChatIds) && $tgMessage) {
     }
 }
 
-// ========== SEND EMAIL ==========
+// ========== SEND EMAIL VIA SMTP ==========
 $emailTo = trim($input['email_to'] ?? '');
 if ($emailTo && !empty($emailBody)) {
-    $from = trim($input['email_from'] ?? 'noreply@climaofficial.com');
-    $domain = preg_match('/@(.+)$/', $from, $dm) ? $dm[1] : 'climaofficial.com';
-    $msgId = '<' . uniqid('clima_', true) . '@' . $domain . '>';
-    $headers = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-    $headers .= "From: Clima Tracker <$from>\r\n";
-    $headers .= "Reply-To: $from\r\n";
-    $headers .= "X-Mailer: ClimaTracker/1.0\r\n";
-    $headers .= "Message-ID: $msgId\r\n";
+    $smtpHost = 'mail.climaofficial.com';
+    $smtpPort = 465;
+    $smtpUser = 'support@climaofficial.com';
+    $smtpPass = 'Labib@12345';
+    $fromAddr = trim($input['email_from'] ?? 'support@climaofficial.com');
+    $fromName = 'Clima Tracker';
 
     $recipients = array_filter(array_map('trim', explode(',', $emailTo)));
     foreach ($recipients as $to) {
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) { $errors[] = "Bad email: $to"; continue; }
-        if (@mail($to, $emailSubject, $emailBody, $headers)) $emailSent++;
-        else $errors[] = "mail() failed: $to";
+        $smtpErr = _sendSmtp($smtpHost, $smtpPort, $smtpUser, $smtpPass, $fromAddr, $fromName, $to, $emailSubject, $emailBody);
+        if ($smtpErr === true) $emailSent++;
+        else $errors[] = "SMTP $to: $smtpErr";
     }
+}
+
+function _sendSmtp($host, $port, $user, $pass, $fromAddr, $fromName, $to, $subject, $htmlBody) {
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]]);
+    $sock = @stream_socket_client("ssl://$host:$port", $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$sock) return "Connection failed: $errstr ($errno)";
+
+    $resp = fgets($sock, 512);
+    if (substr($resp, 0, 3) !== '220') { fclose($sock); return "Server greeting failed: $resp"; }
+
+    // EHLO
+    fwrite($sock, "EHLO climaofficial.com\r\n");
+    $r = ''; while ($line = fgets($sock, 512)) { $r .= $line; if ($line[3] === ' ') break; }
+
+    // AUTH LOGIN
+    fwrite($sock, "AUTH LOGIN\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '334') { fclose($sock); return "AUTH failed: $r"; }
+
+    fwrite($sock, base64_encode($user) . "\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '334') { fclose($sock); return "Username rejected: $r"; }
+
+    fwrite($sock, base64_encode($pass) . "\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '235') { fclose($sock); return "Auth failed: $r"; }
+
+    // MAIL FROM
+    fwrite($sock, "MAIL FROM:<$fromAddr>\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '250') { fclose($sock); return "MAIL FROM rejected: $r"; }
+
+    // RCPT TO
+    fwrite($sock, "RCPT TO:<$to>\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '250') { fclose($sock); return "RCPT TO rejected: $r"; }
+
+    // DATA
+    fwrite($sock, "DATA\r\n");
+    $r = fgets($sock, 512);
+    if (substr($r, 0, 3) !== '354') { fclose($sock); return "DATA rejected: $r"; }
+
+    // Build message
+    $msgId = '<' . uniqid('clima_', true) . '@climaofficial.com>';
+    $msg  = "From: $fromName <$fromAddr>\r\n";
+    $msg .= "To: $to\r\n";
+    $msg .= "Subject: $subject\r\n";
+    $msg .= "MIME-Version: 1.0\r\n";
+    $msg .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $msg .= "Message-ID: $msgId\r\n";
+    $msg .= "X-Mailer: ClimaTracker/1.0\r\n";
+    $msg .= "\r\n";
+    $msg .= $htmlBody;
+    $msg .= "\r\n.\r\n";
+
+    fwrite($sock, $msg);
+    $r = fgets($sock, 512);
+    fwrite($sock, "QUIT\r\n");
+    fclose($sock);
+
+    if (substr($r, 0, 3) === '250') return true;
+    return "Send failed: $r";
 }
 
 $debug = ['has_email_body' => !empty($emailBody), 'has_tg_msg' => !empty($tgMessage), 'email_to' => $input['email_to'] ?? '', 'has_sale' => !empty($sale)];
