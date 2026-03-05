@@ -238,17 +238,23 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
     }
   }
   function _checkScroll(){
-    /* Try window scroll */
     var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
     var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0);
     var vh=window.innerHeight||0;
-    /* If window scroll is 0, check inner scrollable element */
     if(sy===0){
       _findScrollEl();
       if(_scrollEl){sy=_scrollEl.scrollTop;dh=_scrollEl.scrollHeight;vh=_scrollEl.clientHeight;}
     }
-    if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax){scrollMax=pct;console.log('[CT] scroll:',pct+'%','sy:'+sy,'dh:'+dh,'vh:'+vh,_scrollEl?'(inner el)':'(window)');}}
+    if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax){scrollMax=pct;}}
   }
+  /* Debug: log scroll state every 5s so we can see what's happening */
+  setInterval(function(){
+    var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
+    var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0);
+    var vh=window.innerHeight||0;
+    var inner=_scrollEl?_scrollEl.scrollTop:'-';
+    console.log('[CT] scrollDebug: scrollMax='+scrollMax+' windowSY='+sy+' docH='+dh+' viewH='+vh+' innerElScroll='+inner);
+  },5000);
   window.addEventListener('scroll',_checkScroll,true);
   document.addEventListener('scroll',_checkScroll,true);
   setInterval(_checkScroll,2000);
