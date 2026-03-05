@@ -2746,7 +2746,8 @@ function openVisitorDetail(date, vid) {
   html += seRow('Affiliate', affId ? '<span class="badge badge-blue">' + escHtml(affId) + '</span>' : 'Direct');
   html += seRow('Offer', offerObj ? escHtml(offerObj.name) : (v.offerId || '-'));
   html += seRow('Variant', v.variant || '-');
-  html += seRow('Sub1 / Sub2', (v.sub1 || '-') + ' / ' + (v.sub2 || '-'));
+  html += seRow('SubID', v.sub1 ? '<code style="background:#e2e8f0;padding:2px 8px;border-radius:5px;font-size:11px;">' + escHtml(v.sub1) + '</code>' : '-');
+  html += seRow('SubID2', v.sub2 ? '<code style="background:#e2e8f0;padding:2px 8px;border-radius:5px;font-size:11px;">' + escHtml(v.sub2) + '</code>' : '-');
   html += seRow('Referrer', '<span style="font-size:10px;word-break:break-all;display:block;text-align:right;line-height:1.4;">' + escHtml(v.ref || '(direct)') + '</span>');
   html += seRow('Landing Page', '<span style="font-size:10px;word-break:break-all;display:block;text-align:right;line-height:1.4;">' + escHtml(v.url || '-') + '</span>');
   html += '</div></div></div>';

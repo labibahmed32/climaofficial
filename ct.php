@@ -212,7 +212,7 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
   if(!sid){sid='v'+Date.now().toString(36)+Math.random().toString(36).substr(2,5);localStorage.setItem('_ct_sid',sid);}
   var aff=P.get('aff_id')||P.get('affid')||localStorage.getItem('_ct_aff')||'';
   if(aff)localStorage.setItem('_ct_aff',aff);
-  var sub1=P.get('sub1')||P.get('subid')||'',sub2=P.get('sub2')||'';
+  var sub1=P.get('sub1')||P.get('subid')||'',sub2=P.get('sub2')||P.get('subid2')||'';
   var ua=navigator.userAgent,mob=/Mobile|Android|iPhone/i.test(ua);
   var br=(/Chrome/i.test(ua)?'Chrome':/Firefox/i.test(ua)?'Firefox':/Safari/i.test(ua)?'Safari':'Other');
   var os=(/Windows/i.test(ua)?'Windows':/Mac/i.test(ua)?'Mac':/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Linux/i.test(ua)?'Linux':'Other');
