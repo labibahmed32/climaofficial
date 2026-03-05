@@ -1133,34 +1133,43 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 
 <!-- Data Cleanup -->
-<div class="tool-card" style="border:1px solid #fca5a5;background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);">
-<div class="tool-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.tool-body').style.display=this.parentElement.querySelector('.tool-body').style.display==='none'?'':'none'">
-<div class="tool-title"><i class="fas fa-trash-alt" style="color:var(--red);"></i> Data Cleanup</div>
-<i class="fas fa-chevron-down" style="color:var(--text-muted);font-size:11px;"></i>
+<div class="stool" data-stool="cleanup">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#fee2e2;color:var(--red);"><i class="fas fa-trash-alt"></i></div>
+<div class="stool-info"><div class="stool-title">Data Cleanup</div><div class="stool-desc">Delete tracking data by date range or wipe everything</div></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
 </div>
-<div class="tool-body" style="display:none;">
-<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;">
-<h4 style="margin:0 0 12px;font-size:13px;color:#991b1b;"><i class="fas fa-calendar-times" style="margin-right:6px;"></i>Delete by Date Range</h4>
-<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
-<div class="form-group" style="margin:0;flex:1;min-width:140px;"><label style="font-size:11px;font-weight:600;">From</label><input id="cleanupFrom" type="date" style="padding:8px 10px;border-radius:8px;"></div>
-<div class="form-group" style="margin:0;flex:1;min-width:140px;"><label style="font-size:11px;font-weight:600;">To</label><input id="cleanupTo" type="date" style="padding:8px 10px;border-radius:8px;"></div>
+<div class="stool-body">
+<p style="font-size:12px;color:var(--text-muted);margin:12px 0 16px;">Select what to delete. Settings, offers, and domains are never affected.</p>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanVisitors" checked style="accent-color:var(--primary);"> <i class="fas fa-eye" style="color:var(--primary);font-size:10px;"></i> Visitors</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanSales" checked style="accent-color:var(--green);"> <i class="fas fa-dollar-sign" style="color:var(--green);font-size:10px;"></i> Sales</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanCheckouts" checked style="accent-color:var(--orange);"> <i class="fas fa-cash-register" style="color:var(--orange);font-size:10px;"></i> Checkouts</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanThankyou" checked style="accent-color:#6366f1;"> <i class="fas fa-file-invoice" style="color:#6366f1;font-size:10px;"></i> Thank You</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanFraud" checked style="accent-color:var(--red);"> <i class="fas fa-shield-alt" style="color:var(--red);font-size:10px;"></i> Fraud</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;"><input type="checkbox" id="cleanUpsells" checked style="accent-color:#8b5cf6;"> <i class="fas fa-layer-group" style="color:#8b5cf6;font-size:10px;"></i> Upsells</label>
 </div>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanVisitors" checked> <i class="fas fa-eye" style="color:var(--primary);font-size:10px;"></i> Visitors</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanSales" checked> <i class="fas fa-dollar-sign" style="color:var(--green);font-size:10px;"></i> Sales</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanCheckouts" checked> <i class="fas fa-cash-register" style="color:var(--orange);font-size:10px;"></i> Checkouts</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanThankyou" checked> <i class="fas fa-file-invoice" style="color:#6366f1;font-size:10px;"></i> Thank You</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanFraud" checked> <i class="fas fa-shield-alt" style="color:var(--red);font-size:10px;"></i> Fraud</label>
-<label style="font-size:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;"><input type="checkbox" id="cleanUpsells" checked> <i class="fas fa-layer-group" style="color:#8b5cf6;font-size:10px;"></i> Upsells</label>
+
+<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin-bottom:14px;">
+<div class="form-row" style="margin-bottom:12px;">
+<div class="form-group" style="margin:0;"><label>From Date</label><input id="cleanupFrom" type="date"></div>
+<div class="form-group" style="margin:0;"><label>To Date</label><input id="cleanupTo" type="date"></div>
 </div>
-<button onclick="cleanupData()" style="padding:9px 20px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-trash" style="margin-right:6px;"></i>Delete by Date Range</button>
+<button onclick="cleanupData()" style="padding:10px 22px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="fas fa-trash" style="margin-right:6px;"></i> Delete by Date Range</button>
 </div>
-<div style="background:#fff;border:1px solid #fca5a5;border-radius:10px;padding:16px;">
-<h4 style="margin:0 0 8px;font-size:13px;color:#991b1b;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Danger Zone</h4>
-<p style="font-size:11px;color:#6b7280;margin:0 0 12px;">Wipe ALL tracking data permanently. Settings and offers will NOT be deleted.</p>
-<button onclick="cleanupAllData()" style="padding:9px 20px;background:#991b1b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-bomb" style="margin-right:6px;"></i>Delete ALL Tracking Data</button>
+
+<div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:10px;padding:16px;">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+<div>
+<div style="font-size:13px;font-weight:700;color:#991b1b;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> Danger Zone</div>
+<div style="font-size:11px;color:#6b7280;margin-top:4px;">Permanently wipe ALL tracking data</div>
 </div>
-<div id="cleanupStatus" style="margin-top:10px;font-size:12px;"></div>
+<button onclick="cleanupAllData()" style="padding:10px 22px;background:#991b1b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fas fa-bomb" style="margin-right:6px;"></i> Delete ALL Data</button>
+</div>
+</div>
+
+<div id="cleanupStatus" style="margin-top:12px;font-size:12px;"></div>
 </div>
 </div>
 
