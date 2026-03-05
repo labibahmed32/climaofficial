@@ -464,23 +464,6 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 .chart-summary-item:last-child{border-right:none;}
 .chart-summary-item .cs-value{font-size:16px;font-weight:800;color:var(--text-dark);}
 .chart-summary-item .cs-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
-/* Network Overview — Dark gradient panels */
-.net-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
-.net-panel{background:#fff;border:1px solid var(--card-border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s ease;}
-.net-panel:hover{box-shadow:var(--shadow-md);}
-.net-panel-head{padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--card-border);}
-.net-panel-icon{width:40px;height:40px;border-radius:10px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.net-panel-title{font-size:14px;font-weight:700;color:var(--text-dark);}
-.net-panel-cr{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.net-panel-revenue{text-align:right;margin-left:auto;}
-.net-panel-revenue .rev-val{font-size:18px;font-weight:800;color:var(--text-dark);letter-spacing:-.3px;}
-.net-panel-revenue .rev-lbl{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
-.net-panel-body{display:flex;padding:0;}
-.net-panel-stat{flex:1;padding:14px 12px;text-align:center;border-right:1px solid var(--card-border);}
-.net-panel-stat:last-child{border-right:none;}
-.net-panel-stat .nps-val{font-size:16px;font-weight:800;color:var(--text-dark);}
-.net-panel-stat .nps-lbl{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
-@media(max-width:768px){.net-grid{grid-template-columns:1fr;}.net-panel-head{padding:14px;}.net-panel-stat{padding:10px 8px;}.net-panel-stat .nps-val{font-size:13px;}}
 /* (old tc-item, rv-item, ta-aff-row removed — replaced by new bottom section classes above) */
 </style>
 </head>
@@ -561,10 +544,6 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <div class="card-header"><h3><i class="fas fa-chart-area" style="color:var(--primary);"></i> Daily Overview</h3><div class="chart-legend" id="chartLegend"></div></div>
 <div style="padding:16px 20px;"><canvas id="dailyChart" height="300"></canvas></div>
 <div class="chart-summary" id="chartSummary"></div>
-</div>
-<div style="margin-bottom:16px;">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="fas fa-network-wired" style="color:var(--primary);font-size:14px;"></i><h3 style="font-size:14px;font-weight:800;color:var(--text-dark);letter-spacing:-.2px;">Network Overview</h3></div>
-<div id="networkOverview"><div class="empty-state"><i class="fas fa-network-wired"></i><p>No data yet</p></div></div>
 </div>
 <div class="dash-bottom-grid">
 <div class="dash-section" id="secRecentSales"><div class="ds-header"><h3><i class="fas fa-receipt" style="color:var(--primary);"></i> Recent Sales</h3><span class="ds-count" id="salesCount">0</span></div><div class="ds-body" id="recentSales"><div class="empty-state"><i class="fas fa-inbox"></i><p>No sales yet</p></div></div></div>
@@ -2265,7 +2244,6 @@ function loadDashboard() {
   }).then(function() {
     renderStats();
     renderDailyChart();
-    renderNetworkOverview();
     renderRecentSales();
     renderShavedSales();
     renderTopCountries();
@@ -3637,61 +3615,6 @@ function toggleClickExpand(id) {
 }
 
 /* === NETWORK OVERVIEW === */
-function renderNetworkOverview() {
-  var el = document.getElementById('networkOverview');
-  var visitors = getAllVisitors();
-  var netMap = {
-    buygoods: { visitors: 0, sales: 0, revenue: 0, earnings: 0 },
-    digistore: { visitors: 0, sales: 0, revenue: 0, earnings: 0 },
-    clima: { visitors: 0, sales: 0, revenue: 0, earnings: 0 }
-  };
-
-  visitors.forEach(function(v) {
-    var affId = extractAffiliateId(v.url, v.affId);
-    var platform = detectPlatform(v.url, affId);
-    netMap[platform].visitors++;
-  });
-
-  _sales.forEach(function(s) {
-    var platform = detectSalePlatform(s);
-    netMap[platform].sales++;
-    netMap[platform].revenue += parseFloat(s.amount) || 0;
-    var vc = getSaleVariant(s);
-    if (vc) netMap[platform].earnings += getVariantCPA(s.offerId, vc);
-  });
-
-  var platformData = [
-    { key: 'buygoods', name: 'BuyGoods', icon: '🛒' },
-    { key: 'digistore', name: 'Digistore', icon: '💳' },
-    { key: 'clima', name: 'Clima', icon: '🌐' }
-  ];
-
-  var hasData = platformData.some(function(p) { return netMap[p.key].visitors > 0 || netMap[p.key].sales > 0; });
-  if (!hasData) { el.innerHTML = '<div class="empty-state"><i class="fas fa-network-wired"></i><p>No data yet</p></div>'; return; }
-
-  el.innerHTML = '<div class="net-grid">' + platformData.map(function(p) {
-    var d = netMap[p.key];
-    if (d.visitors === 0 && d.sales === 0) return '';
-    var cr = d.visitors ? (d.sales / d.visitors * 100).toFixed(1) : '0.0';
-    var profit = d.revenue - d.earnings;
-    return '<div class="net-panel">' +
-      '<div class="net-panel-head">' +
-      '<div class="net-panel-icon">' + p.icon + '</div>' +
-      '<div style="flex:1;min-width:0;">' +
-      '<div class="net-panel-title">' + p.name + '</div>' +
-      '<div class="net-panel-cr">' + cr + '% conversion rate</div></div>' +
-      '<div class="net-panel-revenue">' +
-      '<div class="rev-val">' + formatMoney(d.revenue) + '</div>' +
-      '<div class="rev-lbl">Revenue</div></div>' +
-      '</div>' +
-      '<div class="net-panel-body">' +
-      '<div class="net-panel-stat"><div class="nps-val">' + d.visitors + '</div><div class="nps-lbl">Visitors</div></div>' +
-      '<div class="net-panel-stat"><div class="nps-val">' + d.sales + '</div><div class="nps-lbl">Sales</div></div>' +
-      '<div class="net-panel-stat"><div class="nps-val">' + formatMoney(d.earnings) + '</div><div class="nps-lbl">Earnings</div></div>' +
-      '<div class="net-panel-stat"><div class="nps-val" style="color:' + (profit >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + formatMoney(profit) + '</div><div class="nps-lbl">Profit</div></div>' +
-      '</div></div>';
-  }).filter(function(s) { return s !== ''; }).join('') + '</div>';
-}
 
 /* === FRAUD SCORING (Enhanced — 3 Services + Cross-Matching) === */
 function getFraudSignals(visitor, checkout, fc) {
