@@ -2044,6 +2044,8 @@ function deleteOffer(id) {
 var _sgShaverDomains = [];
 
 function populateScriptGenOffers() {
+  /* Always reload settings to ensure latest API keys are used */
+  fbGet('tracker/settings').then(function(s) { _settings = s || {}; });
   fbGet('tracker/offers').then(function(data) {
     _offers = data ? Object.keys(data).map(function(k) { var o = data[k]; o._id = k; return o; }) : [];
     var sel = document.getElementById('sgOffer');
@@ -2143,7 +2145,15 @@ function buildCheckoutScript(offer) {
   var ctBase = (_settings.trackingDomain || location.origin) + '/ct.php';
   var cfg = { fb: FB, proxy: _settings.phpProxyUrl || '', ipqsKey: _settings.ipqsKey || '', pcKey: _settings.proxycheckKey || '', abuseKey: _settings.abuseipdbKey || '' };
   var c = _b64cfg(cfg);
-  return '<!-- Clima Tracker - Checkout Page -->\n<script src="' + ctBase + '?t=co&c=' + c + '"><\/script>';
+  var script = '<!-- Clima Tracker - Checkout Page -->\n<script src="' + ctBase + '?t=co&c=' + c + '"><\/script>';
+  /* Show what fraud checks are included */
+  var checks = [];
+  if (_settings.ipqsKey && _settings.phpProxyUrl) checks.push('IPQS');
+  if (_settings.proxycheckKey) checks.push('ProxyCheck');
+  if (_settings.abuseipdbKey && _settings.phpProxyUrl) checks.push('AbuseIPDB');
+  if (checks.length) script += '\n<!-- Fraud checks included: ' + checks.join(', ') + ' -->';
+  else script += '\n<!-- WARNING: No fraud API keys configured! Go to Settings to add IPQS Key + PHP Proxy URL -->';
+  return script;
 }
 
 function buildUpsellScripts(offer) {
