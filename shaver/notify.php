@@ -308,10 +308,18 @@ function _sendSmtp($host, $port, $user, $pass, $fromAddr, $fromName, $to, $subje
     $msg .= "Message-ID: $msgId\r\n";
     $msg .= "X-Mailer: ClimaTracker/1.0\r\n";
     $msg .= "\r\n";
-    $msg .= chunk_split(base64_encode($htmlBody));
+    $encoded = chunk_split(base64_encode($htmlBody), 76, "\r\n");
+    $msg .= $encoded;
     $msg .= "\r\n.\r\n";
 
-    fwrite($sock, $msg);
+    // Write in chunks to avoid buffer issues
+    $len = strlen($msg);
+    $pos = 0;
+    while ($pos < $len) {
+        $chunk = substr($msg, $pos, 8192);
+        fwrite($sock, $chunk);
+        $pos += 8192;
+    }
     $r = fgets($sock, 512);
     fwrite($sock, "QUIT\r\n");
     fclose($sock);
