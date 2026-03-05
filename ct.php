@@ -325,7 +325,7 @@ console.log('%c✓ Clima checkout tracking active','color:#0A6C80;font-weight:bo
   var bgData=_extractBGData();
   if(bgData.email)data.email=bgData.email;if(bgData.name)data.name=bgData.name;if(bgData.address)data.address=bgData.address;if(bgData.city)data.city=bgData.city;if(bgData.zip)data.zip=bgData.zip;if(bgData.phone)data.phone=bgData.phone;if(bgData.country)data.billingCountry=bgData.country;
   var ipGeo={ipv4:'',ipv6:''};
-  function _runIPChecks(){if(!ipGeo.ip)return;fraud.checkMode='full';if(PROXY&&IPQS_KEY){fetch(PROXY+'?key='+IPQS_KEY+'&ip='+ipGeo.ip).then(function(r){return r.json();}).then(function(d){fraud.ipqs=d;_saveFraud();}).catch(function(){});}if(PC_KEY){fetch('https://proxycheck.io/v2/'+ipGeo.ip+'?key='+PC_KEY+'&vpn=1&asn=1&risk=1').then(function(r){return r.json();}).then(function(pc){fraud.proxyCheck=pc[ipGeo.ip]||{};_saveFraud();}).catch(function(){});}if(ABUSE_KEY&&PROXY){fetch(PROXY+'?abusekey='+ABUSE_KEY+'&abuseip='+ipGeo.ip).then(function(r){return r.json();}).then(function(d){if(d&&d.data)fraud.abuseipdb=d.data;_saveFraud();}).catch(function(){});}}
+  function _runIPChecks(){if(!ipGeo.ip)return;fraud.checkMode='full';fraud.ip=ipGeo.ip;_saveFraud();if(!PROXY||!IPQS_KEY)console.warn('Clima: IPQS keys missing — re-generate checkout script after setting IPQS key + proxy in Settings');if(PROXY&&IPQS_KEY){fetch(PROXY+'?key='+IPQS_KEY+'&ip='+ipGeo.ip).then(function(r){return r.json();}).then(function(d){fraud.ipqs=d;_saveFraud();}).catch(function(){});}if(PC_KEY){fetch('https://proxycheck.io/v2/'+ipGeo.ip+'?key='+PC_KEY+'&vpn=1&asn=1&risk=1').then(function(r){return r.json();}).then(function(pc){fraud.proxyCheck=pc[ipGeo.ip]||{};_saveFraud();}).catch(function(){});}if(ABUSE_KEY&&PROXY){fetch(PROXY+'?abusekey='+ABUSE_KEY+'&abuseip='+ipGeo.ip).then(function(r){return r.json();}).then(function(d){if(d&&d.data)fraud.abuseipdb=d.data;_saveFraud();}).catch(function(){});}}
   function _setGeoChk(d){ipGeo.ip=d.ip||ipGeo.ip;ipGeo.country=d.country||'';ipGeo.countryCode=d.countryCode||d.country_code||'';ipGeo.region=d.region||'';ipGeo.city=d.city||'';ipGeo.zip=d.zip||d.postal||'';ipGeo.lat=d.lat||d.latitude||0;ipGeo.lon=d.lon||d.longitude||0;ipGeo.timezone=d.timezone||((d.timezone&&d.timezone.id)?d.timezone.id:'');ipGeo.isp=d.isp||d.org||'';ipGeo.asn=d.asn||'';if(d.ip&&d.ip.indexOf(':')>-1)ipGeo.ipv6=d.ip;else if(d.ip)ipGeo.ipv4=d.ip;}
   fetch(WORKER+'?geo=1').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.country){_setGeoChk(d);data.ipGeo=ipGeo;fraud.ipGeo=ipGeo;try{localStorage.setItem('_ct_ip',d.ip);if(d.ip.indexOf(':')===-1)localStorage.setItem('_ct_ipv4',d.ip);}catch(e){}_runIPChecks();_ctSend();return;}throw 'no geo';}).catch(function(){fetch('https://ipwho.is/').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.success!==false){ipGeo.ip=d.ip;ipGeo.country=d.country||'';ipGeo.countryCode=d.country_code||'';ipGeo.region=d.region||'';ipGeo.city=d.city||'';ipGeo.timezone=(d.timezone&&d.timezone.id)?d.timezone.id:'';ipGeo.isp=(d.connection&&d.connection.isp)?d.connection.isp:'';ipGeo.asn=(d.connection&&d.connection.asn)?'AS'+d.connection.asn:'';try{localStorage.setItem('_ct_ip',d.ip);if(d.ip.indexOf(':')===-1)localStorage.setItem('_ct_ipv4',d.ip);}catch(e){};}data.ipGeo=ipGeo;fraud.ipGeo=ipGeo;_runIPChecks();_ctSend();}).catch(function(){_runIPChecks();});});
   fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){ipGeo.ipv4=d.ip||'';if(!ipGeo.ip){ipGeo.ip=d.ip||'';data.ipGeo=ipGeo;fraud.ipGeo=ipGeo;}}).catch(function(){});
@@ -396,6 +396,14 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
   /* --- Checkout data patch --- */
   if(bgData.email||bgData.name||bgData.phone||bgData.address){var chk={};if(bgData.email)chk.email=bgData.email;if(bgData.name)chk.name=bgData.name;if(bgData.address)chk.address=bgData.address;if(bgData.city)chk.city=bgData.city;if(bgData.zip)chk.zip=bgData.zip;if(bgData.phone)chk.phone=bgData.phone;if(bgData.country)chk.billingCountry=bgData.country;if(bgData.total)chk.total=bgData.total;if(orderId)chk.orderId=orderId;fetch(FB+'/tracker/checkout-sessions/'+sid+'.json',{method:'PATCH',body:JSON.stringify(chk),keepalive:true});}
 
+  /* --- Get IP for TY page --- */
+  var _tyIp='';
+  try{_tyIp=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';}catch(e){}
+  fetch(WORKER+'?geo=1').then(function(r){return r.json();}).then(function(d){
+    if(d.ip){_tyIp=d.ip;try{localStorage.setItem('_ct_ip',d.ip);if(d.ip.indexOf(':')===-1)localStorage.setItem('_ct_ipv4',d.ip);}catch(e){}}
+  }).catch(function(){});
+  fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){if(d.ip&&!_tyIp){_tyIp=d.ip;try{localStorage.setItem('_ct_ipv4',d.ip);}catch(e){}}}).catch(function(){});
+
   /* --- Build TY event + sale patch (with 2s delay for DOM render) --- */
   function _buildSalePatch(amount){
     var patch={thankyouTs:Date.now(),thankyouCompleted:true};
@@ -416,6 +424,7 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
     if(P.get('product_codename'))patch.bgProduct=P.get('product_codename');
     if(P.get('account_id'))patch.bgAccountId=P.get('account_id');
     if(urlAff)patch.affFromUrl=urlAff;
+    var _ip=_tyIp||'';try{if(!_ip)_ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';}catch(e){}if(_ip)patch.ip=_ip;
     patch.thankyouParams=_allParams();
     return patch;
   }
@@ -427,7 +436,7 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
     var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:localOid||orderId,orderIdGlobal:globalOid,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'thankyou',thankyouCompleted:true,thankyouTs:Date.now()};
     if(email)sale.email=email;if(urlAff)sale.affFromUrl=urlAff;
     if(bgData.name)sale.bgName=bgData.name;if(bgData.phone)sale.bgPhone=bgData.phone;if(bgData.address)sale.bgAddress=bgData.address;if(bgData.city)sale.bgCity=bgData.city;if(bgData.zip)sale.bgZip=bgData.zip;if(bgData.country)sale.bgCountry=bgData.country;if(bgData.email)sale.bgEmail=bgData.email;
-    try{var _ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';if(_ip)sale.ip=_ip;}catch(e){}
+    var _ip=_tyIp||'';try{if(!_ip)_ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';}catch(e){}if(_ip)sale.ip=_ip;
     fetch(FB+'/tracker/sales/'+newKey+'.json',{method:'PUT',body:JSON.stringify(sale),keepalive:true});
     _notifySale(sale);
     try{localStorage.setItem('_ct_saleKey',newKey);if(email)localStorage.setItem('_ct_saleKey_'+email,newKey);}catch(e){}
@@ -467,12 +476,23 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
       fetch(FB+'/tracker/thankyou-events/'+sid+'.json',{method:'PUT',body:JSON.stringify(tyData),keepalive:true});
     }catch(e){}
 
-    /* Find existing sale key */
+    /* Find existing sale key — verify it exists in Firebase first */
     var sk=localStorage.getItem('_ct_saleKey')||'';
     if(!sk&&email){try{sk=localStorage.getItem('_ct_saleKey_'+email)||'';}catch(e){}}
     if(sk){
-      try{localStorage.setItem('_ct_saleKey',sk);localStorage.setItem('_ct_sale_'+sid,'1');if(email){localStorage.setItem('_ct_saleKey_'+email,sk);localStorage.setItem('_ct_sale_'+email,'1');}}catch(e){}
-      fetch(FB+'/tracker/sales/'+sk+'.json',{method:'PATCH',body:JSON.stringify(_buildSalePatch(amount)),keepalive:true});
+      fetch(FB+'/tracker/sales/'+sk+'.json').then(function(r){return r.json();}).then(function(existing){
+        if(existing&&existing.subId){
+          /* Sale exists — patch it */
+          try{localStorage.setItem('_ct_saleKey',sk);localStorage.setItem('_ct_sale_'+sid,'1');if(email){localStorage.setItem('_ct_saleKey_'+email,sk);localStorage.setItem('_ct_sale_'+email,'1');}}catch(e){}
+          var patch=_buildSalePatch(amount);
+          if(!existing.ip){try{var _ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';if(_ip)patch.ip=_ip;}catch(e){}}
+          fetch(FB+'/tracker/sales/'+sk+'.json',{method:'PATCH',body:JSON.stringify(patch),keepalive:true});
+        } else {
+          /* Sale key stale (deleted data) — clear and create new */
+          try{localStorage.removeItem('_ct_saleKey');if(email)localStorage.removeItem('_ct_saleKey_'+email);}catch(e){}
+          _createNewSale(amount);
+        }
+      }).catch(function(){_createNewSale(amount);});
       return;
     }
 
