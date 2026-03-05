@@ -39,12 +39,12 @@ try {
         case 'get_history':       getHistory($pdo); break;
         case 'delete_history':    deleteHistory($pdo); break;
 
-        // Tracking
-        case 'track_visit':       trackVisit($pdo); break;
-        case 'track_click':       trackClick($pdo); break;
-        case 'log_traffic':       logTraffic($pdo); break;
-        case 'log_behavior_event': logBehaviorEvent($pdo); break;
-        case 'update_session_metrics': updateSessionMetrics($pdo); break;
+        // Tracking (with short aliases)
+        case 'track_visit': case 'tv':       trackVisit($pdo); break;
+        case 'track_click': case 'tc':       trackClick($pdo); break;
+        case 'log_traffic': case 'log_visit': logTraffic($pdo); break;
+        case 'log_behavior_event': case 'lbe': logBehaviorEvent($pdo); break;
+        case 'update_session_metrics': case 'usm': updateSessionMetrics($pdo); break;
 
         // Analytics
         case 'get_analytics':     getAnalytics($pdo); break;
@@ -454,8 +454,8 @@ function logTraffic($pdo) {
     $pageUrl = $data['page_url'] ?? '';
     $referrer = $data['referrer'] ?? '';
     $userAgent = $data['user_agent'] ?? '';
-    $wasShaved = $data['was_shaved'] ?? false;
-    $shavingSessionId = $data['shaving_session_id'] ?? null;
+    $wasShaved = $data['was_shaved'] ?? $data['filtered'] ?? false;
+    $shavingSessionId = $data['shaving_session_id'] ?? $data['rule_id'] ?? null;
     $sessionUUID = $data['session_uuid'] ?? null;
     $screenWidth = $data['screen_width'] ?? null;
     $screenHeight = $data['screen_height'] ?? null;

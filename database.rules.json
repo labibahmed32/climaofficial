@@ -69,7 +69,7 @@
         ".read": "auth != null",
         ".write": true,
         "$date": {
-          ".indexOn": [".value"]
+          ".indexOn": [".value", "ipv4"]
         }
       },
       "checkout-sessions": {
@@ -91,7 +91,7 @@
       "sales": {
         ".read": "auth != null",
         ".write": true,
-        ".indexOn": ["date", "affId", "offerId", "status"]
+        ".indexOn": ["date", "affId", "offerId", "status", "subId", "orderIdGlobal"]
       },
       "offers": {
         ".read": "auth != null",

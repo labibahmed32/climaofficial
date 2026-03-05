@@ -1054,7 +1054,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 <div class="form-row">
 <div class="form-group"><label>Postback Secret</label><input id="setPostbackSecret" type="text" placeholder="my_secret_key"></div>
-<div class="form-group"><label>Shaver API URL</label><input id="setShaverApiUrl" type="text" placeholder="https://plan1.climaofficial.com/shaver/api.php"></div>
+<div class="form-group"><label>Tracker API URL</label><input id="setShaverApiUrl" type="text" placeholder="https://plan1.climaofficial.com/shaver/api.php"></div>
 </div>
 </div>
 </div>
@@ -1442,8 +1442,9 @@ function formatDate(ts) {
   return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
 }
 function formatMoney(n) { return '$' + (parseFloat(n) || 0).toFixed(2); }
-function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function _etNow() { try { var s = new Date().toLocaleString('en-US', {timeZone: 'America/New_York'}); return new Date(s); } catch(e) { return new Date(); } }
+function todayStr() { var d = _etNow(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function daysAgo(n) { var d = _etNow(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 
 function toast(msg, type) {
   var el = document.createElement('div');
