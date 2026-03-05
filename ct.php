@@ -373,6 +373,19 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
   if(urlAff){aff=urlAff;try{localStorage.setItem('_ct_aff',urlAff);}catch(e){}}
   var ds=_etDateStr();
 
+  /* --- DOM Data Extraction (email, order ID, product from page text) --- */
+  function _extractPageData(){
+    try{
+      var txt=(document.body&&document.body.innerText)||'';
+      /* Email from page text */
+      if(!email){var em=txt.match(/[\w.+-]+@[\w.-]+\.\w{2,}/);if(em)email=em[0];}
+      /* Order ID from page text: "Order ID: XXXXX" */
+      if(!orderId){var om=txt.match(/Order\s*(?:ID|#|Number)[:\s]*([A-Z0-9]{4,})/i);if(om){orderId=om[1];if(!localOid)localOid=om[1];}}
+      /* Product name */
+      var pm=txt.match(/\d+\s*x\s+(.+?)(?:\n|$)/i);if(pm)bgData._product=pm[1].trim();
+    }catch(e){}
+  }
+
   /* --- DOM Amount Extraction --- */
   function _extractPageAmount(){
     /* 1. URL / BG params */
@@ -412,7 +425,9 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
     if(globalOid)patch.orderIdGlobal=globalOid;
     if(amount>0)patch.amount=amount;
     if(bgData.total)patch.bgTotal=parseFloat(bgData.total)||0;
+    if(email)patch.email=email;
     if(bgData.email)patch.bgEmail=bgData.email;
+    if(bgData._product)patch.bgProduct=bgData._product;
     if(bgData.name)patch.bgName=bgData.name;
     if(bgData.phone)patch.bgPhone=bgData.phone;
     if(bgData.address)patch.bgAddress=bgData.address;
@@ -435,7 +450,7 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
     var plat=localStorage.getItem('_ct_platform')||'';
     var sale={subId:sid,affId:aff,offerId:oid,variant:variant,orderId:localOid||orderId,orderIdGlobal:globalOid,amount:amount,platform:plat,date:ds,ts:Date.now(),status:'approved',source:'thankyou',thankyouCompleted:true,thankyouTs:Date.now()};
     if(email)sale.email=email;if(urlAff)sale.affFromUrl=urlAff;
-    if(bgData.name)sale.bgName=bgData.name;if(bgData.phone)sale.bgPhone=bgData.phone;if(bgData.address)sale.bgAddress=bgData.address;if(bgData.city)sale.bgCity=bgData.city;if(bgData.zip)sale.bgZip=bgData.zip;if(bgData.country)sale.bgCountry=bgData.country;if(bgData.email)sale.bgEmail=bgData.email;
+    if(bgData.name)sale.bgName=bgData.name;if(bgData.phone)sale.bgPhone=bgData.phone;if(bgData.address)sale.bgAddress=bgData.address;if(bgData.city)sale.bgCity=bgData.city;if(bgData.zip)sale.bgZip=bgData.zip;if(bgData.country)sale.bgCountry=bgData.country;if(bgData.email)sale.bgEmail=bgData.email;if(bgData._product)sale.bgProduct=bgData._product;
     var _ip=_tyIp||'';try{if(!_ip)_ip=localStorage.getItem('_ct_ipv4')||localStorage.getItem('_ct_ip')||'';}catch(e){}if(_ip)sale.ip=_ip;
     fetch(FB+'/tracker/sales/'+newKey+'.json',{method:'PUT',body:JSON.stringify(sale),keepalive:true});
     _notifySale(sale);
@@ -466,11 +481,16 @@ console.log('%c✓ Clima conversion tracking complete','color:#0A6C80;font-weigh
 
   /* --- Main TY logic (runs after 2s for DOM to render) --- */
   setTimeout(function(){
+    _extractPageData();
+    if(email&&!sid.match(/^em_/)){var newSid='em_'+_stableHash(email);if(!sid||sid.match(/^ty/)){sid=newSid;try{localStorage.setItem('_ct_sid',sid);}catch(e){}}}
     var amount=_extractPageAmount();
     /* Save TY event */
     try{
       var pt=(document.body.innerText||'').substr(0,8000);
       var tyData={sid:sid,affId:aff,offerId:oid,variant:variant,orderId:orderId,orderIdGlobal:globalOid,amount:amount,ts:Date.now(),completed:true,urlParams:_allParams(),pageText:pt};
+      if(email)tyData.email=email;
+      if(bgData._product)tyData.product=bgData._product;
+      if(_tyIp)tyData.ip=_tyIp;
       if(urlAff)tyData.affFromUrl=urlAff;
       var rm=pt.match(/receipt[:\s#]*([A-Z0-9]+)/i);if(rm)tyData.receiptId=rm[1];
       fetch(FB+'/tracker/thankyou-events/'+sid+'.json',{method:'PUT',body:JSON.stringify(tyData),keepalive:true});
