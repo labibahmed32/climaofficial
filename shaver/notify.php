@@ -238,10 +238,14 @@ if ($tgToken && !empty($tgChatIds) && $tgMessage) {
 $emailTo = trim($input['email_to'] ?? '');
 if ($emailTo && !empty($emailBody)) {
     $from = trim($input['email_from'] ?? 'noreply@climaofficial.com');
+    $domain = preg_match('/@(.+)$/', $from, $dm) ? $dm[1] : 'climaofficial.com';
+    $msgId = '<' . uniqid('clima_', true) . '@' . $domain . '>';
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-type: text/html; charset=UTF-8\r\n";
     $headers .= "From: Clima Tracker <$from>\r\n";
     $headers .= "Reply-To: $from\r\n";
+    $headers .= "X-Mailer: ClimaTracker/1.0\r\n";
+    $headers .= "Message-ID: $msgId\r\n";
 
     $recipients = array_filter(array_map('trim', explode(',', $emailTo)));
     foreach ($recipients as $to) {
