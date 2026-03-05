@@ -524,6 +524,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <a class="nav-item" id="nav-shaver" onclick="showPage('shaver')"><i class="fas fa-layer-group"></i> Domains</a>
 <a class="nav-item" id="nav-scriptgen" onclick="showPage('scriptgen')"><i class="fas fa-bolt"></i> Script Generator</a>
 <a class="nav-item" id="nav-sessions" onclick="showPage('sessions')"><i class="fas fa-play-circle"></i> Sessions</a>
+<a class="nav-item" id="nav-emailcenter" onclick="showPage('emailcenter')"><i class="fas fa-mail-bulk"></i> Email Center</a>
 <a class="nav-item" id="nav-fraud" onclick="showPage('fraud')"><i class="fas fa-shield-alt"></i> Fraud Center</a>
 <a class="nav-item" id="nav-settings" onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</a>
 </nav>
@@ -841,6 +842,188 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 </div>
 
+<!-- Email Center Page -->
+<div id="pg-emailcenter" class="page">
+<div class="page-content">
+
+<!-- Tabs -->
+<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #e2e8f0;">
+<button class="ec-tab active" id="ecTabCompose" onclick="switchEmailTab('compose')" style="padding:10px 24px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;"><i class="fas fa-pen" style="margin-right:6px;"></i>Compose</button>
+<button class="ec-tab" id="ecTabTemplates" onclick="switchEmailTab('templates')" style="padding:10px 24px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;"><i class="fas fa-palette" style="margin-right:6px;"></i>Templates</button>
+<button class="ec-tab" id="ecTabHistory" onclick="switchEmailTab('history')" style="padding:10px 24px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;"><i class="fas fa-history" style="margin-right:6px;"></i>History</button>
+</div>
+
+<!-- COMPOSE TAB -->
+<div id="ecPanelCompose" class="ec-panel">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;">
+
+<!-- Left: Settings -->
+<div>
+<div class="card" style="margin-bottom:16px;">
+<div class="card-header" style="padding:12px 16px;"><h3 style="font-size:14px;margin:0;"><i class="fas fa-server" style="color:var(--primary);margin-right:6px;"></i>Send From</h3></div>
+<div style="padding:12px 16px;">
+<select id="ecSmtpSelect" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" onchange="onSmtpSelectChange()">
+<option value="">— Select SMTP Account —</option>
+</select>
+</div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+<div class="card-header" style="padding:12px 16px;"><h3 style="font-size:14px;margin:0;"><i class="fas fa-palette" style="color:#7c3aed;margin-right:6px;"></i>Template</h3></div>
+<div style="padding:12px 16px;">
+<select id="ecTemplateSelect" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;margin-bottom:10px;" onchange="onTemplateChange()">
+<option value="">— Select Template —</option>
+<option value="sale_notification">Sale Notification</option>
+<option value="packing_slip">Packing Slip / Order Confirmation</option>
+<option value="review_reminder">Product Reminder / Review</option>
+<option value="new_offer">New Offer (Affiliates)</option>
+</select>
+
+<!-- Dynamic Template Fields -->
+<div id="ecTemplateFields"></div>
+
+<div class="form-group" style="margin-top:10px;"><label style="font-size:12px;font-weight:600;">Subject</label><input id="ecSubject" type="text" placeholder="Auto-filled from template" style="font-size:13px;"></div>
+</div>
+</div>
+
+<div style="display:flex;gap:8px;">
+<button class="btn-primary-sm" onclick="previewEmail()" style="flex:1;padding:10px;font-size:13px;background:#7c3aed;"><i class="fas fa-eye"></i> Preview</button>
+<button class="btn-primary-sm" onclick="sendEmails()" style="flex:1;padding:10px;font-size:13px;"><i class="fas fa-paper-plane"></i> Send to Selected</button>
+</div>
+<div id="ecSendResult" style="margin-top:8px;"></div>
+</div>
+
+<!-- Right: Recipients -->
+<div>
+<div class="card" style="height:100%;">
+<div class="card-header" style="padding:12px 16px;">
+<h3 style="font-size:14px;margin:0;"><i class="fas fa-users" style="color:#059669;margin-right:6px;"></i>Recipients <span id="ecRecipientCount" style="font-size:11px;color:#64748b;margin-left:6px;">0 selected</span></h3>
+</div>
+<div style="padding:12px 16px;">
+<!-- Manual Add -->
+<div style="display:flex;gap:6px;margin-bottom:10px;">
+<input id="ecAddEmail" type="email" placeholder="email@example.com" style="flex:2;padding:7px 10px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;">
+<input id="ecAddName" type="text" placeholder="Name" style="flex:1;padding:7px 10px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;">
+<button class="btn-primary-sm" onclick="addManualRecipient()" style="font-size:11px;padding:7px 12px;white-space:nowrap;"><i class="fas fa-plus"></i></button>
+</div>
+<!-- Import Buttons -->
+<div style="display:flex;gap:6px;margin-bottom:10px;">
+<button class="btn-primary-sm" onclick="importSalesRecipients()" style="flex:1;font-size:11px;padding:7px;background:#0A6C80;"><i class="fas fa-dollar-sign"></i> Import Sales</button>
+<button class="btn-primary-sm" onclick="importAffiliateRecipients()" style="flex:1;font-size:11px;padding:7px;background:#7c3aed;"><i class="fas fa-users"></i> Import Affiliates</button>
+</div>
+<!-- Select All / Deselect -->
+<div style="display:flex;gap:6px;margin-bottom:8px;">
+<button onclick="selectAllRecipients()" style="font-size:10px;padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;">Select All</button>
+<button onclick="deselectAllRecipients()" style="font-size:10px;padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;">Deselect All</button>
+<button onclick="clearRecipients()" style="font-size:10px;padding:4px 10px;border:1px solid #fca5a5;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;">Clear All</button>
+</div>
+<!-- Recipient List -->
+<div id="ecRecipientList" style="max-height:340px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;"></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- TEMPLATES TAB -->
+<div id="ecPanelTemplates" class="ec-panel" style="display:none;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;">
+
+<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('sale_notification')">
+<div style="padding:20px;text-align:center;">
+<div style="width:50px;height:50px;border-radius:12px;background:#dcfce7;color:#16a34a;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-dollar-sign"></i></div>
+<h4 style="margin:0 0 6px;font-size:14px;">Sale Notification</h4>
+<p style="margin:0;font-size:12px;color:#64748b;">Auto-triggered on new sales. Rich details with fraud check.</p>
+<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;">Use Template</button>
+</div>
+</div>
+
+<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('packing_slip')">
+<div style="padding:20px;text-align:center;">
+<div style="width:50px;height:50px;border-radius:12px;background:#dbeafe;color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-box"></i></div>
+<h4 style="margin:0 0 6px;font-size:14px;">Packing Slip</h4>
+<p style="margin:0;font-size:12px;color:#64748b;">Order confirmation with tracking, product details, buy again link.</p>
+<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#2563eb;">Use Template</button>
+</div>
+</div>
+
+<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('review_reminder')">
+<div style="padding:20px;text-align:center;">
+<div style="width:50px;height:50px;border-radius:12px;background:#fef9c3;color:#ca8a04;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-star"></i></div>
+<h4 style="margin:0 0 6px;font-size:14px;">Product Reminder</h4>
+<p style="margin:0;font-size:12px;color:#64748b;">Review request with product tips and feedback CTA.</p>
+<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#ca8a04;">Use Template</button>
+</div>
+</div>
+
+<div class="card" style="cursor:pointer;transition:box-shadow .2s;" onclick="useTemplate('new_offer')">
+<div style="padding:20px;text-align:center;">
+<div style="width:50px;height:50px;border-radius:12px;background:#fce4ec;color:#e11d48;display:inline-flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;"><i class="fas fa-fire"></i></div>
+<h4 style="margin:0 0 6px;font-size:14px;">New Offer</h4>
+<p style="margin:0;font-size:12px;color:#64748b;">Affiliate offer announcement with CPA, images, manager contact.</p>
+<button class="btn-primary-sm" style="margin-top:12px;font-size:11px;padding:6px 16px;background:#e11d48;">Use Template</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- HISTORY TAB -->
+<div id="ecPanelHistory" class="ec-panel" style="display:none;">
+<div class="card">
+<div class="card-header" style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+<h3 style="font-size:14px;margin:0;"><i class="fas fa-history" style="color:var(--primary);margin-right:6px;"></i>Send History</h3>
+<button class="btn-primary-sm" onclick="loadEmailHistory()" style="font-size:11px;padding:5px 12px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+</div>
+<div style="overflow-x:auto;">
+<table class="data-table" id="ecHistoryTable">
+<thead><tr><th>Date</th><th>Template</th><th>Subject</th><th>SMTP</th><th>Recipients</th><th>Sent</th><th>Failed</th><th></th></tr></thead>
+<tbody id="ecHistoryBody"><tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">No emails sent yet</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- Preview Modal -->
+<div id="ecPreviewModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+<div style="background:#fff;border-radius:12px;max-width:640px;width:95%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+<h3 style="margin:0;font-size:15px;"><i class="fas fa-eye" style="color:var(--primary);margin-right:6px;"></i>Email Preview</h3>
+<button onclick="document.getElementById('ecPreviewModal').style.display='none'" style="border:none;background:none;font-size:18px;cursor:pointer;color:#94a3b8;">&times;</button>
+</div>
+<div id="ecPreviewContent" style="padding:20px;"></div>
+</div>
+</div>
+
+<!-- Import Modal -->
+<div id="ecImportModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+<div style="background:#fff;border-radius:12px;max-width:700px;width:95%;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+<h3 id="ecImportTitle" style="margin:0;font-size:15px;"><i class="fas fa-download" style="color:var(--primary);margin-right:6px;"></i>Import Recipients</h3>
+<button onclick="document.getElementById('ecImportModal').style.display='none'" style="border:none;background:none;font-size:18px;cursor:pointer;color:#94a3b8;">&times;</button>
+</div>
+<div id="ecImportContent" style="padding:16px;"></div>
+<div style="padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right;">
+<button class="btn-primary-sm" onclick="confirmImport()" style="font-size:12px;padding:8px 20px;"><i class="fas fa-check"></i> Import Selected</button>
+</div>
+</div>
+</div>
+
+<!-- History Detail Modal -->
+<div id="ecHistoryDetailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+<div style="background:#fff;border-radius:12px;max-width:600px;width:95%;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+<h3 style="margin:0;font-size:15px;"><i class="fas fa-info-circle" style="color:var(--primary);margin-right:6px;"></i>Send Details</h3>
+<button onclick="document.getElementById('ecHistoryDetailModal').style.display='none'" style="border:none;background:none;font-size:18px;cursor:pointer;color:#94a3b8;">&times;</button>
+</div>
+<div id="ecHistoryDetailContent" style="padding:16px;"></div>
+</div>
+</div>
+
+</div>
+</div>
+
 <!-- Settings Page -->
 <div id="pg-settings" class="page">
 <div style="max-width:740px;">
@@ -926,6 +1109,34 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <button class="btn-primary-sm" onclick="sendTestEmail()" style="background:#ea4335;font-size:12px;"><i class="fas fa-envelope"></i> Send Test</button>
 <span id="emailTestResult" style="font-size:12px;"></span>
 </div>
+</div>
+</div>
+
+<!-- Tool: SMTP Accounts -->
+<div class="stool" data-stool="smtpAccounts">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-server"></i></div>
+<div class="stool-info"><div class="stool-title">SMTP Accounts</div><div class="stool-desc">Configure email servers for sending</div></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
+</div>
+<div class="stool-body">
+<div id="smtpAccountsList"></div>
+<button class="btn-primary-sm" onclick="addSmtpAccount()" style="margin-top:10px;font-size:12px;background:#2e7d32;"><i class="fas fa-plus"></i> Add SMTP Account</button>
+</div>
+</div>
+
+<!-- Tool: Email Compliance -->
+<div class="stool" data-stool="compliance">
+<div class="stool-head" onclick="toggleStool(this)">
+<div class="stool-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-balance-scale"></i></div>
+<div class="stool-info"><div class="stool-title">Email Compliance</div><div class="stool-desc">CAN-SPAM: address, unsubscribe, company info</div></div>
+<i class="fas fa-chevron-right stool-arrow"></i>
+</div>
+<div class="stool-body">
+<div class="form-group"><label>Company Name</label><input id="setCompanyName" type="text" placeholder="Clima Official"></div>
+<div class="form-group"><label>Physical Address</label><input id="setCompanyAddress" type="text" placeholder="123 Main St, City, State, ZIP"></div>
+<div class="form-group"><label>Website URL</label><input id="setCompanyWebsite" type="text" placeholder="https://climaofficial.com"></div>
+<div class="form-group"><label>Unsubscribe URL</label><input id="setUnsubscribeUrl" type="text" placeholder="https://climaofficial.com/unsubscribe"><small>Link shown in every email footer</small></div>
 </div>
 </div>
 
@@ -1306,7 +1517,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 var pageTitles = {
   dashboard:'Dashboard', sales:'Sales', visitors:'Visitors', checkouts:'Checkout Reports', clicks:'Click Reports',
   thankyou:'Thank You Pages', affiliates:'Affiliates', offers:'Offers', scriptgen:'Script Generator',
-  sessions:'Sessions', fraud:'Fraud Center', shaver:'Shaver', settings:'Settings'
+  sessions:'Sessions', emailcenter:'Email Center', fraud:'Fraud Center', shaver:'Shaver', settings:'Settings'
 };
 
 function showPage(page) {
@@ -1333,6 +1544,7 @@ function showPage(page) {
   else if (page === 'fraud') loadFraudCenter();
   else if (page === 'shaver') loadShaver();
   else if (page === 'sessions') loadSessions();
+  else if (page === 'emailcenter') loadEmailCenter();
   else if (page === 'settings') loadSettings();
 }
 
@@ -4039,6 +4251,15 @@ function loadSettings() {
     document.getElementById('setEmailEnabled').checked = !!_settings.emailEnabled;
     document.getElementById('setEmailTo').value = _settings.emailTo || '';
     document.getElementById('setEmailFrom').value = _settings.emailFrom || '';
+    /* SMTP Accounts */
+    _smtpAccounts = _settings.smtpAccounts || [];
+    renderSmtpAccounts();
+    /* Compliance */
+    var c = _settings.emailCompliance || {};
+    document.getElementById('setCompanyName').value = c.company || '';
+    document.getElementById('setCompanyAddress').value = c.address || '';
+    document.getElementById('setCompanyWebsite').value = c.website || '';
+    document.getElementById('setUnsubscribeUrl').value = c.unsubscribe_url || '';
   });
 }
 
@@ -4062,6 +4283,15 @@ function saveAllSettings() {
   data.emailEnabled = document.getElementById('setEmailEnabled').checked;
   data.emailTo = document.getElementById('setEmailTo').value.trim();
   data.emailFrom = document.getElementById('setEmailFrom').value.trim();
+  /* SMTP Accounts */
+  data.smtpAccounts = _smtpAccounts;
+  /* Compliance */
+  data.emailCompliance = {
+    company: document.getElementById('setCompanyName').value.trim(),
+    address: document.getElementById('setCompanyAddress').value.trim(),
+    website: document.getElementById('setCompanyWebsite').value.trim(),
+    unsubscribe_url: document.getElementById('setUnsubscribeUrl').value.trim()
+  };
 
   fbPatch('tracker/settings', data).then(function() {
     Object.keys(data).forEach(function(k) { _settings[k] = data[k]; });
@@ -4331,6 +4561,445 @@ function sendTestEmail() {
     .catch(function(err) {
       resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> Network error: ' + escHtml(err.message) + '</span>';
     });
+}
+
+/* === SMTP ACCOUNTS === */
+var _smtpAccounts = [];
+
+function addSmtpAccount() {
+  _smtpAccounts.push({label:'', purpose:'general', host:'', port:465, user:'', pass:'', from_name:'', from_email:''});
+  renderSmtpAccounts();
+}
+
+function removeSmtpAccount(idx) {
+  _smtpAccounts.splice(idx, 1);
+  renderSmtpAccounts();
+}
+
+function renderSmtpAccounts() {
+  var c = document.getElementById('smtpAccountsList');
+  if (!c) return;
+  if (!_smtpAccounts.length) { c.innerHTML = '<p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px;">No SMTP accounts configured. Add one below.</p>'; return; }
+  var h = '';
+  _smtpAccounts.forEach(function(a, i) {
+    h += '<div class="smtp-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;background:#fafafa;">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    h += '<input type="text" value="' + escHtml(a.label || '') + '" placeholder="Account Label" onchange="_smtpAccounts['+i+'].label=this.value" style="font-size:13px;font-weight:600;border:none;background:none;padding:0;width:200px;">';
+    h += '<div style="display:flex;gap:6px;align-items:center;">';
+    h += '<select onchange="_smtpAccounts['+i+'].purpose=this.value" style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;">';
+    h += '<option value="notifications"' + (a.purpose==='notifications'?' selected':'') + '>Notifications</option>';
+    h += '<option value="general"' + (a.purpose==='general'?' selected':'') + '>General</option>';
+    h += '<option value="promotional"' + (a.purpose==='promotional'?' selected':'') + '>Promotional</option>';
+    h += '</select>';
+    h += '<button onclick="removeSmtpAccount('+i+')" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:14px;" title="Remove"><i class="fas fa-trash-alt"></i></button>';
+    h += '</div></div>';
+    h += '<div style="display:grid;grid-template-columns:3fr 1fr;gap:8px;margin-bottom:8px;">';
+    h += '<input type="text" value="' + escHtml(a.host || '') + '" placeholder="SMTP Host (mail.domain.com)" onchange="_smtpAccounts['+i+'].host=this.value" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '<input type="number" value="' + (a.port || 465) + '" placeholder="Port" onchange="_smtpAccounts['+i+'].port=parseInt(this.value)||465" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
+    h += '<input type="text" value="' + escHtml(a.user || '') + '" placeholder="Username (email)" onchange="_smtpAccounts['+i+'].user=this.value" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '<input type="password" value="' + escHtml(a.pass || '') + '" placeholder="Password" onchange="_smtpAccounts['+i+'].pass=this.value" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
+    h += '<input type="text" value="' + escHtml(a.from_name || '') + '" placeholder="From Name" onchange="_smtpAccounts['+i+'].from_name=this.value" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '<input type="email" value="' + escHtml(a.from_email || '') + '" placeholder="From Email" onchange="_smtpAccounts['+i+'].from_email=this.value" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;">';
+    h += '</div>';
+    h += '<div style="display:flex;gap:8px;align-items:center;">';
+    h += '<button class="btn-primary-sm" onclick="testSmtpConnection('+i+')" style="font-size:11px;padding:5px 12px;background:#2e7d32;"><i class="fas fa-plug"></i> Test Connection</button>';
+    h += '<span id="smtpTest'+i+'" style="font-size:11px;"></span>';
+    h += '</div>';
+    h += '</div>';
+  });
+  c.innerHTML = h;
+}
+
+function testSmtpConnection(idx) {
+  var a = _smtpAccounts[idx];
+  if (!a || !a.host || !a.user || !a.pass) { document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:var(--red);">Fill all fields first</span>'; return; }
+  document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:#0A6C80;"><i class="fas fa-spinner fa-spin"></i> Testing...</span>';
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  if (!notifyUrl) { document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:var(--red);">Set Shaver API URL first</span>'; return; }
+  fetch(notifyUrl, {method:'POST', body:JSON.stringify({action:'test_smtp', smtp:{host:a.host, port:a.port||465, user:a.user, pass:a.pass}}), headers:{'Content-Type':'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success) document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:var(--green);"><i class="fas fa-check-circle"></i> Connected!</span>';
+      else document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:var(--red);"><i class="fas fa-times-circle"></i> ' + escHtml(res.error || 'Failed') + '</span>';
+    })
+    .catch(function(err) { document.getElementById('smtpTest'+idx).innerHTML = '<span style="color:var(--red);">Network error</span>'; });
+}
+
+/* === EMAIL CENTER === */
+var _ecRecipients = [];
+var _ecImportData = [];
+var _ecImportType = '';
+
+function loadEmailCenter() {
+  populateSmtpDropdown();
+  renderRecipientList();
+  loadEmailHistory();
+}
+
+function switchEmailTab(tab) {
+  ['Compose','Templates','History'].forEach(function(t) {
+    var tl = t.toLowerCase();
+    document.getElementById('ecPanel'+t).style.display = (tl === tab) ? '' : 'none';
+    var btn = document.getElementById('ecTab'+t);
+    if (tl === tab) { btn.style.color = 'var(--primary)'; btn.style.borderBottom = '2px solid var(--primary)'; btn.classList.add('active'); }
+    else { btn.style.color = '#64748b'; btn.style.borderBottom = '2px solid transparent'; btn.classList.remove('active'); }
+  });
+  if (tab === 'history') loadEmailHistory();
+}
+
+function populateSmtpDropdown() {
+  var sel = document.getElementById('ecSmtpSelect');
+  if (!sel) return;
+  var h = '<option value="">— Select SMTP Account —</option>';
+  (_settings.smtpAccounts || []).forEach(function(a, i) {
+    h += '<option value="'+i+'">' + escHtml(a.label || a.from_email || ('Account '+(i+1))) + ' (' + escHtml(a.purpose || 'general') + ')</option>';
+  });
+  sel.innerHTML = h;
+}
+
+function onSmtpSelectChange() {}
+
+/* --- Template Fields --- */
+function onTemplateChange() {
+  var tpl = document.getElementById('ecTemplateSelect').value;
+  var c = document.getElementById('ecTemplateFields');
+  var subj = document.getElementById('ecSubject');
+  if (!tpl) { c.innerHTML = ''; subj.value = ''; return; }
+
+  var h = '';
+  if (tpl === 'sale_notification') {
+    subj.value = 'New Sale Notification';
+    h = '<p style="font-size:12px;color:#64748b;padding:8px 0;">This template is auto-triggered on sales. Use it to send manually if needed.</p>';
+    h += '<div class="form-group"><label style="font-size:12px;">Order ID</label><input id="tplOrderId" type="text" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Amount ($)</label><input id="tplAmount" type="number" value="97" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Offer Name</label><input id="tplOfferName" type="text" style="font-size:12px;"></div>';
+  } else if (tpl === 'packing_slip') {
+    subj.value = 'Your Order Confirmation';
+    h += '<div class="form-group"><label style="font-size:12px;">Product Name</label><input id="tplProductName" type="text" placeholder="Premium Weight Loss Formula" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Product Price ($)</label><input id="tplProductPrice" type="number" value="97" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Order ID</label><input id="tplOrderId" type="text" style="font-size:12px;"></div>';
+    h += '<div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;">';
+    h += '<div class="form-group"><label style="font-size:12px;">Tracking Number</label><input id="tplTracking" type="text" placeholder="9400111899223..." style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Carrier</label><select id="tplCarrier" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;"><option value="USPS">USPS</option><option value="FedEx">FedEx</option><option value="UPS">UPS</option><option value="DHL">DHL</option></select></div>';
+    h += '</div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Buy Again URL</label><input id="tplBuyAgainUrl" type="url" placeholder="https://..." style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Thank You Message</label><textarea id="tplThankYouMsg" rows="2" placeholder="Thank you for your purchase!" style="font-size:12px;width:100%;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;resize:vertical;"></textarea></div>';
+  } else if (tpl === 'review_reminder') {
+    subj.value = 'How\'s your product? We\'d love your feedback!';
+    h += '<div class="form-group"><label style="font-size:12px;">Product Name</label><input id="tplProductName" type="text" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Days Since Purchase</label><input id="tplDaysSince" type="number" value="14" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Review URL</label><input id="tplReviewUrl" type="url" placeholder="https://..." style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Usage Tips</label><textarea id="tplTips" rows="3" placeholder="Take daily with meals\nResults improve over 30 days\nStay consistent!" style="font-size:12px;width:100%;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;resize:vertical;"></textarea><small>One tip per line</small></div>';
+  } else if (tpl === 'new_offer') {
+    subj.value = 'New Offer Available!';
+    h += '<div class="form-group"><label style="font-size:12px;">Offer Name</label><input id="tplOfferName" type="text" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Description</label><textarea id="tplOfferDesc" rows="2" style="font-size:12px;width:100%;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;resize:vertical;"></textarea></div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    h += '<div class="form-group"><label style="font-size:12px;">Payout / CPA ($)</label><input id="tplPayoutCpa" type="number" value="80" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Commission Type</label><select id="tplCommissionType" style="font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;"><option value="CPA">CPA (Per Sale)</option><option value="RevShare">RevShare</option><option value="Hybrid">Hybrid</option></select></div>';
+    h += '</div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Offer Image URL</label><input id="tplOfferImage" type="url" placeholder="https://..." style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Landing Page URL</label><input id="tplLandingUrl" type="url" placeholder="https://..." style="font-size:12px;"></div>';
+    h += '<div style="border-top:1px solid #e5e7eb;margin:12px 0 8px;padding-top:10px;"><label style="font-size:12px;font-weight:600;color:#334155;">Manager Contact</label></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Name</label><input id="tplManagerName" type="text" placeholder="David Jordan" style="font-size:12px;"></div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    h += '<div class="form-group"><label style="font-size:12px;">Email</label><input id="tplManagerEmail" type="email" style="font-size:12px;"></div>';
+    h += '<div class="form-group"><label style="font-size:12px;">Telegram</label><input id="tplManagerTg" type="text" placeholder="@username" style="font-size:12px;"></div>';
+    h += '</div>';
+  }
+  c.innerHTML = h;
+}
+
+function useTemplate(tpl) {
+  switchEmailTab('compose');
+  document.getElementById('ecTemplateSelect').value = tpl;
+  onTemplateChange();
+}
+
+/* --- Recipients --- */
+function addManualRecipient() {
+  var email = document.getElementById('ecAddEmail').value.trim();
+  var name = document.getElementById('ecAddName').value.trim();
+  if (!email || email.indexOf('@') < 1) { toast('Enter a valid email', 'error'); return; }
+  for (var i = 0; i < _ecRecipients.length; i++) { if (_ecRecipients[i].email === email) { toast('Already added', 'error'); return; } }
+  _ecRecipients.push({email: email, name: name || email.split('@')[0], selected: true});
+  document.getElementById('ecAddEmail').value = '';
+  document.getElementById('ecAddName').value = '';
+  renderRecipientList();
+}
+
+function removeRecipient(idx) { _ecRecipients.splice(idx, 1); renderRecipientList(); }
+function toggleRecipient(idx) { _ecRecipients[idx].selected = !_ecRecipients[idx].selected; renderRecipientList(); }
+function selectAllRecipients() { _ecRecipients.forEach(function(r) { r.selected = true; }); renderRecipientList(); }
+function deselectAllRecipients() { _ecRecipients.forEach(function(r) { r.selected = false; }); renderRecipientList(); }
+function clearRecipients() { _ecRecipients = []; renderRecipientList(); }
+
+function renderRecipientList() {
+  var c = document.getElementById('ecRecipientList');
+  var countEl = document.getElementById('ecRecipientCount');
+  if (!c) return;
+  var sel = _ecRecipients.filter(function(r) { return r.selected; }).length;
+  if (countEl) countEl.textContent = sel + ' of ' + _ecRecipients.length + ' selected';
+  if (!_ecRecipients.length) { c.innerHTML = '<p style="color:#94a3b8;font-size:12px;text-align:center;padding:20px;">No recipients added yet</p>'; return; }
+  var h = '';
+  _ecRecipients.forEach(function(r, i) {
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;' + (r.selected ? '' : 'opacity:.5;') + '">';
+    h += '<input type="checkbox" ' + (r.selected ? 'checked' : '') + ' onchange="toggleRecipient('+i+')" style="cursor:pointer;">';
+    h += '<div style="flex:1;min-width:0;">';
+    h += '<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(r.name) + '</div>';
+    h += '<div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(r.email) + '</div>';
+    h += '</div>';
+    h += '<button onclick="removeRecipient('+i+')" style="border:none;background:none;color:#94a3b8;cursor:pointer;font-size:12px;" title="Remove"><i class="fas fa-times"></i></button>';
+    h += '</div>';
+  });
+  c.innerHTML = h;
+}
+
+/* --- Import from Sales --- */
+function importSalesRecipients() {
+  _ecImportType = 'sales';
+  document.getElementById('ecImportTitle').innerHTML = '<i class="fas fa-dollar-sign" style="color:var(--primary);margin-right:6px;"></i>Import from Sales';
+  document.getElementById('ecImportContent').innerHTML = '<p style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading sales...</p>';
+  document.getElementById('ecImportModal').style.display = 'flex';
+  fbGet('tracker/sales').then(function(data) {
+    if (!data) { document.getElementById('ecImportContent').innerHTML = '<p style="text-align:center;color:#94a3b8;">No sales found</p>'; return; }
+    _ecImportData = [];
+    var seen = {};
+    Object.keys(data).forEach(function(k) {
+      var s = data[k];
+      var email = s.email || s.bgEmail || '';
+      if (!email || seen[email]) return;
+      seen[email] = true;
+      var exists = false;
+      for (var i = 0; i < _ecRecipients.length; i++) { if (_ecRecipients[i].email === email) { exists = true; break; } }
+      _ecImportData.push({email: email, name: s.bgName || s.customerName || email.split('@')[0], extra: '$' + (s.amount || 0) + ' — ' + (s.date || ''), checked: !exists, disabled: exists});
+    });
+    renderImportList();
+  });
+}
+
+/* --- Import from Affiliates --- */
+function importAffiliateRecipients() {
+  _ecImportType = 'affiliates';
+  document.getElementById('ecImportTitle').innerHTML = '<i class="fas fa-users" style="color:#7c3aed;margin-right:6px;"></i>Import from Affiliates';
+  document.getElementById('ecImportContent').innerHTML = '<p style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading affiliates...</p>';
+  document.getElementById('ecImportModal').style.display = 'flex';
+  fbGet('users').then(function(data) {
+    if (!data) { document.getElementById('ecImportContent').innerHTML = '<p style="text-align:center;color:#94a3b8;">No affiliates found</p>'; return; }
+    _ecImportData = [];
+    Object.keys(data).forEach(function(k) {
+      var u = data[k];
+      if (u.role !== 'affiliate' || !u.email) return;
+      var exists = false;
+      for (var i = 0; i < _ecRecipients.length; i++) { if (_ecRecipients[i].email === u.email) { exists = true; break; } }
+      _ecImportData.push({email: u.email, name: u.name || u.email.split('@')[0], extra: u.status || '', checked: !exists, disabled: exists});
+    });
+    renderImportList();
+  });
+}
+
+function renderImportList() {
+  var h = '<div style="margin-bottom:8px;"><button onclick="toggleAllImport(true)" style="font-size:10px;padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;margin-right:4px;">Select All</button><button onclick="toggleAllImport(false)" style="font-size:10px;padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;">Deselect All</button></div>';
+  h += '<div style="max-height:400px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;">';
+  _ecImportData.forEach(function(r, i) {
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;' + (r.disabled ? 'opacity:.4;' : '') + '">';
+    h += '<input type="checkbox" ' + (r.checked ? 'checked' : '') + ' ' + (r.disabled ? 'disabled' : '') + ' onchange="_ecImportData['+i+'].checked=this.checked" style="cursor:pointer;">';
+    h += '<div style="flex:1;"><div style="font-size:12px;font-weight:500;">' + escHtml(r.name) + '</div><div style="font-size:11px;color:#64748b;">' + escHtml(r.email) + '</div></div>';
+    h += '<div style="font-size:11px;color:#94a3b8;">' + escHtml(r.extra) + (r.disabled ? ' (added)' : '') + '</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  document.getElementById('ecImportContent').innerHTML = h;
+}
+
+function toggleAllImport(val) {
+  _ecImportData.forEach(function(r) { if (!r.disabled) r.checked = val; });
+  renderImportList();
+}
+
+function confirmImport() {
+  _ecImportData.forEach(function(r) {
+    if (r.checked && !r.disabled) _ecRecipients.push({email: r.email, name: r.name, selected: true});
+  });
+  document.getElementById('ecImportModal').style.display = 'none';
+  renderRecipientList();
+  toast('Imported ' + _ecImportData.filter(function(r){return r.checked && !r.disabled;}).length + ' recipients', 'success');
+}
+
+/* --- Collect Template Data --- */
+function collectTemplateData() {
+  var tpl = document.getElementById('ecTemplateSelect').value;
+  var d = {};
+  if (tpl === 'sale_notification') {
+    d.order_id = (document.getElementById('tplOrderId') || {}).value || '';
+    d.amount = (document.getElementById('tplAmount') || {}).value || '97';
+    d.offer_name = (document.getElementById('tplOfferName') || {}).value || '';
+  } else if (tpl === 'packing_slip') {
+    d.product_name = (document.getElementById('tplProductName') || {}).value || '';
+    d.product_price = (document.getElementById('tplProductPrice') || {}).value || '97';
+    d.order_id = (document.getElementById('tplOrderId') || {}).value || '';
+    d.tracking_number = (document.getElementById('tplTracking') || {}).value || '';
+    d.tracking_carrier = (document.getElementById('tplCarrier') || {}).value || 'USPS';
+    d.buy_again_url = (document.getElementById('tplBuyAgainUrl') || {}).value || '';
+    d.thank_you_message = (document.getElementById('tplThankYouMsg') || {}).value || 'Thank you for your purchase!';
+  } else if (tpl === 'review_reminder') {
+    d.product_name = (document.getElementById('tplProductName') || {}).value || '';
+    d.days_since_purchase = (document.getElementById('tplDaysSince') || {}).value || '14';
+    d.review_url = (document.getElementById('tplReviewUrl') || {}).value || '';
+    d.tips = (document.getElementById('tplTips') || {}).value || '';
+  } else if (tpl === 'new_offer') {
+    d.offer_name = (document.getElementById('tplOfferName') || {}).value || '';
+    d.offer_description = (document.getElementById('tplOfferDesc') || {}).value || '';
+    d.payout_cpa = (document.getElementById('tplPayoutCpa') || {}).value || '80';
+    d.commission_type = (document.getElementById('tplCommissionType') || {}).value || 'CPA';
+    d.offer_image_url = (document.getElementById('tplOfferImage') || {}).value || '';
+    d.landing_url = (document.getElementById('tplLandingUrl') || {}).value || '';
+    d.manager_name = (document.getElementById('tplManagerName') || {}).value || '';
+    d.manager_email = (document.getElementById('tplManagerEmail') || {}).value || '';
+    d.manager_telegram = (document.getElementById('tplManagerTg') || {}).value || '';
+  }
+  return d;
+}
+
+function getComplianceData() {
+  var c = _settings.emailCompliance || {};
+  return {company: c.company || 'Clima Official', address: c.address || '', website: c.website || 'https://climaofficial.com', unsubscribe_url: c.unsubscribe_url || '#'};
+}
+
+function getSelectedSmtp() {
+  var idx = document.getElementById('ecSmtpSelect').value;
+  if (idx === '' || !_settings.smtpAccounts || !_settings.smtpAccounts[idx]) return null;
+  return _settings.smtpAccounts[idx];
+}
+
+/* --- Preview --- */
+function previewEmail() {
+  var tpl = document.getElementById('ecTemplateSelect').value;
+  if (!tpl) { toast('Select a template first', 'error'); return; }
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  if (!notifyUrl) { toast('Set Shaver API URL in Settings', 'error'); return; }
+  var body = {action:'preview', template:tpl, data:collectTemplateData(), compliance:getComplianceData()};
+  document.getElementById('ecPreviewContent').innerHTML = '<p style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Building preview...</p>';
+  document.getElementById('ecPreviewModal').style.display = 'flex';
+  fetch(notifyUrl, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success && res.html) {
+        document.getElementById('ecPreviewContent').innerHTML = '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">' + res.html + '</div>';
+      } else {
+        document.getElementById('ecPreviewContent').innerHTML = '<p style="color:var(--red);">' + escHtml(res.error || 'Preview failed') + '</p>';
+      }
+    })
+    .catch(function(err) { document.getElementById('ecPreviewContent').innerHTML = '<p style="color:var(--red);">Network error</p>'; });
+}
+
+/* --- Send --- */
+function sendEmails() {
+  var tpl = document.getElementById('ecTemplateSelect').value;
+  var subject = document.getElementById('ecSubject').value.trim();
+  var smtp = getSelectedSmtp();
+  var selected = _ecRecipients.filter(function(r) { return r.selected; });
+  if (!tpl) { toast('Select a template', 'error'); return; }
+  if (!smtp) { toast('Select an SMTP account', 'error'); return; }
+  if (!selected.length) { toast('Select at least one recipient', 'error'); return; }
+  if (!subject) { toast('Enter a subject', 'error'); return; }
+
+  var resultEl = document.getElementById('ecSendResult');
+  resultEl.innerHTML = '<span style="color:var(--primary);font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Sending to ' + selected.length + ' recipient(s)...</span>';
+
+  var notifyUrl = (_settings.shaverApiUrl || '').replace('api.php', 'notify.php');
+  var body = {
+    action: 'send_email',
+    template: tpl,
+    subject: subject,
+    data: collectTemplateData(),
+    compliance: getComplianceData(),
+    smtp: {host: smtp.host, port: smtp.port || 465, user: smtp.user, pass: smtp.pass, from_name: smtp.from_name, from_email: smtp.from_email},
+    recipients: selected.map(function(r) { return {email: r.email, name: r.name}; })
+  };
+
+  fetch(notifyUrl, {method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success) {
+        var msg = '<span style="color:var(--green);font-size:12px;"><i class="fas fa-check-circle"></i> Sent: ' + (res.sent || 0) + ' | Failed: ' + (res.failed || 0) + '</span>';
+        if (res.failed > 0 && res.results) {
+          var errs = res.results.filter(function(r) { return r.status === 'failed'; }).map(function(r) { return r.email + ': ' + r.error; });
+          if (errs.length) msg += '<br><span style="font-size:11px;color:var(--red);">' + escHtml(errs.join(', ')) + '</span>';
+        }
+        resultEl.innerHTML = msg;
+        /* Log to Firebase */
+        var logKey = 'EH' + Date.now().toString(36);
+        var logData = {
+          ts: Date.now(), date: new Date().toISOString().split('T')[0],
+          template: tpl, subject: subject,
+          smtpLabel: smtp.label || smtp.from_email, smtpEmail: smtp.from_email,
+          totalRecipients: selected.length, sentCount: res.sent || 0, failedCount: res.failed || 0,
+          recipients: res.results || selected.map(function(r) { return {email:r.email, name:r.name, status:'unknown'}; })
+        };
+        fbPut('tracker/emailHistory/' + logKey, logData);
+      } else {
+        resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> ' + escHtml(res.error || 'Send failed') + '</span>';
+      }
+    })
+    .catch(function(err) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;">Network error: ' + escHtml(err.message) + '</span>'; });
+}
+
+/* --- History --- */
+function loadEmailHistory() {
+  var tbody = document.getElementById('ecHistoryBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+  fbGet('tracker/emailHistory').then(function(data) {
+    if (!data) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">No emails sent yet</td></tr>'; return; }
+    var rows = [];
+    Object.keys(data).forEach(function(k) { var d = data[k]; d._key = k; rows.push(d); });
+    rows.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+    var h = '';
+    rows.slice(0, 50).forEach(function(r) {
+      var tplNames = {sale_notification:'Sale', packing_slip:'Packing Slip', review_reminder:'Review', new_offer:'New Offer'};
+      h += '<tr style="cursor:pointer;" onclick="showHistoryDetail(\'' + r._key + '\')">';
+      h += '<td style="font-size:12px;white-space:nowrap;">' + escHtml(r.date || '-') + '</td>';
+      h += '<td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#f1f5f9;">' + (tplNames[r.template] || r.template || '-') + '</span></td>';
+      h += '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(r.subject || '-') + '</td>';
+      h += '<td style="font-size:12px;">' + escHtml(r.smtpLabel || '-') + '</td>';
+      h += '<td style="font-size:12px;text-align:center;">' + (r.totalRecipients || 0) + '</td>';
+      h += '<td style="font-size:12px;text-align:center;color:var(--green);">' + (r.sentCount || 0) + '</td>';
+      h += '<td style="font-size:12px;text-align:center;color:' + ((r.failedCount || 0) > 0 ? 'var(--red)' : '#94a3b8') + ';">' + (r.failedCount || 0) + '</td>';
+      h += '<td><i class="fas fa-chevron-right" style="color:#94a3b8;font-size:10px;"></i></td>';
+      h += '</tr>';
+    });
+    tbody.innerHTML = h || '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">No emails sent yet</td></tr>';
+  });
+}
+
+function showHistoryDetail(key) {
+  fbGet('tracker/emailHistory/' + key).then(function(d) {
+    if (!d) return;
+    var h = '<div style="margin-bottom:12px;">';
+    h += '<div style="font-size:13px;font-weight:600;margin-bottom:4px;">' + escHtml(d.subject || '-') + '</div>';
+    h += '<div style="font-size:12px;color:#64748b;">' + escHtml(d.date || '-') + ' | ' + escHtml(d.smtpLabel || '-') + ' | ' + (d.template || '-') + '</div>';
+    h += '<div style="font-size:12px;margin-top:4px;">Sent: <span style="color:var(--green);font-weight:600;">' + (d.sentCount||0) + '</span> | Failed: <span style="color:var(--red);font-weight:600;">' + (d.failedCount||0) + '</span></div>';
+    h += '</div>';
+    h += '<div style="border:1px solid #e5e7eb;border-radius:8px;max-height:300px;overflow-y:auto;">';
+    (d.recipients || []).forEach(function(r) {
+      var color = r.status === 'sent' ? 'var(--green)' : (r.status === 'failed' ? 'var(--red)' : '#94a3b8');
+      var icon = r.status === 'sent' ? 'check-circle' : (r.status === 'failed' ? 'times-circle' : 'question-circle');
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;">';
+      h += '<i class="fas fa-' + icon + '" style="color:' + color + ';"></i>';
+      h += '<div style="flex:1;"><div style="font-size:12px;">' + escHtml(r.name || '') + '</div><div style="font-size:11px;color:#64748b;">' + escHtml(r.email) + '</div></div>';
+      h += '<span style="font-size:11px;color:' + color + ';">' + (r.status || 'unknown') + '</span>';
+      if (r.error) h += '<span style="font-size:10px;color:var(--red);margin-left:4px;">(' + escHtml(r.error) + ')</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+    document.getElementById('ecHistoryDetailContent').innerHTML = h;
+    document.getElementById('ecHistoryDetailModal').style.display = 'flex';
+  });
 }
 
 /* === CHECKOUT REPORTS === */
