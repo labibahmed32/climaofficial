@@ -241,7 +241,7 @@ if ($emailTo && !empty($emailBody)) {
     $smtpPort = 465;
     $smtpUser = 'support@climaofficial.com';
     $smtpPass = 'Labib@12345';
-    $fromAddr = trim($input['email_from'] ?? 'support@climaofficial.com');
+    $fromAddr = 'support@climaofficial.com'; // Must match SMTP auth user
     $fromName = 'Clima Tracker';
 
     $recipients = array_filter(array_map('trim', explode(',', $emailTo)));
@@ -293,17 +293,22 @@ function _sendSmtp($host, $port, $user, $pass, $fromAddr, $fromName, $to, $subje
     $r = fgets($sock, 512);
     if (substr($r, 0, 3) !== '354') { fclose($sock); return "DATA rejected: $r"; }
 
-    // Build message
+    // Build message with proper headers
     $msgId = '<' . uniqid('clima_', true) . '@climaofficial.com>';
-    $msg  = "From: $fromName <$fromAddr>\r\n";
+    $date = date('r'); // RFC 2822 date
+    $msg  = "Date: $date\r\n";
+    $msg .= "From: $fromName <$fromAddr>\r\n";
+    $msg .= "Reply-To: $fromAddr\r\n";
+    $msg .= "Return-Path: <$fromAddr>\r\n";
     $msg .= "To: $to\r\n";
-    $msg .= "Subject: $subject\r\n";
+    $msg .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
     $msg .= "MIME-Version: 1.0\r\n";
     $msg .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $msg .= "Content-Transfer-Encoding: base64\r\n";
     $msg .= "Message-ID: $msgId\r\n";
     $msg .= "X-Mailer: ClimaTracker/1.0\r\n";
     $msg .= "\r\n";
-    $msg .= $htmlBody;
+    $msg .= chunk_split(base64_encode($htmlBody));
     $msg .= "\r\n.\r\n";
 
     fwrite($sock, $msg);
