@@ -624,6 +624,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <th class="th-sort" id="th-v-ts" onclick="sortVisitors('ts')">Date <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-v-ip" onclick="sortVisitors('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-v-country" onclick="sortVisitors('country')">Country <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-v-device" onclick="sortVisitors('device')">Device <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-v-platform" onclick="sortVisitors('platform')">Platform <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-v-affId" onclick="sortVisitors('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
 <th>Offer</th>
@@ -2664,6 +2665,7 @@ function renderVisitorsTable() {
     switch(visitorsSortField) {
       case 'ip': va=a.ip||''; vb=b.ip||''; break;
       case 'country': va=a.country||''; vb=b.country||''; break;
+      case 'device': va=a.device||''; vb=b.device||''; break;
       case 'platform': va=detectPlatform(a.url,a.affId); vb=detectPlatform(b.url,b.affId); break;
       case 'affId': va=extractAffiliateId(a.url,a.affId)||''; vb=extractAffiliateId(b.url,b.affId)||''; break;
       case 'scroll': va=a.scrollMax||0; vb=b.scrollMax||0; break;
@@ -2681,7 +2683,7 @@ function renderVisitorsTable() {
   var start = visitorsPageNum * PER_PAGE;
   var page = all.slice(start, start + PER_PAGE);
   var body = document.getElementById('visitorsBody');
-  if (!page.length) { body.innerHTML = '<tr><td colspan="12" class="empty-state"><p>No visitors found</p></td></tr>'; document.getElementById('visitorsPag').innerHTML = ''; return; }
+  if (!page.length) { body.innerHTML = '<tr><td colspan="13" class="empty-state"><p>No visitors found</p></td></tr>'; document.getElementById('visitorsPag').innerHTML = ''; return; }
   body.innerHTML = page.map(function(v) {
     var offer = _offers.find(function(o) { return o._id === v.offerId; });
     var offerName = offer ? offer.name : (v.offerId || '-');
@@ -2705,6 +2707,7 @@ function renderVisitorsTable() {
     return '<tr><td style="font-size:11px;">' + formatDate(v.ts) + '</td>' +
       '<td title="' + escHtml(v.ip || '') + '"><code style="font-size:11px;">' + escHtml(ipShort) + '</code></td>' +
       '<td>' + escHtml(v.country || '?') + '</td>' +
+      '<td>' + (v.device === 'mobile' ? '<i class="fas fa-mobile-alt" style="color:var(--primary);"></i> Mobile' : '<i class="fas fa-desktop" style="color:var(--text-muted);"></i> Desktop') + '</td>' +
       '<td>' + platformBadge + '</td>' +
       '<td>' + (affId ? '<span class="badge badge-blue" style="font-size:10px;">' + escHtml(affId) + '</span>' : '<span style="color:var(--text-muted);">direct</span>') + '</td>' +
       '<td title="' + escHtml(v.offerId || '') + '">' + escHtml(offerName) + '</td>' +
