@@ -1132,6 +1132,34 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 </div>
 
+<!-- Data Cleanup -->
+<div class="tool-card" style="border-color:#fee2e2;">
+<div class="tool-header" style="cursor:pointer;" onclick="this.parentElement.querySelector('.tool-body').style.display=this.parentElement.querySelector('.tool-body').style.display==='none'?'':'none'">
+<div class="tool-title"><i class="fas fa-trash-alt" style="color:var(--red);"></i> Data Cleanup</div>
+<i class="fas fa-chevron-down" style="color:var(--text-muted);font-size:11px;"></i>
+</div>
+<div class="tool-body" style="display:none;">
+<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Delete tracking data by date range. This cannot be undone.</p>
+<div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+<div class="form-group" style="margin:0;flex:1;min-width:130px;"><label>From Date</label><input id="cleanupFrom" type="date"></div>
+<div class="form-group" style="margin:0;flex:1;min-width:130px;"><label>To Date</label><input id="cleanupTo" type="date"></div>
+</div>
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanVisitors" checked> Visitors</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanSales" checked> Sales</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanCheckouts" checked> Checkouts</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanThankyou" checked> Thank You</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanFraud" checked> Fraud Checks</label>
+<label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="cleanUpsells" checked> Upsells</label>
+</div>
+<div style="margin-top:12px;display:flex;gap:8px;">
+<button class="btn-sm" style="background:var(--red);color:#fff;border:none;" onclick="cleanupData()"><i class="fas fa-trash"></i> Delete Selected Data</button>
+<button class="btn-sm" style="background:var(--red);color:#fff;border:none;" onclick="cleanupAllData()"><i class="fas fa-bomb"></i> Delete ALL Data</button>
+</div>
+<div id="cleanupStatus" style="margin-top:8px;font-size:12px;color:var(--text-muted);"></div>
+</div>
+</div>
+
 <!-- Save -->
 <button class="btn-primary-sm" onclick="saveAllSettings()" style="width:100%;padding:13px;font-size:14px;font-weight:700;border-radius:10px;margin-top:16px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);"><i class="fas fa-save" style="margin-right:8px;"></i> Save All Settings</button>
 
@@ -4219,6 +4247,91 @@ function loadSettings() {
     document.getElementById('setCompanyAddress').value = c.address || '';
     document.getElementById('setCompanyWebsite').value = c.website || '';
     document.getElementById('setUnsubscribeUrl').value = c.unsubscribe_url || '';
+  });
+}
+
+function cleanupData() {
+  var from = document.getElementById('cleanupFrom').value;
+  var to = document.getElementById('cleanupTo').value;
+  if (!from || !to) { toast('Select both From and To dates', 'error'); return; }
+  if (from > to) { toast('From date must be before To date', 'error'); return; }
+  if (!confirm('Delete all selected data from ' + from + ' to ' + to + '? This cannot be undone!')) return;
+  var status = document.getElementById('cleanupStatus');
+  status.textContent = 'Deleting...';
+  var dates = [];
+  var cur = new Date(from + 'T00:00:00');
+  var end = new Date(to + 'T00:00:00');
+  while (cur <= end) {
+    dates.push(cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0'));
+    cur.setDate(cur.getDate() + 1);
+  }
+  var promises = [];
+  var doVisitors = document.getElementById('cleanVisitors').checked;
+  var doSales = document.getElementById('cleanSales').checked;
+  var doCheckouts = document.getElementById('cleanCheckouts').checked;
+  var doThankyou = document.getElementById('cleanThankyou').checked;
+  var doFraud = document.getElementById('cleanFraud').checked;
+  var doUpsells = document.getElementById('cleanUpsells').checked;
+  /* Visitors are stored by date key */
+  if (doVisitors) {
+    dates.forEach(function(d) {
+      promises.push(fetch(FB + '/tracker/visitors/' + d + '.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+    });
+  }
+  /* Sales/checkouts/etc need to be fetched then filtered by date */
+  if (doSales) {
+    promises.push(fbGet('tracker/sales').then(function(sales) {
+      if (!sales) return;
+      var deletes = [];
+      Object.keys(sales).forEach(function(k) {
+        var s = sales[k];
+        if (s.date >= from && s.date <= to) {
+          deletes.push(fetch(FB + '/tracker/sales/' + k + '.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+        }
+      });
+      return Promise.all(deletes);
+    }));
+  }
+  if (doCheckouts) {
+    promises.push(fetch(FB + '/tracker/checkout-sessions.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+  }
+  if (doThankyou) {
+    promises.push(fetch(FB + '/tracker/thankyou-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+  }
+  if (doFraud) {
+    promises.push(fetch(FB + '/tracker/fraud-checks.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+  }
+  if (doUpsells) {
+    promises.push(fetch(FB + '/tracker/upsell-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }));
+  }
+  Promise.all(promises).then(function() {
+    status.innerHTML = '<span style="color:var(--green);"><i class="fas fa-check"></i> Data deleted successfully!</span>';
+    toast('Data cleaned up for ' + from + ' to ' + to, 'success');
+    _autoRefresh();
+  }).catch(function(err) {
+    status.innerHTML = '<span style="color:var(--red);">Error: ' + err.message + '</span>';
+  });
+}
+
+function cleanupAllData() {
+  if (!confirm('DELETE ALL tracking data? Visitors, Sales, Checkouts, Thank You, Fraud, Upsells — EVERYTHING will be wiped!')) return;
+  if (!confirm('Are you SURE? This cannot be undone!')) return;
+  var status = document.getElementById('cleanupStatus');
+  status.textContent = 'Deleting all data...';
+  Promise.all([
+    fetch(FB + '/tracker/visitors.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
+    fetch(FB + '/tracker/sales.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
+    fetch(FB + '/tracker/checkout-sessions.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
+    fetch(FB + '/tracker/thankyou-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
+    fetch(FB + '/tracker/fraud-checks.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } }),
+    fetch(FB + '/tracker/upsell-events.json', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + authToken } })
+  ]).then(function() {
+    status.innerHTML = '<span style="color:var(--green);"><i class="fas fa-check"></i> All data deleted!</span>';
+    toast('All tracking data has been wiped', 'success');
+    _visitors = {}; _sales = []; _checkouts = {}; _thankyou = {}; _fraudChecks = {}; _upsells = {};
+    _autoRefresh();
+  }).catch(function(err) {
+    status.innerHTML = '<span style="color:var(--red);">Error: ' + err.message + '</span>';
   });
 }
 
