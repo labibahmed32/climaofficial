@@ -2565,24 +2565,20 @@ function detectPlatform(url, affId) {
 
 /* Detect platform for a sale - checks visitor first, then sale data */
 function detectSalePlatform(sale) {
-  /* First try to find visitor and use their platform */
+  /* Check sale's own platform field first (set by ct.php from URL params) */
+  if (sale.platform) return sale.platform;
+
+  /* Try to find visitor and use their platform */
   var visitor = getVisitorById(sale.subId);
   if (visitor) {
+    if (visitor.platform) return visitor.platform;
     var affId = extractAffiliateId(visitor.url, visitor.affId);
     return detectPlatform(visitor.url, affId);
   }
 
-  /* If no visitor found, check sale's own data */
-  /* Check if sale came from BuyGoods (has bgOrderId or bgEmail patterns) */
+  /* Check BuyGoods indicators */
   if (sale.bgOrderId || sale.bgEmail || sale.bgPhone) return 'buygoods';
 
-  /* Check sale's affId - if it exists and sale has subId, likely from tracking */
-  if (sale.affId && sale.affId !== 'direct') {
-    /* Could be from any platform, default to clima for tracked sales */
-    return 'clima';
-  }
-
-  /* Default to clima if no clear platform indicators */
   return 'clima';
 }
 
