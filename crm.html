@@ -4323,7 +4323,9 @@ function sendTestEmail() {
       if (res.success && res.email_sent > 0) {
         resultEl.innerHTML = '<span style="color:var(--green);font-size:12px;"><i class="fas fa-check-circle"></i> Test email sent to ' + res.email_sent + ' recipient(s)!</span>';
       } else {
-        resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> ' + escHtml(res.error || 'Failed to send email') + '</span>';
+        var errMsg = (res.errors && res.errors.length) ? res.errors.join(', ') : (res.error || 'Failed to send email');
+        resultEl.innerHTML = '<span style="color:var(--red);font-size:12px;"><i class="fas fa-times-circle"></i> ' + escHtml(errMsg) + '</span>';
+        console.log('Email test response:', JSON.stringify(res));
       }
     })
     .catch(function(err) {

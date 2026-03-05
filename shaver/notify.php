@@ -23,6 +23,9 @@ $fb = rtrim($input['firebase_url'] ?? '', '/');
 $emailSent = 0;
 $tgSent = 0;
 $errors = [];
+$tgMessage = '';
+$emailBody = '';
+$emailSubject = 'New Sale Notification';
 
 // --- Backwards compat: if tg_message/email_body already provided, use them directly ---
 if (!empty($input['tg_message']) || !empty($input['email_body'])) {
@@ -248,4 +251,5 @@ if ($emailTo && !empty($emailBody)) {
     }
 }
 
-echo json_encode(['success' => true, 'email_sent' => $emailSent, 'tg_sent' => $tgSent, 'errors' => $errors]);
+$debug = ['has_email_body' => !empty($emailBody), 'has_tg_msg' => !empty($tgMessage), 'email_to' => $input['email_to'] ?? '', 'has_sale' => !empty($sale)];
+echo json_encode(['success' => true, 'email_sent' => $emailSent, 'tg_sent' => $tgSent, 'errors' => $errors, 'debug' => $debug]);
