@@ -123,7 +123,6 @@ if (!empty($input['tg_message']) || !empty($input['email_body'])) {
     if ($upsellTotal > 0) $tgMessage .= "🛒 Upsells: +\$" . number_format($upsellTotal, 2) . "  |  Total: <b>\$" . number_format($totalRevenue, 2) . "</b>\n";
     if ($orderIdGlobal) $tgMessage .= "📦 Global Order: <code>$orderIdGlobal</code>\n";
     if ($orderId && $orderId !== '-' && $orderId !== $orderIdGlobal) $tgMessage .= "🔖 Order ID: <code>$orderId</code>\n";
-    if (!$orderIdGlobal && $orderId && $orderId !== '-') $tgMessage .= "📦 Order: <code>$orderId</code>\n";
     $tgMessage .= "📋 Offer: $offerName" . ($variant ? " ($variant)" : "") . "\n";
     $tgMessage .= "👤 Affiliate: <b>$affId</b>\n";
     $tgMessage .= "\n👤 <b>Customer</b>\n";
@@ -165,7 +164,6 @@ if (!empty($input['tg_message']) || !empty($input['email_body'])) {
     $rows = [];
     if ($orderIdGlobal) $rows[] = ['Global Order ID', "<code style=\"background:#f1f5f9;padding:2px 8px;border-radius:4px;\">$orderIdGlobal</code>"];
     if ($orderId && $orderId !== '-' && $orderId !== $orderIdGlobal) $rows[] = ['Order ID', "<code style=\"background:#f1f5f9;padding:2px 8px;border-radius:4px;\">$orderId</code>"];
-    if (!$orderIdGlobal && $orderId && $orderId !== '-') $rows[] = ['Order ID', "<code style=\"background:#f1f5f9;padding:2px 8px;border-radius:4px;\">$orderId</code>"];
     $rows = array_merge($rows, [
         ['Affiliate', "<strong>$affId</strong>"],
         ['Platform', $platName],
