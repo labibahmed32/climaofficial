@@ -5693,7 +5693,14 @@ function loadShaver() {
 }
 
 function loadSessions() {
-  switchSessionsTab('sessions');
+  if (!_shaverDomains.length) {
+    shaverAPI('get_domains').then(function(res) {
+      if (res.success) { _shaverDomains = res.domains || []; }
+      switchSessionsTab('sessions');
+    }).catch(function() { switchSessionsTab('sessions'); });
+  } else {
+    switchSessionsTab('sessions');
+  }
 }
 
 function switchSessionsTab(tab) {
