@@ -224,40 +224,24 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
   fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   fetch('https://api64.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){if(d.ip&&d.ip.indexOf(':')>-1)ipData.ipv6=d.ip;else if(!ipData.ipv4)ipData.ipv4=d.ip||'';if(!ipData.ip)ipData.ip=d.ip||'';}).catch(function(){});
   var _fp={tz:(typeof Intl!=='undefined')?Intl.DateTimeFormat().resolvedOptions().timeZone:'',lang:navigator.language||'',scr:screen.width+'x'+screen.height,plat:navigator.platform||'',cores:navigator.hardwareConcurrency||0,touch:'ontouchstart' in window,cookies:navigator.cookieEnabled,dnt:navigator.doNotTrack||''};
-  var _scrollEl=null;
-  function _findScrollEl(){
-    if(_scrollEl)return;
-    /* Check common scrollable containers */
-    var candidates=document.querySelectorAll('div,main,section,article');
-    for(var i=0;i<candidates.length;i++){
-      var el=candidates[i];
-      if(el.scrollHeight>el.clientHeight+50){
-        var ov=getComputedStyle(el).overflowY;
-        if(ov==='auto'||ov==='scroll'){_scrollEl=el;el.addEventListener('scroll',_checkScroll);return;}
+  function _getScroll(){
+    try{
+      var sy=window.scrollY||window.pageYOffset||0;
+      if(!sy)sy=document.documentElement.scrollTop||0;
+      if(!sy)sy=document.body?document.body.scrollTop:0;
+      var dh=Math.max(document.documentElement.scrollHeight||0,document.body?document.body.scrollHeight:0,document.documentElement.offsetHeight||0,document.body?document.body.offsetHeight:0);
+      var vh=window.innerHeight||document.documentElement.clientHeight||0;
+      /* If still 0, brute-force: scan ALL elements for the one being scrolled */
+      if(sy===0&&document.body){
+        var all=document.body.querySelectorAll('*');
+        for(var i=0;i<all.length;i++){try{if(all[i].scrollTop>0&&all[i].scrollHeight>all[i].clientHeight+100){sy=all[i].scrollTop;dh=all[i].scrollHeight;vh=all[i].clientHeight;break;}}catch(e){}}
       }
-    }
+      if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax)scrollMax=pct;}
+    }catch(e){}
   }
-  function _checkScroll(){
-    var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-    var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0);
-    var vh=window.innerHeight||0;
-    if(sy===0){
-      _findScrollEl();
-      if(_scrollEl){sy=_scrollEl.scrollTop;dh=_scrollEl.scrollHeight;vh=_scrollEl.clientHeight;}
-    }
-    if(dh>vh){var pct=Math.min(100,Math.round(((sy+vh)/dh)*100));if(pct>scrollMax){scrollMax=pct;}}
-  }
-  /* Debug: log scroll state every 5s so we can see what's happening */
-  setInterval(function(){
-    var sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop||document.body.scrollTop||0;
-    var dh=Math.max(document.documentElement.scrollHeight||0,document.body.scrollHeight||0);
-    var vh=window.innerHeight||0;
-    var inner=_scrollEl?_scrollEl.scrollTop:'-';
-    console.log('[CT] scrollDebug: scrollMax='+scrollMax+' windowSY='+sy+' docH='+dh+' viewH='+vh+' innerElScroll='+inner);
-  },5000);
-  window.addEventListener('scroll',_checkScroll,true);
-  document.addEventListener('scroll',_checkScroll,true);
-  setInterval(_checkScroll,2000);
+  window.addEventListener('scroll',_getScroll,true);
+  document.addEventListener('scroll',_getScroll,true);
+  setInterval(_getScroll,3000);
   var platform=localStorage.getItem('_ct_platform')||'';
   if(!platform){if(P.get('aff_id')||P.get('affid'))platform='buygoods';else if(location.hash.indexOf('aff=')>-1)platform='digistore';}
   if(platform)localStorage.setItem('_ct_platform',platform);
@@ -266,7 +250,7 @@ if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES)console.log('%c✓ BuyGoods tracking injected
   function _ctLog(action,extra){var d={action:action,ts:Date.now()};if(extra)for(var k in extra)d[k]=extra[k];fetch(FB+'/tracker/visitors/'+ds+'/'+sid+'/clicks.json',{method:'POST',body:JSON.stringify(d)});}
   if(LINK_DOMAIN){setTimeout(function(){var links=document.querySelectorAll('a[href*="'+LINK_DOMAIN+'"]');for(var i=0;i<links.length;i++){var h=links[i].getAttribute('href');if(h.indexOf('subid=')===-1)links[i].setAttribute('href',h+(h.indexOf('?')===-1?'?':'&')+'subid='+sid);}},2000);}
   try{localStorage.setItem('_ct_date',ds);}catch(e){}
-  function _ctSend(){var d={ua:ua.substr(0,200),device:mob?'mobile':'desktop',browser:br,os:os,ref:document.referrer.substr(0,200),url:location.href.substr(0,300),affId:aff,subId:sid,sub1:sub1,sub2:sub2,offerId:OID,scrollMax:scrollMax,timeOnPage:Math.round((Date.now()-startTime)/1000),buyClicked:buyClicked,variant:variant,fingerprint:_fp,ts:Date.now()};if(platform)d.platform=platform;if(ipData.ip){d.ip=ipData.ip;try{localStorage.setItem('_ct_ip',ipData.ip);}catch(e){}}if(ipData.ipv4){d.ipv4=ipData.ipv4;try{localStorage.setItem('_ct_ipv4',ipData.ipv4);}catch(e){}}if(ipData.ipv6)d.ipv6=ipData.ipv6;if(ipData.country)d.country=ipData.country;if(ipData.countryCode)d.countryCode=ipData.countryCode;if(ipData.region)d.region=ipData.region;if(ipData.city)d.city=ipData.city;if(ipData.zip)d.zip=ipData.zip;if(ipData.lat)d.lat=ipData.lat;if(ipData.lon)d.lon=ipData.lon;if(ipData.timezone)d.timezone=ipData.timezone;if(ipData.isp)d.isp=ipData.isp;if(ipData.asn)d.asn=ipData.asn;fetch(FB+'/tracker/visitors/'+ds+'/'+sid+'.json',{method:'PATCH',body:JSON.stringify(d),keepalive:true});}
+  function _ctSend(){_getScroll();var d={ua:ua.substr(0,200),device:mob?'mobile':'desktop',browser:br,os:os,ref:document.referrer.substr(0,200),url:location.href.substr(0,300),affId:aff,subId:sid,sub1:sub1,sub2:sub2,offerId:OID,scrollMax:scrollMax,timeOnPage:Math.round((Date.now()-startTime)/1000),buyClicked:buyClicked,variant:variant,fingerprint:_fp,ts:Date.now()};if(platform)d.platform=platform;if(ipData.ip){d.ip=ipData.ip;try{localStorage.setItem('_ct_ip',ipData.ip);}catch(e){}}if(ipData.ipv4){d.ipv4=ipData.ipv4;try{localStorage.setItem('_ct_ipv4',ipData.ipv4);}catch(e){}}if(ipData.ipv6)d.ipv6=ipData.ipv6;if(ipData.country)d.country=ipData.country;if(ipData.countryCode)d.countryCode=ipData.countryCode;if(ipData.region)d.region=ipData.region;if(ipData.city)d.city=ipData.city;if(ipData.zip)d.zip=ipData.zip;if(ipData.lat)d.lat=ipData.lat;if(ipData.lon)d.lon=ipData.lon;if(ipData.timezone)d.timezone=ipData.timezone;if(ipData.isp)d.isp=ipData.isp;if(ipData.asn)d.asn=ipData.asn;fetch(FB+'/tracker/visitors/'+ds+'/'+sid+'.json',{method:'PATCH',body:JSON.stringify(d),keepalive:true});}
   _ctSend();
   setInterval(_ctSend,15000);
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')_ctSend();});
