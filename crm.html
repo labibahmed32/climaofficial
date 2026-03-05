@@ -5526,7 +5526,7 @@ function _autoRefresh() {
   if (page === 'dashboard') {
     Promise.all([loadVisitorData(), loadSaleData(), loadCheckoutData(),
       loadUpsellData(), loadThankYouData(), loadFraudCheckData()]).then(function() {
-      renderStats(); renderDailyChart(); renderNetworkOverview();
+      renderStats(); renderDailyChart();
       renderRecentSales(); renderShavedSales(); renderTopCountries(); renderRecentVisitors();
       _refreshing = false;
     }).catch(function(err) {
