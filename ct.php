@@ -106,10 +106,16 @@ function _stableHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i
 function _etDate(){try{var s=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});return new Date(s);}catch(e){return new Date();}}
 function _etDateStr(){var d=_etDate();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
+/* Notify URL (constructed server-side so we don't depend on settings read) */
+var _NOTIFY='<?php echo rtrim(dirname($TRACKER_API), "/") . "/notify.php"; ?>';
+
 /* Sale notification helper — sends Telegram + Email via notify.php */
 function _notifySale(sale){
-  try{fetch(FB+'/tracker/settings.json').then(function(r){return r.json();}).then(function(cfg){
-    if(!cfg)return;
+  try{fetch(FB+'/tracker/settings.json').then(function(r){
+    if(!r.ok){console.warn('[CT] Settings fetch failed:',r.status);return null;}
+    return r.json();
+  }).then(function(cfg){
+    if(!cfg){console.warn('[CT] No settings config found');return;}
     var body={sale:sale,firebase_url:FB};
     if(cfg.tgEnabled&&cfg.tgBotToken&&cfg.tgChatIds){
       body.tg_token=cfg.tgBotToken;
@@ -119,12 +125,15 @@ function _notifySale(sale){
       body.email_to=cfg.emailTo;
       body.email_from=cfg.emailFrom||'noreply@climaofficial.com';
     }
-    if(!body.tg_token&&!body.email_to)return;
+    if(!body.tg_token&&!body.email_to){console.warn('[CT] No notification channels configured');return;}
     if(cfg.ipqsKey)body.ipqs_key=cfg.ipqsKey;
     if(cfg.phpProxyUrl)body.proxy_url=cfg.phpProxyUrl;
-    var notifyUrl=(cfg.shaverApiUrl||cfg.trackerApiUrl||'').replace('api.php','notify.php');
-    if(notifyUrl)fetch(notifyUrl,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'application/json'},keepalive:true});
-  }).catch(function(){});}catch(e){}
+    var notifyUrl=_NOTIFY;
+    console.log('[CT] Sending sale notification to',notifyUrl);
+    fetch(notifyUrl,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'application/json'},keepalive:true}).then(function(nr){
+      console.log('[CT] Notification response:',nr.status);
+    }).catch(function(e){console.warn('[CT] Notification POST failed:',e);});
+  }).catch(function(e){console.warn('[CT] _notifySale error:',e);});}catch(e){console.warn('[CT] _notifySale exception:',e);}
 }
 
 <?php if ($type === 'lp'): ?>

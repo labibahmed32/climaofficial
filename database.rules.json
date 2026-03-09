@@ -94,11 +94,11 @@
         ".indexOn": ["date", "affId", "offerId", "status", "subId", "orderIdGlobal"]
       },
       "offers": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": "auth != null"
       },
       "settings": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": "auth != null"
       },
       "ipqs": {
