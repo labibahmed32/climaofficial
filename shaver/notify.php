@@ -586,7 +586,13 @@ default:
         if ($fraudProxy) $fraudDetails[] = '🔒 Proxy';
 
         // ========== BUILD TELEGRAM MESSAGE ==========
-        $tgMessage = "💰 <b>NEW SALE!</b>\n";
+        $isUpsellNotify = !empty($sale['_upsellNotify']);
+        $upsellNum = intval($sale['_upsellNum'] ?? 0);
+        if ($isUpsellNotify && $upsellNum > 0) {
+            $tgMessage = "🛒 <b>UPSELL $upsellNum ACCEPTED!</b>\n";
+        } else {
+            $tgMessage = "💰 <b>NEW SALE!</b>\n";
+        }
         $tgMessage .= "━━━━━━━━━━━━━━━\n";
         $tgMessage .= "💵 <b>\$$amount</b>  |  $platName\n";
         if ($upsellTotal > 0) $tgMessage .= "🛒 Upsells: +\$" . number_format($upsellTotal, 2) . "  |  Total: <b>\$" . number_format($totalRevenue, 2) . "</b>\n";
@@ -609,7 +615,11 @@ default:
         $tgMessage .= "\n📅 $date";
 
         // ========== BUILD EMAIL ==========
-        $emailSubject = "New Sale: \$$amount — $offerName";
+        if ($isUpsellNotify && $upsellNum > 0) {
+            $emailSubject = "Upsell $upsellNum Accepted: \$$amount — $offerName";
+        } else {
+            $emailSubject = "New Sale: \$$amount — $offerName";
+        }
 
         $fraudBadge = '';
         if ($fraudScore !== '-') {
@@ -623,7 +633,11 @@ default:
         $emailBody = '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;">';
         // Header
         $emailBody .= '<div style="background:linear-gradient(135deg,#0A6C80 0%,#085a6b 100%);padding:24px 28px;border-radius:12px 12px 0 0;">';
-        $emailBody .= '<h1 style="color:#fff;margin:0;font-size:20px;">💰 New Sale — $' . $amount . '</h1>';
+        if ($isUpsellNotify && $upsellNum > 0) {
+            $emailBody .= '<h1 style="color:#fff;margin:0;font-size:20px;">🛒 Upsell ' . $upsellNum . ' Accepted — $' . $amount . '</h1>';
+        } else {
+            $emailBody .= '<h1 style="color:#fff;margin:0;font-size:20px;">💰 New Sale — $' . $amount . '</h1>';
+        }
         $emailBody .= '<p style="color:rgba(255,255,255,.7);margin:6px 0 0;font-size:13px;">' . $offerName . ' | ' . $platName . ' | ' . $date . '</p>';
         $emailBody .= '</div>';
         // Body
