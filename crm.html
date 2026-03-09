@@ -1973,16 +1973,48 @@ function addVariantRow(name, code, cpa, checkoutLink, amount) {
   container.appendChild(div);
 }
 
-function addUpsellRow(num, url, price) {
+function addUpsellRow(num, url, price, packs) {
   var container = document.getElementById('upsellRows');
-  var count = container.querySelectorAll('.ups-row').length + 1;
+  var count = container.querySelectorAll('.ups-group').length + 1;
+  var uNum = num || count;
   var div = document.createElement('div');
-  div.className = 'ups-row';
-  div.innerHTML = '<span style="font-size:12px;font-weight:600;min-width:20px;">#' + (num || count) + '</span>' +
-    '<input type="text" class="ups-url" placeholder="Upsell page URL" value="' + escHtml(url || '') + '" style="flex:2;">' +
-    '<input type="number" class="ups-price" placeholder="Price $" value="' + (price || '') + '" step="0.01" style="max-width:100px;" title="Upsell price (e.g. 29.99)">' +
-    '<button type="button" class="del-row" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
+  div.className = 'ups-group';
+  div.setAttribute('data-unum', uNum);
+  div.style.cssText = 'border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:10px;background:#f8fafc;';
+  var header = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+    '<span style="font-size:13px;font-weight:700;color:var(--primary);">Upsell #' + uNum + '</span>' +
+    '<input type="text" class="ups-url" placeholder="Upsell page URL" value="' + escHtml(url || '') + '" style="flex:2;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;">' +
+    '<button type="button" class="del-row" onclick="this.closest(\'.ups-group\').remove()" style="margin-left:auto;"><i class="fas fa-times"></i></button>' +
+    '</div>';
+  var packsHtml = '<div class="ups-packs" style="padding-left:28px;">';
+  if (packs && packs.length) {
+    packs.forEach(function(pk) {
+      packsHtml += _upsellPackRow(pk.name, pk.price, pk.link);
+    });
+  } else {
+    /* Single price = legacy format, convert to one pack */
+    packsHtml += _upsellPackRow(price ? '1 Pack' : '', price || '', '');
+  }
+  packsHtml += '<button type="button" onclick="addUpsellPack(this)" style="font-size:11px;color:var(--primary);background:none;border:1px dashed var(--primary);border-radius:4px;padding:4px 10px;cursor:pointer;margin-top:4px;"><i class="fas fa-plus" style="margin-right:4px;"></i>Add Pack Option</button>';
+  packsHtml += '</div>';
+  div.innerHTML = header + packsHtml;
   container.appendChild(div);
+}
+
+function _upsellPackRow(name, price, link) {
+  return '<div class="ups-pack-row" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+    '<input type="text" class="upk-name" placeholder="Pack name (e.g. 3 Bottles)" value="' + escHtml(name || '') + '" style="flex:1;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;">' +
+    '<input type="number" class="upk-price" placeholder="Price $" value="' + (price || '') + '" step="0.01" style="max-width:90px;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;">' +
+    '<input type="text" class="upk-link" placeholder="Checkout link (optional)" value="' + escHtml(link || '') + '" style="flex:1;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;">' +
+    '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;"><i class="fas fa-times"></i></button>' +
+    '</div>';
+}
+
+function addUpsellPack(btn) {
+  var packsDiv = btn.parentElement;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = _upsellPackRow('', '', '');
+  packsDiv.insertBefore(tmp.firstChild, btn);
 }
 
 function openOfferModal(id) {
@@ -2004,7 +2036,7 @@ function openOfferModal(id) {
       var variants = getOfferVariants(o);
       variants.forEach(function(v) { addVariantRow(v.name, v.code, v.cpa, v.checkoutLink, v.amount); });
       var upsells = getOfferUpsells(o);
-      upsells.forEach(function(u) { addUpsellRow(u.num, u.url, u.price); });
+      upsells.forEach(function(u) { addUpsellRow(u.num, u.url, u.price, u.packs); });
     }
   } else {
     document.getElementById('ofName').value = '';
@@ -2042,14 +2074,26 @@ function saveOffer() {
   }
   var upsellPages = [];
   var upsellPrices = {};
-  var upsRows = document.querySelectorAll('#upsellRows .ups-row');
-  for (var j = 0; j < upsRows.length; j++) {
-    var uu = upsRows[j].querySelector('.ups-url').value.trim();
-    var uprice = parseFloat(upsRows[j].querySelector('.ups-price').value) || 0;
-    if (uu) {
-      upsellPages.push({ num: j + 1, url: uu, price: uprice });
-      /* Also store as upsell1Price, upsell2Price format for compatibility */
-      upsellPrices['upsell' + (j + 1) + 'Price'] = uprice;
+  var upsGroups = document.querySelectorAll('#upsellRows .ups-group');
+  for (var j = 0; j < upsGroups.length; j++) {
+    var uu = upsGroups[j].querySelector('.ups-url').value.trim();
+    var packRows = upsGroups[j].querySelectorAll('.ups-pack-row');
+    var packs = [];
+    var maxPrice = 0;
+    for (var pk = 0; pk < packRows.length; pk++) {
+      var pkName = packRows[pk].querySelector('.upk-name').value.trim();
+      var pkPrice = parseFloat(packRows[pk].querySelector('.upk-price').value) || 0;
+      var pkLink = packRows[pk].querySelector('.upk-link').value.trim();
+      if (pkName || pkPrice) {
+        packs.push({ name: pkName, price: pkPrice, link: pkLink });
+        if (pkPrice > maxPrice) maxPrice = pkPrice;
+      }
+    }
+    if (uu || packs.length) {
+      var upEntry = { num: j + 1, url: uu, price: maxPrice, packs: packs };
+      upsellPages.push(upEntry);
+      /* Compatibility: store highest pack price as upsellNPrice */
+      upsellPrices['upsell' + (j + 1) + 'Price'] = maxPrice;
     }
   }
   var data = {

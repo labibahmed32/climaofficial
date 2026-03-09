@@ -621,10 +621,15 @@ default:
         if ($offer && !empty($offer['upsellPages'])) {
             foreach ($offer['upsellPages'] as $up) {
                 $num = $up['num'] ?? 0;
-                $price = floatval($up['price'] ?? 0);
                 $status = $sale['upsell' . $num] ?? '';
+                /* Check actual amount from sale first, then fall back to offer price */
+                $actualAmt = floatval($sale['upsell' . $num . 'Amount'] ?? 0);
+                $price = $actualAmt > 0 ? $actualAmt : floatval($up['price'] ?? 0);
+                $packName = $sale['upsell' . $num . 'Pack'] ?? '';
                 if ($status === 'accept') {
-                    $upsellParts[] = "Upsell $num: ✅ \$$price";
+                    $label = "Upsell $num: ✅ \$" . number_format($price, 2);
+                    if ($packName) $label .= " ($packName)";
+                    $upsellParts[] = $label;
                     $upsellTotal += $price;
                 } elseif ($status === 'decline') {
                     $upsellParts[] = "Upsell $num: ❌";
@@ -633,7 +638,15 @@ default:
         } else {
             for ($i = 1; $i <= 5; $i++) {
                 $status = $sale['upsell' . $i] ?? '';
-                if ($status === 'accept') $upsellParts[] = "Upsell $i: ✅";
+                $actualAmt = floatval($sale['upsell' . $i . 'Amount'] ?? 0);
+                $packName = $sale['upsell' . $i . 'Pack'] ?? '';
+                if ($status === 'accept') {
+                    $label = "Upsell $i: ✅";
+                    if ($actualAmt > 0) $label .= " \$" . number_format($actualAmt, 2);
+                    if ($packName) $label .= " ($packName)";
+                    $upsellParts[] = $label;
+                    $upsellTotal += $actualAmt;
+                }
                 elseif ($status === 'decline') $upsellParts[] = "Upsell $i: ❌";
             }
         }
