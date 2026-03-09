@@ -285,6 +285,69 @@ function _buildTemplate($type, $data, $compliance = []) {
             break;
 
         // --------------------------------------------------
+        //  SALE NOTIFICATION (preview / manual send)
+        // --------------------------------------------------
+        case 'sale_notification':
+            $orderId     = $data['order_id']   ?? 'ORD-00000';
+            $amount      = $data['amount']     ?? '0.00';
+            $offerName   = $data['offer_name'] ?? 'Offer';
+            $custName    = $data['customer_name']  ?? 'John Smith';
+            $custEmail   = $data['customer_email'] ?? 'customer@example.com';
+            $custPhone   = $data['customer_phone'] ?? '-';
+            $affId       = $data['affiliate_id']   ?? 'Direct';
+            $platform    = $data['platform']       ?? 'BuyGoods';
+            $ipAddr      = $data['ip']             ?? '0.0.0.0';
+            $country     = $data['country']        ?? 'US';
+            $fraudScore  = $data['fraud_score']    ?? '12';
+            $variant     = $data['variant']        ?? '';
+            $date        = $data['date']           ?? date('Y-m-d');
+
+            $fs = intval($fraudScore);
+            $fraudLabel = $fs <= 15 ? 'Clean' : ($fs <= 40 ? 'Suspect' : 'Fraud');
+            $fColor = $fs <= 15 ? '#16a34a' : ($fs <= 40 ? '#d97706' : '#dc2626');
+            $fBg    = $fs <= 15 ? '#dcfce7' : ($fs <= 40 ? '#fef9c3' : '#fee2e2');
+            $fraudBadge = "<span style=\"display:inline-block;padding:3px 10px;border-radius:20px;background:$fBg;color:$fColor;font-weight:700;font-size:13px;\">$fraudScore/100 — $fraudLabel</span>";
+
+            $subject = "New Sale: \$$amount — $offerName";
+
+            $body = '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;">';
+            // Header
+            $body .= '<div style="background:linear-gradient(135deg,#0A6C80 0%,#085a6b 100%);padding:24px 28px;border-radius:12px 12px 0 0;">';
+            $body .= '<h1 style="color:#fff;margin:0;font-size:20px;">💰 New Sale — $' . htmlspecialchars($amount) . '</h1>';
+            $body .= '<p style="color:rgba(255,255,255,.7);margin:6px 0 0;font-size:13px;">' . htmlspecialchars($offerName) . ' | ' . htmlspecialchars($platform) . ' | ' . htmlspecialchars($date) . '</p>';
+            $body .= '</div>';
+            // Body
+            $body .= '<div style="padding:24px 28px;border:1px solid #e2e8f0;border-top:none;">';
+            // Sale info
+            $body .= '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+            $rows = [
+                ['Order ID', '<code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;">' . htmlspecialchars($orderId) . '</code>'],
+                ['Affiliate', '<strong>' . htmlspecialchars($affId) . '</strong>'],
+                ['Platform', htmlspecialchars($platform)],
+                ['Variant', htmlspecialchars($variant ?: '-')],
+                ['Amount', '<strong style="color:#059669;font-size:16px;">$' . htmlspecialchars($amount) . '</strong>'],
+            ];
+            foreach ($rows as $r) {
+                $body .= '<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;width:130px;">' . $r[0] . '</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">' . $r[1] . '</td></tr>';
+            }
+            $body .= '</table>';
+            // Customer
+            $body .= '<h3 style="font-size:14px;color:#334155;margin:0 0 10px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;">👤 Customer</h3>';
+            $body .= '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+            $custRows = [['Name', $custName], ['Email', $custEmail], ['Phone', $custPhone], ['IP', "$ipAddr ($country)"]];
+            foreach ($custRows as $r) {
+                $body .= '<tr><td style="padding:6px 0;color:#64748b;font-size:12px;width:80px;">' . $r[0] . '</td><td style="padding:6px 0;font-size:12px;">' . htmlspecialchars($r[1]) . '</td></tr>';
+            }
+            $body .= '</table>';
+            // Fraud
+            $body .= '<h3 style="font-size:14px;color:#334155;margin:0 0 10px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;">🛡️ Fraud Check</h3>';
+            $body .= '<p style="margin:0 0 16px;">' . $fraudBadge . '</p>';
+            $body .= '</div>';
+            $body .= _complianceFooter($compliance);
+            $body .= '</div>';
+            break;
+
+        // --------------------------------------------------
         //  UNKNOWN TEMPLATE
         // --------------------------------------------------
         default:
