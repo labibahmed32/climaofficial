@@ -569,6 +569,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <div class="table-wrap">
 <table class="data-table" id="salesTable"><thead><tr>
 <th class="th-sort" id="th-s-ts" onclick="sortSales('ts')">Date <i class="fas fa-sort sort-ic"></i></th>
+<th class="th-sort" id="th-s-offer" onclick="sortSales('offer')">Offer <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-s-orderId" onclick="sortSales('orderId')">Order ID <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-s-ip" onclick="sortSales('ip')">IP <i class="fas fa-sort sort-ic"></i></th>
 <th class="th-sort" id="th-s-affId" onclick="sortSales('affId')">Affiliate <i class="fas fa-sort sort-ic"></i></th>
@@ -2986,7 +2987,8 @@ function renderSalesTable() {
   var filtered = _sales.filter(function(s) {
     if (search) {
       var chkS = _checkouts[s.subId] || {};
-      var haystack = ((s.affId||'')+' '+(s.offerId||'')+' '+(s.orderId||'')+' '+(s.country||'')+' '+(s.ip||'')+' '+(s.upsell1OrderId||'')+' '+(s.upsell2OrderId||'')+' '+(s.upsell3OrderId||'')+' '+(chkS.email||'')+' '+(chkS.name||'')).toLowerCase();
+      var offerS = _offers.find(function(o){return o._id===s.offerId;});
+      var haystack = ((s.affId||'')+' '+(s.offerId||'')+' '+(offerS?offerS.name:'')+' '+(s.orderId||'')+' '+(s.country||'')+' '+(s.ip||'')+' '+(s.upsell1OrderId||'')+' '+(s.upsell2OrderId||'')+' '+(s.upsell3OrderId||'')+' '+(chkS.email||'')+' '+(chkS.name||'')).toLowerCase();
       if (haystack.indexOf(search) === -1) return false;
     }
     if (statusF !== 'all' && (s.status||'pending') !== statusF) return false;
@@ -3017,6 +3019,7 @@ function renderSalesTable() {
   filtered.sort(function(a, b) {
     var va, vb;
     switch(salesSortField) {
+      case 'offer': var oa=_offers.find(function(o){return o._id===a.offerId;}), ob=_offers.find(function(o){return o._id===b.offerId;}); va=(oa?oa.name:a.offerId)||''; vb=(ob?ob.name:b.offerId)||''; break;
       case 'orderId': va=a.orderId||''; vb=b.orderId||''; break;
       case 'ip': va=a.ip||''; vb=b.ip||''; break;
       case 'affId': va=a.affId||''; vb=b.affId||''; break;
@@ -3041,7 +3044,7 @@ function renderSalesTable() {
   var start = salesPageNum * PER_PAGE;
   var page = filtered.slice(start, start + PER_PAGE);
   var body = document.getElementById('salesBody');
-  if (!page.length) { body.innerHTML = '<tr><td colspan="12" class="empty-state"><p>No sales found</p></td></tr>'; document.getElementById('salesPag').innerHTML = ''; return; }
+  if (!page.length) { body.innerHTML = '<tr><td colspan="13" class="empty-state"><p>No sales found</p></td></tr>'; document.getElementById('salesPag').innerHTML = ''; return; }
   var html = '';
   page.forEach(function(s) {
     var offer = _offers.find(function(o) { return o._id === s.offerId; });
@@ -3058,7 +3061,9 @@ function renderSalesTable() {
     var platBadge = platform === 'digistore' ? '<span class="badge" style="background:#7c3aed;color:#fff;">Digistore</span>' : platform === 'clickbank' ? '<span class="badge" style="background:#e67e22;color:#fff;">ClickBank</span>' : platform === 'buygoods' ? '<span class="badge badge-blue">BuyGoods</span>' : '<span class="badge badge-gray">Direct</span>';
     /* Get country from sale, checkout, or visitor data */
     var country = s.country || s.bgCountry || (chk ? (chk.country || chk.billingCountry) : '') || (visitor ? visitor.country : '') || '?';
+    var offerName = offer ? (offer.name || offer._id) : (s.offerId || 'Unknown');
     html += '<tr><td style="font-size:11px;">' + formatDate(s.ts) + '</td>' +
+      '<td><span style="font-weight:600;font-size:11.5px;color:var(--primary);">' + escHtml(offerName) + '</span></td>' +
       '<td><code style="font-size:11px;">' + escHtml((s.orderId || '-').substr(0, 12)) + '</code></td>' +
       '<td title="' + escHtml(ip) + '"><code style="font-size:11px;">' + escHtml(ipShort) + '</code></td>' +
       '<td>' + (s.affId ? '<span class="badge badge-blue">' + escHtml(s.affId) + '</span>' + (_shavedAffIds[s.affId] ? ' <span class="badge" style="background:#fee2e2;color:#dc2626;font-size:9px;padding:1px 5px;"><i class="fas fa-cut" style="font-size:8px;"></i> Shaved</span>' : '') : '<span class="badge badge-gray">Direct</span>') + '</td>' +
@@ -3074,7 +3079,7 @@ function renderSalesTable() {
       '<button class="btn-icon status-approved" style="font-size:10px;" onclick="updateSaleStatus(\'' + s._id + '\',\'approved\')" title="Approve"><i class="fas fa-check"></i></button> ' +
       '<button class="btn-icon" style="color:var(--red);" onclick="updateSaleStatus(\'' + s._id + '\',\'flagged\')" title="Flag"><i class="fas fa-flag"></i></button> ' +
       '<button class="btn-icon btn-danger-sm" style="font-size:10px;padding:3px 6px;" onclick="deleteSale(\'' + s._id + '\')" title="Delete"><i class="fas fa-trash"></i></button></td></tr>';
-    html += '<tr class="sale-expand" id="se-' + s._id + '"><td colspan="12"><div class="se-inner" id="sei-' + s._id + '"></div></td></tr>';
+    html += '<tr class="sale-expand" id="se-' + s._id + '"><td colspan="13"><div class="se-inner" id="sei-' + s._id + '"></div></td></tr>';
   });
   body.innerHTML = html;
   renderPagination('salesPag', total, salesPageNum, function(p) { salesPageNum = p; renderSalesTable(); });
