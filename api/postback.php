@@ -60,6 +60,12 @@ if (!$clickId || !$secret) {
     exit;
 }
 
+// Detect BuyGoods test (macros not replaced = test call)
+if (strpos($clickId, '{') !== false || strpos($clickId, 'SUBID') !== false) {
+    echo 'SUCCESS: Test postback received. Macros will be replaced with real values on actual sales.';
+    exit;
+}
+
 // Validate secret key
 $settings = fbGet('settings/postback');
 if (!$settings || !isset($settings['secretKey']) || $settings['secretKey'] !== $secret) {
@@ -172,12 +178,16 @@ if ($assignment && ($assignment['status'] ?? '') === 'active' && $dailyCap > 0) 
     }
 }
 
+// Get friendly affiliate ID from click data
+$friendlyAffId = $click['affId'] ?? '';
+
 // Create conversion
 $convId = 'conv_' . genId();
 $conv = [
     'clickId' => $clickId,
     'offerId' => $offerId,
     'affiliateId' => $affiliateId,
+    'affId' => $friendlyAffId,
     'revenue' => $finalRevenue,
     'payout' => $finalPayout,
     'status' => $status,
@@ -209,4 +219,5 @@ fbPut('postback-log/' . $logId, [
 ]);
 
 // Output success (BuyGoods requires output)
-echo 'SUCCESS: ' . $convId . ' | Offer: ' . $offerId . ' | Affiliate: ' . $affiliateId . ' | Revenue: $' . number_format($finalRevenue, 2) . ' | Payout: $' . number_format($finalPayout, 2);
+$affDisplay = $friendlyAffId ? $friendlyAffId : $affiliateId;
+echo 'SUCCESS: ' . $convId . ' | Offer: ' . $offerId . ' | Affiliate: ' . $affDisplay . ' | Revenue: $' . number_format($finalRevenue, 2) . ' | Payout: $' . number_format($finalPayout, 2);

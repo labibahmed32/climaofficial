@@ -132,6 +132,7 @@ function resolveAffId(id) {
 
 function processClick() {
     var uaInfo = parseUA();
+    var originalAffId = affId;
 
     resolveAffId(affId).then(function(realAffUid) {
     affId = realAffUid;
@@ -177,6 +178,7 @@ function processClick() {
             var clickData = {
                 offerId: offerId,
                 affiliateId: affId,
+                affId: originalAffId,
                 ip: ip,
                 userAgent: uaInfo.userAgent,
                 country: country,
