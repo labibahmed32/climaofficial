@@ -3,6 +3,9 @@ RewriteEngine On
 # Clean tracking links: /go/OFFER_ID/AFF_ID → /api/click.html
 RewriteRule ^go/(.*)$ /api/click.html [L,QSA]
 
-# API rewrites (without .html extension)
+# API rewrites
 RewriteRule ^api/click$ /api/click.html [L,QSA]
-RewriteRule ^api/postback$ /api/postback.html [L,QSA]
+
+# Postback: PHP handler for server-to-server (S2S) postbacks
+RewriteCond %{REQUEST_URI} ^/api/postback$ [NC]
+RewriteRule ^api/postback$ /api/postback.php [L,QSA]
