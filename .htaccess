@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Clean tracking links: /go/OFFER_ID/AFF_ID → /api/click.html
+RewriteRule ^go/(.*)$ /api/click.html [L,QSA]
+
+# API rewrites (without .html extension)
+RewriteRule ^api/click$ /api/click.html [L,QSA]
+RewriteRule ^api/postback$ /api/postback.html [L,QSA]

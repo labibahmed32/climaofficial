@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "database.rules.json", "**/.*", "*.bat"],
+    "ignore": ["firebase.json", "database.rules.json", "*.bat"],
     "rewrites": [
       { "source": "/go/**", "destination": "/api/click.html" },
       { "source": "/api/click**", "destination": "/api/click.html" },
