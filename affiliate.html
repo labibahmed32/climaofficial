@@ -90,8 +90,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .astat-pct.down{color:#dc2626;}
 .astat-sub{font-size:9.5px;color:var(--tl);font-weight:500;letter-spacing:.3px;}
 .astat-val{font-size:26px;font-weight:800;color:#1a2744;margin:8px 0 18px;line-height:1;letter-spacing:-.3px;font-feature-settings:'tnum';}
-.astat-bar{height:2px;background:#e8ecf1;border-radius:2px;margin-bottom:18px;overflow:hidden;}
+.astat-bar{height:2px;background:#e8ecf1;border-radius:2px;margin-bottom:0;overflow:hidden;display:none;}
 .astat-bar-f{height:100%;border-radius:2px;background:var(--accent);transition:width .5s ease;}
+.astat-spark{height:45px;margin:6px 0 12px;position:relative;}
+.astat-spark canvas{width:100%!important;height:45px!important;}
 .astat-rows{font-size:11px;padding-top:0;}
 .astat-row{display:flex;justify-content:space-between;padding:6px 0;color:var(--tm);}
 .astat-row span:first-child{font-weight:500;font-size:11px;color:#5a6a80;}
@@ -1143,26 +1145,42 @@ function loadAllData() {
 }
 
 /* ── Build Stat Card ── */
-function buildStat(title, curVal, todayVal, yestVal, lastVal, isMoney) {
+var sparkKey = 0;
+var affSparkCharts = {};
+function buildStat(title, curVal, todayVal, yestVal, lastVal, isMoney, sparkId) {
     var cN = isMoney ? (parseFloat(curVal) || 0) : (typeof curVal === 'string' && curVal.indexOf('%') > -1 ? parseFloat(curVal) : (parseInt(curVal) || 0));
     var lN = isMoney ? (parseFloat(lastVal) || 0) : (typeof lastVal === 'string' && lastVal.indexOf('%') > -1 ? parseFloat(lastVal) : (parseInt(lastVal) || 0));
     var pct = 0;
     if (lN > 0) pct = ((cN - lN) / lN * 100).toFixed(0);
     var pCls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
     var pTxt = pct > 0 ? '+' + pct + '%' : (pct < 0 ? pct + '%' : '0%');
-    var bw = lN > 0 ? Math.min(100, Math.round(cN / lN * 100)) : (cN > 0 ? 100 : 0);
     var dC = isMoney ? fmtM(curVal) : curVal;
     var dT = isMoney ? fmtM(todayVal) : todayVal;
     var dY = isMoney ? fmtM(yestVal) : yestVal;
     var dL = isMoney ? fmtM(lastVal) : lastVal;
+    var canvasId = 'astat-spark-' + (sparkId || sparkKey++);
     return '<div class="astat">' +
         '<span class="astat-t">' + title + '</span>' +
-        '<div class="astat-hd"><span class="astat-sub">Current Month</span><span class="astat-pct ' + pCls + '">' + pTxt + '</span></div>' +
-        '<div class="astat-val">' + dC + '</div>' +
-        '<div class="astat-bar"><div class="astat-bar-f" style="width:' + bw + '%"></div></div>' +
-        '<div class="astat-rows"><div class="astat-row"><span>Today</span><span>' + dT + '</span></div>' +
-        '<div class="astat-row"><span>Yesterday</span><span>' + dY + '</span></div>' +
+        '<div class="astat-hd"><span class="astat-sub">Today</span><span class="astat-pct ' + pCls + '">' + pTxt + '</span></div>' +
+        '<div class="astat-val">' + dT + '</div>' +
+        '<div class="astat-spark"><canvas id="' + canvasId + '"></canvas></div>' +
+        '<div class="astat-rows"><div class="astat-row"><span>Yesterday</span><span>' + dY + '</span></div>' +
+        '<div class="astat-row"><span>Current Month</span><span>' + dC + '</span></div>' +
         '<div class="astat-row"><span>Last Month</span><span>' + dL + '</span></div></div></div>';
+}
+function renderAffSparkline(canvasId, data, color) {
+    var el = document.getElementById(canvasId);
+    if (!el) return;
+    if (affSparkCharts[canvasId]) affSparkCharts[canvasId].destroy();
+    affSparkCharts[canvasId] = new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: { labels: data.map(function(_, i) { return i; }), datasets: [{
+            data: data, borderColor: color || '#3B82F6', backgroundColor: (color || '#3B82F6') + '18',
+            tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2
+        }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false } }, animation: { duration: 600 } }
+    });
 }
 
 /* ── Dashboard ── */
@@ -1219,13 +1237,36 @@ function loadDashboard() {
         '<div class="astat-row"><span>Total Paid</span><span>' + fmtM(totalPaid) + '</span></div>' +
         '<div class="astat-row"><span>Pending Payout</span><span>' + fmtM(pendingPayAmt) + '</span></div></div></div>';
 
+    sparkKey = 0;
     document.getElementById('dashStats').innerHTML =
-        buildStat('Clicks', cmCk.length, tCk, yCk, lCk, false) +
-        buildStat('Conversions', cmCv.length, tCv, yCv, lCv, false) +
-        buildStat('CVR', cmCVR, tCVR, yCVR, lCVR, false) +
-        buildStat('EPC', cmEPC, tEPC, yEPC, lEPC, false) +
-        buildStat('Revenue', cmRev, tRev, yRev, lRev, true) +
+        buildStat('Clicks', cmCk.length, tCk, yCk, lCk, false, 'clicks') +
+        buildStat('Conversions', cmCv.length, tCv, yCv, lCv, false, 'convs') +
+        buildStat('CVR', cmCVR, tCVR, yCVR, lCVR, false, 'cvr') +
+        buildStat('EPC', cmEPC, tEPC, yEPC, lEPC, false, 'epc') +
+        buildStat('Revenue', cmRev, tRev, yRev, lRev, true, 'revenue') +
         payoutCard;
+
+    /* Sparklines - hourly data for today */
+    var now = new Date();
+    var todayStart = dayS(now);
+    var sparkColors = { clicks:'#3b82f6', convs:'#22c55e', cvr:'#8b5cf6', epc:'#f59e0b', revenue:'#0a6c80' };
+    ['clicks','convs','cvr','epc','revenue'].forEach(function(metric) {
+        var hourData = [];
+        for (var h = 0; h < 24; h++) {
+            var hStart = todayStart + h * 3600000;
+            var hEnd = hStart + 3600000;
+            var hCk = myClicks.filter(function(c) { return c.timestamp >= hStart && c.timestamp < hEnd; }).length;
+            var hCv = myConversions.filter(function(c) { return (c.createdAt||0) >= hStart && (c.createdAt||0) < hEnd; });
+            var hCvCount = hCv.length;
+            var hRev = hCv.filter(function(c) { return c.status === 'approved'; }).reduce(function(s,c) { return s + (parseFloat(c.payout)||0); }, 0);
+            if (metric === 'clicks') hourData.push(hCk);
+            else if (metric === 'convs') hourData.push(hCvCount);
+            else if (metric === 'cvr') hourData.push(hCk > 0 ? parseFloat(((hCvCount/hCk)*100).toFixed(2)) : 0);
+            else if (metric === 'epc') hourData.push(hCk > 0 ? parseFloat((hRev/hCk).toFixed(3)) : 0);
+            else if (metric === 'revenue') hourData.push(hRev);
+        }
+        renderAffSparkline('astat-spark-' + metric, hourData, sparkColors[metric]);
+    });
 
     /* Chart */
     buildChart();
