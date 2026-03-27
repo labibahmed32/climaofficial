@@ -99,6 +99,16 @@ function buildRedirectUrl(template, clickId, affId, subs) {
 var params = new URLSearchParams(window.location.search);
 var offerId = params.get('offer_id') || '';
 var affId = params.get('aff_id') || '';
+
+// Clean URL support: /go/OFFER_ID/AFF_ID
+if (!offerId || !affId) {
+    var pathMatch = window.location.pathname.match(/^\/go\/([^\/]+)\/([^\/]+)/);
+    if (pathMatch) {
+        offerId = offerId || decodeURIComponent(pathMatch[1]);
+        affId = affId || decodeURIComponent(pathMatch[2]);
+    }
+}
+
 var sub1 = params.get('sub1') || '';
 var sub2 = params.get('sub2') || '';
 var sub3 = params.get('sub3') || '';

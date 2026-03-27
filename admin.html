@@ -2156,7 +2156,7 @@ function updateOfferLinkPreview() {
         var domain = window.location.origin;
         var editId = document.getElementById('offerEditId').value;
         var offId = editId || '{offer_id}';
-        el.innerHTML = '<strong>Click URL:</strong> ' + escHtml(domain + '/api/click?offer_id=' + offId + '&aff_id={affiliate_id}') + '<br><br><strong>Destination:</strong> ' + escHtml(finalUrl);
+        el.innerHTML = '<strong>Tracking Link:</strong> ' + escHtml(domain + '/go/' + offId + '/{affiliate_id}') + '<br><br><strong>Destination:</strong> ' + escHtml(finalUrl);
         el.style.color = 'var(--text-dark)';
         /* Auto-detect tracker from URL if dropdown not set */
         var sel = document.getElementById('ofTrackerType');
@@ -2584,7 +2584,7 @@ function updateWzTestUrl() {
     var box = document.getElementById('wzTestUrlBox');
     if (!offerId || !affId) { box.style.display = 'none'; return; }
     var domain = window._cachedDefaultDomain || window.location.origin;
-    document.getElementById('wzTestUrlText').textContent = domain + '/api/click?offer_id=' + encodeURIComponent(offerId) + '&aff_id=' + encodeURIComponent(affId) + '&sub1=TEST_VERIFY&test=1';
+    document.getElementById('wzTestUrlText').textContent = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(affId) + '?sub1=TEST_VERIFY&test=1';
     box.style.display = 'block';
 }
 
@@ -3483,8 +3483,10 @@ function updateLinkPreview() {
     var output = document.getElementById('linkOutput'); if (!offerId || !affId) { output.style.display = 'none'; return; }
     var aff = allUsers.find(function(u) { return u._id === affId; }); var useAffId = (aff && aff.affId) ? aff.affId : affId;
     var domain = document.getElementById('lgDomain').value || window.location.origin;
-    var url = domain + '/api/click?offer_id=' + offerId + '&aff_id=' + useAffId;
-    ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) { var v = document.getElementById(id).value.trim(); if (v) url += '&sub' + (i + 1) + '=' + encodeURIComponent(v); });
+    var url = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(useAffId);
+    var subParams = [];
+    ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) { var v = document.getElementById(id).value.trim(); if (v) subParams.push('sub' + (i + 1) + '=' + encodeURIComponent(v)); });
+    if (subParams.length) url += '?' + subParams.join('&');
     document.getElementById('linkText').textContent = url; output.style.display = 'block';
 }
 function copyLink() { navigator.clipboard.writeText(document.getElementById('linkText').textContent).then(function() { toast('Link copied!'); }); }
@@ -4509,7 +4511,7 @@ function updateTestUrl() {
     var box = document.getElementById('pbTestUrlBox');
     if (!offerId || !affId) { box.style.display = 'none'; return; }
     var domain = window._cachedDefaultDomain || window.location.origin;
-    var url = domain + '/api/click?offer_id=' + encodeURIComponent(offerId) + '&aff_id=' + encodeURIComponent(affId) + '&sub1=TEST_VERIFY&test=1';
+    var url = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(affId) + '?sub1=TEST_VERIFY&test=1';
     document.getElementById('pbTestUrlText').textContent = url;
     box.style.display = 'block';
 }

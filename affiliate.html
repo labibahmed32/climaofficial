@@ -1665,11 +1665,13 @@ function backToOffers() {
 }
 function updateOdLink() {
     if (!viewingOffer) return;
-    var url = window.location.origin + '/api/click?offer_id=' + viewingOffer._id + '&aff_id=' + (myAffId || myUid);
+    var url = window.location.origin + '/go/' + encodeURIComponent(viewingOffer._id) + '/' + encodeURIComponent(myAffId || myUid);
+    var subParams = [];
     ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id, i) {
         var v = document.getElementById(id).value.trim();
-        if (v) url += '&sub' + (i + 1) + '=' + encodeURIComponent(v);
+        if (v) subParams.push('sub' + (i + 1) + '=' + encodeURIComponent(v));
     });
+    if (subParams.length) url += '?' + subParams.join('&');
     document.getElementById('odLinkTxt').textContent = url;
 }
 function copyOdLink() {
@@ -1907,11 +1909,13 @@ function updateLinkPreview() {
     var oid = document.getElementById('lgOffer').value;
     var out = document.getElementById('lnkOut');
     if (!oid) { out.style.display = 'none'; return; }
-    var url = window.location.origin + '/api/click?offer_id=' + oid + '&aff_id=' + (myAffId || myUid);
+    var url = window.location.origin + '/go/' + encodeURIComponent(oid) + '/' + encodeURIComponent(myAffId || myUid);
+    var subParams = [];
     ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) {
         var v = document.getElementById(id).value.trim();
-        if (v) url += '&sub' + (i + 1) + '=' + encodeURIComponent(v);
+        if (v) subParams.push('sub' + (i + 1) + '=' + encodeURIComponent(v));
     });
+    if (subParams.length) url += '?' + subParams.join('&');
     document.getElementById('lnkTxt').textContent = url;
     out.style.display = 'block';
 }
