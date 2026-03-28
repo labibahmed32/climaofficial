@@ -650,7 +650,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <span class="page-info" id="clickSummary"></span>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>Device</th><th>Browser</th><th>Sub1</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="clicksTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>City</th><th>Device</th><th>OS</th><th>Browser</th><th>ISP</th><th>Quality</th><th>Time</th><th>Conv?</th><th></th></tr></thead><tbody id="clicksTbody"></tbody></table>
             </div><div class="pagination-bar"><span class="page-info" id="clicksPageInfo"></span><div class="pagination-controls" id="clicksPagination"></div></div></div>
         </div>
 
@@ -671,7 +671,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 </div>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Revenue</th><th>Payout</th><th>Status</th><th>Source</th><th>Date</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Revenue</th><th>Payout</th><th>Status</th><th>Source</th><th>TTC</th><th>Date</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
             </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
         </div>
 
@@ -1059,6 +1059,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="clickDetailModal"><div class="modal-panel" style="max-width:750px;"><div class="modal-body" id="clickDetailBody" style="padding:24px"></div></div></div>
 <div class="modal-overlay" id="advModal"><div class="modal-panel" style="max-width:620px;">
     <div class="modal-header"><h3 id="advModalTitle">New Advertiser</h3><button class="modal-close" onclick="closeModal('advModal')">&times;</button></div>
     <div class="modal-body">
@@ -3179,11 +3180,67 @@ function renderClicks() {
     var filtered = allClicks.filter(function(c) { if (c.timestamp < fromTs || c.timestamp > toTs) return false; if (offerF && c.offerId !== offerF) return false; if (affF && c.affiliateId !== affF) return false; return true; }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
     document.getElementById('clickSummary').textContent = filtered.length + ' clicks';
     var start = (clicksPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
-    page.forEach(function(c) { html += '<tr><td style="font-family:monospace;font-size:11px">' + escHtml(c._id) + '</td><td>' + escHtml(getOfferName(c.offerId)) + '</td><td>' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-family:monospace;font-size:11px">' + escHtml(c.ip || '-') + '</td><td>' + escHtml(c.country || '-') + '</td><td>' + escHtml(c.device || '-') + '</td><td>' + escHtml(c.browser || '-') + '</td><td>' + escHtml(c.sub1 || '-') + '</td><td>' + fmtDateTime(c.timestamp) + '</td><td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td></tr>'; });
-    document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="10" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
+    page.forEach(function(c) {
+        var qualBadge = '';
+        if (c.isProxy || c.isHosting) qualBadge = '<span class="badge" style="background:#fef2f2;color:#991b1b;font-size:9px">Risky</span>';
+        else qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
+        html += '<tr><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-size:11px">' + escHtml(getOfferName(c.offerId)) + '</td><td style="font-size:11px">' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.ip || '-') + '</td><td>' + escHtml(c.country || '-') + '</td><td style="font-size:11px">' + escHtml(c.city || '-') + '</td><td>' + escHtml(c.device || '-') + '</td><td style="font-size:11px">' + escHtml(c.os || '-') + '</td><td style="font-size:11px">' + escHtml(c.browser || '-') + '</td><td style="font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.isp || '-') + '</td><td>' + qualBadge + '</td><td style="font-size:11px">' + fmtDateTime(c.timestamp) + '</td><td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td><td><button class="btn-sm" onclick="openClickDetail(\'' + c._id + '\')" title="Details"><i class="fas fa-eye"></i></button></td></tr>';
+    });
+    document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="14" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
     renderPagination('clicksPagination', 'clicksPageInfo', filtered.length, clicksPage, PAGE_SIZE, 'goClicksPage');
 }
 function goClicksPage(p) { clicksPage = p; renderClicks(); }
+
+/* Click Detail Modal */
+function openClickDetail(clickId) {
+    var c = allClicks.find(function(x) { return x._id === clickId; });
+    if (!c) { toast('Click not found', 'error'); return; }
+    var conv = allConversions.find(function(x) { return x.clickId === clickId; });
+    var timeDelta = '';
+    if (conv && conv.createdAt && c.timestamp) {
+        var diff = conv.createdAt - c.timestamp;
+        if (diff < 60000) timeDelta = '< 1 min';
+        else if (diff < 3600000) timeDelta = Math.floor(diff/60000) + ' min';
+        else if (diff < 86400000) timeDelta = Math.floor(diff/3600000) + 'h ' + Math.floor((diff%3600000)/60000) + 'm';
+        else timeDelta = Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
+    }
+    var qualColor = (c.isProxy || c.isHosting) ? '#dc2626' : '#059669';
+    var qualLabel = (c.isProxy || c.isHosting) ? 'Risky' : 'Clean';
+    var flags = [];
+    if (c.isProxy) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Proxy</span>');
+    if (c.isHosting) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Hosting/DC</span>');
+    if (!c.referer) flags.push('<span style="background:#fffbeb;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">No Referer</span>');
+
+    var h = '<div style="max-width:700px;margin:0 auto">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="font-size:16px;font-weight:800">Click Detail</h3><button onclick="closeModal(\'clickDetailModal\')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">&times;</button></div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:4px 10px;border-radius:6px">' + escHtml(clickId) + '</span><span style="background:' + (c.converted ? '#ecfdf5' : '#f1f5f9') + ';color:' + (c.converted ? '#065f46' : '#94a3b8') + ';padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600">' + (c.converted ? 'Converted' : 'Not Converted') + '</span>' + flags.join('') + '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">' +
+        cdItem('IP Address', c.ip) + cdItem('Country', (c.country || '-') + (c.countryName ? ' (' + c.countryName + ')' : '')) +
+        cdItem('City', c.city) + cdItem('ISP', c.isp) +
+        cdItem('Device', c.device) + cdItem('OS', c.os) +
+        cdItem('Browser', c.browser) + cdItem('Timezone', c.timezone) +
+        cdItem('Screen', c.screenRes) + cdItem('Language', c.language) +
+        cdItem('Referer', c.referer || 'Direct') + cdItem('Quality', '<span style="color:' + qualColor + ';font-weight:700">' + qualLabel + '</span>') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px">' +
+        cdItem('Sub1', c.sub1) + cdItem('Sub2', c.sub2) + cdItem('Sub3', c.sub3) + cdItem('Sub4', c.sub4) + cdItem('Sub5', c.sub5) +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">' +
+        cdItem('Offer', getOfferName(c.offerId)) + cdItem('Affiliate', getUserName(c.affiliateId)) +
+        cdItem('Click Time', fmtDateTime(c.timestamp)) + cdItem('Test Click', c.test ? 'Yes' : 'No') +
+        '</div>';
+    if (conv) {
+        h += '<div style="border-top:2px solid #e2e8f0;padding-top:14px;margin-top:8px"><h4 style="font-size:13px;font-weight:700;color:#059669;margin-bottom:10px"><i class="fas fa-check-circle"></i> Conversion Details</h4>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
+            cdItem('Revenue', fmtMoney(conv.revenue)) + cdItem('Payout', fmtMoney(conv.payout)) + cdItem('Status', conv.status) +
+            cdItem('Transaction', conv.transactionId || '-') + cdItem('Source', conv.source || '-') + cdItem('Time to Convert', timeDelta || '-') +
+            '</div></div>';
+    }
+    h += '</div>';
+    document.getElementById('clickDetailBody').innerHTML = h;
+    openModal('clickDetailModal');
+}
+function cdItem(label, val) { return '<div style="background:#f8fafc;padding:8px 10px;border-radius:6px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;font-weight:600;margin-bottom:2px">' + escHtml(label) + '</div><div style="font-size:12px;font-weight:600;color:#1e293b;word-break:break-all">' + (val || '-') + '</div></div>'; }
 
 /* ===== CONVERSIONS ===== */
 var convPage = 1;
@@ -3208,8 +3265,21 @@ function renderConversions() {
     var pending = filtered.filter(function(c) { return c.status === 'pending'; }).length;
     document.getElementById('convStats').innerHTML = statCardSm('fa-exchange-alt', '#e3f2fd', '#1565c0', filtered.length, 'Total Conversions') + statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', approved, 'Approved') + statCardSm('fa-clock', '#fff3e0', '#e65100', pending, 'Pending') + statCardSm('fa-dollar-sign', '#f3e5f5', '#7b1fa2', fmtMoney(totalRev), 'Revenue') + statCardSm('fa-hand-holding-usd', '#e8f5e9', '#2e7d32', fmtMoney(totalPay), 'Payout');
     var start = (convPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
-    page.forEach(function(c) { html += '<tr><td><input type="checkbox" class="conv-check" value="' + c._id + '"></td><td style="font-family:monospace;font-size:11px">' + escHtml(c._id) + '</td><td style="font-family:monospace;font-size:11px">' + escHtml(c.clickId || '-') + '</td><td>' + escHtml(getOfferName(c.offerId)) + '</td><td>' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-weight:700;color:var(--primary)">' + fmtMoney(c.revenue) + '</td><td style="font-weight:700;color:var(--green)">' + fmtMoney(c.payout) + '</td><td>' + statusBadge(c.status) + '</td><td>' + escHtml(c.source || '-') + '</td><td>' + fmtDateTime(c.createdAt) + '</td><td><button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'approved\')"><i class="fas fa-check"></i></button> <button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'rejected\')"><i class="fas fa-times"></i></button></td></tr>'; });
-    document.getElementById('convTbody').innerHTML = html || '<tr><td colspan="11" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions found</td></tr>';
+    page.forEach(function(c) {
+        var ttc = '-';
+        if (c.clickId) {
+            var click = allClicks.find(function(x) { return x._id === c.clickId; });
+            if (click && click.timestamp && c.createdAt) {
+                var diff = c.createdAt - click.timestamp;
+                if (diff < 60000) ttc = '< 1m';
+                else if (diff < 3600000) ttc = Math.floor(diff/60000) + 'm';
+                else if (diff < 86400000) ttc = Math.floor(diff/3600000) + 'h ' + Math.floor((diff%3600000)/60000) + 'm';
+                else ttc = Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
+            }
+        }
+        html += '<tr><td><input type="checkbox" class="conv-check" value="' + c._id + '"></td><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td><td>' + escHtml(getOfferName(c.offerId)) + '</td><td>' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-weight:700;color:var(--primary)">' + fmtMoney(c.revenue) + '</td><td style="font-weight:700;color:var(--green)">' + fmtMoney(c.payout) + '</td><td>' + statusBadge(c.status) + '</td><td>' + escHtml(c.source || '-') + '</td><td style="font-size:11px;color:var(--primary);font-weight:600">' + ttc + '</td><td>' + fmtDateTime(c.createdAt) + '</td><td><button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'approved\')"><i class="fas fa-check"></i></button> <button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'rejected\')"><i class="fas fa-times"></i></button></td></tr>';
+    });
+    document.getElementById('convTbody').innerHTML = html || '<tr><td colspan="12" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions found</td></tr>';
     renderPagination('convPagination', 'convPageInfo', filtered.length, convPage, PAGE_SIZE, 'goConvPage');
 }
 function goConvPage(p) { convPage = p; renderConversions(); }
