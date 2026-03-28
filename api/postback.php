@@ -53,6 +53,7 @@ $customPayout = isset($_GET['payout']) ? $_GET['payout'] : '';
 $customRevenue = isset($_GET['revenue']) ? $_GET['revenue'] : '';
 $txnId = isset($_GET['txn_id']) ? $_GET['txn_id'] : '';
 $status = isset($_GET['status']) ? $_GET['status'] : 'approved';
+$isTest = isset($_GET['test']) && $_GET['test'] === '1';
 
 // Validate required params
 if (!$clickId || !$secret) {
@@ -198,6 +199,7 @@ $conv = [
     'ip' => $click['ip'] ?? '',
     'overCap' => $isOverCap,
     'capNote' => $capNote,
+    'isTest' => $isTest,
     'createdAt' => round(microtime(true) * 1000)
 ];
 

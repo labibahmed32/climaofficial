@@ -553,65 +553,90 @@ body.impersonating .impersonate-banner{display:block;}
 
         <!-- POSTBACKS -->
         <div class="section" id="pg-postbacks">
-            <!-- How It Works -->
-            <div class="scard" style="max-width:780px">
-                <h5><i class="fas fa-route"></i> How Conversion Tracking Works</h5>
-                <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-bottom:6px">
-                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#e8f0fe;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-mouse-pointer" style="color:var(--accent);font-size:14px"></i></div>
-                        <div style="font-size:11px;font-weight:700;color:var(--td)">1. User Clicks</div>
-                        <div style="font-size:10px;color:var(--tl);margin-top:2px">Your tracking link records the click with a unique click_id</div>
-                    </div>
-                    <i class="fas fa-chevron-right" style="color:var(--border);font-size:12px"></i>
-                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#e8f5e9;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-shopping-cart" style="color:var(--green);font-size:14px"></i></div>
-                        <div style="font-size:11px;font-weight:700;color:var(--td)">2. Sale Happens</div>
-                        <div style="font-size:10px;color:var(--tl);margin-top:2px">User converts on the advertiser's landing page</div>
-                    </div>
-                    <i class="fas fa-chevron-right" style="color:var(--border);font-size:12px"></i>
-                    <div style="flex:1;min-width:140px;text-align:center;padding:14px 8px">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#fff3e0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-satellite-dish" style="color:var(--orange);font-size:14px"></i></div>
-                        <div style="font-size:11px;font-weight:700;color:var(--td)">3. Postback Fires</div>
-                        <div style="font-size:10px;color:var(--tl);margin-top:2px">Network records conversion &amp; notifies you via your postback URL</div>
+            <!-- Global Postback URL -->
+            <div class="scard" style="max-width:860px">
+                <h5 style="font-size:15px"><i class="fas fa-satellite-dish" style="color:var(--accent)"></i> Global Postback URL</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:12px">This single URL handles all offers. Set it in your advertiser panel as a global/default postback.</p>
+                <div style="background:#f8f9fb;border:2px dashed var(--accent);border-radius:8px;padding:14px 16px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--accent);word-break:break-all;line-height:1.6;position:relative" id="pbGlobalUrl"></div>
+                <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                    <button class="btn-p" style="padding:6px 14px" onclick="copyGlobalPb()"><i class="fas fa-copy"></i> Copy</button>
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#e8f5e9;border-radius:6px;font-size:10px;font-weight:600;color:#2e7d32"><i class="fas fa-check-circle"></i> Works for all offers</span>
+                </div>
+            </div>
+
+            <!-- Per-Offer Postback -->
+            <div class="scard" style="max-width:860px">
+                <h5 style="font-size:15px"><i class="fas fa-exchange-alt" style="color:var(--accent)"></i> Per-Offer Postback</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:12px">Generate postback URL for a specific offer. Use this if you need different postback per offer in your advertiser panel.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="pb-form-row">
+                    <div class="f-grp"><label>Select Offer</label><select id="pbOfferSel" class="f-sel" onchange="onPbOfferSel()" style="width:100%;padding:8px 12px"><option value="">-- Choose Offer --</option></select></div>
+                    <div class="f-grp"><label>Advertiser Platform</label><select id="pbPlatformSel" class="f-sel" onchange="onPbPlatformSel()" style="width:100%;padding:8px 12px"><option value="">-- Select Platform --</option><option value="buygoods">BuyGoods</option><option value="digistore">Digistore24</option><option value="clickbank">ClickBank</option><option value="everflow">Everflow</option><option value="custom">Custom / Other</option></select></div>
+                </div>
+                <div id="pbOfferResult" style="display:none;margin-top:14px">
+                    <label style="font-size:11px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px">Generated Postback URL</label>
+                    <div style="background:#f0f7f4;border:2px solid #c6e6d0;border-radius:8px;padding:14px;font-family:'Courier New',monospace;font-size:11px;color:#2e7d32;word-break:break-all;line-height:1.6" id="pbOfferUrl"></div>
+                    <div style="display:flex;gap:6px;margin-top:8px">
+                        <button class="btn-p" style="padding:6px 14px" onclick="copyElText('pbOfferUrl')"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                 </div>
             </div>
-            <!-- Your Domain -->
-            <div class="scard" style="max-width:780px">
-                <h5><i class="fas fa-globe"></i> Your Tracking Domain</h5>
-                <div style="background:#f0f7f4;border:1.5px solid #c6e6d0;border-radius:8px;padding:12px 16px;font-family:'Courier New',monospace;font-size:13px;color:#2e7d32;font-weight:700" id="pbDomain"></div>
-                <div style="font-size:10.5px;color:var(--tl);margin-top:6px">This is the base domain for all your tracking links and postback endpoints.</div>
+
+            <!-- Test URL -->
+            <div class="scard" style="max-width:860px">
+                <h5 style="font-size:15px"><i class="fas fa-flask" style="color:var(--orange)"></i> Test Postback</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:12px">Generate a test URL to verify your postback setup. Test records only appear in the log below, not in your main reports.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="pb-form-row">
+                    <div class="f-grp"><label>Offer</label><select id="pbTestOffer" class="f-sel" onchange="genTestUrl()" style="width:100%;padding:8px 12px"><option value="">-- Choose Offer --</option></select></div>
+                    <div class="f-grp"><label>Test Payout ($)</label><input type="number" id="pbTestPayout" class="f-inp" value="10" step="0.01" oninput="genTestUrl()"></div>
+                </div>
+                <div id="pbTestResult" style="display:none;margin-top:14px">
+                    <div style="margin-bottom:10px">
+                        <label style="font-size:11px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px"><i class="fas fa-link"></i> Step 1: Click this tracking link first</label>
+                        <div style="background:#fff8e1;border:2px solid #ffe082;border-radius:8px;padding:12px;font-family:'Courier New',monospace;font-size:11px;color:#f57f17;word-break:break-all" id="pbTestClickUrl"></div>
+                        <div style="display:flex;gap:6px;margin-top:6px">
+                            <button class="btn-p" style="padding:5px 12px;font-size:11px" onclick="copyElText('pbTestClickUrl')"><i class="fas fa-copy"></i> Copy</button>
+                            <button class="btn-p" style="padding:5px 12px;font-size:11px;background:var(--orange)" onclick="window.open(document.getElementById('pbTestClickUrl').textContent,'_blank')"><i class="fas fa-external-link-alt"></i> Open</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px"><i class="fas fa-satellite-dish"></i> Step 2: After clicking, fire this postback URL</label>
+                        <div style="background:#e8f5e9;border:2px solid #a5d6a7;border-radius:8px;padding:12px;font-family:'Courier New',monospace;font-size:11px;color:#2e7d32;word-break:break-all" id="pbTestPostbackUrl"></div>
+                        <p style="font-size:10px;color:var(--tl);margin-top:4px"><i class="fas fa-info-circle"></i> Replace CLICK_ID_HERE with the subid value from step 1's redirect URL</p>
+                        <button class="btn-p" style="padding:5px 12px;font-size:11px;margin-top:6px" onclick="copyElText('pbTestPostbackUrl')"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                </div>
             </div>
-            <!-- Global Postback (for advertiser panels) -->
-            <div class="scard" style="max-width:780px">
-                <h5><i class="fas fa-satellite-dish"></i> Global Postback URL (For Advertisers)</h5>
-                <p style="font-size:12px;color:var(--tm);margin-bottom:10px">Give this URL to advertisers so they fire it when a conversion happens. Replace the macros with their dynamic values:</p>
-                <div style="background:#f8f9fb;border:2px dashed var(--accent);border-radius:8px;padding:14px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--accent);word-break:break-all;line-height:1.6;position:relative" id="pbGlobalUrl"></div>
-                <button class="btn-p" style="margin-top:10px;padding:6px 14px" onclick="copyGlobalPb()"><i class="fas fa-copy"></i> Copy Postback URL</button>
+
+            <!-- Your Outgoing Postback -->
+            <div class="scard" style="max-width:860px">
+                <h5 style="font-size:15px"><i class="fas fa-share" style="color:var(--accent)"></i> Your Outgoing Postback URL</h5>
+                <p style="font-size:12px;color:var(--tm);margin-bottom:12px">When a conversion is recorded, we fire a GET request to your URL with macros replaced. Use this if you run your own tracker.</p>
+                <div class="f-grp"><label>Global Postback URL</label><input type="text" id="affPbUrl" class="f-inp" placeholder="https://yourtracker.com/postback?clickid={click_id}&payout={payout}"><div class="f-help">Macros: {click_id}, {payout}, {offer_id}, {txn_id}, {sub1}-{sub5}</div></div>
+                <button class="btn-p" onclick="savePbUrl()" style="margin-bottom:16px"><i class="fas fa-save"></i> Save Global Postback</button>
+
+                <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="document.getElementById('perOfferPbBody').style.display=document.getElementById('perOfferPbBody').style.display==='none'?'block':'none'">
+                        <label style="font-size:12px;font-weight:700;color:var(--td);cursor:pointer"><i class="fas fa-list"></i> Per-Offer Postback URLs (Optional)</label>
+                        <i class="fas fa-chevron-down" style="font-size:10px;color:var(--tl)"></i>
+                    </div>
+                    <div id="perOfferPbBody" style="display:none;margin-top:12px">
+                        <div id="perOfferPbList"></div>
+                    </div>
+                </div>
             </div>
-            <!-- Macros Reference -->
-            <div class="scard" style="max-width:780px">
-                <h5><i class="fas fa-code"></i> Available Macros</h5>
-                <div style="overflow-x:auto">
+
+            <!-- Postback Log -->
+            <div class="scard" style="max-width:860px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                    <h5 style="font-size:15px;margin-bottom:0"><i class="fas fa-list-alt" style="color:var(--accent)"></i> Postback Log</h5>
+                    <button class="btn-p" style="padding:5px 12px;font-size:11px" onclick="loadPbLog()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                <div class="tbl-scroll">
                     <table class="dtbl" style="font-size:12px">
-                        <thead><tr><th>Macro</th><th>Description</th><th>Used In</th></tr></thead>
-                        <tbody>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{click_id}</td><td>Unique click identifier (passed to advertiser via tracking link)</td><td>Postback</td></tr>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{payout}</td><td>Conversion payout amount</td><td>Postback / Your URL</td></tr>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{offer_id}</td><td>Offer ID for the conversion</td><td>Postback / Your URL</td></tr>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{txn_id}</td><td>Advertiser's transaction/order ID</td><td>Postback / Your URL</td></tr>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{sub1} - {sub5}</td><td>Your custom sub IDs from the tracking link</td><td>Your URL</td></tr>
-                            <tr><td style="font-family:monospace;color:var(--accent);font-weight:700">{aff_id}</td><td>Your affiliate ID</td><td>Tracking Link</td></tr>
-                        </tbody>
+                        <thead><tr><th>Time</th><th>Status</th><th>Click ID</th><th>Offer</th><th>Payout</th><th>Detail</th></tr></thead>
+                        <tbody id="pbLogBody"><tr><td colspan="6" class="no-data" style="padding:20px"><i class="fas fa-inbox"></i><p>No postback logs</p></td></tr></tbody>
                     </table>
                 </div>
-            </div>
-            <!-- Your Outgoing Postback -->
-            <div class="scard" style="max-width:780px">
-                <h5><i class="fas fa-share"></i> Your Postback URL (Outgoing)</h5>
-                <p style="font-size:12px;color:var(--tm);margin-bottom:10px">When a conversion is recorded for you, the network will fire a GET request to your URL below with macros replaced. Use this if you run your own tracker (Voluum, Binom, RedTrack, etc).</p>
-                <div class="f-grp"><label>Your Postback URL</label><input type="text" id="affPbUrl"><div class="f-help">We'll replace {click_id}, {payout}, {offer_id}, {txn_id}, {sub1}, {sub2} with real values</div></div>
-                <button class="btn-p" onclick="savePbUrl()"><i class="fas fa-save"></i> Save Postback URL</button>
             </div>
         </div>
 
@@ -1138,7 +1163,7 @@ function loadAllData() {
     Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
-        myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
         loadDashboard();
     });
@@ -1505,7 +1530,7 @@ function loadOffers() {
         todayConvMap = {};
         var todayStart = dayS(new Date());
         var convs = objToArr(r[2]).filter(function(c) {
-            return c.affiliateId === myUid && !c.overCap && (c.createdAt || 0) >= todayStart && c.status === 'approved';
+            return c.affiliateId === myUid && !c.overCap && !c.isTest && (c.createdAt || 0) >= todayStart && c.status === 'approved';
         });
         convs.forEach(function(c) {
             if (!todayConvMap[c.offerId]) todayConvMap[c.offerId] = 0;
@@ -1810,21 +1835,138 @@ function quickLink(oid) {
 }
 
 /* ── Postbacks ── */
+var pbPlatformMacros = {
+    buygoods: { click_id:'{SUBID}', payout:'{COMMISSION_AMOUNT}', txn_id:'{ORDERID}', status:'approved' },
+    digistore: { click_id:'{custom}', payout:'{amount}', txn_id:'{order_id}', status:'approved' },
+    clickbank: { click_id:'{tid}', payout:'{amount}', txn_id:'{receipt}', status:'approved' },
+    everflow: { click_id:'{transaction_id}', payout:'{payout}', txn_id:'{txn_id}', status:'{status}' },
+    custom: { click_id:'{click_id}', payout:'{payout}', txn_id:'{txn_id}', status:'approved' }
+};
+
 function loadPostbacks() {
-    fbGet('users/' + myUid + '/postbackUrl').then(function(url) { if (url) document.getElementById('affPbUrl').value = url; });
-    /* Show domain and global postback URL */
     var domain = window.location.origin;
-    document.getElementById('pbDomain').textContent = domain;
-    document.getElementById('pbGlobalUrl').textContent = domain + '/api/postback?click_id={click_id}&secret=YOUR_SECRET&payout={payout}&txn_id={txn_id}';
+    Promise.all([fbGet('users/' + myUid), fbGet('settings/postback'), fbGet('offers')]).then(function(r) {
+        var user = r[0] || {};
+        var pbSettings = r[1] || {};
+        var offers = objToArr(r[2]).filter(function(o) { return o.status === 'active'; });
+        var secret = pbSettings.secretKey || 'YOUR_SECRET';
+
+        /* Global postback URL */
+        document.getElementById('pbGlobalUrl').textContent = domain + '/api/postback?click_id={click_id}&secret=' + secret + '&payout={payout}&txn_id={txn_id}&status=approved';
+
+        /* Outgoing postback URL */
+        if (user.postbackUrl) document.getElementById('affPbUrl').value = user.postbackUrl;
+
+        /* Offer dropdowns */
+        var oh = '<option value="">-- Choose Offer --</option>';
+        offers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        document.getElementById('pbOfferSel').innerHTML = oh;
+        document.getElementById('pbTestOffer').innerHTML = oh;
+
+        /* Per-offer outgoing postback list */
+        var perH = '';
+        offers.forEach(function(o) {
+            var key = 'offerPb_' + o._id;
+            var val = user[key] || '';
+            perH += '<div class="f-grp" style="margin-bottom:8px"><label style="font-size:11px">' + esc(o.name) + ' (ID: ' + o._id + ')</label>' +
+                '<div style="display:flex;gap:6px"><input type="text" class="f-inp" id="' + key + '" value="' + esc(val) + '" placeholder="Leave empty to use global" style="flex:1">' +
+                '<button class="btn-p" style="padding:5px 10px;font-size:11px;white-space:nowrap" onclick="saveOfferPb(\'' + o._id + '\')"><i class="fas fa-save"></i></button></div></div>';
+        });
+        document.getElementById('perOfferPbList').innerHTML = perH || '<p style="font-size:12px;color:var(--tl)">No active offers</p>';
+
+        loadPbLog();
+    });
 }
+
 function savePbUrl() {
     var url = document.getElementById('affPbUrl').value.trim();
     fbPatch('users/' + myUid, { postbackUrl: url }).then(function() { toast('Postback URL saved!'); });
 }
+function saveOfferPb(offerId) {
+    var key = 'offerPb_' + offerId;
+    var url = document.getElementById(key).value.trim();
+    var data = {}; data[key] = url;
+    fbPatch('users/' + myUid, data).then(function() { toast('Offer postback saved!'); });
+}
+
 function copyGlobalPb() {
     var txt = document.getElementById('pbGlobalUrl').textContent;
-    navigator.clipboard.writeText(txt).then(function() { toast('Global postback URL copied!'); });
+    navigator.clipboard.writeText(txt).then(function() { toast('Copied!'); });
 }
+function copyElText(id) {
+    var txt = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(txt).then(function() { toast('Copied!'); });
+}
+
+/* Per-offer postback URL generation */
+function onPbOfferSel() {
+    var offerId = document.getElementById('pbOfferSel').value;
+    var platform = document.getElementById('pbPlatformSel').value;
+    if (offerId && platform) buildOfferPbUrl();
+    else document.getElementById('pbOfferResult').style.display = 'none';
+}
+function onPbPlatformSel() { onPbOfferSel(); }
+
+function buildOfferPbUrl() {
+    var platform = document.getElementById('pbPlatformSel').value;
+    if (!platform) return;
+    var macros = pbPlatformMacros[platform] || pbPlatformMacros.custom;
+    var domain = window.location.origin;
+    var secret = document.getElementById('pbGlobalUrl').textContent.match(/secret=([^&]+)/);
+    secret = secret ? secret[1] : 'YOUR_SECRET';
+    var url = domain + '/api/postback?click_id=' + macros.click_id + '&secret=' + secret + '&payout=' + macros.payout + '&txn_id=' + macros.txn_id + '&status=' + macros.status;
+    document.getElementById('pbOfferUrl').textContent = url;
+    document.getElementById('pbOfferResult').style.display = 'block';
+}
+
+/* Test URL generation */
+function genTestUrl() {
+    var offerId = document.getElementById('pbTestOffer').value;
+    var payout = document.getElementById('pbTestPayout').value || '10';
+    if (!offerId) { document.getElementById('pbTestResult').style.display = 'none'; return; }
+    var domain = window.location.origin;
+    var secret = document.getElementById('pbGlobalUrl').textContent.match(/secret=([^&]+)/);
+    secret = secret ? secret[1] : 'YOUR_SECRET';
+
+    var clickUrl = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(myAffId || myUid) + '?sub1=TEST&test=1';
+    var postbackUrl = domain + '/api/postback?click_id=CLICK_ID_HERE&secret=' + secret + '&payout=' + payout + '&txn_id=TEST-' + Date.now().toString(36).toUpperCase() + '&status=approved&test=1';
+
+    document.getElementById('pbTestClickUrl').textContent = clickUrl;
+    document.getElementById('pbTestPostbackUrl').textContent = postbackUrl;
+    document.getElementById('pbTestResult').style.display = 'block';
+}
+
+/* Postback Log */
+function loadPbLog() {
+    fbGet('postback-log').then(function(data) {
+        var logs = objToArr(data).filter(function(l) {
+            return l.affiliateId === myUid || l.affiliateId === (myAffId || '');
+        }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); }).slice(0, 30);
+
+        if (!logs.length) {
+            document.getElementById('pbLogBody').innerHTML = '<tr><td colspan="6" class="no-data" style="padding:20px"><i class="fas fa-inbox"></i><p>No postback logs yet</p></td></tr>';
+            return;
+        }
+        var h = '';
+        logs.forEach(function(l) {
+            var isTest = (l.rawQuery || '').indexOf('test=1') > -1 || (l.detail || '').indexOf('TEST') > -1;
+            var statusBadge = l.processed ?
+                '<span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">OK</span>' :
+                '<span style="background:#fde8e8;color:#c62828;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">FAIL</span>';
+            if (isTest) statusBadge += ' <span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700">TEST</span>';
+            var offerName = l.offerId || '-';
+            allOffers.forEach(function(o) { if (o._id === l.offerId) offerName = o.name; });
+            h += '<tr><td style="font-size:11px;white-space:nowrap">' + fmtDt(l.timestamp) + '</td>' +
+                '<td>' + statusBadge + '</td>' +
+                '<td style="font-family:monospace;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(l.clickId || '-') + '</td>' +
+                '<td>' + esc(offerName) + '</td>' +
+                '<td style="font-weight:700">$' + (parseFloat(l.payout) || 0).toFixed(2) + '</td>' +
+                '<td style="font-size:10px;color:var(--tl);max-width:150px;overflow:hidden;text-overflow:ellipsis">' + esc(l.detail || '-') + '</td></tr>';
+        });
+        document.getElementById('pbLogBody').innerHTML = h;
+    });
+}
+function fmtDt(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
 
 /* ── Reporting (Clicks) ── */
 var ckPage = 1;
@@ -1872,7 +2014,7 @@ var cvPage = 1;
 function loadAnalytics() {
     Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('payments/records')]).then(function(r) {
         allOffers = objToArr(r[1]);
-        myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid; });
         var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
         if (!document.getElementById('cvFrom').value) document.getElementById('cvFrom').value = from.toISOString().split('T')[0];
@@ -2094,7 +2236,7 @@ function switchSettingsTab(tab) {
 function loadNotifDot() {
     fbGet('conversions').then(function(data) {
         var weekAgo = Date.now() - 7 * 86400000;
-        var hasPending = objToArr(data).some(function(c) { return c.affiliateId === myUid && !c.overCap && c.status === 'pending' && (c.createdAt || 0) >= weekAgo; });
+        var hasPending = objToArr(data).some(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest && c.status === 'pending' && (c.createdAt || 0) >= weekAgo; });
         document.getElementById('notifDot').style.display = hasPending ? 'block' : 'none';
     });
 }
@@ -2123,7 +2265,7 @@ function loadNotifications() {
     list.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
     Promise.all([fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
-        var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap; });
+        var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         var pays = objToArr(r[1]).filter(function(p) { return p.affiliateId === myUid; });
         var notifs = [];
 

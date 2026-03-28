@@ -1713,7 +1713,7 @@ function collapseSidebar() {
 /* ===== LOAD ALL DATA ===== */
 function loadAllData() {
     Promise.all([fbGet('offers'), fbGet('users'), fbGet('clicks'), fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers')]).then(function(res) {
-        allOffers = objToArr(res[0]); allUsers = objToArr(res[1]); allClicks = objToArr(res[2]); allConversions = objToArr(res[3]); allSignups = objToArr(res[4]); allPayments = objToArr(res[5]);
+        allOffers = objToArr(res[0]); allUsers = objToArr(res[1]); allClicks = objToArr(res[2]); allConversions = objToArr(res[3]).filter(function(c) { return !c.isTest; }); allSignups = objToArr(res[4]); allPayments = objToArr(res[5]);
         allApplications = objToArr(res[6]);
         allAdvertisers = objToArr(res[8]);
         /* Flatten nested offerAssignments: {offerId: {affId: data}} */
