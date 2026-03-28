@@ -462,7 +462,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
     </div>
     <div class="sidebar-main" id="sidebarMain">
-        <div class="sidebar-logo"><img src="https://i.ibb.co/ZzqT56H0/image.png" alt="Clima"></div>
+        <div class="sidebar-logo"><img src="/images/logo.webp" alt="Clima"></div>
         <nav class="sidebar-nav">
             <div class="nav-group">
                 <div class="nav-item" data-page="dashboard" onclick="goPage('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
@@ -927,7 +927,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         <div class="form-group"><label>From Email</label><input type="email" id="smtpFromEmail" placeholder="noreply@yournetwork.com"></div>
                         <div class="form-group"><label>From Name</label><input type="text" id="smtpFromName" placeholder="Clima Network"></div>
                     </div>
-                    <div class="form-group"><label>Email Logo URL</label><input type="text" id="smtpLogoUrl" placeholder="https://i.ibb.co/ZzqT56H0/image.png"><div class="form-help">Logo shown in email templates. Leave blank for default.</div></div>
+                    <div class="form-group"><label>Email Logo URL</label><input type="text" id="smtpLogoUrl" placeholder="/images/logo.webp"><div class="form-help">Logo shown in email templates. Leave blank for default.</div></div>
                     <div style="display:flex;gap:10px;margin-top:12px;">
                         <button class="btn-primary-sm" onclick="saveSmtpSettings()"><i class="fas fa-save"></i> Save SMTP</button>
                         <button class="btn-secondary" onclick="sendTestEmail()"><i class="fas fa-paper-plane"></i> Send Test Email</button>
@@ -3964,7 +3964,7 @@ function sendTemplateEmail(templateKey, toEmail, vars) {
         if (!tpl || tpl.enabled === false || tpl.enabled === 'false') { console.log('Template disabled: ' + templateKey); return; }
         var networkName = network.networkName || 'Clima Affiliate Network';
         var loginUrl = window.location.origin;
-        var logo = smtp.logoUrl || 'https://i.ibb.co/ZzqT56H0/image.png';
+        var logo = smtp.logoUrl || '/images/logo.webp';
         var allVars = { networkName: networkName, loginUrl: loginUrl, logo: logo };
         Object.keys(vars || {}).forEach(function(k) { allVars[k] = vars[k]; });
         var subject = replaceVars(tpl.subject || '', allVars);
@@ -4309,7 +4309,7 @@ function previewTemplate() {
         affId: '42',
         networkName: document.getElementById('setNetName') ? (document.getElementById('setNetName').value || 'Clima Affiliate Network') : 'Clima Affiliate Network',
         loginUrl: window.location.origin,
-        logo: document.getElementById('smtpLogoUrl') ? (document.getElementById('smtpLogoUrl').value || 'https://i.ibb.co/ZzqT56H0/image.png') : 'https://i.ibb.co/ZzqT56H0/image.png'
+        logo: document.getElementById('smtpLogoUrl') ? (document.getElementById('smtpLogoUrl').value || '/images/logo.webp') : '/images/logo.webp'
     };
     var previewSubject = replaceVars(subject, sampleVars);
     var previewBody = replaceVars(body, sampleVars);

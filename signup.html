@@ -556,7 +556,7 @@ function sendSignupConfirmEmail(name, email) {
         if (!smtp || !smtp.host || !smtp.password) return;
         if (!tpl || tpl.enabled === false || tpl.enabled === 'false') return;
         var networkName = network.networkName || 'Clima Affiliate Network';
-        var logo = smtp.logoUrl || 'https://i.ibb.co/ZzqT56H0/image.png';
+        var logo = smtp.logoUrl || '/images/logo.webp';
         var vars = { name: name, email: email, networkName: networkName, loginUrl: window.location.origin, logo: logo };
         var subject = tpl.subject || ''; var body = tpl.body || '';
         Object.keys(vars).forEach(function(k) { var re = new RegExp('\\{\\{' + k + '\\}\\}', 'g'); subject = subject.replace(re, vars[k]); body = body.replace(re, vars[k]); });
