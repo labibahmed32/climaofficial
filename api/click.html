@@ -75,12 +75,12 @@ function getIP() {
         .catch(function() { return ''; });
 }
 
-function getCountry(ip) {
-    if (!ip) return Promise.resolve('');
-    return fetch('https://ip-api.com/json/' + ip + '?fields=countryCode')
+function getGeoData(ip) {
+    if (!ip) return Promise.resolve({});
+    return fetch('https://ip-api.com/json/' + ip + '?fields=status,countryCode,country,city,isp,org,as,timezone,proxy,hosting')
         .then(function(r) { return r.json(); })
-        .then(function(d) { return d.countryCode || ''; })
-        .catch(function() { return ''; });
+        .then(function(d) { return d.status === 'success' ? d : {}; })
+        .catch(function() { return {}; });
 }
 
 function buildRedirectUrl(template, clickId, affId, subs) {
@@ -163,8 +163,9 @@ function processClick() {
             }
         }
 
-        /* Get country for the click */
-        getCountry(ip).then(function(country) {
+        /* Get geo data for the click */
+        getGeoData(ip).then(function(geo) {
+            var country = geo.countryCode || '';
             /* Check country targeting */
             if (offer.allowedCountries && offer.allowedCountries.trim()) {
                 var allowed = offer.allowedCountries.toUpperCase().split(',').map(function(c) { return c.trim(); });
@@ -182,9 +183,17 @@ function processClick() {
                 ip: ip,
                 userAgent: uaInfo.userAgent,
                 country: country,
+                countryName: geo.country || '',
+                city: geo.city || '',
+                isp: geo.isp || '',
+                timezone: geo.timezone || '',
+                isProxy: geo.proxy || false,
+                isHosting: geo.hosting || false,
                 device: uaInfo.device,
                 browser: uaInfo.browser,
                 os: uaInfo.os,
+                screenRes: (typeof screen !== 'undefined') ? screen.width + 'x' + screen.height : '',
+                language: navigator.language || '',
                 referer: document.referrer || '',
                 sub1: sub1,
                 sub2: sub2,

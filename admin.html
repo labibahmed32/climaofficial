@@ -180,6 +180,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .badge-inactive{background:#f5f5f5;color:#999;}
 .badge-yes{background:#e8f5e9;color:#2e7d32;}
 .badge-no{background:#f5f5f5;color:#999;}
+/* Offer Card Grid */
+.offer-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;}
+.offer-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;position:relative;transition:transform .2s,box-shadow .2s;}
+.offer-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.offer-card-img{width:100%;height:150px;overflow:hidden;background:#f0f4f8;}
+.offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A6C80,#064d5c);color:rgba(255,255,255,.4);font-size:38px;}
+.offer-card-badge{position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(4px);}
+.offer-card-badge.s-active{background:rgba(232,245,233,.9);color:#2e7d32;}
+.offer-card-badge.s-paused{background:rgba(255,243,224,.9);color:#e65100;}
+.offer-card-badge.s-private{background:rgba(240,240,240,.9);color:#666;}
+.offer-card-body{padding:14px 16px 16px;}
+.offer-card-name{font-size:14px;font-weight:700;color:var(--text-dark);margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.offer-card-id{font-family:monospace;font-size:10px;color:var(--primary);opacity:.7;}
+.offer-card-tags{display:flex;gap:5px;margin:8px 0;flex-wrap:wrap;}
+.offer-card-tag{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
+.offer-card-tag.cat{background:#f0f4f8;color:var(--text-mid);text-transform:capitalize;}
+.offer-card-tag.model{background:#e3f2fd;color:#1565c0;text-transform:uppercase;}
+.offer-card-adv{font-size:11px;color:var(--text-muted);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.offer-card-adv i{margin-right:3px;font-size:9px;opacity:.5;}
+.offer-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px 0;border-top:1px solid #f0f2f5;border-bottom:1px solid #f0f2f5;margin-bottom:10px;}
+.offer-card-st{text-align:center;}
+.offer-card-st span:first-child{display:block;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}
+.offer-card-st span:last-child{display:block;font-size:13px;font-weight:700;}
+.offer-card-foot{display:flex;justify-content:space-between;align-items:center;}
+.offer-card-cap{font-size:10px;color:var(--text-muted);}
+.offer-card-cap i{margin-right:2px;font-size:9px;}
+.offer-card-acts{display:flex;gap:4px;}
 
 /* === STAT CARDS SM (for conv/pay pages) === */
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
@@ -560,13 +588,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="toolbar-left">
                     <input type="text" id="offerSearch" placeholder="Search offers..." class="form-input-sm" onkeyup="renderOffers()">
                     <select id="offerStatusFilter" class="form-select-sm" onchange="renderOffers()"><option value="">All Status</option><option value="active">Active</option><option value="paused">Paused</option><option value="private">Private</option></select>
+                    <button class="btn-sm" id="offerViewToggle" onclick="toggleOfferView()" title="Toggle view" style="min-width:34px;text-align:center"><i class="fas fa-th" id="offerViewIcon"></i></button>
                 </div>
                 <button class="btn-secondary" id="migrateIdsBtn" onclick="migrateOfferIds()" style="display:none;"><i class="fas fa-sync-alt"></i> Migrate Old IDs</button>
                 <button class="btn-primary-sm" onclick="openOfferModal()"><i class="fas fa-plus"></i> New Offer</button>
             </div>
-            <div class="table-wrap"><div class="table-scroll">
+            <div id="offersGridView"><div class="offer-card-grid" id="offersCardGrid"></div></div>
+            <div id="offersTableView" style="display:none"><div class="table-wrap"><div class="table-scroll">
                 <table class="data-table"><thead><tr><th style="width:80px">ID</th><th style="width:36px"></th><th>Name</th><th>Advertiser</th><th>Model</th><th>Revenue</th><th>Payout</th><th>Earnings</th><th>Cap</th><th>Countries</th><th>Status</th><th>Actions</th></tr></thead><tbody id="offersTbody"></tbody></table>
-            </div><div class="pagination-bar"><span class="page-info" id="offersPageInfo"></span><div class="pagination-controls" id="offersPagination"></div></div></div>
+            </div></div></div>
+            <div class="pagination-bar"><span class="page-info" id="offersPageInfo"></span><div class="pagination-controls" id="offersPagination"></div></div>
         </div>
 
         <!-- ===== AFFILIATES ===== -->
@@ -1077,6 +1108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="form-row">
                 <div class="form-group"><label>Category</label><select id="ofCategory"><option value="health">Health</option><option value="finance">Finance</option><option value="dating">Dating</option><option value="gaming">Gaming</option><option value="ecommerce">Ecommerce</option><option value="crypto">Crypto</option><option value="education">Education</option><option value="software">Software</option><option value="other">Other</option></select></div>
                 <div class="form-group"><label>Status</label><select id="ofStatus"><option value="active">Active</option><option value="paused">Paused</option><option value="private">Private</option></select></div>
+                <div class="form-group"><label>Visibility</label><select id="ofVisibility"><option value="approval">Approval Required</option><option value="public">Public (All Affiliates)</option></select><div class="form-help">Public: affiliates get tracking link instantly. Approval: they must apply first.</div></div>
             </div>
             <div class="form-group">
                 <label>Offer Image / Logo URL</label>
@@ -1992,6 +2024,15 @@ function loadOffers() {
 
 function getCurrSymbol(cur) { return cur === 'EUR' ? '\u20ac' : cur === 'GBP' ? '\u00a3' : '$'; }
 
+var offerViewMode = 'grid';
+function toggleOfferView() {
+    offerViewMode = offerViewMode === 'grid' ? 'table' : 'grid';
+    document.getElementById('offerViewIcon').className = offerViewMode === 'grid' ? 'fas fa-th' : 'fas fa-list';
+    document.getElementById('offersGridView').style.display = offerViewMode === 'grid' ? '' : 'none';
+    document.getElementById('offersTableView').style.display = offerViewMode === 'table' ? '' : 'none';
+    renderOffers();
+}
+
 function renderOffers() {
     var search = (document.getElementById('offerSearch').value || '').toLowerCase();
     var statusF = document.getElementById('offerStatusFilter').value;
@@ -2002,6 +2043,35 @@ function renderOffers() {
     });
     var start = (offersPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE;
     var page = filtered.slice(start, end);
+
+    /* Card Grid */
+    var cards = '';
+    page.forEach(function(o) {
+        var cs = getCurrSymbol(o.currency);
+        var profit = (parseFloat(o.revenue) || 0) - (parseFloat(o.payout) || 0);
+        var profitColor = profit >= 0 ? 'var(--green)' : 'var(--red)';
+        var catLabel = (o.category || 'other').charAt(0).toUpperCase() + (o.category || 'other').slice(1);
+        var imgH = o.thumbnail ? '<div class="offer-card-img"><img src="' + escHtml(o.thumbnail) + '" onerror="this.parentElement.innerHTML=\'<div class=offer-card-img-ph><i class=fas\\ fa-bullhorn></i></div>\'"></div>' : '<div class="offer-card-img"><div class="offer-card-img-ph"><i class="fas fa-bullhorn"></i></div></div>';
+        cards += '<div class="offer-card">' + imgH +
+            '<div class="offer-card-badge s-' + (o.status || 'inactive') + '">' + escHtml(o.status || '-') + '</div>' +
+            '<div class="offer-card-body">' +
+            '<div class="offer-card-name" title="' + escHtml(o.name) + '">' + escHtml(o.name) + '</div>' +
+            '<div class="offer-card-id">#' + escHtml(o._id) + '</div>' +
+            '<div class="offer-card-tags"><span class="offer-card-tag cat">' + escHtml(catLabel) + '</span><span class="offer-card-tag model">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + '</span></div>' +
+            '<div class="offer-card-adv"><i class="fas fa-building"></i> ' + escHtml(getAdvName(o.advertiser)) + '</div>' +
+            '<div class="offer-card-stats">' +
+            '<div class="offer-card-st"><span>Revenue</span><span style="color:var(--primary)">' + fmtMoney(o.revenue,cs) + '</span></div>' +
+            '<div class="offer-card-st"><span>Payout</span><span style="color:var(--green)">' + fmtMoney(o.payout,cs) + '</span></div>' +
+            '<div class="offer-card-st"><span>Profit</span><span style="color:' + profitColor + '">' + fmtMoney(profit,cs) + '</span></div>' +
+            '</div>' +
+            '<div class="offer-card-foot">' +
+            '<span class="offer-card-cap"><i class="fas fa-tachometer-alt"></i> ' + (o.dailyCap ? o.dailyCap+'/day' : 'Unlimited') + '</span>' +
+            '<div class="offer-card-acts"><button class="btn-sm" onclick="openOfferModal(\'' + o._id + '\')"><i class="fas fa-edit"></i></button> <button class="btn-danger-sm" onclick="deleteOffer(\'' + o._id + '\')"><i class="fas fa-trash"></i></button></div>' +
+            '</div></div></div>';
+    });
+    document.getElementById('offersCardGrid').innerHTML = cards || '<div class="no-data" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>No offers found</p></div>';
+
+    /* Table */
     var html = '';
     page.forEach(function(o) {
         var cs = getCurrSymbol(o.currency);
@@ -2010,20 +2080,7 @@ function renderOffers() {
         var thumbHtml = o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" style="width:28px;height:28px;border-radius:6px;object-fit:cover;border:1px solid var(--card-border);" onerror="this.style.display=\'none\'">' : '<i class="fas fa-image" style="color:var(--text-muted);font-size:16px;"></i>';
         var modelBadge = '<span class="badge" style="background:#e3f2fd;color:#1565c0;text-transform:uppercase;font-size:10px;">' + escHtml(o.payoutModel || 'cpa') + '</span>';
         var countriesText = o.countryMode === 'specific' && o.allowedCountries ? escHtml(o.allowedCountries) : '<span style="color:var(--text-muted)">All</span>';
-        html += '<tr>' +
-            '<td style="font-family:monospace;font-size:11px;font-weight:700;color:var(--primary)">' + escHtml(o._id) + '</td>' +
-            '<td style="text-align:center">' + thumbHtml + '</td>' +
-            '<td><strong>' + escHtml(o.name) + '</strong></td>' +
-            '<td>' + escHtml(getAdvName(o.advertiser)) + '</td>' +
-            '<td>' + modelBadge + '</td>' +
-            '<td style="font-weight:700;color:var(--primary)">' + fmtMoney(o.revenue, cs) + '</td>' +
-            '<td style="font-weight:700;color:var(--green)">' + fmtMoney(o.payout, cs) + '</td>' +
-            '<td style="font-weight:700;color:' + profitColor + '">' + fmtMoney(profit, cs) + '</td>' +
-            '<td>' + (o.dailyCap ? o.dailyCap + '/day' : 'Unlimited') + '</td>' +
-            '<td style="font-size:11px;">' + countriesText + '</td>' +
-            '<td>' + statusBadge(o.status) + '</td>' +
-            '<td><button class="btn-sm" onclick="openOfferModal(\'' + o._id + '\')"><i class="fas fa-edit"></i></button> <button class="btn-danger-sm" onclick="deleteOffer(\'' + o._id + '\')"><i class="fas fa-trash"></i></button></td>' +
-            '</tr>';
+        html += '<tr><td style="font-family:monospace;font-size:11px;font-weight:700;color:var(--primary)">' + escHtml(o._id) + '</td><td style="text-align:center">' + thumbHtml + '</td><td><strong>' + escHtml(o.name) + '</strong></td><td>' + escHtml(getAdvName(o.advertiser)) + '</td><td>' + modelBadge + '</td><td style="font-weight:700;color:var(--primary)">' + fmtMoney(o.revenue, cs) + '</td><td style="font-weight:700;color:var(--green)">' + fmtMoney(o.payout, cs) + '</td><td style="font-weight:700;color:' + profitColor + '">' + fmtMoney(profit, cs) + '</td><td>' + (o.dailyCap ? o.dailyCap + '/day' : 'Unlimited') + '</td><td style="font-size:11px;">' + countriesText + '</td><td>' + statusBadge(o.status) + '</td><td><button class="btn-sm" onclick="openOfferModal(\'' + o._id + '\')"><i class="fas fa-edit"></i></button> <button class="btn-danger-sm" onclick="deleteOffer(\'' + o._id + '\')"><i class="fas fa-trash"></i></button></td></tr>';
     });
     document.getElementById('offersTbody').innerHTML = html || '<tr><td colspan="12" class="no-data"><i class="fas fa-bullhorn"></i>No offers found</td></tr>';
     renderPagination('offersPagination', 'offersPageInfo', filtered.length, offersPage, PAGE_SIZE, 'goOffersPage');
@@ -2307,6 +2364,7 @@ function openOfferModal(id) {
     document.getElementById('ofDescription').value = '';
     document.getElementById('ofCategory').value = 'health';
     document.getElementById('ofStatus').value = 'active';
+    document.getElementById('ofVisibility').value = 'approval';
     document.getElementById('ofThumbnail').value = '';
     document.getElementById('ofImgPreview').classList.remove('visible');
     document.getElementById('ofPreviewUrl').value = '';
@@ -2347,6 +2405,7 @@ function openOfferModal(id) {
             document.getElementById('ofDescription').value = o.description || '';
             document.getElementById('ofCategory').value = o.category || 'health';
             document.getElementById('ofStatus').value = o.status || 'active';
+            document.getElementById('ofVisibility').value = o.visibility || 'approval';
             document.getElementById('ofThumbnail').value = o.thumbnail || '';
             document.getElementById('ofPreviewUrl').value = o.previewUrl || '';
             document.getElementById('ofPayoutModel').value = o.payoutModel || 'cpa';
@@ -2427,6 +2486,7 @@ function saveOffer() {
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
         detectedTracker: document.getElementById('ofTrackerType').value || '',
+        visibility: document.getElementById('ofVisibility').value || 'approval',
         upsell1Price: parseFloat(document.getElementById('ofUpsell1Price').value) || 0,
         upsell2Price: parseFloat(document.getElementById('ofUpsell2Price').value) || 0,
         upsell3Price: parseFloat(document.getElementById('ofUpsell3Price').value) || 0,
@@ -2521,7 +2581,8 @@ function wzCollectData() {
         countryMode: countryMode,
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
-        detectedTracker: document.getElementById('ofTrackerType').value || ''
+        detectedTracker: document.getElementById('ofTrackerType').value || '',
+        visibility: document.getElementById('ofVisibility').value || 'approval'
     };
 }
 
