@@ -178,6 +178,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .badge-rejected{background:#fde8e8;color:#c62828;}
 .badge-blocked{background:#fde8e8;color:#c62828;}
 .badge-inactive{background:#f5f5f5;color:#999;}
+.badge-paid{background:#e8f5e9;color:#2e7d32;}
+.badge-delayed{background:#e3f2fd;color:#1565c0;}
+.badge-hold{background:#fde8e8;color:#c62828;}
 .badge-yes{background:#e8f5e9;color:#2e7d32;}
 .badge-no{background:#f5f5f5;color:#999;}
 /* Offer Card Grid */
@@ -750,20 +753,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div>
             <div class="tab-content active" id="payTab-records">
                 <div class="toolbar">
-                    <div class="toolbar-left"><select id="payStatusFilter" class="form-select-sm" onchange="renderPayments()"><option value="">All</option><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
+                    <div class="toolbar-left"><select id="payStatusFilter" class="form-select-sm" onchange="renderPayments()"><option value="">All</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="delayed">Delayed</option><option value="hold">Hold</option></select></div>
                     <button class="btn-primary-sm" onclick="openPayModal()"><i class="fas fa-plus"></i> New Payment</button>
                 </div>
                 <div class="table-wrap"><div class="table-scroll">
-                    <table class="data-table"><thead><tr><th>ID</th><th>Affiliate</th><th>Amount</th><th>Method</th><th>Period</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="payTbody"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>Affiliate</th><th>Amount</th><th>Method</th><th>Period</th><th>Ref/Txn</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="payTbody"></tbody></table>
                 </div></div>
             </div>
             <div class="tab-content" id="payTab-invoices">
                 <div class="toolbar">
                     <div class="toolbar-left"></div>
-                    <button class="btn-primary-sm" onclick="generateInvoices()"><i class="fas fa-file-invoice-dollar"></i> Generate from Conversions</button>
+                    <button class="btn-primary-sm" onclick="openInvoiceGenModal()"><i class="fas fa-file-invoice-dollar"></i> Generate from Conversions</button>
                 </div>
                 <div class="table-wrap"><div class="table-scroll">
-                    <table class="data-table"><thead><tr><th>Invoice #</th><th>Affiliate</th><th>Period</th><th>Conversions</th><th>Amount</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="invoiceTbody"></tbody></table>
+                    <table class="data-table"><thead><tr><th>Invoice #</th><th>Affiliate</th><th>Period</th><th>Conversions</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="invoiceTbody"></tbody></table>
                 </div></div>
             </div>
         </div>
@@ -1373,16 +1376,76 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('convModal')">Cancel</button><button class="btn-primary-sm" onclick="saveConversion()"><i class="fas fa-save"></i> Save Conversion</button></div>
 </div></div>
 
-<div class="modal-overlay" id="payModal"><div class="modal-panel">
-    <div class="modal-header"><h3>New Payment Record</h3><button class="modal-close" onclick="closeModal('payModal')">&times;</button></div>
+<div class="modal-overlay" id="payModal"><div class="modal-panel" style="max-width:640px;">
+    <div class="modal-header"><h3 id="payModalTitle">New Payment Record</h3><button class="modal-close" onclick="closeModal('payModal')">&times;</button></div>
     <div class="modal-body">
+        <input type="hidden" id="pmEditKey" value="">
         <div class="form-row"><div class="form-group"><label>Affiliate *</label><select id="pmAffiliate" onchange="onPayAffChange()"></select></div><div class="form-group"><label>Amount *</label><input type="number" id="pmAmount" step="0.01" value="0"></div></div>
-        <div class="form-row"><div class="form-group"><label>Payment Method</label><select id="pmMethod"><option value="paypal">PayPal</option><option value="wire">Wire Transfer</option><option value="ach">ACH</option><option value="usdt">USDT</option><option value="payoneer">Payoneer</option></select></div><div class="form-group"><label>Period</label><input type="text" id="pmPeriod" placeholder="e.g. Jan 2025"></div></div>
         <div id="pmPayInfo" style="display:none;padding:10px 14px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;margin-bottom:10px;font-size:12px;color:#0f766e;"></div>
-        <div class="form-group"><label>Status</label><select id="pmStatus"><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
+        <div id="pmPayWarning" style="display:none;padding:10px 14px;background:#fff3e0;border:1px solid #ffe0b2;border-radius:6px;margin-bottom:10px;font-size:12px;color:#e65100;"><i class="fas fa-exclamation-triangle"></i> No payment method saved for this affiliate.</div>
+        <div class="form-row"><div class="form-group"><label>Payment Method</label><select id="pmMethod"><option value="paypal">PayPal</option><option value="wire">Wire Transfer</option><option value="ach">ACH</option><option value="usdt">USDT</option><option value="payoneer">Payoneer</option></select></div><div class="form-group"><label>Period</label><input type="text" id="pmPeriod" placeholder="e.g. Jan 2025"></div></div>
+        <div class="form-row"><div class="form-group"><label>Invoice # (optional)</label><input type="text" id="pmInvoiceNum" placeholder="e.g. INV-202601-001"></div><div class="form-group"><label>Transaction Ref/ID</label><input type="text" id="pmTxnRef" placeholder="e.g. TXN-12345"></div></div>
+        <div class="form-group"><label>Status</label><select id="pmStatus" onchange="onPayStatusChange()"><option value="pending">Pending</option><option value="paid">Paid</option><option value="delayed">Delayed</option><option value="hold">Hold</option></select></div>
+        <div id="pmHoldReasonWrap" style="display:none;"><div class="form-group"><label>Hold Reason *</label><textarea id="pmHoldReason" placeholder="Enter reason for holding payment"></textarea></div></div>
+        <div id="pmExpectedDateWrap" style="display:none;"><div class="form-group"><label>Expected Payment Date</label><input type="date" id="pmExpectedDate"></div></div>
         <div class="form-group"><label>Notes</label><textarea id="pmNotes" placeholder="Optional notes"></textarea></div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;"><label style="margin:0;"><input type="checkbox" id="pmSendEmail" checked> Send email notification to affiliate</label></div>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('payModal')">Cancel</button><button class="btn-primary-sm" onclick="savePayment()"><i class="fas fa-save"></i> Save Payment</button></div>
+</div></div>
+
+<div class="modal-overlay" id="invoiceGenModal"><div class="modal-panel" style="max-width:750px;">
+    <div class="modal-header"><h3><i class="fas fa-file-invoice-dollar"></i> Generate Invoices</h3><button class="modal-close" onclick="closeModal('invoiceGenModal')">&times;</button></div>
+    <div class="modal-body">
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:600;margin-bottom:6px;display:block;">Date Range</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+                <button class="btn-sm" onclick="setInvDatePreset('thisWeek')">This Week</button>
+                <button class="btn-sm" onclick="setInvDatePreset('lastWeek')">Last Week</button>
+                <button class="btn-sm" onclick="setInvDatePreset('thisMonth')">This Month</button>
+                <button class="btn-sm" onclick="setInvDatePreset('lastMonth')">Last Month</button>
+                <button class="btn-sm" onclick="setInvDatePreset('biweekly')">Bi-Weekly</button>
+                <button class="btn-sm" onclick="setInvDatePreset('custom')">Custom</button>
+            </div>
+            <div class="form-row"><div class="form-group"><label>From</label><input type="date" id="invDateFrom"></div><div class="form-group"><label>To</label><input type="date" id="invDateTo"></div></div>
+        </div>
+        <div class="form-group"><label>Period Name *</label><input type="text" id="invPeriodName" placeholder="e.g. Jan 2025"></div>
+        <div style="margin-bottom:10px;">
+            <button class="btn-primary-sm" onclick="previewInvoiceGen()" style="margin-bottom:10px;"><i class="fas fa-search"></i> Preview</button>
+        </div>
+        <div id="invPreviewArea" style="display:none;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:12px;">
+                <div style="font-weight:700;margin-bottom:8px;" id="invPreviewSummary"></div>
+                <div style="max-height:250px;overflow-y:auto;" id="invPreviewList"></div>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px;"><label style="margin:0;"><input type="checkbox" id="invSendEmails" checked> Send email notifications to affiliates</label></div>
+        </div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('invoiceGenModal')">Cancel</button><button class="btn-primary-sm" id="invGenBtn" onclick="executeInvoiceGen()" disabled><i class="fas fa-file-invoice"></i> Generate Invoices</button></div>
+</div></div>
+
+<div class="modal-overlay" id="invoiceEditModal"><div class="modal-panel" style="max-width:550px;">
+    <div class="modal-header"><h3><i class="fas fa-edit"></i> Edit Invoice</h3><button class="modal-close" onclick="closeModal('invoiceEditModal')">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="invEditKey" value="">
+        <div class="form-row"><div class="form-group"><label>Invoice #</label><input type="text" id="invEditNumber" readonly style="background:#f1f5f9;"></div><div class="form-group"><label>Affiliate</label><input type="text" id="invEditAff" readonly style="background:#f1f5f9;"></div></div>
+        <div class="form-row"><div class="form-group"><label>Period</label><input type="text" id="invEditPeriod"></div><div class="form-group"><label>Amount</label><input type="number" id="invEditAmount" step="0.01"></div></div>
+        <div class="form-group"><label>Status</label><select id="invEditStatus"><option value="pending">Pending</option><option value="paid">Paid</option><option value="delayed">Delayed</option><option value="hold">Hold</option></select></div>
+        <div class="form-group"><label>Notes</label><textarea id="invEditNotes" placeholder="Optional notes"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('invoiceEditModal')">Cancel</button><button class="btn-primary-sm" onclick="saveInvoiceEdit()"><i class="fas fa-save"></i> Save</button><button class="btn-primary-sm" onclick="saveAndDownloadInvoice()" style="background:var(--primary);"><i class="fas fa-file-pdf"></i> Save & Download PDF</button></div>
+</div></div>
+
+<div class="modal-overlay" id="payStatusModal"><div class="modal-panel" style="max-width:480px;">
+    <div class="modal-header"><h3 id="payStatusModalTitle">Update Payment Status</h3><button class="modal-close" onclick="closeModal('payStatusModal')">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="psRecordId" value="">
+        <div class="form-group"><label>New Status</label><select id="psNewStatus" onchange="onPayStatusModalChange()"><option value="pending">Pending</option><option value="paid">Paid</option><option value="delayed">Delayed</option><option value="hold">Hold</option></select></div>
+        <div id="psHoldReasonWrap" style="display:none;"><div class="form-group"><label>Hold Reason *</label><textarea id="psHoldReason" placeholder="Enter reason for holding payment"></textarea></div></div>
+        <div id="psExpectedDateWrap" style="display:none;"><div class="form-group"><label>Expected Payment Date</label><input type="date" id="psExpectedDate"></div></div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;"><label style="margin:0;"><input type="checkbox" id="psSendEmail" checked> Send email notification to affiliate</label></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('payStatusModal')">Cancel</button><button class="btn-primary-sm" onclick="executePayStatusChange()"><i class="fas fa-save"></i> Update Status</button></div>
 </div></div>
 
 <div class="modal-overlay" id="assignModal"><div class="modal-panel" style="max-width:600px;">
@@ -3302,58 +3365,301 @@ function saveConversion() {
 }
 
 /* ===== PAYMENTS ===== */
+var allInvoices = [];
+var _invPreviewData = null; /* cached preview data for invoice generation */
+
 function loadPayments() {
     Promise.all([fbGet('payments/records'), fbGet('payments/invoices'), fbGet('users'), fbGet('conversions')]).then(function(res) {
-        allPayments = objToArr(res[0]); var invoices = objToArr(res[1]); allUsers = objToArr(res[2]); allConversions = objToArr(res[3]);
-        renderPayments(); renderInvoices(invoices);
+        allPayments = objToArr(res[0]); allInvoices = objToArr(res[1]); allUsers = objToArr(res[2]); allConversions = objToArr(res[3]);
+        renderPayments(); renderInvoices(allInvoices);
         var totalPaid = allPayments.filter(function(p) { return p.status === 'paid'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
         var totalPending = allPayments.filter(function(p) { return p.status === 'pending'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-        document.getElementById('payStats').innerHTML = statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', fmtMoney(totalPaid), 'Total Paid') + statCardSm('fa-clock', '#fff3e0', '#e65100', fmtMoney(totalPending), 'Pending') + statCardSm('fa-file-invoice', '#e3f2fd', '#1565c0', allPayments.length, 'Records');
+        var totalDelayed = allPayments.filter(function(p) { return p.status === 'delayed'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+        var totalHold = allPayments.filter(function(p) { return p.status === 'hold'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+        document.getElementById('payStats').innerHTML = statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', fmtMoney(totalPaid), 'Total Paid') + statCardSm('fa-clock', '#fff3e0', '#e65100', fmtMoney(totalPending), 'Pending') + statCardSm('fa-hourglass-half', '#e3f2fd', '#1565c0', fmtMoney(totalDelayed), 'Delayed') + statCardSm('fa-hand-paper', '#fde8e8', '#c62828', fmtMoney(totalHold), 'On Hold') + statCardSm('fa-file-invoice', '#f3e8fd', '#6a1b9a', allPayments.length, 'Records');
     });
 }
 function switchPayTab(tab) { document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); }); document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); }); document.getElementById('payTab-' + tab).classList.add('active'); event.target.classList.add('active'); }
+
 function renderPayments() {
     var statusF = document.getElementById('payStatusFilter').value;
     var filtered = allPayments.filter(function(p) { return !statusF || p.status === statusF; });
     filtered.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }); var html = '';
-    filtered.forEach(function(p) { html += '<tr><td style="font-family:monospace;font-size:11px">' + escHtml(p._id) + '</td><td>' + escHtml(getUserName(p.affiliateId)) + '</td><td style="font-weight:700">' + fmtMoney(p.amount) + '</td><td>' + escHtml(p.method || '-') + '</td><td>' + escHtml(p.period || '-') + '</td><td>' + statusBadge(p.status) + '</td><td>' + fmtDate(p.createdAt) + '</td><td>'; if (p.status === 'pending') { html += '<button class="btn-primary-sm" style="padding:4px 10px;font-size:11px" onclick="markPaymentPaid(\'' + p._id + '\')"><i class="fas fa-check"></i> Mark Paid</button>'; } else { html += '<span style="color:var(--green);font-weight:600"><i class="fas fa-check-circle"></i> Paid</span>'; } html += '</td></tr>'; });
-    document.getElementById('payTbody').innerHTML = html || '<tr><td colspan="8" class="no-data"><i class="fas fa-wallet"></i>No payment records</td></tr>';
+    filtered.forEach(function(p) {
+        var statusExtra = '';
+        if (p.status === 'hold' && p.holdReason) statusExtra = '<div style="font-size:10px;color:#c62828;margin-top:2px;">Reason: ' + escHtml(p.holdReason) + '</div>';
+        if (p.status === 'delayed' && p.expectedDate) statusExtra = '<div style="font-size:10px;color:#1565c0;margin-top:2px;">Expected: ' + escHtml(p.expectedDate) + '</div>';
+        html += '<tr><td style="font-family:monospace;font-size:11px">' + escHtml(p._id) + '</td><td>' + escHtml(getUserName(p.affiliateId)) + '</td><td style="font-weight:700">' + fmtMoney(p.amount) + '</td><td>' + escHtml(p.method || '-') + '</td><td>' + escHtml(p.period || '-') + '</td><td style="font-size:11px">' + escHtml(p.txnRef || '-') + '</td><td>' + statusBadge(p.status) + statusExtra + '</td><td>' + fmtDate(p.createdAt) + '</td><td style="white-space:nowrap;">';
+        html += '<button class="btn-sm" style="padding:4px 8px;font-size:11px;margin-right:4px;" onclick="openPayStatusModal(\'' + p._id + '\',\'' + (p.status || 'pending') + '\')" title="Change Status"><i class="fas fa-exchange-alt"></i></button>';
+        html += '<button class="btn-sm" style="padding:4px 8px;font-size:11px;" onclick="editPaymentRecord(\'' + p._id + '\')" title="Edit"><i class="fas fa-edit"></i></button>';
+        html += '</td></tr>';
+    });
+    document.getElementById('payTbody').innerHTML = html || '<tr><td colspan="9" class="no-data"><i class="fas fa-wallet"></i>No payment records</td></tr>';
 }
+
 function renderInvoices(invoices) {
     invoices.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }); var html = '';
-    invoices.forEach(function(inv) { html += '<tr><td style="font-weight:600">' + escHtml(inv.invoiceNumber || inv._id) + '</td><td>' + escHtml(getUserName(inv.affiliateId)) + '</td><td>' + escHtml(inv.period || '-') + '</td><td>' + (inv.convCount || 0) + '</td><td style="font-weight:700">' + fmtMoney(inv.amount) + '</td><td>' + statusBadge(inv.status || 'pending') + '</td><td>' + fmtDate(inv.createdAt) + '</td><td><button class="btn-sm" onclick="downloadInvoicePDF(\'' + inv._id + '\')" title="Download PDF"><i class="fas fa-file-pdf"></i></button></td></tr>'; });
+    invoices.forEach(function(inv) {
+        html += '<tr><td style="font-weight:600">' + escHtml(inv.invoiceNumber || inv._id) + '</td><td>' + escHtml(getUserName(inv.affiliateId)) + '</td><td>' + escHtml(inv.period || '-') + '</td><td>' + (inv.convCount || 0) + '</td><td style="font-weight:700">' + fmtMoney(inv.amount) + '</td><td>' + statusBadge(inv.status || 'pending') + '</td><td>' + fmtDate(inv.createdAt) + '</td><td style="white-space:nowrap;">';
+        html += '<button class="btn-sm" onclick="openInvoiceEditModal(\'' + inv._id + '\')" title="Edit Invoice" style="margin-right:4px;"><i class="fas fa-edit"></i></button>';
+        html += '<button class="btn-sm" onclick="downloadInvoicePDF(\'' + inv._id + '\')" title="Download PDF"><i class="fas fa-file-pdf"></i></button>';
+        html += '</td></tr>';
+    });
     document.getElementById('invoiceTbody').innerHTML = html || '<tr><td colspan="8" class="no-data"><i class="fas fa-file-invoice"></i>No invoices</td></tr>';
 }
-function openPayModal() {
-    document.getElementById('pmAmount').value = '0'; document.getElementById('pmMethod').value = 'paypal'; document.getElementById('pmPeriod').value = ''; document.getElementById('pmStatus').value = 'pending'; document.getElementById('pmNotes').value = '';
-    var afHtml = '<option value="">Select Affiliate</option>'; allUsers.filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; }); document.getElementById('pmAffiliate').innerHTML = afHtml;
+
+/* ---- Payment Modal (New/Edit) ---- */
+function onPayStatusChange() {
+    var st = document.getElementById('pmStatus').value;
+    document.getElementById('pmHoldReasonWrap').style.display = st === 'hold' ? 'block' : 'none';
+    document.getElementById('pmExpectedDateWrap').style.display = st === 'delayed' ? 'block' : 'none';
+}
+
+function openPayModal(editId) {
+    document.getElementById('pmEditKey').value = editId || '';
+    document.getElementById('payModalTitle').textContent = editId ? 'Edit Payment Record' : 'New Payment Record';
+    document.getElementById('pmAmount').value = '0';
+    document.getElementById('pmMethod').value = 'paypal';
+    document.getElementById('pmPeriod').value = '';
+    document.getElementById('pmInvoiceNum').value = '';
+    document.getElementById('pmTxnRef').value = '';
+    document.getElementById('pmStatus').value = 'pending';
+    document.getElementById('pmHoldReason').value = '';
+    document.getElementById('pmExpectedDate').value = '';
+    document.getElementById('pmNotes').value = '';
+    document.getElementById('pmSendEmail').checked = true;
+    document.getElementById('pmPayInfo').style.display = 'none';
+    document.getElementById('pmPayWarning').style.display = 'none';
+    onPayStatusChange();
+
+    var afHtml = '<option value="">Select Affiliate</option>';
+    allUsers.filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; });
+    document.getElementById('pmAffiliate').innerHTML = afHtml;
+
+    if (editId) {
+        var rec = allPayments.find(function(p) { return p._id === editId; });
+        if (rec) {
+            document.getElementById('pmAffiliate').value = rec.affiliateId || '';
+            document.getElementById('pmAmount').value = rec.amount || 0;
+            document.getElementById('pmMethod').value = rec.method || 'paypal';
+            document.getElementById('pmPeriod').value = rec.period || '';
+            document.getElementById('pmInvoiceNum').value = rec.invoiceNumber || '';
+            document.getElementById('pmTxnRef').value = rec.txnRef || '';
+            document.getElementById('pmStatus').value = rec.status || 'pending';
+            document.getElementById('pmHoldReason').value = rec.holdReason || '';
+            document.getElementById('pmExpectedDate').value = rec.expectedDate || '';
+            document.getElementById('pmNotes').value = rec.notes || '';
+            onPayStatusChange();
+            onPayAffChange();
+        }
+    }
     openModal('payModal');
 }
+
+function editPaymentRecord(id) { openPayModal(id); }
+
 function savePayment() {
-    var affId = document.getElementById('pmAffiliate').value; var amount = parseFloat(document.getElementById('pmAmount').value);
-    if (!affId) { toast('Select an affiliate', 'error'); return; } if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
-    var payId = genId('pay_');
-    var data = { affiliateId: affId, amount: amount, method: document.getElementById('pmMethod').value, period: document.getElementById('pmPeriod').value.trim(), status: document.getElementById('pmStatus').value, notes: document.getElementById('pmNotes').value.trim(), createdAt: Date.now() };
-    fbPut('payments/records/' + payId, data).then(function() { toast('Payment record created!'); closeModal('payModal'); loadPayments(); }).catch(function() { toast('Error saving payment', 'error'); });
+    var editId = document.getElementById('pmEditKey').value;
+    var affId = document.getElementById('pmAffiliate').value;
+    var amount = parseFloat(document.getElementById('pmAmount').value);
+    if (!affId) { toast('Select an affiliate', 'error'); return; }
+    if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+    var status = document.getElementById('pmStatus').value;
+    if (status === 'hold' && !document.getElementById('pmHoldReason').value.trim()) { toast('Enter a hold reason', 'error'); return; }
+
+    var payId = editId || genId('pay_');
+    var data = {
+        affiliateId: affId,
+        amount: amount,
+        method: document.getElementById('pmMethod').value,
+        period: document.getElementById('pmPeriod').value.trim(),
+        invoiceNumber: document.getElementById('pmInvoiceNum').value.trim(),
+        txnRef: document.getElementById('pmTxnRef').value.trim(),
+        status: status,
+        holdReason: status === 'hold' ? document.getElementById('pmHoldReason').value.trim() : '',
+        expectedDate: status === 'delayed' ? document.getElementById('pmExpectedDate').value : '',
+        notes: document.getElementById('pmNotes').value.trim(),
+        createdAt: Date.now()
+    };
+
+    /* If editing, preserve original createdAt */
+    if (editId) {
+        var orig = allPayments.find(function(p) { return p._id === editId; });
+        if (orig && orig.createdAt) data.createdAt = orig.createdAt;
+        data.updatedAt = Date.now();
+    }
+    if (status === 'paid') data.paidAt = Date.now();
+
+    var sendEmail = document.getElementById('pmSendEmail').checked;
+
+    fbPut('payments/records/' + payId, data).then(function() {
+        toast(editId ? 'Payment record updated!' : 'Payment record created!');
+        closeModal('payModal');
+        /* Send email based on status */
+        if (sendEmail) {
+            data._id = payId;
+            if (status === 'paid') sendPaymentPaidEmail(data);
+            else if (status === 'delayed') sendPaymentDelayedEmail(data);
+            else if (status === 'hold') sendPaymentHoldEmail(data);
+        }
+        loadPayments();
+    }).catch(function() { toast('Error saving payment', 'error'); });
 }
-function markPaymentPaid(id) {
-    if (!confirm('Mark this payment as paid?')) return;
-    fbPatch('payments/records/' + id, { status: 'paid', paidAt: Date.now() }).then(function() {
-        toast('Marked as paid!');
-        /* Send paid email */
-        fbGet('payments/records/' + id).then(function(rec) {
-            if (rec && rec.affiliateId && rec.invoiceNumber) {
-                sendPaymentPaidEmail(rec);
-            }
-        });
+
+/* ---- Payment Status Change Modal ---- */
+function openPayStatusModal(id, currentStatus) {
+    document.getElementById('psRecordId').value = id;
+    document.getElementById('psNewStatus').value = currentStatus;
+    document.getElementById('psHoldReason').value = '';
+    document.getElementById('psExpectedDate').value = '';
+    document.getElementById('psSendEmail').checked = true;
+    onPayStatusModalChange();
+    openModal('payStatusModal');
+}
+
+function onPayStatusModalChange() {
+    var st = document.getElementById('psNewStatus').value;
+    document.getElementById('psHoldReasonWrap').style.display = st === 'hold' ? 'block' : 'none';
+    document.getElementById('psExpectedDateWrap').style.display = st === 'delayed' ? 'block' : 'none';
+}
+
+function executePayStatusChange() {
+    var id = document.getElementById('psRecordId').value;
+    var newStatus = document.getElementById('psNewStatus').value;
+    var sendEmail = document.getElementById('psSendEmail').checked;
+    if (newStatus === 'hold' && !document.getElementById('psHoldReason').value.trim()) { toast('Enter a hold reason', 'error'); return; }
+
+    var patch = { status: newStatus, updatedAt: Date.now() };
+    if (newStatus === 'paid') patch.paidAt = Date.now();
+    if (newStatus === 'hold') patch.holdReason = document.getElementById('psHoldReason').value.trim();
+    if (newStatus === 'delayed') patch.expectedDate = document.getElementById('psExpectedDate').value;
+    /* Clear fields when switching away from hold/delayed */
+    if (newStatus !== 'hold') patch.holdReason = '';
+    if (newStatus !== 'delayed') patch.expectedDate = '';
+
+    fbPatch('payments/records/' + id, patch).then(function() {
+        toast('Status updated to ' + newStatus + '!');
+        closeModal('payStatusModal');
+        if (sendEmail) {
+            fbGet('payments/records/' + id).then(function(rec) {
+                if (!rec || !rec.affiliateId) return;
+                rec._id = id;
+                if (newStatus === 'paid') sendPaymentPaidEmail(rec);
+                else if (newStatus === 'delayed') sendPaymentDelayedEmail(rec);
+                else if (newStatus === 'hold') sendPaymentHoldEmail(rec);
+            });
+        }
         loadPayments();
     });
 }
 
-function generateInvoices() {
-    var period = prompt('Enter period name (e.g. "Jan 2025"):'); if (!period) return;
-    var affMap = {}; allConversions.filter(function(c) { return c.status === 'approved'; }).forEach(function(c) { if (!affMap[c.affiliateId]) affMap[c.affiliateId] = { count: 0, amount: 0 }; affMap[c.affiliateId].count++; affMap[c.affiliateId].amount += parseFloat(c.payout) || 0; });
-    if (!Object.keys(affMap).length) { toast('No approved conversions to invoice', 'error'); return; }
+/* ---- Invoice Generation Modal ---- */
+function openInvoiceGenModal() {
+    document.getElementById('invDateFrom').value = '';
+    document.getElementById('invDateTo').value = '';
+    document.getElementById('invPeriodName').value = '';
+    document.getElementById('invPreviewArea').style.display = 'none';
+    document.getElementById('invGenBtn').disabled = true;
+    _invPreviewData = null;
+    setInvDatePreset('thisMonth');
+    openModal('invoiceGenModal');
+}
+
+function setInvDatePreset(preset) {
+    var now = new Date();
+    var from, to;
+    if (preset === 'thisWeek') {
+        var day = now.getDay(); var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        from = new Date(now.getFullYear(), now.getMonth(), diff);
+        to = new Date(from); to.setDate(to.getDate() + 6);
+    } else if (preset === 'lastWeek') {
+        var day = now.getDay(); var diff = now.getDate() - day + (day === 0 ? -6 : 1) - 7;
+        from = new Date(now.getFullYear(), now.getMonth(), diff);
+        to = new Date(from); to.setDate(to.getDate() + 6);
+    } else if (preset === 'thisMonth') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (preset === 'lastMonth') {
+        from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        to = new Date(now.getFullYear(), now.getMonth(), 0);
+    } else if (preset === 'biweekly') {
+        to = new Date(now);
+        from = new Date(now); from.setDate(from.getDate() - 14);
+    } else { /* custom - don't change dates */ return; }
+
+    var fmtD = function(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+    document.getElementById('invDateFrom').value = fmtD(from);
+    document.getElementById('invDateTo').value = fmtD(to);
+
+    /* Auto-set period name */
+    if (preset === 'thisMonth' || preset === 'lastMonth') {
+        var mo = from.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        document.getElementById('invPeriodName').value = mo;
+    } else {
+        document.getElementById('invPeriodName').value = fmtD(from) + ' to ' + fmtD(to);
+    }
+}
+
+function previewInvoiceGen() {
+    var fromStr = document.getElementById('invDateFrom').value;
+    var toStr = document.getElementById('invDateTo').value;
+    if (!fromStr || !toStr) { toast('Select date range', 'error'); return; }
+    var fromTs = new Date(fromStr).getTime();
+    var toTs = new Date(toStr + 'T23:59:59').getTime();
+    if (fromTs > toTs) { toast('From date must be before To date', 'error'); return; }
+
+    /* Filter conversions by date range and approved status */
+    var affMap = {};
+    allConversions.filter(function(c) {
+        return c.status === 'approved' && c.createdAt >= fromTs && c.createdAt <= toTs;
+    }).forEach(function(c) {
+        if (!affMap[c.affiliateId]) affMap[c.affiliateId] = { count: 0, amount: 0 };
+        affMap[c.affiliateId].count++;
+        affMap[c.affiliateId].amount += parseFloat(c.payout) || 0;
+    });
+
+    if (!Object.keys(affMap).length) {
+        toast('No approved conversions found in this date range', 'error');
+        document.getElementById('invPreviewArea').style.display = 'none';
+        document.getElementById('invGenBtn').disabled = true;
+        _invPreviewData = null;
+        return;
+    }
+
+    var totalConv = 0; var totalAmt = 0;
+    var listHtml = '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+    listHtml += '<tr style="background:#e2e8f0;"><th style="padding:6px 8px;text-align:left;"><input type="checkbox" id="invSelectAll" checked onchange="toggleInvSelectAll()"> Select</th><th style="padding:6px 8px;text-align:left;">Affiliate</th><th style="padding:6px 8px;text-align:right;">Conversions</th><th style="padding:6px 8px;text-align:right;">Amount</th></tr>';
+    Object.keys(affMap).forEach(function(affId) {
+        var d = affMap[affId];
+        totalConv += d.count;
+        totalAmt += d.amount;
+        listHtml += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 8px;"><input type="checkbox" class="inv-aff-cb" value="' + affId + '" checked></td><td style="padding:6px 8px;">' + escHtml(getUserName(affId)) + '</td><td style="padding:6px 8px;text-align:right;">' + d.count + '</td><td style="padding:6px 8px;text-align:right;font-weight:600;">' + fmtMoney(d.amount) + '</td></tr>';
+    });
+    listHtml += '</table>';
+
+    document.getElementById('invPreviewSummary').innerHTML = '<i class="fas fa-chart-bar" style="color:var(--primary);"></i> ' + Object.keys(affMap).length + ' affiliates, ' + totalConv + ' conversions, Total: <strong>' + fmtMoney(totalAmt) + '</strong>';
+    document.getElementById('invPreviewList').innerHTML = listHtml;
+    document.getElementById('invPreviewArea').style.display = 'block';
+    document.getElementById('invGenBtn').disabled = false;
+    _invPreviewData = affMap;
+}
+
+function toggleInvSelectAll() {
+    var checked = document.getElementById('invSelectAll').checked;
+    document.querySelectorAll('.inv-aff-cb').forEach(function(cb) { cb.checked = checked; });
+}
+
+function executeInvoiceGen() {
+    if (!_invPreviewData) { toast('Preview first', 'error'); return; }
+    var period = document.getElementById('invPeriodName').value.trim();
+    if (!period) { toast('Enter a period name', 'error'); return; }
+
+    /* Get selected affiliates */
+    var selectedAffs = [];
+    document.querySelectorAll('.inv-aff-cb:checked').forEach(function(cb) { selectedAffs.push(cb.value); });
+    if (!selectedAffs.length) { toast('Select at least one affiliate', 'error'); return; }
+
+    var sendEmails = document.getElementById('invSendEmails').checked;
 
     /* Get next invoice numbers */
     var now = new Date();
@@ -3362,41 +3668,126 @@ function generateInvoices() {
         counter = counter || 0;
         var promises = [];
         var invoiceList = [];
-        Object.keys(affMap).forEach(function(affId) {
+        selectedAffs.forEach(function(affId) {
+            if (!_invPreviewData[affId]) return;
             counter++;
             var invNum = 'INV-' + ym + '-' + ('000' + counter).slice(-3);
             var invId = genId('inv_');
-            var invData = { affiliateId: affId, period: period, convCount: affMap[affId].count, amount: affMap[affId].amount, status: 'pending', invoiceNumber: invNum, createdAt: Date.now() };
+            var invData = {
+                affiliateId: affId,
+                period: period,
+                dateFrom: document.getElementById('invDateFrom').value,
+                dateTo: document.getElementById('invDateTo').value,
+                convCount: _invPreviewData[affId].count,
+                amount: _invPreviewData[affId].amount,
+                status: 'pending',
+                invoiceNumber: invNum,
+                createdAt: Date.now()
+            };
             promises.push(fbPut('payments/invoices/' + invId, invData));
-            invoiceList.push({ _id: invId, invoiceNumber: invNum, affiliateId: affId, amount: affMap[affId].amount, period: period, convCount: affMap[affId].count });
+            invoiceList.push({ _id: invId, invoiceNumber: invNum, affiliateId: affId, amount: _invPreviewData[affId].amount, period: period, convCount: _invPreviewData[affId].count });
         });
         promises.push(fbPut('settings/invoiceCounter/' + ym, counter));
 
         Promise.all(promises).then(function() {
             toast(invoiceList.length + ' invoices generated!');
-            /* Send emails for each invoice */
-            invoiceList.forEach(function(inv) { sendInvoiceCreatedEmail(inv); });
+            closeModal('invoiceGenModal');
+            if (sendEmails) {
+                invoiceList.forEach(function(inv) { sendInvoiceCreatedEmail(inv); });
+            }
             loadPayments();
         });
     });
+}
+
+/* ---- Invoice Edit Modal ---- */
+function openInvoiceEditModal(invId) {
+    var inv = allInvoices.find(function(i) { return i._id === invId; });
+    if (!inv) { toast('Invoice not found', 'error'); return; }
+    document.getElementById('invEditKey').value = invId;
+    document.getElementById('invEditNumber').value = inv.invoiceNumber || invId;
+    document.getElementById('invEditAff').value = getUserName(inv.affiliateId);
+    document.getElementById('invEditPeriod').value = inv.period || '';
+    document.getElementById('invEditAmount').value = inv.amount || 0;
+    document.getElementById('invEditStatus').value = inv.status || 'pending';
+    document.getElementById('invEditNotes').value = inv.notes || '';
+    openModal('invoiceEditModal');
+}
+
+function saveInvoiceEdit() {
+    var invId = document.getElementById('invEditKey').value;
+    if (!invId) return;
+    var patch = {
+        period: document.getElementById('invEditPeriod').value.trim(),
+        amount: parseFloat(document.getElementById('invEditAmount').value) || 0,
+        status: document.getElementById('invEditStatus').value,
+        notes: document.getElementById('invEditNotes').value.trim(),
+        updatedAt: Date.now()
+    };
+    fbPatch('payments/invoices/' + invId, patch).then(function() {
+        toast('Invoice updated!');
+        closeModal('invoiceEditModal');
+        loadPayments();
+    }).catch(function() { toast('Error updating invoice', 'error'); });
+}
+
+function saveAndDownloadInvoice() {
+    var invId = document.getElementById('invEditKey').value;
+    if (!invId) return;
+    var patch = {
+        period: document.getElementById('invEditPeriod').value.trim(),
+        amount: parseFloat(document.getElementById('invEditAmount').value) || 0,
+        status: document.getElementById('invEditStatus').value,
+        notes: document.getElementById('invEditNotes').value.trim(),
+        updatedAt: Date.now()
+    };
+    fbPatch('payments/invoices/' + invId, patch).then(function() {
+        toast('Invoice updated!');
+        closeModal('invoiceEditModal');
+        downloadInvoicePDF(invId);
+        loadPayments();
+    }).catch(function() { toast('Error updating invoice', 'error'); });
 }
 
 /* ---- Payment auto-select from affiliate's payment method ---- */
 function onPayAffChange() {
     var affId = document.getElementById('pmAffiliate').value;
     var infoEl = document.getElementById('pmPayInfo');
-    if (!affId) { infoEl.style.display = 'none'; return; }
+    var warnEl = document.getElementById('pmPayWarning');
+    if (!affId) { infoEl.style.display = 'none'; warnEl.style.display = 'none'; return; }
     fbGet('users/' + affId + '/payment').then(function(pay) {
-        if (!pay || !pay.method) { infoEl.style.display = 'none'; return; }
+        if (!pay || !pay.method) {
+            infoEl.style.display = 'none';
+            warnEl.style.display = 'block';
+            return;
+        }
+        warnEl.style.display = 'none';
         document.getElementById('pmMethod').value = pay.method;
         var details = '';
-        if (pay.method === 'paypal' && pay.paypal) details = 'PayPal: ' + (pay.paypal.email || '-');
-        else if (pay.method === 'wire' && pay.wire) details = 'Wire: ' + (pay.wire.bankName || '') + ' | ' + (pay.wire.accountHolder || '') + ' | IBAN: ' + (pay.wire.iban || pay.wire.accountNumber || '-');
-        else if (pay.method === 'ach' && pay.ach) details = 'ACH: ' + (pay.ach.bankName || '') + ' | ' + (pay.ach.accountHolder || '') + ' | Routing: ' + (pay.ach.routingNumber || '-');
-        else if (pay.method === 'usdt' && pay.usdt) details = 'USDT: ' + (pay.usdt.walletAddress || '-') + ' (' + (pay.usdt.network || 'TRC20') + ')';
-        else if (pay.method === 'payoneer' && pay.payoneer) details = 'Payoneer: ' + (pay.payoneer.email || '-');
-        if (details) { infoEl.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Auto-filled:</strong> ' + escHtml(details); infoEl.style.display = 'block'; }
-        else { infoEl.style.display = 'none'; }
+        var detailParts = [];
+        if (pay.method === 'paypal' && pay.paypal) {
+            details = 'PayPal: ' + (pay.paypal.email || '-');
+        } else if (pay.method === 'wire' && pay.wire) {
+            detailParts.push('Bank: ' + (pay.wire.bankName || '-'));
+            detailParts.push('Holder: ' + (pay.wire.accountHolder || '-'));
+            detailParts.push('IBAN: ' + (pay.wire.iban || pay.wire.accountNumber || '-'));
+            if (pay.wire.swiftCode) detailParts.push('SWIFT: ' + pay.wire.swiftCode);
+            details = detailParts.join(' | ');
+        } else if (pay.method === 'ach' && pay.ach) {
+            detailParts.push('Bank: ' + (pay.ach.bankName || '-'));
+            detailParts.push('Holder: ' + (pay.ach.accountHolder || '-'));
+            detailParts.push('Routing: ' + (pay.ach.routingNumber || '-'));
+            if (pay.ach.accountNumber) detailParts.push('Acct: ' + pay.ach.accountNumber);
+            details = detailParts.join(' | ');
+        } else if (pay.method === 'usdt' && pay.usdt) {
+            details = 'USDT (' + (pay.usdt.network || 'TRC20') + '): ' + (pay.usdt.walletAddress || '-');
+        } else if (pay.method === 'payoneer' && pay.payoneer) {
+            details = 'Payoneer: ' + (pay.payoneer.email || '-');
+        }
+        if (details) {
+            infoEl.innerHTML = '<div style="margin-bottom:4px;"><i class="fas fa-info-circle"></i> <strong>Saved Payment Details (' + pay.method.toUpperCase() + '):</strong></div><div style="word-break:break-all;">' + escHtml(details) + '</div>';
+            infoEl.style.display = 'block';
+        } else { infoEl.style.display = 'none'; }
     });
 }
 
@@ -3479,7 +3870,18 @@ function generateInvoicePDF(invoiceData, affiliateData, paymentData, networkData
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     if (status === 'paid') { doc.setTextColor(22, 101, 52); doc.text('STATUS: PAID', 15, y + 5); }
+    else if (status === 'delayed') { doc.setTextColor(21, 101, 192); doc.text('STATUS: DELAYED', 15, y + 5); }
+    else if (status === 'hold') { doc.setTextColor(198, 40, 40); doc.text('STATUS: ON HOLD', 15, y + 5); }
     else { doc.setTextColor(217, 119, 6); doc.text('STATUS: PENDING', 15, y + 5); }
+
+    /* Notes */
+    if (invoiceData.notes) {
+        y += 15;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text('Notes: ' + invoiceData.notes, 15, y + 5);
+    }
 
     /* Footer */
     doc.setTextColor(150, 150, 150);
@@ -3561,7 +3963,6 @@ function sendPaymentPaidEmail(payRec) {
         var net = res[3] || {};
         if (!smtp || !smtp.password || !aff.email) return;
         var networkName = net.networkName || 'Clima Affiliate Network';
-        /* Build invoice-like data for PDF */
         var invData = { invoiceNumber: payRec.invoiceNumber || 'PAY-' + (payRec._id || ''), period: payRec.period || '', amount: payRec.amount || 0, convCount: 0, status: 'paid', createdAt: payRec.createdAt || Date.now() };
         var doc = generateInvoicePDF(invData, aff, pay, net);
         var pdfBase64 = doc.output('datauristring').split(',')[1];
@@ -3588,6 +3989,81 @@ function sendPaymentPaidEmail(payRec) {
             Body: body,
             Attachments: [{ name: (payRec.invoiceNumber || 'payment') + '.pdf', data: pdfBase64 }]
         }).then(function(msg) { console.log('Payment email sent:', msg); }).catch(function(err) { console.error('Payment email error:', err); });
+    });
+}
+
+function sendPaymentDelayedEmail(payRec) {
+    var affId = payRec.affiliateId;
+    Promise.all([
+        fbGet('users/' + affId),
+        fbGet('settings/smtp'),
+        fbGet('settings/network')
+    ]).then(function(res) {
+        var aff = res[0] || {};
+        var smtp = res[1];
+        var net = res[2] || {};
+        if (!smtp || !smtp.password || !aff.email) return;
+        var networkName = net.networkName || 'Clima Affiliate Network';
+        var expectedStr = payRec.expectedDate ? new Date(payRec.expectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'To be determined';
+
+        var subject = 'Payment Delayed - ' + (payRec.invoiceNumber || '') + ' - ' + networkName;
+        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
+            '<h2 style="color:#1565c0;">Payment Delayed</h2>' +
+            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
+            '<p>We wanted to let you know that your payment has been temporarily delayed:</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.invoiceNumber || '-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">$' + parseFloat(payRec.amount || 0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Expected Payment Date</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold;">' + expectedStr + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold;">DELAYED</td></tr>' +
+            '</table>' +
+            '<p>We apologize for the inconvenience. Your payment will be processed as soon as possible.</p>' +
+            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
+
+        Email.send({
+            SecureToken: smtp.password,
+            To: aff.email,
+            From: smtp.fromEmail || smtp.username,
+            Subject: subject,
+            Body: body
+        }).then(function(msg) { console.log('Payment delayed email sent:', msg); }).catch(function(err) { console.error('Payment delayed email error:', err); });
+    });
+}
+
+function sendPaymentHoldEmail(payRec) {
+    var affId = payRec.affiliateId;
+    Promise.all([
+        fbGet('users/' + affId),
+        fbGet('settings/smtp'),
+        fbGet('settings/network')
+    ]).then(function(res) {
+        var aff = res[0] || {};
+        var smtp = res[1];
+        var net = res[2] || {};
+        if (!smtp || !smtp.password || !aff.email) return;
+        var networkName = net.networkName || 'Clima Affiliate Network';
+
+        var subject = 'Payment On Hold - ' + (payRec.invoiceNumber || '') + ' - ' + networkName;
+        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
+            '<h2 style="color:#c62828;">Payment On Hold</h2>' +
+            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
+            '<p>Your payment has been placed on hold:</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.invoiceNumber || '-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">$' + parseFloat(payRec.amount || 0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Reason</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828;">' + escHtml(payRec.holdReason || 'Under review') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828;font-weight:bold;">ON HOLD</td></tr>' +
+            '</table>' +
+            '<p>If you have any questions, please contact us.</p>' +
+            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
+
+        Email.send({
+            SecureToken: smtp.password,
+            To: aff.email,
+            From: smtp.fromEmail || smtp.username,
+            Subject: subject,
+            Body: body
+        }).then(function(msg) { console.log('Payment hold email sent:', msg); }).catch(function(err) { console.error('Payment hold email error:', err); });
     });
 }
 
