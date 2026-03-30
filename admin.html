@@ -853,19 +853,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <!-- Macro Mapping Table -->
                     <div id="pbS2sMacroTable"></div>
                 </div>
-                <!-- Quick Test -->
+                <!-- Test URL Generator -->
                 <div class="pb-test-section" id="pbTestSection" style="display:none;">
                     <div style="border-top:1px solid #e2e8f0;margin-top:18px;padding-top:18px;">
-                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:10px;"><i class="fas fa-bolt" style="color:var(--orange);"></i> Quick Test (Auto Click ID)</label>
-                        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Click ID automatically generated — no manual clicking needed. Simulates full flow: click → postback → conversion.</div>
+                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:6px;"><i class="fas fa-flask" style="color:var(--orange);"></i> Test URL</label>
+                        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Generate a test URL with a real click ID. Give it to the advertiser — when they fire it, the sale will appear here.</div>
                         <div class="form-row">
-                            <div class="form-group"><label>Test Affiliate</label><select id="pbTestAff" onchange="updateTestUrl()"><option value="">-- Select Affiliate --</option></select></div>
-                            <div class="form-group"><label>Test Payout ($)</label><input type="number" id="pbTestPayout" value="10" step="0.01" class="form-input-sm"></div>
+                            <div class="form-group"><label>Test Affiliate</label><select id="pbTestAff" onchange="generateTestPostbackUrl()"><option value="">-- Select Affiliate --</option></select></div>
+                            <div class="form-group"><label>Test Payout ($)</label><input type="number" id="pbTestPayout" value="10" step="0.01" class="form-input-sm" oninput="generateTestPostbackUrl()"></div>
                         </div>
-                        <div style="display:flex;gap:8px;">
-                            <button class="btn-primary-sm" onclick="fireQuickTest()"><i class="fas fa-bolt"></i> Fire Test Postback</button>
+                        <div id="pbTestUrlBox" style="display:none;">
+                            <label style="font-size:11px;font-weight:600;color:#475569;margin-bottom:4px;display:block">Ready Test URL (click ID auto-generated)</label>
+                            <div class="pb-s2s-url" style="background:#f0fdf4;border-color:#86efac;">
+                                <button class="pb-copy-lg" style="background:#059669;" onclick="copyPbUrl('pbTestUrlText')"><i class="fas fa-copy"></i> Copy</button>
+                                <span id="pbTestUrlText" style="color:#166534;"></span>
+                            </div>
+                            <div style="font-size:11px;color:#64748b;margin-top:6px"><i class="fas fa-info-circle"></i> Give this URL to the advertiser. They paste it in their test field and fire — sale appears automatically.</div>
+                            <button class="btn-primary-sm" style="margin-top:8px" onclick="generateTestPostbackUrl()"><i class="fas fa-sync-alt"></i> Generate New Test URL</button>
                         </div>
-                        <div id="pbQuickTestResult" style="display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-size:12px;line-height:1.6"></div>
                     </div>
                 </div>
             </div>
@@ -5161,44 +5166,24 @@ function updateTestUrl() {
     box.style.display = 'block';
 }
 
-function fireQuickTest() {
+function generateTestPostbackUrl() {
     var offerId = document.getElementById('pbOfferSelect').value;
     var affUid = document.getElementById('pbTestAff').value;
     var payout = parseFloat(document.getElementById('pbTestPayout').value) || 10;
-    var resultEl = document.getElementById('pbQuickTestResult');
+    var box = document.getElementById('pbTestUrlBox');
+    if (!offerId || !affUid) { box.style.display = 'none'; return; }
 
-    if (!offerId || !affUid) { resultEl.style.display = 'block'; resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626'; resultEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Select both offer and affiliate first.'; return; }
-
-    resultEl.style.display = 'block'; resultEl.style.background = '#eff6ff'; resultEl.style.color = '#1e40af';
-    resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating click and firing postback...';
-
-    /* Auto-generate click */
+    /* Auto-generate a real click record in Firebase */
     var clickId = 'test_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-    var clickData = { offerId: offerId, affiliateId: affUid, ip: '127.0.0.1', userAgent: 'QuickTest/Admin', country: 'XX', device: 'desktop', browser: 'Admin', os: 'Test', referer: 'admin-panel', sub1: 'QUICK_TEST', timestamp: Date.now(), converted: false, test: true, isTest: true };
+    var clickData = { offerId: offerId, affiliateId: affUid, ip: '127.0.0.1', userAgent: 'TestURL/Admin', country: 'XX', device: 'desktop', browser: 'Admin', os: 'Test', referer: 'admin-panel', sub1: 'TEST', timestamp: Date.now(), converted: false, test: true, isTest: true };
 
     fbPut('clicks/' + clickId, clickData).then(function() {
-        /* Fire postback to our own PHP handler */
         var domain = window._cachedDefaultDomain || window.location.origin;
         var secret = window._cachedPostbackSecret || '';
-        var txnId = 'QTEST-' + Date.now().toString(36).toUpperCase();
-        var pbUrl = domain + '/api/postback?click_id=' + encodeURIComponent(clickId) + '&secret=' + encodeURIComponent(secret) + '&payout=' + payout + '&txn_id=' + encodeURIComponent(txnId) + '&status=approved&test=1';
-
-        fetch(pbUrl).then(function(r) { return r.text(); }).then(function(txt) {
-            var isSuccess = txt.indexOf('SUCCESS') === 0;
-            resultEl.style.background = isSuccess ? '#f0fdf4' : '#fef2f2';
-            resultEl.style.color = isSuccess ? '#166534' : '#dc2626';
-            resultEl.innerHTML = '<div style="margin-bottom:6px"><i class="fas fa-' + (isSuccess ? 'check-circle' : 'times-circle') + '"></i> <strong>' + (isSuccess ? 'Test Successful!' : 'Test Failed') + '</strong></div>' +
-                '<div style="font-size:11px;opacity:.8">Click ID: <code>' + escHtml(clickId) + '</code></div>' +
-                '<div style="font-size:11px;opacity:.8">Transaction: <code>' + escHtml(txnId) + '</code></div>' +
-                '<div style="font-size:11px;opacity:.8">Response: ' + escHtml(txt.substring(0, 200)) + '</div>';
-            refreshPostbackLog();
-        }).catch(function(err) {
-            resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626';
-            resultEl.innerHTML = '<i class="fas fa-times-circle"></i> Postback request failed: ' + escHtml(err.message);
-        });
-    }).catch(function(err) {
-        resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626';
-        resultEl.innerHTML = '<i class="fas fa-times-circle"></i> Failed to create test click: ' + escHtml(err.message);
+        var txnId = 'TEST-' + Date.now().toString(36).toUpperCase();
+        var url = domain + '/api/postback?click_id=' + encodeURIComponent(clickId) + '&secret=' + encodeURIComponent(secret) + '&payout=' + payout + '&txn_id=' + encodeURIComponent(txnId) + '&status=approved&test=1';
+        document.getElementById('pbTestUrlText').textContent = url;
+        box.style.display = 'block';
     });
 }
 
