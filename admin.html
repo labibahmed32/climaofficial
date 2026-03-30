@@ -265,7 +265,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toast.error{background:var(--red);}
 
 /* === OFFER TABBED EDITOR === */
-.offer-tabs{display:flex;gap:0;margin-bottom:24px;position:relative;padding:0 4px;}
+.offer-tabs{display:flex;gap:0;margin-bottom:0;position:relative;padding:0 4px;}
 .offer-tabs::before{content:'';position:absolute;top:16px;left:40px;right:40px;height:2px;background:#e2e8f0;z-index:0;}
 .offer-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 12px;border:none;background:transparent;font-size:10px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;position:relative;z-index:1;flex:1;}
 .offer-tab .step-num{width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#94a3b8;transition:all .2s;}
@@ -853,30 +853,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <!-- Macro Mapping Table -->
                     <div id="pbS2sMacroTable"></div>
                 </div>
-                <!-- Test Click URL -->
+                <!-- Quick Test -->
                 <div class="pb-test-section" id="pbTestSection" style="display:none;">
                     <div style="border-top:1px solid #e2e8f0;margin-top:18px;padding-top:18px;">
-                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:10px;"><i class="fas fa-flask" style="color:var(--orange);"></i> Test Click URL</label>
+                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:10px;"><i class="fas fa-bolt" style="color:var(--orange);"></i> Quick Test (Auto Click ID)</label>
+                        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Click ID automatically generated — no manual clicking needed. Simulates full flow: click → postback → conversion.</div>
                         <div class="form-row">
                             <div class="form-group"><label>Test Affiliate</label><select id="pbTestAff" onchange="updateTestUrl()"><option value="">-- Select Affiliate --</option></select></div>
+                            <div class="form-group"><label>Test Payout ($)</label><input type="number" id="pbTestPayout" value="10" step="0.01" class="form-input-sm"></div>
                         </div>
-                        <div id="pbTestUrlBox" style="display:none;">
-                            <div class="pb-s2s-url" style="background:#fef3c7;border-color:#f59e0b;">
-                                <button class="pb-copy-lg" style="background:#d97706;" onclick="copyPbUrl('pbTestUrlText')"><i class="fas fa-copy"></i> Copy</button>
-                                <span id="pbTestUrlText"></span>
-                            </div>
-                            <div style="display:flex;gap:8px;margin-top:8px;">
-                                <button class="btn-primary-sm" onclick="openTestUrl()"><i class="fas fa-external-link-alt"></i> Open in Browser</button>
-                            </div>
-                            <div style="margin-top:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;">
-                                <strong>Instructions for advertiser:</strong>
-                                <ol style="margin:6px 0 0;padding-left:18px;">
-                                    <li>Open the test URL above in your browser (simulates a click)</li>
-                                    <li>Fire a test conversion from your tracker panel</li>
-                                    <li>Check the Postback Log below for confirmation</li>
-                                </ol>
-                            </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn-primary-sm" onclick="fireQuickTest()"><i class="fas fa-bolt"></i> Fire Test Postback</button>
                         </div>
+                        <div id="pbQuickTestResult" style="display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-size:12px;line-height:1.6"></div>
                     </div>
                 </div>
             </div>
@@ -1096,13 +1085,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div></div>
 
 <div class="modal-overlay" id="offerModal"><div class="modal-panel" style="max-width:920px;border-radius:16px;">
-    <div class="modal-header" style="background:linear-gradient(135deg,#0A6C80,#085a6b);padding:20px 28px;border-radius:16px 16px 0 0;">
-        <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-bullhorn" style="color:#fff;font-size:15px"></i></div><div><h3 id="offerModalTitle" style="color:#fff;font-size:17px;margin:0">New Offer</h3><span style="font-size:11px;color:rgba(255,255,255,.5)">Fill in the details step by step</span></div></div>
-        <span id="offerIdBadge" class="offer-id-badge" style="display:none;margin-left:12px;background:rgba(255,255,255,.15);color:#fff;"></span>
-        <button class="modal-close" onclick="closeModal('offerModal')" style="color:rgba(255,255,255,.7)">&times;</button>
-    </div>
-    <div class="modal-body" style="padding:24px 28px;">
-        <input type="hidden" id="offerEditId">
+    <div style="position:sticky;top:0;z-index:10;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#0A6C80,#085a6b);padding:16px 28px 12px;border-radius:16px 16px 0 0;">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-bullhorn" style="color:#fff;font-size:14px"></i></div><div><h3 id="offerModalTitle" style="color:#fff;font-size:16px;margin:0">New Offer</h3></div></div>
+            <span id="offerIdBadge" class="offer-id-badge" style="display:none;margin-left:12px;background:rgba(255,255,255,.15);color:#fff;"></span>
+            <button class="modal-close" onclick="closeModal('offerModal')" style="color:rgba(255,255,255,.7)">&times;</button>
+        </div>
+        <div style="background:#fff;padding:14px 20px 10px;border-bottom:1px solid #e2e8f0;" id="offerStepsBar">
         <div class="offer-tabs">
             <button class="offer-tab active" onclick="switchOfferTab('general')"><span class="step-num">1</span><span class="step-label">General</span></button>
             <button class="offer-tab" onclick="switchOfferTab('revenue')"><span class="step-num">2</span><span class="step-label">Revenue</span></button>
@@ -1112,6 +1101,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="offer-tab" onclick="switchOfferTab('activity')" id="ofTabBtn-activity" style="display:none;"><span class="step-num"><i class="fas fa-history" style="display:inline;font-size:12px"></i></span><span class="step-label">Activity</span></button>
             <button class="offer-tab" onclick="switchOfferTab('complete')" id="ofTabBtn-complete" style="display:none;"><span class="step-num"><i class="fas fa-check" style="display:inline;font-size:12px"></i></span><span class="step-label">Done</span></button>
         </div>
+        </div>
+    </div>
+    <div class="modal-body" style="padding:24px 28px;">
+        <input type="hidden" id="offerEditId">
 
         <!-- Tab 1: General -->
         <div class="offer-tab-pane active" id="ofTab-general">
@@ -5168,9 +5161,45 @@ function updateTestUrl() {
     box.style.display = 'block';
 }
 
-function openTestUrl() {
-    var url = document.getElementById('pbTestUrlText').textContent;
-    if (url) window.open(url, '_blank');
+function fireQuickTest() {
+    var offerId = document.getElementById('pbOfferSelect').value;
+    var affUid = document.getElementById('pbTestAff').value;
+    var payout = parseFloat(document.getElementById('pbTestPayout').value) || 10;
+    var resultEl = document.getElementById('pbQuickTestResult');
+
+    if (!offerId || !affUid) { resultEl.style.display = 'block'; resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626'; resultEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Select both offer and affiliate first.'; return; }
+
+    resultEl.style.display = 'block'; resultEl.style.background = '#eff6ff'; resultEl.style.color = '#1e40af';
+    resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating click and firing postback...';
+
+    /* Auto-generate click */
+    var clickId = 'test_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+    var clickData = { offerId: offerId, affiliateId: affUid, ip: '127.0.0.1', userAgent: 'QuickTest/Admin', country: 'XX', device: 'desktop', browser: 'Admin', os: 'Test', referer: 'admin-panel', sub1: 'QUICK_TEST', timestamp: Date.now(), converted: false, test: true, isTest: true };
+
+    fbPut('clicks/' + clickId, clickData).then(function() {
+        /* Fire postback to our own PHP handler */
+        var domain = window._cachedDefaultDomain || window.location.origin;
+        var secret = window._cachedPostbackSecret || '';
+        var txnId = 'QTEST-' + Date.now().toString(36).toUpperCase();
+        var pbUrl = domain + '/api/postback?click_id=' + encodeURIComponent(clickId) + '&secret=' + encodeURIComponent(secret) + '&payout=' + payout + '&txn_id=' + encodeURIComponent(txnId) + '&status=approved&test=1';
+
+        fetch(pbUrl).then(function(r) { return r.text(); }).then(function(txt) {
+            var isSuccess = txt.indexOf('SUCCESS') === 0;
+            resultEl.style.background = isSuccess ? '#f0fdf4' : '#fef2f2';
+            resultEl.style.color = isSuccess ? '#166534' : '#dc2626';
+            resultEl.innerHTML = '<div style="margin-bottom:6px"><i class="fas fa-' + (isSuccess ? 'check-circle' : 'times-circle') + '"></i> <strong>' + (isSuccess ? 'Test Successful!' : 'Test Failed') + '</strong></div>' +
+                '<div style="font-size:11px;opacity:.8">Click ID: <code>' + escHtml(clickId) + '</code></div>' +
+                '<div style="font-size:11px;opacity:.8">Transaction: <code>' + escHtml(txnId) + '</code></div>' +
+                '<div style="font-size:11px;opacity:.8">Response: ' + escHtml(txt.substring(0, 200)) + '</div>';
+            refreshPostbackLog();
+        }).catch(function(err) {
+            resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626';
+            resultEl.innerHTML = '<i class="fas fa-times-circle"></i> Postback request failed: ' + escHtml(err.message);
+        });
+    }).catch(function(err) {
+        resultEl.style.background = '#fef2f2'; resultEl.style.color = '#dc2626';
+        resultEl.innerHTML = '<i class="fas fa-times-circle"></i> Failed to create test click: ' + escHtml(err.message);
+    });
 }
 
 /* ---- Postback Log ---- */
