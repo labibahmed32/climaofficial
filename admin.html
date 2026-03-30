@@ -1099,16 +1099,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="offer-tab" onclick="switchOfferTab('tracking')"><i class="fas fa-link"></i> Tracking</button>
             <button class="offer-tab" onclick="switchOfferTab('targeting')"><i class="fas fa-crosshairs"></i> Targeting</button>
             <button class="offer-tab" onclick="switchOfferTab('creatives')"><i class="fas fa-image"></i> Creatives</button>
+            <button class="offer-tab" onclick="switchOfferTab('activity')" id="ofTabBtn-activity" style="display:none;"><i class="fas fa-history"></i> Activity</button>
             <button class="offer-tab" onclick="switchOfferTab('complete')" id="ofTabBtn-complete" style="display:none;"><i class="fas fa-check-circle"></i> Setup Complete</button>
         </div>
 
         <!-- Tab 1: General -->
         <div class="offer-tab-pane active" id="ofTab-general">
             <div class="form-row">
-                <div class="form-group"><label>Offer Name *</label><input type="text" id="ofName" placeholder="e.g. Weight Loss Supplement"></div>
+                <div class="form-group"><label>Offer Name *</label><input type="text" id="ofName"></div>
                 <div class="form-group"><label>Advertiser</label><select id="ofAdvertiser"><option value="">-- Select Advertiser --</option></select></div>
             </div>
-            <div class="form-group"><label>Description</label><textarea id="ofDescription" placeholder="Brief description of the offer..." rows="3"></textarea></div>
+            <div class="form-group"><label>Description</label><textarea id="ofDescription" rows="3"></textarea></div>
             <div class="form-row">
                 <div class="form-group"><label>Category</label><select id="ofCategory"><option value="health">Health</option><option value="finance">Finance</option><option value="dating">Dating</option><option value="gaming">Gaming</option><option value="ecommerce">Ecommerce</option><option value="crypto">Crypto</option><option value="education">Education</option><option value="software">Software</option><option value="other">Other</option></select></div>
                 <div class="form-group"><label>Status</label><select id="ofStatus"><option value="active">Active</option><option value="paused">Paused</option><option value="private">Private</option></select></div>
@@ -1116,11 +1117,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div>
             <div class="form-group">
                 <label>Offer Image / Logo URL</label>
-                <input type="text" id="ofThumbnail" placeholder="https://example.com/product-logo.png" oninput="previewOfferImage()">
-                <div class="form-help">Image URL for offer logo (shown to affiliates)</div>
+                <input type="text" id="ofThumbnail" oninput="previewOfferImage()">
+                <div class="form-help">Direct URL to offer logo/image</div>
                 <img id="ofImgPreview" class="img-preview" src="" alt="Preview">
             </div>
-            <div class="form-group"><label>Preview URL</label><input type="text" id="ofPreviewUrl" placeholder="https://example.com/offer-preview"><div class="form-help">Landing page URL for affiliate preview (won't track)</div></div>
+            <div class="form-group"><label>Preview URL</label><input type="text" id="ofPreviewUrl"><div class="form-help">Landing page preview link for affiliates</div></div>
+            <div style="margin-top:18px;padding-top:16px;border-top:2px solid #e2e8f0;">
+                <h4 style="font-size:14px;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;">
+                    <i class="fas fa-bell" style="margin-right:8px;"></i> Notifications
+                </h4>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dark);cursor:pointer;">
+                        <input type="checkbox" id="ofNotifyAffiliates" checked> Email affiliates when offer is created
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dark);cursor:pointer;">
+                        <input type="checkbox" id="ofNotifyManagers" checked> Email managers when offer is created
+                    </label>
+                </div>
+            </div>
         </div>
 
         <!-- Tab 2: Revenue & Payout -->
@@ -1130,8 +1144,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="form-group"><label>Currency</label><select id="ofCurrency"><option value="USD">USD ($)</option><option value="EUR">EUR (&euro;)</option><option value="GBP">GBP (&pound;)</option></select></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Revenue (From Advertiser) *</label><input type="number" id="ofRevenue" step="0.01" value="0" oninput="calcOfferProfit()"></div>
-                <div class="form-group"><label>Payout (To Affiliate) *</label><input type="number" id="ofPayout" step="0.01" value="0" oninput="calcOfferProfit()"></div>
+                <div class="form-group"><label>Revenue (From Advertiser) *</label><input type="number" id="ofRevenue" step="0.01" value="0" oninput="calcOfferProfit()"><div class="form-help">Amount you earn from advertiser per conversion</div></div>
+                <div class="form-group"><label>Payout (To Affiliate) *</label><input type="number" id="ofPayout" step="0.01" value="0" oninput="calcOfferProfit()"><div class="form-help">Amount paid to affiliate per conversion</div></div>
             </div>
             <div class="profit-display">
                 <div class="profit-box"><div class="val" id="ofProfitVal">$0.00</div><div class="lbl">Profit per Conversion</div></div>
@@ -1145,21 +1159,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 </h4>
                 <div class="form-help" style="margin-bottom:16px;">Set individual prices for each upsell. Leave 0 if not applicable.</div>
                 <div class="form-row">
-                    <div class="form-group"><label>Upsell 1 Price</label><input type="number" id="ofUpsell1Price" step="0.01" value="0" placeholder="29.99"></div>
-                    <div class="form-group"><label>Upsell 2 Price</label><input type="number" id="ofUpsell2Price" step="0.01" value="0" placeholder="29.99"></div>
-                    <div class="form-group"><label>Upsell 3 Price</label><input type="number" id="ofUpsell3Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"><label>Upsell 1 Price</label><input type="number" id="ofUpsell1Price" step="0.01" value="0"></div>
+                    <div class="form-group"><label>Upsell 2 Price</label><input type="number" id="ofUpsell2Price" step="0.01" value="0"></div>
+                    <div class="form-group"><label>Upsell 3 Price</label><input type="number" id="ofUpsell3Price" step="0.01" value="0"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Upsell 4 Price</label><input type="number" id="ofUpsell4Price" step="0.01" value="0" placeholder="29.99"></div>
-                    <div class="form-group"><label>Upsell 5 Price</label><input type="number" id="ofUpsell5Price" step="0.01" value="0" placeholder="29.99"></div>
+                    <div class="form-group"><label>Upsell 4 Price</label><input type="number" id="ofUpsell4Price" step="0.01" value="0"></div>
+                    <div class="form-group"><label>Upsell 5 Price</label><input type="number" id="ofUpsell5Price" step="0.01" value="0"></div>
                     <div class="form-group"></div>
                 </div>
             </div>
 
             <div style="margin-top:16px;">
                 <div class="form-row">
-                    <div class="form-group"><label>Daily Cap</label><input type="number" id="ofDailyCap" value="0" placeholder="0 = unlimited"><div class="form-help">0 = unlimited conversions per day</div></div>
-                    <div class="form-group"><label>Hourly Cap</label><input type="number" id="ofHourlyCap" value="0" placeholder="0 = unlimited"><div class="form-help">0 = unlimited conversions per hour</div></div>
+                    <div class="form-group"><label>Daily Cap</label><input type="number" id="ofDailyCap" value="0"><div class="form-help">0 = unlimited conversions per day</div></div>
+                    <div class="form-group"><label>Hourly Cap</label><input type="number" id="ofHourlyCap" value="0"><div class="form-help">0 = unlimited conversions per hour</div></div>
                 </div>
             </div>
         </div>
@@ -1185,8 +1199,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div id="trackerMacroRef" style="display:none;"></div>
             <div class="form-group">
                 <label>Final URL (Destination) *</label>
-                <input type="text" id="ofFinalUrl" placeholder="https://advertiser.com/offer?click_id={click_id}&aff_id={aff_id}" oninput="updateOfferLinkPreview()">
-                <div class="form-help">Paste the advertiser's tracking link. Our internal macros will be replaced with real values at click time.</div>
+                <input type="text" id="ofFinalUrl" oninput="updateOfferLinkPreview()">
+                <div class="form-help">Advertiser's tracking link with macros</div>
             </div>
             <div class="form-group">
                 <label>Clima Internal Macros <span style="font-weight:400;color:var(--text-muted)">(click to insert into Final URL)</span></label>
@@ -1252,7 +1266,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div id="noCreatives" style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px;"><i class="fas fa-image" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3;"></i>No creatives added yet. Click "Add Creative" to start.</div>
         </div>
 
-        <!-- Tab 6: Setup Complete -->
+        <!-- Tab 6: Activity Log (edit mode only) -->
+        <div class="offer-tab-pane" id="ofTab-activity">
+            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+                <i class="fas fa-history" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3;"></i>
+                <h4 style="font-size:14px;color:var(--text-dark);margin-bottom:6px;">Offer Activity Log</h4>
+                <p style="font-size:13px;">Change history for this offer will appear here.</p>
+            </div>
+        </div>
+
+        <!-- Tab 7: Setup Complete -->
         <div class="offer-tab-pane" id="ofTab-complete">
             <div class="wz-success-banner">
                 <div class="wz-check-circle"><i class="fas fa-check"></i></div>
@@ -2470,6 +2493,8 @@ function openOfferModal(id) {
             document.getElementById('ofCategory').value = o.category || 'health';
             document.getElementById('ofStatus').value = o.status || 'active';
             document.getElementById('ofVisibility').value = o.visibility || 'approval';
+            document.getElementById('ofNotifyAffiliates').checked = o.notifyAffiliates !== false;
+            document.getElementById('ofNotifyManagers').checked = o.notifyManagers !== false;
             document.getElementById('ofThumbnail').value = o.thumbnail || '';
             document.getElementById('ofPreviewUrl').value = o.previewUrl || '';
             document.getElementById('ofPayoutModel').value = o.payoutModel || 'cpa';
@@ -2515,6 +2540,8 @@ function openOfferModal(id) {
     wzCurrentStep = 0;
     wzSavedOfferId = id || null;
     document.getElementById('ofTabBtn-complete').style.display = 'none';
+    var actTab = document.getElementById('ofTabBtn-activity');
+    if (actTab) actTab.style.display = id ? '' : 'none';
     wzUpdateFooter();
 
     openModal('offerModal');
@@ -2551,6 +2578,8 @@ function saveOffer() {
         creatives: offerCreatives.filter(function(c) { return c.url; }),
         detectedTracker: document.getElementById('ofTrackerType').value || '',
         visibility: document.getElementById('ofVisibility').value || 'approval',
+        notifyAffiliates: document.getElementById('ofNotifyAffiliates').checked,
+        notifyManagers: document.getElementById('ofNotifyManagers').checked,
         upsell1Price: parseFloat(document.getElementById('ofUpsell1Price').value) || 0,
         upsell2Price: parseFloat(document.getElementById('ofUpsell2Price').value) || 0,
         upsell3Price: parseFloat(document.getElementById('ofUpsell3Price').value) || 0,
@@ -2646,7 +2675,9 @@ function wzCollectData() {
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
         detectedTracker: document.getElementById('ofTrackerType').value || '',
-        visibility: document.getElementById('ofVisibility').value || 'approval'
+        visibility: document.getElementById('ofVisibility').value || 'approval',
+        notifyAffiliates: document.getElementById('ofNotifyAffiliates').checked,
+        notifyManagers: document.getElementById('ofNotifyManagers').checked
     };
 }
 
