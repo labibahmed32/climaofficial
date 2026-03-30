@@ -265,13 +265,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toast.error{background:var(--red);}
 
 /* === OFFER TABBED EDITOR === */
-.offer-tabs{display:flex;gap:0;border-bottom:2px solid var(--card-border);margin-bottom:20px;}
-.offer-tab{padding:10px 18px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
-.offer-tab:hover{color:var(--text-mid);}
-.offer-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
-.offer-tab i{margin-right:5px;font-size:12px;}
-.offer-tab-pane{display:none;}
+.offer-tabs{display:flex;gap:0;margin-bottom:24px;position:relative;padding:0 4px;}
+.offer-tabs::before{content:'';position:absolute;top:16px;left:40px;right:40px;height:2px;background:#e2e8f0;z-index:0;}
+.offer-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 12px;border:none;background:transparent;font-size:10px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;position:relative;z-index:1;flex:1;}
+.offer-tab .step-num{width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#94a3b8;transition:all .2s;}
+.offer-tab:hover .step-num{border-color:var(--primary);color:var(--primary);}
+.offer-tab.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(10,108,128,.3);}
+.offer-tab.done .step-num{background:#059669;border-color:#059669;color:#fff;}
+.offer-tab .step-label{white-space:nowrap;letter-spacing:.3px;}
+.offer-tab.active .step-label{color:var(--primary);font-weight:700;}
+.offer-tab i{display:none;}
+.offer-tab-pane{display:none;animation:fadeIn .2s ease;}
 .offer-tab-pane.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .country-search{width:100%;padding:7px 12px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:13px;outline:none;margin-bottom:0;}
 .country-search:focus{border-color:var(--primary);}
 .country-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-height:220px;overflow-y:auto;border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:10px;margin-top:8px;}
@@ -1089,22 +1095,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('advModal')">Cancel</button><button class="btn-primary-sm" onclick="saveAdvertiser()"><i class="fas fa-save"></i> Save Advertiser</button></div>
 </div></div>
 
-<div class="modal-overlay" id="offerModal"><div class="modal-panel" style="max-width:900px;">
-    <div class="modal-header"><h3 id="offerModalTitle">New Offer</h3><span id="offerIdBadge" class="offer-id-badge" style="display:none;margin-left:12px;"></span><button class="modal-close" onclick="closeModal('offerModal')">&times;</button></div>
-    <div class="modal-body" style="padding-top:10px;">
+<div class="modal-overlay" id="offerModal"><div class="modal-panel" style="max-width:920px;border-radius:16px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#0A6C80,#085a6b);padding:20px 28px;border-radius:16px 16px 0 0;">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-bullhorn" style="color:#fff;font-size:15px"></i></div><div><h3 id="offerModalTitle" style="color:#fff;font-size:17px;margin:0">New Offer</h3><span style="font-size:11px;color:rgba(255,255,255,.5)">Fill in the details step by step</span></div></div>
+        <span id="offerIdBadge" class="offer-id-badge" style="display:none;margin-left:12px;background:rgba(255,255,255,.15);color:#fff;"></span>
+        <button class="modal-close" onclick="closeModal('offerModal')" style="color:rgba(255,255,255,.7)">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:24px 28px;">
         <input type="hidden" id="offerEditId">
         <div class="offer-tabs">
-            <button class="offer-tab active" onclick="switchOfferTab('general')"><i class="fas fa-info-circle"></i> General</button>
-            <button class="offer-tab" onclick="switchOfferTab('revenue')"><i class="fas fa-dollar-sign"></i> Revenue & Payout</button>
-            <button class="offer-tab" onclick="switchOfferTab('tracking')"><i class="fas fa-link"></i> Tracking</button>
-            <button class="offer-tab" onclick="switchOfferTab('targeting')"><i class="fas fa-crosshairs"></i> Targeting</button>
-            <button class="offer-tab" onclick="switchOfferTab('creatives')"><i class="fas fa-image"></i> Creatives</button>
-            <button class="offer-tab" onclick="switchOfferTab('activity')" id="ofTabBtn-activity" style="display:none;"><i class="fas fa-history"></i> Activity</button>
-            <button class="offer-tab" onclick="switchOfferTab('complete')" id="ofTabBtn-complete" style="display:none;"><i class="fas fa-check-circle"></i> Setup Complete</button>
+            <button class="offer-tab active" onclick="switchOfferTab('general')"><span class="step-num">1</span><span class="step-label">General</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('revenue')"><span class="step-num">2</span><span class="step-label">Revenue</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('tracking')"><span class="step-num">3</span><span class="step-label">Tracking</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('targeting')"><span class="step-num">4</span><span class="step-label">Targeting</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('creatives')"><span class="step-num">5</span><span class="step-label">Creatives</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('activity')" id="ofTabBtn-activity" style="display:none;"><span class="step-num"><i class="fas fa-history" style="display:inline;font-size:12px"></i></span><span class="step-label">Activity</span></button>
+            <button class="offer-tab" onclick="switchOfferTab('complete')" id="ofTabBtn-complete" style="display:none;"><span class="step-num"><i class="fas fa-check" style="display:inline;font-size:12px"></i></span><span class="step-label">Done</span></button>
         </div>
 
         <!-- Tab 1: General -->
         <div class="offer-tab-pane active" id="ofTab-general">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f1f5f9"><i class="fas fa-info-circle" style="color:var(--primary);font-size:14px"></i><span style="font-size:14px;font-weight:700;color:var(--text-dark)">Basic Information</span></div>
             <div class="form-row">
                 <div class="form-group"><label>Offer Name *</label><input type="text" id="ofName"></div>
                 <div class="form-group"><label>Advertiser</label><select id="ofAdvertiser"><option value="">-- Select Advertiser --</option></select></div>
@@ -1139,6 +1150,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <!-- Tab 2: Revenue & Payout -->
         <div class="offer-tab-pane" id="ofTab-revenue">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f1f5f9"><i class="fas fa-dollar-sign" style="color:var(--primary);font-size:14px"></i><span style="font-size:14px;font-weight:700;color:var(--text-dark)">Payout & Revenue</span></div>
             <div class="form-row">
                 <div class="form-group"><label>Payout Model</label><select id="ofPayoutModel"><option value="cpa">CPA (Cost Per Action)</option><option value="cps">CPS (Cost Per Sale)</option><option value="cpl">CPL (Cost Per Lead)</option><option value="revshare">RevShare</option></select></div>
                 <div class="form-group"><label>Currency</label><select id="ofCurrency"><option value="USD">USD ($)</option><option value="EUR">EUR (&euro;)</option><option value="GBP">GBP (&pound;)</option></select></div>
@@ -1180,6 +1192,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <!-- Tab 3: Tracking -->
         <div class="offer-tab-pane" id="ofTab-tracking">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f1f5f9"><i class="fas fa-link" style="color:var(--primary);font-size:14px"></i><span style="font-size:14px;font-weight:700;color:var(--text-dark)">Tracking & URLs</span></div>
             <div class="form-group">
                 <label>Advertiser Tracker Platform</label>
                 <select id="ofTrackerType" onchange="onTrackerTypeChange()">
@@ -1236,6 +1249,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <!-- Tab 4: Targeting -->
         <div class="offer-tab-pane" id="ofTab-targeting">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f1f5f9"><i class="fas fa-crosshairs" style="color:var(--primary);font-size:14px"></i><span style="font-size:14px;font-weight:700;color:var(--text-dark)">Geo & Device Targeting</span></div>
             <div class="form-group"><label>Device Targeting</label><select id="ofDevice"><option value="all">All Devices</option><option value="desktop">Desktop Only</option><option value="mobile">Mobile Only</option><option value="tablet">Tablet Only</option></select></div>
             <div class="form-group">
                 <label>Country Targeting</label>
