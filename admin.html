@@ -183,34 +183,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .badge-hold{background:#fde8e8;color:#c62828;}
 .badge-yes{background:#e8f5e9;color:#2e7d32;}
 .badge-no{background:#f5f5f5;color:#999;}
-/* Offer Card Grid */
-.offer-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;}
-.offer-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;position:relative;transition:transform .2s,box-shadow .2s;}
-.offer-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
-.offer-card-img{width:100%;height:150px;overflow:hidden;background:#f0f4f8;}
-.offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
-.offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A6C80,#064d5c);color:rgba(255,255,255,.4);font-size:38px;}
-.offer-card-badge{position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(4px);}
-.offer-card-badge.s-active{background:rgba(232,245,233,.9);color:#2e7d32;}
-.offer-card-badge.s-paused{background:rgba(255,243,224,.9);color:#e65100;}
-.offer-card-badge.s-private{background:rgba(240,240,240,.9);color:#666;}
-.offer-card-body{padding:14px 16px 16px;}
-.offer-card-name{font-size:14px;font-weight:700;color:var(--text-dark);margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.offer-card-id{font-family:monospace;font-size:10px;color:var(--primary);opacity:.7;}
+/* ═══ OFFER CARD GRID — MODERN REDESIGN ═══ */
+.offer-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+.offer-card{background:#fff;border:1px solid #e8edf3;border-radius:16px;overflow:hidden;position:relative;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.offer-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0A6C80,#14b8a6);opacity:0;transition:opacity .25s;z-index:2;}
+.offer-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(10,108,128,.15);border-color:#0A6C80;}
+.offer-card:hover::before{opacity:1;}
+.offer-card-img{width:100%;height:170px;overflow:hidden;background:#f0f4f8;position:relative;}
+.offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease;}
+.offer-card:hover .offer-card-img img{transform:scale(1.05);}
+.offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A6C80 0%,#064d5c 100%);color:rgba(255,255,255,.35);font-size:44px;position:relative;}
+.offer-card-img-ph::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(255,255,255,.1),transparent 60%);}
+.offer-card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%);pointer-events:none;}
+.offer-card-payout-hero{position:absolute;left:14px;bottom:12px;color:#fff;z-index:2;}
+.offer-card-payout-hero .amt{font-size:24px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4);letter-spacing:-.5px;line-height:1;}
+.offer-card-payout-hero .lbl{font-size:10px;font-weight:600;opacity:.9;letter-spacing:.5px;text-transform:uppercase;margin-top:3px;display:block;}
+.offer-card-badge{position:absolute;top:12px;right:12px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.offer-card-badge::before{content:"";width:6px;height:6px;border-radius:50%;}
+.offer-card-badge.s-active{background:rgba(232,245,233,.95);color:#1b5e20;}
+.offer-card-badge.s-active::before{background:#2e7d32;box-shadow:0 0 0 2px rgba(46,125,50,.2);animation:pulse-dot 2s infinite;}
+.offer-card-badge.s-paused{background:rgba(255,243,224,.95);color:#e65100;}
+.offer-card-badge.s-paused::before{background:#ef6c00;}
+.offer-card-badge.s-private{background:rgba(245,245,245,.95);color:#555;}
+.offer-card-badge.s-private::before{background:#888;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.5;}}
+.offer-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1;}
+.offer-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.offer-card-name{font-size:15px;font-weight:700;color:#1a2332;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;letter-spacing:-.2px;}
+.offer-card-id{font-family:'SF Mono',Monaco,monospace;font-size:10px;color:#0A6C80;background:#e6f4f6;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;}
 .offer-card-tags{display:flex;gap:5px;margin:8px 0;flex-wrap:wrap;}
-.offer-card-tag{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
-.offer-card-tag.cat{background:#f0f4f8;color:var(--text-mid);text-transform:capitalize;}
-.offer-card-tag.model{background:#e3f2fd;color:#1565c0;text-transform:uppercase;}
-.offer-card-adv{font-size:11px;color:var(--text-muted);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.offer-card-adv i{margin-right:3px;font-size:9px;opacity:.5;}
-.offer-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px 0;border-top:1px solid #f0f2f5;border-bottom:1px solid #f0f2f5;margin-bottom:10px;}
-.offer-card-st{text-align:center;}
-.offer-card-st span:first-child{display:block;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;}
-.offer-card-st span:last-child{display:block;font-size:13px;font-weight:700;}
-.offer-card-foot{display:flex;justify-content:space-between;align-items:center;}
-.offer-card-cap{font-size:10px;color:var(--text-muted);}
-.offer-card-cap i{margin-right:2px;font-size:9px;}
-.offer-card-acts{display:flex;gap:4px;}
+.offer-card-tag{padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.2px;}
+.offer-card-tag.cat{background:#f0f4f8;color:#475569;text-transform:capitalize;}
+.offer-card-tag.model{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:#0d47a1;text-transform:uppercase;}
+.offer-card-adv{font-size:12px;color:#64748b;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+.offer-card-adv i{font-size:11px;color:#94a3b8;}
+.offer-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:12px 0;border-top:1px dashed #e2e8f0;border-bottom:1px dashed #e2e8f0;margin-bottom:12px;}
+.offer-card-st{text-align:center;padding:0 2px;}
+.offer-card-st span:first-child{display:block;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:600;}
+.offer-card-st span:last-child{display:block;font-size:14px;font-weight:700;letter-spacing:-.3px;}
+.offer-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;}
+.offer-card-cap{font-size:11px;color:#64748b;font-weight:500;display:flex;align-items:center;gap:4px;}
+.offer-card-cap i{font-size:11px;color:#94a3b8;}
+.offer-card-acts{display:flex;gap:6px;}
+.offer-card-acts button{border:none;padding:7px 11px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .15s;}
+.offer-card-acts .btn-sm{background:#e6f4f6;color:#0A6C80;}
+.offer-card-acts .btn-sm:hover{background:#0A6C80;color:#fff;transform:scale(1.05);}
+.offer-card-acts .btn-danger-sm{background:#fee2e2;color:#dc2626;}
+.offer-card-acts .btn-danger-sm:hover{background:#dc2626;color:#fff;transform:scale(1.05);}
 
 /* === STAT CARDS SM (for conv/pay pages) === */
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
@@ -478,9 +497,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* === RESPONSIVE === */
 @media(max-width:1200px){.dash-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;}.g-perf{grid-column:1/-1;grid-row:auto;}.g-revenue,.g-payout,.g-profit,.g-clicks,.g-convs,.g-cr{grid-column:auto;grid-row:auto;}.dash-bottom{grid-template-columns:1fr;}}
 @media(max-width:768px){.app-sidebar .sidebar-main{display:none;}.app-sidebar.mob-open .sidebar-main{display:flex;position:fixed;left:48px;top:0;bottom:0;z-index:1100;box-shadow:4px 0 12px rgba(0,0,0,.1);}.sidebar-overlay.open{display:block;}.content-wrap{margin-left:48px;}.content-wrap.sb-collapsed{margin-left:48px;}.hamburger-btn{display:block;}.dash-grid{grid-template-columns:1fr;}.g-perf{grid-column:1;}.stat-cards{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
+/* ═══ DATA LOADER (subtle top-bar indicator) ═══ */
+#dataLoader{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;display:none;align-items:center;overflow:hidden;background:transparent;pointer-events:none;}
+#dataLoader::before{content:"";position:absolute;top:0;left:-50%;width:50%;height:100%;background:linear-gradient(90deg,transparent,#14b8a6,#0a6c80,transparent);animation:dataloadSlide 1.2s ease-in-out infinite;}
+@keyframes dataloadSlide{0%{left:-50%;}100%{left:100%;}}
+#dataLoaderPill{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.9);color:#fff;padding:8px 16px;border-radius:20px;font-size:11px;font-weight:600;display:none;align-items:center;gap:8px;z-index:9999;backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.2);pointer-events:none;}
+#dataLoaderPill i{animation:dataSpin 1s linear infinite;}
+@keyframes dataSpin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
+<div id="dataLoader"></div>
+<div id="dataLoaderPill"><i class="fas fa-sync-alt"></i> Refreshing data...</div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
 <div class="app-sidebar" id="appSidebar">
     <div class="sidebar-strip">
@@ -856,20 +884,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <!-- Test URL Generator -->
                 <div class="pb-test-section" id="pbTestSection" style="display:none;">
                     <div style="border-top:1px solid #e2e8f0;margin-top:18px;padding-top:18px;">
-                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:6px;"><i class="fas fa-flask" style="color:var(--orange);"></i> Test URL</label>
-                        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Generate a test URL with a real click ID. Give it to the advertiser — when they fire it, the sale will appear here.</div>
+                        <label style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:6px;"><i class="fas fa-flask" style="color:var(--orange);"></i> Test Tracking Link</label>
+                        <div style="font-size:12px;color:#64748b;margin-bottom:12px">Advertiser pastes this tracking link into their Postback Testing Tool (e.g. Everflow → Partners → Postbacks → ⋮ → Test). The tool simulates a click + conversion, fires postback back with the real click_id — conversion arrives here.</div>
                         <div class="form-row">
                             <div class="form-group"><label>Test Affiliate</label><select id="pbTestAff" onchange="generateTestPostbackUrl()"><option value="">-- Select Affiliate --</option></select></div>
-                            <div class="form-group"><label>Test Payout ($)</label><input type="number" id="pbTestPayout" value="10" step="0.01" class="form-input-sm" oninput="generateTestPostbackUrl()"></div>
                         </div>
                         <div id="pbTestUrlBox" style="display:none;">
-                            <label style="font-size:11px;font-weight:600;color:#475569;margin-bottom:4px;display:block">Ready Test URL (click ID auto-generated)</label>
+                            <label style="font-size:11px;font-weight:600;color:#475569;margin-bottom:4px;display:block">Tracking Link (share with advertiser)</label>
                             <div class="pb-s2s-url" style="background:#f0fdf4;border-color:#86efac;">
                                 <button class="pb-copy-lg" style="background:#059669;" onclick="copyPbUrl('pbTestUrlText')"><i class="fas fa-copy"></i> Copy</button>
                                 <span id="pbTestUrlText" style="color:#166534;"></span>
                             </div>
-                            <div style="font-size:11px;color:#64748b;margin-top:6px"><i class="fas fa-info-circle"></i> Give this URL to the advertiser. They paste it in their test field and fire — sale appears automatically.</div>
-                            <button class="btn-primary-sm" style="margin-top:8px" onclick="generateTestPostbackUrl()"><i class="fas fa-sync-alt"></i> Generate New Test URL</button>
+                            <div style="font-size:11px;color:#64748b;margin-top:6px"><i class="fas fa-info-circle"></i> Everflow's Postback Testing Tool takes a tracking link → simulates click + conversion → fires postback back with the real click_id. No macros needed, no manual firing.</div>
                         </div>
                     </div>
                 </div>
@@ -1588,17 +1614,19 @@ var PAGE_SIZE = 20;
 var TRACKER_PROFILES = {
     everflow: {
         name: 'Everflow', icon: 'fas fa-bolt', badgeClass: 'tracker-badge-everflow',
-        domains: ['everflowclick.net', 'evoffers.com', 'everflowoffers.com'],
-        signatureMacros: ['{transaction_id}', '{affiliate_id}'],
+        domains: ['everflowclick.net', 'evoffers.com', 'everflowoffers.com', 'o18a.com'],
+        signatureMacros: ['{aff_click_id}', '{transaction_id}'],
         macroMap: {
-            '{transaction_id}': '{click_id}', '{affiliate_id}': '{aff_id}', '{offer_id}': '{offer_id}',
+            '{aff_click_id}': '{click_id}', '{transaction_id}': '{click_id}', '{sub_aff_id}': '{aff_id}',
+            '{affiliate_id}': '{aff_id}', '{offer_id}': '{offer_id}',
             '{sub1}': '{sub1}', '{sub2}': '{sub2}', '{sub3}': '{sub3}', '{sub4}': '{sub4}', '{sub5}': '{sub5}',
             '{payout}': '{payout}', '{revenue}': '{revenue}'
         },
-        postbackMacros: { click_id: '{transaction_id}', payout: '{payout}', txn_id: '{txn_id}', status: '{status}' },
+        postbackMacros: { click_id: '{aff_click_id}', payout: '{payout}', txn_id: '{transaction_id}', status: '{status}' },
         macroRef: [
-            ['Click ID', '{transaction_id}', '{click_id}', 'Pass in any sub parameter (e.g. sub2={click_id})'],
-            ['Affiliate ID', '{affiliate_id}', '{aff_id}', 'Pass in sub1 or any available slot'],
+            ['Click ID (our)', '{aff_click_id}', '{click_id}', 'Everflow returns the aff_click_id we sent in the click URL'],
+            ['Transaction ID', '{transaction_id}', '{txn_id}', "Everflow's internal conversion ID"],
+            ['Affiliate ID', '{sub_aff_id}', '{aff_id}', 'Our affiliate ID passed as sub_aff_id'],
             ['Sub 1', '{sub1}', '{sub1}', ''], ['Sub 2', '{sub2}', '{sub2}', ''],
             ['Sub 3', '{sub3}', '{sub3}', ''], ['Sub 4', '{sub4}', '{sub4}', ''], ['Sub 5', '{sub5}', '{sub5}', '']
         ]
@@ -1788,7 +1816,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         if (_nav) _nav.classList.add('active');
         document.getElementById('pageTitle').textContent = pageTitles[_initPage] || _initPage;
         document.getElementById('pageCrumb').textContent = pageCrumbs[_initPage] || _initPage;
-        loadAllData();
+        loadAllDataInitial();
     });
 });
 function doLogout() { firebase.auth().signOut().then(function() { window.location.href = 'index.html'; }); }
@@ -1809,22 +1837,25 @@ function goPage(page) {
     if (navItem) navItem.classList.add('active');
     document.getElementById('pageTitle').textContent = pageTitles[page] || page;
     document.getElementById('pageCrumb').textContent = pageCrumbs[page] || page;
-    if (page === 'dashboard') loadDashboard();
-    else if (page === 'advertisers') loadAdvertisers();
-    else if (page === 'offers') loadOffers();
-    else if (page === 'assignments') loadAssignments();
-    else if (page === 'affiliates') loadAffiliates();
-    else if (page === 'managers') loadManagers();
-    else if (page === 'signups') loadSignups();
-    else if (page === 'postbacks') loadPostbacksPage();
-    else if (page === 'clicks') loadClicks();
-    else if (page === 'conversions') loadConversionsPage();
-    else if (page === 'overcap') loadOverCap();
-    else if (page === 'fraud') loadFraud();
-    else if (page === 'payments') loadPayments();
-    else if (page === 'linkgen') loadLinkGen();
-    else if (page === 'mailer') loadMailer();
-    else if (page === 'settings') loadSettings();
+    /* Always refresh global data first, then render page (prevents stale/partial data). */
+    loadAllData(function() {
+        if (page === 'dashboard') loadDashboard();
+        else if (page === 'advertisers') loadAdvertisers();
+        else if (page === 'offers') loadOffers();
+        else if (page === 'assignments') loadAssignments();
+        else if (page === 'affiliates') loadAffiliates();
+        else if (page === 'managers') loadManagers();
+        else if (page === 'signups') loadSignups();
+        else if (page === 'postbacks') loadPostbacksPage();
+        else if (page === 'clicks') loadClicks();
+        else if (page === 'conversions') loadConversionsPage();
+        else if (page === 'overcap') loadOverCap();
+        else if (page === 'fraud') loadFraud();
+        else if (page === 'payments') loadPayments();
+        else if (page === 'linkgen') loadLinkGen();
+        else if (page === 'mailer') loadMailer();
+        else if (page === 'settings') loadSettings();
+    });
     /* Close mobile sidebar */
     document.getElementById('appSidebar').classList.remove('mob-open');
     document.getElementById('sidebarOverlay').classList.remove('open');
@@ -1841,9 +1872,26 @@ function collapseSidebar() {
     else { icon.className = 'fas fa-chevron-left'; }
 }
 
-/* ===== LOAD ALL DATA ===== */
-function loadAllData() {
+/* ═══ DATA LOADING SYSTEM ═══
+   Version-tracked fetch prevents race conditions when user navigates pages fast.
+   Each fetch gets a ticket; only the latest ticket's result is applied. */
+var _dataFetchVersion = 0;
+var _isRefreshing = false;
+var _autoRefreshTimer = null;
+
+function showDataLoader(show) {
+    var el = document.getElementById('dataLoader');
+    if (!el) return;
+    el.style.display = show ? 'flex' : 'none';
+}
+
+function loadAllData(onDone, silent) {
+    var myVersion = ++_dataFetchVersion;
+    if (!silent) showDataLoader(true);
+    _isRefreshing = true;
     Promise.all([fbGet('offers'), fbGet('users'), fbGet('clicks'), fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers')]).then(function(res) {
+        /* Discard result if a newer fetch has started */
+        if (myVersion !== _dataFetchVersion) return;
         allOffers = objToArr(res[0]); allUsers = objToArr(res[1]); allClicks = objToArr(res[2]); allConversions = objToArr(res[3]).filter(function(c) { return !c.isTest; }); allSignups = objToArr(res[4]); allPayments = objToArr(res[5]);
         allApplications = objToArr(res[6]);
         allAdvertisers = objToArr(res[8]);
@@ -1858,12 +1906,55 @@ function loadAllData() {
                 });
             }
         });
-        var hashPage = (window.location.hash || '').replace('#', '');
-        goPage((hashPage && pageTitles[hashPage]) ? hashPage : 'dashboard');
+        _isRefreshing = false;
+        showDataLoader(false);
         updateSignupBadge();
         updateAppBadge();
-        initDefaultTemplates();
+        if (typeof onDone === 'function') onDone();
+    }).catch(function() {
+        _isRefreshing = false;
+        showDataLoader(false);
     });
+}
+
+function loadAllDataInitial() {
+    loadAllData(function() {
+        var hashPage = (window.location.hash || '').replace('#', '');
+        goPage((hashPage && pageTitles[hashPage]) ? hashPage : 'dashboard');
+        initDefaultTemplates();
+        startAutoRefresh();
+    });
+}
+
+function startAutoRefresh() {
+    if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+    _autoRefreshTimer = setInterval(function() {
+        if (document.hidden) return; /* Skip if tab not visible */
+        if (_isRefreshing) return;   /* Skip if fetch already in flight */
+        loadAllData(function() {
+            /* Re-render current page with fresh data */
+            if (currentPage && typeof window['loadCurrentPageRender'] === 'function') {
+                window['loadCurrentPageRender']();
+            } else {
+                rerenderCurrentPage();
+            }
+        }, true); /* silent = true: no loader overlay */
+    }, 20000); /* 20 seconds */
+}
+
+function rerenderCurrentPage() {
+    var page = currentPage;
+    if (page === 'dashboard') { if (typeof loadDashboard === 'function') loadDashboard(); }
+    else if (page === 'offers') renderOffers && renderOffers();
+    else if (page === 'clicks') renderClicks && renderClicks();
+    else if (page === 'conversions') renderConversions && renderConversions();
+    else if (page === 'affiliates') renderAffiliates && renderAffiliates();
+    else if (page === 'signups') renderSignups && renderSignups();
+    else if (page === 'payments') renderPayments && renderPayments();
+    else if (page === 'postbacks') refreshPostbackLog && refreshPostbackLog();
+    else if (page === 'assignments') renderAssignments && renderAssignments();
+    updateSignupBadge();
+    updateAppBadge();
 }
 function updateSignupBadge() {
     var pending = allSignups.filter(function(s) { return s.status === 'pending'; }).length;
@@ -2150,12 +2241,12 @@ function renderOffers() {
         var profit = (parseFloat(o.revenue) || 0) - (parseFloat(o.payout) || 0);
         var profitColor = profit >= 0 ? 'var(--green)' : 'var(--red)';
         var catLabel = (o.category || 'other').charAt(0).toUpperCase() + (o.category || 'other').slice(1);
-        var imgH = o.thumbnail ? '<div class="offer-card-img"><img src="' + escHtml(o.thumbnail) + '" onerror="this.parentElement.innerHTML=\'<div class=offer-card-img-ph><i class=fas\\ fa-bullhorn></i></div>\'"></div>' : '<div class="offer-card-img"><div class="offer-card-img-ph"><i class="fas fa-bullhorn"></i></div></div>';
-        cards += '<div class="offer-card">' + imgH +
+        var imgInner = o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" onerror="this.parentElement.querySelector(\'.offer-card-img-ph\').style.display=\'flex\';this.style.display=\'none\'"><div class="offer-card-img-ph" style="display:none;position:absolute;inset:0"><i class="fas fa-bullhorn"></i></div>' : '<div class="offer-card-img-ph"><i class="fas fa-bullhorn"></i></div>';
+        var heroPayout = '<div class="offer-card-img-overlay"></div><div class="offer-card-payout-hero"><div class="amt">' + fmtMoney(o.payout, cs) + '</div><span class="lbl">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + ' Payout</span></div>';
+        cards += '<div class="offer-card"><div class="offer-card-img">' + imgInner + heroPayout + '</div>' +
             '<div class="offer-card-badge s-' + (o.status || 'inactive') + '">' + escHtml(o.status || '-') + '</div>' +
             '<div class="offer-card-body">' +
-            '<div class="offer-card-name" title="' + escHtml(o.name) + '">' + escHtml(o.name) + '</div>' +
-            '<div class="offer-card-id">#' + escHtml(o._id) + '</div>' +
+            '<div class="offer-card-head"><div class="offer-card-name" title="' + escHtml(o.name) + '">' + escHtml(o.name) + '</div><span class="offer-card-id">#' + escHtml(o._id) + '</span></div>' +
             '<div class="offer-card-tags"><span class="offer-card-tag cat">' + escHtml(catLabel) + '</span><span class="offer-card-tag model">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + '</span></div>' +
             '<div class="offer-card-adv"><i class="fas fa-building"></i> ' + escHtml(getAdvName(o.advertiser)) + '</div>' +
             '<div class="offer-card-stats">' +
@@ -2165,7 +2256,7 @@ function renderOffers() {
             '</div>' +
             '<div class="offer-card-foot">' +
             '<span class="offer-card-cap"><i class="fas fa-tachometer-alt"></i> ' + (o.dailyCap ? o.dailyCap+'/day' : 'Unlimited') + '</span>' +
-            '<div class="offer-card-acts"><button class="btn-sm" onclick="openOfferModal(\'' + o._id + '\')"><i class="fas fa-edit"></i></button> <button class="btn-danger-sm" onclick="deleteOffer(\'' + o._id + '\')"><i class="fas fa-trash"></i></button></div>' +
+            '<div class="offer-card-acts"><button class="btn-sm" onclick="openOfferModal(\'' + o._id + '\')" title="Edit"><i class="fas fa-edit"></i></button> <button class="btn-danger-sm" onclick="deleteOffer(\'' + o._id + '\')" title="Delete"><i class="fas fa-trash"></i></button></div>' +
             '</div></div></div>';
     });
     document.getElementById('offersCardGrid').innerHTML = cards || '<div class="no-data" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>No offers found</p></div>';
@@ -5151,40 +5242,23 @@ function onPbTrackerChange() {
     resultEl.className = 'pb-s2s-result visible';
     /* Show test URL section */
     document.getElementById('pbTestSection').style.display = 'block';
-    updateTestUrl();
-}
-
-/* ---- Test URL ---- */
-function updateTestUrl() {
-    var offerId = document.getElementById('pbOfferSelect').value;
-    var affId = document.getElementById('pbTestAff').value;
-    var box = document.getElementById('pbTestUrlBox');
-    if (!offerId || !affId) { box.style.display = 'none'; return; }
-    var domain = window._cachedDefaultDomain || window.location.origin;
-    var url = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(affId) + '?sub1=TEST_VERIFY&test=1';
-    document.getElementById('pbTestUrlText').textContent = url;
-    box.style.display = 'block';
+    generateTestPostbackUrl();
 }
 
 function generateTestPostbackUrl() {
     var offerId = document.getElementById('pbOfferSelect').value;
     var affUid = document.getElementById('pbTestAff').value;
-    var payout = parseFloat(document.getElementById('pbTestPayout').value) || 10;
     var box = document.getElementById('pbTestUrlBox');
     if (!offerId || !affUid) { box.style.display = 'none'; return; }
 
-    /* Auto-generate a real click record in Firebase */
-    var clickId = 'test_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-    var clickData = { offerId: offerId, affiliateId: affUid, ip: '127.0.0.1', userAgent: 'TestURL/Admin', country: 'XX', device: 'desktop', browser: 'Admin', os: 'Test', referer: 'admin-panel', sub1: 'TEST', timestamp: Date.now(), converted: false, test: true, isTest: true };
-
-    fbPut('clicks/' + clickId, clickData).then(function() {
-        var domain = window._cachedDefaultDomain || window.location.origin;
-        var secret = window._cachedPostbackSecret || '';
-        var txnId = 'TEST-' + Date.now().toString(36).toUpperCase();
-        var url = domain + '/api/postback?click_id=' + encodeURIComponent(clickId) + '&secret=' + encodeURIComponent(secret) + '&payout=' + payout + '&txn_id=' + encodeURIComponent(txnId) + '&status=approved&test=1';
-        document.getElementById('pbTestUrlText').textContent = url;
-        box.style.display = 'block';
-    });
+    /* Advertiser's tool (e.g. Everflow Postback Testing Tool) takes a TRACKING LINK,
+       simulates a click + conversion. So we give them our /go/ link — their tool will
+       click it, create a real click_id in our system, redirect with aff_click_id=click_id,
+       then simulate a postback back to us with the stored click_id. */
+    var domain = window._cachedDefaultDomain || window.location.origin;
+    var url = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(affUid) + '?test=1';
+    document.getElementById('pbTestUrlText').textContent = url;
+    box.style.display = 'block';
 }
 
 /* ---- Postback Log ---- */

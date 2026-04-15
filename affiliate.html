@@ -110,37 +110,53 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 
 /* ── Offer Card Grid ── */
 .aff-offer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
-.aff-offer-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;}
-.aff-offer-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
-.aff-offer-card-img{width:100%;height:140px;overflow:hidden;background:#f0f4f8;position:relative;}
-.aff-offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
-.aff-offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a6c80,#064d5c);color:rgba(255,255,255,.35);font-size:36px;}
-.aff-offer-card-status{position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;text-transform:capitalize;}
-.aff-offer-card-status.st-approved{background:rgba(232,245,233,.92);color:#2e7d32;}
-.aff-offer-card-status.st-pending{background:rgba(227,242,253,.92);color:#1565c0;}
-.aff-offer-card-status.st-rejected{background:rgba(255,235,238,.92);color:#c62828;}
-.aff-offer-card-status.st-public{background:rgba(232,245,233,.92);color:#2e7d32;}
-.aff-offer-card-body{padding:12px 14px 14px;}
-.aff-offer-card-name{font-size:14px;font-weight:700;color:#1a2332;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.aff-offer-card-tags{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
-.aff-offer-card-tag{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
-.aff-offer-card-tag.cat{background:#f0f4f8;color:#5a6a80;text-transform:capitalize;}
-.aff-offer-card-tag.model{background:#e3f2fd;color:#1565c0;text-transform:uppercase;}
-.aff-offer-card-payout{display:flex;align-items:baseline;gap:4px;margin-bottom:10px;}
-.aff-offer-card-payout-amt{font-size:22px;font-weight:800;color:#0a6c80;letter-spacing:-.5px;}
-.aff-offer-card-payout-type{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;}
-.aff-offer-card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #f1f5f9;}
-.aff-offer-card-rev{font-size:11px;color:#94a3b8;}
-.aff-offer-card-rev b{color:#1a2332;}
-.aff-offer-card-btn{padding:5px 12px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
-.aff-offer-card-btn.apply{background:#0a6c80;color:#fff;}
-.aff-offer-card-btn.apply:hover{background:#085a6b;}
+/* ═══ AFFILIATE OFFER CARDS — MODERN REDESIGN ═══ */
+.aff-offer-card{background:#fff;border:1px solid #e8edf3;border-radius:16px;overflow:hidden;transition:all .25s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;display:flex;flex-direction:column;}
+.aff-offer-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0a6c80,#14b8a6);opacity:0;transition:opacity .25s;z-index:2;}
+.aff-offer-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(10,108,128,.15);border-color:#0a6c80;}
+.aff-offer-card:hover::before{opacity:1;}
+.aff-offer-card-img{width:100%;height:170px;overflow:hidden;background:#f0f4f8;position:relative;}
+.aff-offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease;}
+.aff-offer-card:hover .aff-offer-card-img img{transform:scale(1.05);}
+.aff-offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a6c80 0%,#064d5c 100%);color:rgba(255,255,255,.35);font-size:44px;position:relative;}
+.aff-offer-card-img-ph::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(255,255,255,.1),transparent 60%);}
+.aff-offer-card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 50%);pointer-events:none;}
+.aff-offer-card-payout-hero{position:absolute;left:14px;bottom:12px;color:#fff;z-index:2;}
+.aff-offer-card-payout-hero .amt{font-size:26px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4);letter-spacing:-.5px;line-height:1;}
+.aff-offer-card-payout-hero .lbl{font-size:10px;font-weight:600;opacity:.9;letter-spacing:.5px;text-transform:uppercase;margin-top:3px;display:block;}
+.aff-offer-card-status{position:absolute;top:12px;right:12px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.aff-offer-card-status::before{content:"";width:6px;height:6px;border-radius:50%;}
+.aff-offer-card-status.st-approved{background:rgba(232,245,233,.95);color:#1b5e20;}
+.aff-offer-card-status.st-approved::before{background:#2e7d32;box-shadow:0 0 0 2px rgba(46,125,50,.2);animation:aff-pulse 2s infinite;}
+.aff-offer-card-status.st-pending{background:rgba(227,242,253,.95);color:#0d47a1;}
+.aff-offer-card-status.st-pending::before{background:#1565c0;animation:aff-pulse 1.5s infinite;}
+.aff-offer-card-status.st-rejected{background:rgba(255,235,238,.95);color:#b71c1c;}
+.aff-offer-card-status.st-rejected::before{background:#c62828;}
+.aff-offer-card-status.st-public{background:rgba(232,245,233,.95);color:#1b5e20;}
+.aff-offer-card-status.st-public::before{background:#2e7d32;}
+@keyframes aff-pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.aff-offer-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1;}
+.aff-offer-card-name{font-size:15px;font-weight:700;color:#1a2332;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;}
+.aff-offer-card-tags{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+.aff-offer-card-tag{padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.2px;}
+.aff-offer-card-tag.cat{background:#f0f4f8;color:#475569;text-transform:capitalize;}
+.aff-offer-card-tag.model{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:#0d47a1;text-transform:uppercase;}
+.aff-offer-card-tag.country{background:#fff7e6;color:#b45309;}
+.aff-offer-card-desc{font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px;}
+.aff-offer-card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px dashed #e2e8f0;margin-top:auto;gap:8px;}
+.aff-offer-card-rev{font-size:11px;color:#94a3b8;font-weight:500;display:flex;align-items:center;gap:4px;}
+.aff-offer-card-rev i{font-size:10px;}
+.aff-offer-card-rev b{color:#1a2332;font-weight:700;}
+.aff-offer-card-btn{padding:7px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;letter-spacing:.2px;}
+.aff-offer-card-btn i{font-size:10px;}
+.aff-offer-card-btn.apply{background:linear-gradient(135deg,#0a6c80,#14b8a6);color:#fff;box-shadow:0 2px 8px rgba(10,108,128,.25);}
+.aff-offer-card-btn.apply:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,108,128,.35);}
 .aff-offer-card-btn.approved{background:#e8f5e9;color:#2e7d32;cursor:default;}
 .aff-offer-card-btn.pending{background:#e3f2fd;color:#1565c0;cursor:default;}
 .aff-offer-card-btn.reapply{background:#fff3e0;color:#e65100;}
 .aff-offer-card-btn.reapply:hover{background:#ffe0b2;}
-.aff-offer-card-btn.get-link{background:#0a6c80;color:#fff;}
-.aff-offer-card-btn.get-link:hover{background:#085a6b;}
+.aff-offer-card-btn.get-link{background:linear-gradient(135deg,#0a6c80,#14b8a6);color:#fff;box-shadow:0 2px 8px rgba(10,108,128,.25);}
+.aff-offer-card-btn.get-link:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,108,128,.35);}
 
 /* ── Chart ── */
 .chart-box{background:#fff;border-radius:10px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.02);margin-bottom:20px;}
@@ -352,9 +368,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 body.impersonating .sidebar{top:40px;}
 body.impersonating .content{margin-top:40px;}
 body.impersonating .impersonate-banner{display:block;}
+/* ═══ DATA LOADER ═══ */
+#affDataLoader{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;display:none;overflow:hidden;background:transparent;pointer-events:none;}
+#affDataLoader::before{content:"";position:absolute;top:0;left:-50%;width:50%;height:100%;background:linear-gradient(90deg,transparent,#14b8a6,#0a6c80,transparent);animation:affLoadSlide 1.2s ease-in-out infinite;}
+@keyframes affLoadSlide{0%{left:-50%;}100%{left:100%;}}
 </style>
 </head>
 <body>
+<div id="affDataLoader"></div>
 <div class="impersonate-banner" id="impersonateBanner"><i class="fas fa-eye" style="margin-right:6px;"></i> <span id="impersonateText">Viewing as affiliate</span><button onclick="exitImpersonation()"><i class="fas fa-times"></i> Exit</button></div>
 <div class="sb-overlay" id="sbOverlay" onclick="toggleSb()"></div>
 <div class="sidebar" id="sidebar">
@@ -942,6 +963,7 @@ function normalAuth(user) {
         } else {
             goPage('dashboard');
         }
+        startAffAutoRefresh();
     });
 }
 
@@ -1128,15 +1150,44 @@ function toggleSb() {
     document.getElementById('sbOverlay').classList.toggle('open');
 }
 
-/* ── Load All Data ── */
-function loadAllData() {
+/* ── Load All Data (with race-condition guard + auto-refresh) ── */
+var _affFetchVer = 0;
+var _affRefreshTimer = null;
+var _affRefreshing = false;
+
+function loadAllData(onDone, silent) {
+    var myVer = ++_affFetchVer;
+    _affRefreshing = true;
+    if (!silent) { var l = document.getElementById('affDataLoader'); if (l) l.style.display = 'block'; }
     Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
+        if (myVer !== _affFetchVer) return; /* newer fetch superseded this one */
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
         myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
-        loadDashboard();
+        _affRefreshing = false;
+        var l2 = document.getElementById('affDataLoader'); if (l2) l2.style.display = 'none';
+        if (typeof onDone === 'function') onDone();
+        else loadDashboard();
+    }).catch(function() {
+        _affRefreshing = false;
+        var l3 = document.getElementById('affDataLoader'); if (l3) l3.style.display = 'none';
     });
+}
+
+function startAffAutoRefresh() {
+    if (_affRefreshTimer) clearInterval(_affRefreshTimer);
+    _affRefreshTimer = setInterval(function() {
+        if (document.hidden || _affRefreshing) return;
+        loadAllData(function() {
+            var pg = (window.location.hash || '').replace('#', '') || 'dashboard';
+            if (pg === 'dashboard') loadDashboard && loadDashboard();
+            else if (pg === 'offers') loadOffers && loadOffers();
+            else if (pg === 'reporting') loadClicks && loadClicks();
+            else if (pg === 'analytics') loadAnalytics && loadAnalytics();
+            else if (pg === 'invoices') loadInvoices && loadInvoices();
+        }, true);
+    }, 20000);
 }
 
 /* ── Build Stat Card ── */
