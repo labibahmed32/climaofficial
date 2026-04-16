@@ -77,9 +77,23 @@ function getIP() {
 
 function getGeoData(ip) {
     if (!ip) return Promise.resolve({});
-    return fetch('https://ip-api.com/json/' + ip + '?fields=status,countryCode,country,city,isp,org,as,timezone,proxy,hosting')
+    /* ipwho.is is free + HTTPS (ip-api.com free is HTTP-only → blocked as mixed content) */
+    return fetch('https://ipwho.is/' + ip)
         .then(function(r) { return r.json(); })
-        .then(function(d) { return d.status === 'success' ? d : {}; })
+        .then(function(d) {
+            if (!d || d.success === false) return {};
+            return {
+                countryCode: d.country_code || '',
+                country: d.country || '',
+                city: d.city || '',
+                isp: (d.connection && d.connection.isp) || '',
+                org: (d.connection && d.connection.org) || '',
+                as: (d.connection && d.connection.asn) ? ('AS' + d.connection.asn) : '',
+                timezone: (d.timezone && d.timezone.id) || '',
+                proxy: false,
+                hosting: false
+            };
+        })
         .catch(function() { return {}; });
 }
 

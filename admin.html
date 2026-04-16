@@ -189,16 +189,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .offer-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0A6C80,#14b8a6);opacity:0;transition:opacity .25s;z-index:2;}
 .offer-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(10,108,128,.15);border-color:#0A6C80;}
 .offer-card:hover::before{opacity:1;}
-.offer-card-img{width:100%;height:170px;overflow:hidden;background:#f0f4f8;position:relative;}
-.offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease;}
-.offer-card:hover .offer-card-img img{transform:scale(1.05);}
+.offer-card-img{width:100%;height:190px;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8fafc 0%,#e6f4f6 50%,#f0f4f8 100%);}
+.offer-card-img::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(10,108,128,.08) 0%,transparent 40%),radial-gradient(circle at 80% 70%,rgba(20,184,166,.06) 0%,transparent 40%);pointer-events:none;}
+.offer-card-img::after{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(10,108,128,.015) 20px,rgba(10,108,128,.015) 40px);pointer-events:none;}
+.offer-card-img img{position:relative;width:100%;height:100%;object-fit:contain;display:block;padding:16px 60px 16px 16px;transition:transform .35s ease;filter:drop-shadow(0 4px 12px rgba(0,0,0,.15));}
+.offer-card:hover .offer-card-img img{transform:scale(1.06) rotate(-1deg);}
 .offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A6C80 0%,#064d5c 100%);color:rgba(255,255,255,.35);font-size:44px;position:relative;}
 .offer-card-img-ph::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(255,255,255,.1),transparent 60%);}
-.offer-card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%);pointer-events:none;}
-.offer-card-payout-hero{position:absolute;left:14px;bottom:12px;color:#fff;z-index:2;}
-.offer-card-payout-hero .amt{font-size:24px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4);letter-spacing:-.5px;line-height:1;}
-.offer-card-payout-hero .lbl{font-size:10px;font-weight:600;opacity:.9;letter-spacing:.5px;text-transform:uppercase;margin-top:3px;display:block;}
-.offer-card-badge{position:absolute;top:12px;right:12px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.offer-card-payout-hero{position:absolute;right:14px;top:14px;z-index:2;background:linear-gradient(135deg,#0A6C80,#14b8a6);color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(10,108,128,.35);text-align:right;}
+.offer-card-payout-hero .amt{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;display:block;}
+.offer-card-payout-hero .lbl{font-size:9px;font-weight:600;opacity:.95;letter-spacing:.8px;text-transform:uppercase;margin-top:3px;display:block;}
+.offer-card-badge{position:absolute;top:14px;left:14px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.08);}
 .offer-card-badge::before{content:"";width:6px;height:6px;border-radius:50%;}
 .offer-card-badge.s-active{background:rgba(232,245,233,.95);color:#1b5e20;}
 .offer-card-badge.s-active::before{background:#2e7d32;box-shadow:0 0 0 2px rgba(46,125,50,.2);animation:pulse-dot 2s infinite;}
@@ -254,6 +255,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:13px;outline:none;font-family:inherit;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(10,108,128,.08);}
 .form-group textarea{resize:vertical;min-height:60px;}
+/* ═══ RICH TEXT EDITOR ═══ */
+.rich-editor-wrap{border:1.5px solid var(--card-border);border-radius:var(--radius-sm);overflow:visible;background:#fff;position:relative;}
+.rich-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px;background:linear-gradient(to bottom,#fafbfc,#f3f5f7);border-bottom:1px solid var(--card-border);align-items:center;}
+.rt-btn{background:transparent;border:1px solid transparent;padding:5px 9px;border-radius:5px;cursor:pointer;font-size:13px;color:#475569;transition:all .12s;min-width:30px;line-height:1;}
+.rt-btn:hover{background:#fff;border-color:var(--card-border);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.rt-btn:active{background:#e6f4f6;}
+.rt-btn.rt-emoji-btn{font-size:15px;padding:3px 7px;}
+.rt-sep{width:1px;height:20px;background:#d1d9e0;margin:0 4px;}
+.rt-select{border:1px solid transparent;background:transparent;padding:4px 8px;border-radius:5px;font-size:12px;color:#475569;cursor:pointer;outline:none;font-family:inherit;}
+.rt-select:hover{background:#fff;border-color:var(--card-border);}
+.rich-editable{min-height:120px;max-height:280px;overflow-y:auto;padding:12px 14px;font-size:13.5px;line-height:1.6;color:#1a2332;outline:none;background:#fff;}
+.rich-editable:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
+.rich-editable:focus{background:#fff;}
+.rich-editable h2{font-size:18px;font-weight:700;margin:10px 0 6px;color:#0a6c80;}
+.rich-editable h3{font-size:16px;font-weight:700;margin:8px 0 5px;color:#0a6c80;}
+.rich-editable h4{font-size:14px;font-weight:700;margin:6px 0 4px;color:#0a6c80;}
+.rich-editable p{margin:6px 0;}
+.rich-editable ul,.rich-editable ol{padding-left:24px;margin:6px 0;}
+.rich-editable li{margin:3px 0;}
+.rich-editable a{color:#0a6c80;text-decoration:underline;}
+.rt-emoji-panel{display:none;position:absolute;top:100%;left:0;right:0;z-index:10;background:#fff;border:1px solid var(--card-border);border-top:none;box-shadow:0 4px 12px rgba(0,0,0,.1);padding:10px;max-height:180px;overflow-y:auto;}
+.rt-emoji-panel.open{display:block;}
+.rt-emoji-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;}
+.rt-emoji-grid span{font-size:22px;cursor:pointer;text-align:center;padding:5px;border-radius:5px;transition:background .1s;}
+.rt-emoji-grid span:hover{background:#f0f4f8;}
+/* Rich content display (affiliate view) */
+.rich-display{font-size:14px;line-height:1.65;color:#1a2332;}
+.rich-display h2,.rich-display h3,.rich-display h4{color:#0a6c80;margin:12px 0 6px;font-weight:700;}
+.rich-display h2{font-size:20px;}
+.rich-display h3{font-size:17px;}
+.rich-display h4{font-size:15px;}
+.rich-display p{margin:8px 0;}
+.rich-display ul,.rich-display ol{padding-left:26px;margin:8px 0;}
+.rich-display li{margin:4px 0;}
+.rich-display a{color:#0a6c80;text-decoration:underline;}
+.rich-display strong,.rich-display b{font-weight:700;color:#0a2e38;}
 .form-help{font-size:11px;color:var(--text-muted);margin-top:3px;}
 
 /* === MISC === */
@@ -1144,7 +1181,48 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="form-group"><label>Offer Name *</label><input type="text" id="ofName"></div>
                 <div class="form-group"><label>Advertiser</label><select id="ofAdvertiser"><option value="">-- Select Advertiser --</option></select></div>
             </div>
-            <div class="form-group"><label>Description</label><textarea id="ofDescription" rows="3"></textarea></div>
+            <div class="form-group">
+                <label>Description</label>
+                <div class="rich-editor-wrap">
+                    <div class="rich-toolbar">
+                        <button type="button" class="rt-btn" onclick="rtCmd('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('underline')" title="Underline"><u>U</u></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+                        <span class="rt-sep"></span>
+                        <button type="button" class="rt-btn" onclick="rtCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('justifyCenter')" title="Center"><i class="fas fa-align-center"></i></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                        <span class="rt-sep"></span>
+                        <button type="button" class="rt-btn" onclick="rtCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button type="button" class="rt-btn" onclick="rtCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <span class="rt-sep"></span>
+                        <div class="rt-color-wrap">
+                            <button type="button" class="rt-btn" onclick="document.getElementById('rtColorPicker').click()" title="Text Color"><i class="fas fa-palette"></i></button>
+                            <input type="color" id="rtColorPicker" onchange="rtCmd('foreColor',this.value)" style="display:none">
+                        </div>
+                        <select class="rt-select" onchange="if(this.value){rtCmd('formatBlock',this.value);this.value=''}" title="Heading">
+                            <option value="">Heading</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                            <option value="h4">Heading 4</option>
+                            <option value="p">Paragraph</option>
+                        </select>
+                        <span class="rt-sep"></span>
+                        <button type="button" class="rt-btn rt-emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">😀</button>
+                        <button type="button" class="rt-btn" onclick="rtClearFormat()" title="Clear Formatting"><i class="fas fa-remove-format"></i></button>
+                    </div>
+                    <div id="ofDescription" class="rich-editable" contenteditable="true" data-placeholder="Write offer description — use the toolbar to format, add colors, emojis..."></div>
+                    <div class="rt-emoji-panel" id="rtEmojiPanel">
+                        <div class="rt-emoji-grid">
+                            <span onclick="insertEmoji('🔥')">🔥</span><span onclick="insertEmoji('💰')">💰</span><span onclick="insertEmoji('💎')">💎</span><span onclick="insertEmoji('🚀')">🚀</span><span onclick="insertEmoji('⭐')">⭐</span><span onclick="insertEmoji('✅')">✅</span><span onclick="insertEmoji('❌')">❌</span><span onclick="insertEmoji('⚡')">⚡</span><span onclick="insertEmoji('🎯')">🎯</span><span onclick="insertEmoji('💵')">💵</span>
+                            <span onclick="insertEmoji('📱')">📱</span><span onclick="insertEmoji('💻')">💻</span><span onclick="insertEmoji('🌟')">🌟</span><span onclick="insertEmoji('🏆')">🏆</span><span onclick="insertEmoji('🎁')">🎁</span><span onclick="insertEmoji('👑')">👑</span><span onclick="insertEmoji('💪')">💪</span><span onclick="insertEmoji('🎉')">🎉</span><span onclick="insertEmoji('📈')">📈</span><span onclick="insertEmoji('📊')">📊</span>
+                            <span onclick="insertEmoji('🔴')">🔴</span><span onclick="insertEmoji('🟢')">🟢</span><span onclick="insertEmoji('🟡')">🟡</span><span onclick="insertEmoji('🔵')">🔵</span><span onclick="insertEmoji('⚪')">⚪</span><span onclick="insertEmoji('⚫')">⚫</span><span onclick="insertEmoji('🟠')">🟠</span><span onclick="insertEmoji('🟣')">🟣</span><span onclick="insertEmoji('❤️')">❤️</span><span onclick="insertEmoji('💯')">💯</span>
+                            <span onclick="insertEmoji('⏰')">⏰</span><span onclick="insertEmoji('📅')">📅</span><span onclick="insertEmoji('🌍')">🌍</span><span onclick="insertEmoji('🛒')">🛒</span><span onclick="insertEmoji('💳')">💳</span><span onclick="insertEmoji('🏅')">🏅</span><span onclick="insertEmoji('🎊')">🎊</span><span onclick="insertEmoji('👉')">👉</span><span onclick="insertEmoji('👈')">👈</span><span onclick="insertEmoji('👆')">👆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="form-row">
                 <div class="form-group"><label>Category</label><select id="ofCategory"><option value="health">Health</option><option value="finance">Finance</option><option value="dating">Dating</option><option value="gaming">Gaming</option><option value="ecommerce">Ecommerce</option><option value="crypto">Crypto</option><option value="education">Education</option><option value="software">Software</option><option value="other">Other</option></select></div>
                 <div class="form-group"><label>Status</label><select id="ofStatus"><option value="active">Active</option><option value="paused">Paused</option><option value="private">Private</option></select></div>
@@ -1767,8 +1845,10 @@ function objToArr(obj) {
     return result;
 }
 function genId(prefix) { return (prefix || '') + Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
-function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-function fmtDateTime(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+var TZ = 'America/New_York'; /* Florida (US Eastern) */
+function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: TZ }); }
+function fmtDateTime(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: TZ }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: TZ }); }
+function todayET() { return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date()); }
 function fmtMoney(n, cur) { return (cur || '$') + (parseFloat(n) || 0).toFixed(2); }
 function fmtNum(n) { n = parseFloat(n) || 0; if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'; if (n >= 1000) return (n / 1000).toFixed(1) + 'K'; return n.toString(); }
 function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
@@ -2242,7 +2322,7 @@ function renderOffers() {
         var profitColor = profit >= 0 ? 'var(--green)' : 'var(--red)';
         var catLabel = (o.category || 'other').charAt(0).toUpperCase() + (o.category || 'other').slice(1);
         var imgInner = o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" onerror="this.parentElement.querySelector(\'.offer-card-img-ph\').style.display=\'flex\';this.style.display=\'none\'"><div class="offer-card-img-ph" style="display:none;position:absolute;inset:0"><i class="fas fa-bullhorn"></i></div>' : '<div class="offer-card-img-ph"><i class="fas fa-bullhorn"></i></div>';
-        var heroPayout = '<div class="offer-card-img-overlay"></div><div class="offer-card-payout-hero"><div class="amt">' + fmtMoney(o.payout, cs) + '</div><span class="lbl">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + ' Payout</span></div>';
+        var heroPayout = '<div class="offer-card-payout-hero"><span class="amt">' + fmtMoney(o.payout, cs) + '</span><span class="lbl">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + '</span></div>';
         cards += '<div class="offer-card"><div class="offer-card-img">' + imgInner + heroPayout + '</div>' +
             '<div class="offer-card-badge s-' + (o.status || 'inactive') + '">' + escHtml(o.status || '-') + '</div>' +
             '<div class="offer-card-body">' +
@@ -2308,6 +2388,34 @@ function previewOfferImage() {
     if (url) { img.src = url; img.classList.add('visible'); img.onerror = function() { img.classList.remove('visible'); }; }
     else { img.classList.remove('visible'); }
 }
+
+/* ═══ RICH TEXT EDITOR ═══ */
+function rtCmd(cmd, val) {
+    document.getElementById('ofDescription').focus();
+    document.execCommand(cmd, false, val || null);
+}
+function rtClearFormat() {
+    document.getElementById('ofDescription').focus();
+    document.execCommand('removeFormat', false);
+    document.execCommand('formatBlock', false, 'p');
+}
+function toggleEmojiPicker() {
+    document.getElementById('rtEmojiPanel').classList.toggle('open');
+}
+function insertEmoji(emoji) {
+    var editor = document.getElementById('ofDescription');
+    editor.focus();
+    document.execCommand('insertText', false, emoji);
+    document.getElementById('rtEmojiPanel').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+    var panel = document.getElementById('rtEmojiPanel');
+    if (panel && panel.classList.contains('open')) {
+        if (!e.target.closest('.rt-emoji-panel') && !e.target.closest('.rt-emoji-btn')) {
+            panel.classList.remove('open');
+        }
+    }
+});
 
 function insertMacro(macro) {
     var input = document.getElementById('ofFinalUrl');
@@ -2551,7 +2659,7 @@ function openOfferModal(id) {
     document.getElementById('ofName').value = '';
     populateAdvDropdown('ofAdvertiser');
     document.getElementById('ofAdvertiser').value = '';
-    document.getElementById('ofDescription').value = '';
+    document.getElementById('ofDescription').innerHTML = '';
     document.getElementById('ofCategory').value = 'health';
     document.getElementById('ofStatus').value = 'active';
     document.getElementById('ofVisibility').value = 'approval';
@@ -2592,7 +2700,7 @@ function openOfferModal(id) {
             document.getElementById('offerIdBadge').style.display = 'inline-block';
             document.getElementById('ofName').value = o.name || '';
             document.getElementById('ofAdvertiser').value = o.advertiser || '';
-            document.getElementById('ofDescription').value = o.description || '';
+            document.getElementById('ofDescription').innerHTML = o.description || '';
             document.getElementById('ofCategory').value = o.category || 'health';
             document.getElementById('ofStatus').value = o.status || 'active';
             document.getElementById('ofVisibility').value = o.visibility || 'approval';
@@ -2662,7 +2770,7 @@ function saveOffer() {
 
     var data = {
         name: name,
-        description: document.getElementById('ofDescription').value.trim(),
+        description: document.getElementById('ofDescription').innerHTML.trim(),
         advertiser: document.getElementById('ofAdvertiser').value.trim(),
         category: document.getElementById('ofCategory').value,
         status: document.getElementById('ofStatus').value,
@@ -2760,7 +2868,7 @@ function wzCollectData() {
     var countryMode = document.getElementById('ofCountryMode').value;
     return {
         name: document.getElementById('ofName').value.trim(),
-        description: document.getElementById('ofDescription').value.trim(),
+        description: document.getElementById('ofDescription').innerHTML.trim(),
         advertiser: document.getElementById('ofAdvertiser').value.trim(),
         category: document.getElementById('ofCategory').value,
         status: document.getElementById('ofStatus').value,
@@ -3362,9 +3470,9 @@ var clicksPage = 1;
 function loadClicks() {
     Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users')]).then(function(res) {
         allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
-        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
-        if (!document.getElementById('clickDateFrom').value) document.getElementById('clickDateFrom').value = from.toISOString().split('T')[0];
-        if (!document.getElementById('clickDateTo').value) document.getElementById('clickDateTo').value = now.toISOString().split('T')[0];
+        var today = todayET();
+        if (!document.getElementById('clickDateFrom').value) document.getElementById('clickDateFrom').value = today;
+        if (!document.getElementById('clickDateTo').value) document.getElementById('clickDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('clickOfferFilter').innerHTML = ofHtml;
         var afHtml = '<option value="">All Affiliates</option>'; allUsers.filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; }); document.getElementById('clickAffFilter').innerHTML = afHtml;
         clicksPage = 1; renderClicks();
@@ -3444,9 +3552,9 @@ var convPage = 1;
 function loadConversionsPage() {
     Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('users')]).then(function(res) {
         allConversions = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
-        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
-        if (!document.getElementById('convDateFrom').value) document.getElementById('convDateFrom').value = from.toISOString().split('T')[0];
-        if (!document.getElementById('convDateTo').value) document.getElementById('convDateTo').value = now.toISOString().split('T')[0];
+        var today = todayET();
+        if (!document.getElementById('convDateFrom').value) document.getElementById('convDateFrom').value = today;
+        if (!document.getElementById('convDateTo').value) document.getElementById('convDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('convOfferFilter').innerHTML = ofHtml;
         convPage = 1; renderConversions();
     });
@@ -4258,9 +4366,9 @@ var fraudAnalyzedClicks = [];
 function loadFraud() {
     Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users'), fbGet('conversions')]).then(function(res) {
         allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]); allConversions = objToArr(res[3]);
-        var now = new Date(), from = new Date(now.getTime() - 7 * 86400000);
-        if (!document.getElementById('fraudDateFrom').value) document.getElementById('fraudDateFrom').value = from.toISOString().split('T')[0];
-        if (!document.getElementById('fraudDateTo').value) document.getElementById('fraudDateTo').value = now.toISOString().split('T')[0];
+        var today = todayET();
+        if (!document.getElementById('fraudDateFrom').value) document.getElementById('fraudDateFrom').value = today;
+        if (!document.getElementById('fraudDateTo').value) document.getElementById('fraudDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; });
         document.getElementById('fraudOfferFilter').innerHTML = ofHtml;

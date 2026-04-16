@@ -115,16 +115,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .aff-offer-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0a6c80,#14b8a6);opacity:0;transition:opacity .25s;z-index:2;}
 .aff-offer-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(10,108,128,.15);border-color:#0a6c80;}
 .aff-offer-card:hover::before{opacity:1;}
-.aff-offer-card-img{width:100%;height:170px;overflow:hidden;background:#f0f4f8;position:relative;}
-.aff-offer-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease;}
-.aff-offer-card:hover .aff-offer-card-img img{transform:scale(1.05);}
+.aff-offer-card-img{width:100%;height:190px;overflow:hidden;position:relative;background:linear-gradient(135deg,#f8fafc 0%,#e6f4f6 50%,#f0f4f8 100%);}
+.aff-offer-card-img::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(10,108,128,.08) 0%,transparent 40%),radial-gradient(circle at 80% 70%,rgba(20,184,166,.06) 0%,transparent 40%);pointer-events:none;}
+.aff-offer-card-img::after{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(10,108,128,.015) 20px,rgba(10,108,128,.015) 40px);pointer-events:none;}
+.aff-offer-card-img img{position:relative;width:100%;height:100%;object-fit:contain;display:block;padding:16px 60px 16px 16px;transition:transform .35s ease;filter:drop-shadow(0 4px 12px rgba(0,0,0,.15));}
+.aff-offer-card:hover .aff-offer-card-img img{transform:scale(1.06) rotate(-1deg);}
 .aff-offer-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a6c80 0%,#064d5c 100%);color:rgba(255,255,255,.35);font-size:44px;position:relative;}
 .aff-offer-card-img-ph::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(255,255,255,.1),transparent 60%);}
-.aff-offer-card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 50%);pointer-events:none;}
-.aff-offer-card-payout-hero{position:absolute;left:14px;bottom:12px;color:#fff;z-index:2;}
-.aff-offer-card-payout-hero .amt{font-size:26px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4);letter-spacing:-.5px;line-height:1;}
-.aff-offer-card-payout-hero .lbl{font-size:10px;font-weight:600;opacity:.9;letter-spacing:.5px;text-transform:uppercase;margin-top:3px;display:block;}
-.aff-offer-card-status{position:absolute;top:12px;right:12px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.aff-offer-card-payout-hero{position:absolute;right:14px;top:14px;z-index:2;background:linear-gradient(135deg,#0a6c80,#14b8a6);color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(10,108,128,.35);text-align:right;}
+.aff-offer-card-payout-hero .amt{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;display:block;}
+.aff-offer-card-payout-hero .lbl{font-size:9px;font-weight:600;opacity:.95;letter-spacing:.8px;text-transform:uppercase;margin-top:3px;display:block;}
+.aff-offer-card-status{position:absolute;top:14px;left:14px;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;text-transform:capitalize;backdrop-filter:blur(8px);z-index:2;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.08);}
 .aff-offer-card-status::before{content:"";width:6px;height:6px;border-radius:50%;}
 .aff-offer-card-status.st-approved{background:rgba(232,245,233,.95);color:#1b5e20;}
 .aff-offer-card-status.st-approved::before{background:#2e7d32;box-shadow:0 0 0 2px rgba(46,125,50,.2);animation:aff-pulse 2s infinite;}
@@ -291,6 +292,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .od-ii-label{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;opacity:.6;}
 .od-ii-val{font-size:13.5px;font-weight:700;color:var(--td);}
 .od-desc{font-size:12.5px;line-height:1.7;color:var(--tm);padding:18px 20px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.rich-display{font-size:13px;line-height:1.75;color:#1a2332;}
+.rich-display p{margin:0 0 10px 0;}
+.rich-display p:last-child{margin-bottom:0;}
+.rich-display strong,.rich-display b{font-weight:800;color:#0a1e35;}
+.rich-display em,.rich-display i{font-style:italic;}
+.rich-display u{text-decoration:underline;}
+.rich-display ul,.rich-display ol{margin:8px 0 10px 0;padding-left:22px;}
+.rich-display li{margin:3px 0;}
+.rich-display h1,.rich-display h2,.rich-display h3{margin:12px 0 8px 0;color:#0a1e35;font-weight:800;}
+.rich-display h1{font-size:20px;}.rich-display h2{font-size:17px;}.rich-display h3{font-size:15px;}
+.rich-display a{color:var(--primary);text-decoration:underline;}
 .od-tgt-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .od-tgt-card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.02);}
 .od-tgt-card h6{font-size:10px;font-weight:800;color:var(--td);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
@@ -865,8 +877,10 @@ function objToArr(obj) {
     if (!obj) return [];
     return Object.keys(obj).map(function(k) { var it = typeof obj[k] === 'object' && obj[k] !== null ? obj[k] : { value: obj[k] }; it._id = k; return it; });
 }
-function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-function fmtDT(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+var TZ = 'America/New_York'; /* Florida (US Eastern) */
+function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: TZ }); }
+function fmtDT(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: TZ }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: TZ }); }
+function todayET() { var d = new Date(); var p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(d); return p; }
 function fmtM(n) { return '$' + (parseFloat(n) || 0).toFixed(2); }
 function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function sBadge(s) { return '<span class="badge badge-' + (s || 'pending') + '">' + esc(s || 'unknown') + '</span>'; }
@@ -1609,8 +1623,10 @@ function renderOffers() {
         var payType = (o.payoutModel || 'cpa').toUpperCase();
         var catLabel = (o.category || 'other').charAt(0).toUpperCase() + (o.category || 'other').slice(1);
 
-        /* Image */
-        var imgH = o.thumbnail ? '<div class="aff-offer-card-img"><img src="' + esc(o.thumbnail) + '" onerror="this.parentElement.innerHTML=\'<div class=aff-offer-card-img-ph><i class=fas\\ fa-bullhorn></i></div>\'"></div>' : '<div class="aff-offer-card-img"><div class="aff-offer-card-img-ph"><i class="fas fa-bullhorn"></i></div></div>';
+        /* Image + floating payout pill */
+        var payoutPill = '<div class="aff-offer-card-payout-hero"><span class="amt">' + fmtM(o.payout) + '</span><span class="lbl">' + esc(payType) + '</span></div>';
+        var imgInner = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" onerror="this.parentElement.querySelector(\'.aff-offer-card-img-ph\').style.display=\'flex\';this.style.display=\'none\'"><div class="aff-offer-card-img-ph" style="display:none;position:absolute;inset:0"><i class="fas fa-bullhorn"></i></div>' : '<div class="aff-offer-card-img-ph"><i class="fas fa-bullhorn"></i></div>';
+        var imgH = '<div class="aff-offer-card-img">' + imgInner + payoutPill + '</div>';
 
         /* Status badge */
         var statusH = '';
@@ -1636,7 +1652,6 @@ function renderOffers() {
             '<div class="aff-offer-card-body">' +
             '<div class="aff-offer-card-name" title="' + esc(o.name) + '">' + esc(o.name || 'Untitled') + '</div>' +
             '<div class="aff-offer-card-tags"><span class="aff-offer-card-tag cat">' + esc(catLabel) + '</span><span class="aff-offer-card-tag model">' + esc(payType) + '</span></div>' +
-            '<div class="aff-offer-card-payout"><span class="aff-offer-card-payout-amt">' + fmtM(o.payout) + '</span><span class="aff-offer-card-payout-type">per ' + esc(payType) + '</span></div>' +
             '<div class="aff-offer-card-foot">' +
             '<span class="aff-offer-card-rev">Today: <b>' + fmtM(todayRev) + '</b></span>' +
             btnH +
@@ -1708,7 +1723,14 @@ function viewOffer(oid) {
         '<div class="od-info-item"><div class="od-ii-label">Currency</div><div class="od-ii-val">' + curLabel + '</div></div>' +
         '<div class="od-info-item"><div class="od-ii-label">Status</div><div class="od-ii-val"><span class="badge badge-' + offer.status + '">' + (offer.status || 'active') + '</span></div></div>' +
         '<div class="od-info-item"><div class="od-ii-label">Created</div><div class="od-ii-val">' + (offer.createdAt ? fmtDT(offer.createdAt) : '-') + '</div></div>';
-    document.getElementById('odDesc').textContent = offer.description || 'No description available for this offer.';
+    var descEl = document.getElementById('odDesc');
+    if (offer.description && offer.description.trim()) {
+        descEl.innerHTML = offer.description;
+        descEl.classList.add('rich-display');
+    } else {
+        descEl.textContent = 'No description available for this offer.';
+        descEl.classList.remove('rich-display');
+    }
     /* Targeting */
     var inclHtml = '', exclHtml = '';
     if (offer.allowedCountries && offer.allowedCountries.trim()) {
@@ -1902,11 +1924,12 @@ function loadClicks() {
     Promise.all([fbGet('clicks'), fbGet('offers')]).then(function(r) {
         allOffers = objToArr(r[1]);
         myClicks = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid; });
-        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
-        if (!document.getElementById('ckFrom').value) document.getElementById('ckFrom').value = from.toISOString().split('T')[0];
-        if (!document.getElementById('ckTo').value) document.getElementById('ckTo').value = now.toISOString().split('T')[0];
+        var today = todayET();
+        if (!document.getElementById('ckFrom').value) document.getElementById('ckFrom').value = today;
+        if (!document.getElementById('ckTo').value) document.getElementById('ckTo').value = today;
+        var curOff = document.getElementById('ckOfferF').value;
         var oh = '<option value="">All Offers</option>';
-        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
         document.getElementById('ckOfferF').innerHTML = oh;
         ckPage = 1;
         renderClicks();
@@ -1927,7 +1950,7 @@ function renderClicks() {
         h += '<tr><td style="font-family:monospace;font-size:10.5px">' + esc(c._id) + '</td>' +
             '<td>' + esc(offerName(c.offerId)) + '</td>' +
             '<td style="font-family:monospace;font-size:10.5px">' + esc(c.ip || '-') + '</td>' +
-            '<td>' + esc(c.country || '-') + '</td><td>' + esc(c.device || '-') + '</td><td>' + esc(c.browser || '-') + '</td>' +
+            '<td>' + esc(c.countryName || c.country || '-') + '</td><td>' + esc(c.device || '-') + '</td><td>' + esc(c.browser || '-') + '</td>' +
             '<td>' + esc(c.sub1 || '-') + '</td><td>' + esc(c.sub2 || '-') + '</td>' +
             '<td>' + fmtDT(c.timestamp) + '</td>' +
             '<td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td></tr>';
@@ -1944,11 +1967,12 @@ function loadAnalytics() {
         allOffers = objToArr(r[1]);
         myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid; });
-        var now = new Date(), from = new Date(now.getTime() - 30 * 86400000);
-        if (!document.getElementById('cvFrom').value) document.getElementById('cvFrom').value = from.toISOString().split('T')[0];
-        if (!document.getElementById('cvTo').value) document.getElementById('cvTo').value = now.toISOString().split('T')[0];
+        var today = todayET();
+        if (!document.getElementById('cvFrom').value) document.getElementById('cvFrom').value = today;
+        if (!document.getElementById('cvTo').value) document.getElementById('cvTo').value = today;
+        var curOff = document.getElementById('cvOfferF').value;
         var oh = '<option value="">All Offers</option>';
-        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
         document.getElementById('cvOfferF').innerHTML = oh;
         cvPage = 1;
         renderAnalytics();
