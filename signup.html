@@ -1,396 +1,511 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliate Signup - Clima Network</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-    <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <style>
-        :root{--accent:#0A6C80;--accent-dark:#085a6b;--accent-light:#E8F6F8;--navy:#1B2A4A;--navy-deep:#0F1923;--green:#22C55E;--red:#EF4444;--text-primary:#111827;--text-secondary:#4B5563;--text-muted:#9CA3AF;--border:#E5E7EB;--bg:#F9FAFB;--card:#FFFFFF;}
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Inter',system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;overflow-x:hidden;}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affiliate Signup - Clima Network</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://smtpjs.com/v3/smtp.js"></script>
+<style>
+:root{--accent:#0A6C80;--accent-dark:#085a6b;--accent-light:#E8F6F8;--green:#22C55E;--red:#EF4444;--text-primary:#111827;--text-secondary:#4B5563;--text-muted:#9CA3AF;--border:#E5E7EB;--bg:#F3F6F9;--card:#FFFFFF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;overflow-x:hidden;}
+.signup-wrapper{width:100%;max-width:1080px;display:grid;grid-template-columns:360px 1fr;border-radius:22px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05),0 30px 80px rgba(0,0,0,.12);background:var(--card);}
 
-        /* Wrapper */
-        .signup-wrapper{width:100%;max-width:1060px;display:grid;grid-template-columns:380px 1fr;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06),0 25px 65px rgba(0,0,0,.1);background:var(--card);}
+/* LEFT */
+.left-panel{background:linear-gradient(160deg,#0D7C8F 0%,#085a6b 40%,#1B2A4A 100%);background-size:300% 300%;animation:gradShift 14s ease infinite;padding:42px 30px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.orb{position:absolute;border-radius:50%;pointer-events:none;}
+.orb-1{width:220px;height:220px;top:-60px;right:-80px;background:rgba(255,255,255,.035);}
+.orb-2{width:150px;height:150px;bottom:60px;left:-50px;background:rgba(255,255,255,.025);}
+.orb-3{width:80px;height:80px;top:42%;right:24px;background:rgba(34,197,94,.06);}
+.brand{display:flex;align-items:center;gap:4px;position:relative;z-index:1;}
+.brand h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.brand-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-top:3px;animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.35)}}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-top:3px;position:relative;z-index:1;}
+.left-content{position:relative;z-index:1;margin-top:36px;}
+.left-step-panel{display:none;}
+.left-step-panel.active{display:block;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.left-heading{font-size:21px;font-weight:800;color:#fff;line-height:1.35;letter-spacing:-.4px;}
+.left-desc{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;margin-top:10px;}
+.left-features{margin-top:22px;}
+.lf-item{display:flex;align-items:center;gap:10px;padding:7px 0;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:500;}
+.lf-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.09);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lf-icon i{font-size:11px;color:rgba(255,255,255,.75);}
+.left-stats{display:flex;gap:12px;margin-top:26px;position:relative;z-index:1;}
+.ls-item{background:rgba(255,255,255,.07);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,.08);flex:1;text-align:center;}
+.ls-val{font-size:18px;font-weight:800;color:#fff;}
+.ls-lbl{font-size:9px;color:rgba(255,255,255,.35);font-weight:500;margin-top:2px;letter-spacing:.3px;text-transform:uppercase;}
+.left-footer{padding-top:14px;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:1;}
+.left-footer p{font-size:10.5px;color:rgba(255,255,255,.2);line-height:1.6;}
 
-        /* Left panel - animated gradient */
-        .left-panel{background:linear-gradient(160deg,#0D7C8F,#085a6b,#1B2A4A,#0a5e6e);background-size:300% 300%;animation:gradShift 12s ease infinite,slideInL .7s ease forwards;padding:44px 32px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
-        @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+/* RIGHT */
+.form-panel{background:var(--card);padding:36px 38px 22px;overflow-y:auto;max-height:96vh;}
 
-        /* Floating orbs */
-        .orb{position:absolute;border-radius:50%;pointer-events:none;}
-        .orb-1{width:200px;height:200px;top:-50px;right:-70px;background:rgba(255,255,255,.04);animation:orbFloat 8s ease-in-out infinite;}
-        .orb-2{width:140px;height:140px;bottom:80px;left:-40px;background:rgba(255,255,255,.03);animation:orbFloat 10s ease-in-out infinite reverse;}
-        .orb-3{width:90px;height:90px;top:45%;right:30px;background:rgba(34,197,94,.06);animation:orbFloat 7s ease-in-out infinite 2s;}
-        .orb-4{width:60px;height:60px;bottom:30%;left:20%;background:rgba(255,255,255,.03);animation:orbFloat 9s ease-in-out infinite 1s;}
-        @keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.06)}}
+.form-header h2{font-size:20px;font-weight:700;color:var(--text-primary);letter-spacing:-.3px;}
+.form-header p{font-size:13px;color:var(--text-muted);margin-top:4px;}
 
-        .brand{display:flex;align-items:center;gap:3px;position:relative;z-index:1;}
-        .brand h1{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;}
-        .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:4px;animation:pulse 2s ease infinite;}
-        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-        .brand-sub{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-top:4px;position:relative;z-index:1;}
+/* PROGRESS */
+.wizard-progress{display:flex;align-items:flex-start;justify-content:center;margin:24px 0 4px;gap:0;}
+.wz-step-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:64px;}
+.wz-dot{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-muted);transition:all .3s;background:#fff;position:relative;z-index:2;}
+.wz-dot.active{border-color:var(--accent);color:#fff;background:var(--accent);box-shadow:0 0 0 4px rgba(10,108,128,.1);}
+.wz-dot.done{border-color:var(--green);color:#fff;background:var(--green);}
+.wz-label{font-size:9.5px;color:var(--text-muted);font-weight:500;text-align:center;}
+.wz-label.active{color:var(--accent);font-weight:600;}
+.wz-label.done{color:var(--green);font-weight:600;}
+.wz-line-wrap{display:flex;align-items:center;padding-top:17px;}
+.wz-line{width:52px;height:2px;background:var(--border);border-radius:2px;transition:background .3s;}
+.wz-line.done{background:var(--green);}
 
-        /* Dynamic left content per step */
-        .left-content{position:relative;z-index:1;margin-top:40px;}
-        .left-step-panel{display:none;}
-        .left-step-panel.active{display:block;animation:fadeUp .4s ease;}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-        .left-heading{font-size:24px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.5px;}
-        .left-desc{font-size:13.5px;color:rgba(255,255,255,.45);line-height:1.7;margin-top:10px;font-weight:400;}
-        .left-features{margin-top:24px;}
-        .lf-item{display:flex;align-items:center;gap:10px;padding:8px 0;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;}
-        .lf-item .lf-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-        .lf-item .lf-icon i{font-size:11px;color:rgba(255,255,255,.7);}
+/* PANELS */
+.wz-panel{display:none;}
+.wz-panel.active{display:block;animation:wzIn .3s ease;}
+@keyframes wzIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 
-        /* Left stat row */
-        .left-stats-row{display:flex;gap:16px;margin-top:28px;position:relative;z-index:1;}
-        .ls-item{background:rgba(255,255,255,.06);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:10px;padding:14px 16px;border:1px solid rgba(255,255,255,.08);flex:1;text-align:center;}
-        .ls-item .ls-val{font-size:20px;font-weight:800;color:#fff;}
-        .ls-item .ls-lbl{font-size:9px;color:rgba(255,255,255,.35);font-weight:500;margin-top:2px;letter-spacing:.3px;text-transform:uppercase;}
+/* Fields */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row.tri{grid-template-columns:1fr 1fr 1fr;}
+.form-row.full{grid-template-columns:1fr;}
+.fl-group{position:relative;margin-bottom:14px;}
+.fl-group .fi{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:18px 13px 7px;font-size:13.5px;outline:none;background:#fff;color:var(--text-primary);transition:border-color .2s,box-shadow .2s;font-family:'Inter',system-ui,sans-serif;}
+.fl-group .fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,108,128,.07);}
+.fl-group label{position:absolute;left:13px;top:14px;font-size:13.5px;color:var(--text-muted);transition:all .2s;pointer-events:none;background:transparent;}
+.fl-group .fi:focus+label,.fl-group .fi:not(:placeholder-shown)+label,.fl-group .fi.has-val+label{top:5px;font-size:9.5px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
+.fl-group label .req{color:var(--red);}
+select.fi{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.fl-group select+label,.fl-group select.fi+label{top:5px;font-size:9.5px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
+.step-section{margin-bottom:18px;}
+.step-section-title{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.step-section-title::after{content:"";flex:1;height:1px;background:var(--border);}
 
-        .left-footer{padding-top:16px;border-top:1px solid rgba(255,255,255,.06);position:relative;z-index:1;}
-        .left-footer p{font-size:11px;color:rgba(255,255,255,.2);line-height:1.6;font-weight:400;}
+/* Toggle pills (checkboxes) */
+.pill-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.pill-option{display:none;}
+.pill-option+label{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .18s;user-select:none;display:flex;align-items:center;gap:5px;}
+.pill-option+label i{font-size:10px;opacity:.6;}
+.pill-option:checked+label{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pill-option:checked+label i{opacity:1;}
 
-        /* Right panel - form */
-        .form-panel{background:var(--card);padding:40px 40px 24px;overflow-y:auto;max-height:96vh;animation:slideInR .7s ease .1s forwards;opacity:0;}
-        @keyframes slideInL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes slideInR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+/* Payment dynamic sections */
+.pay-section{display:none;animation:wzIn .25s ease;}
+.pay-section.active{display:block;}
 
-        .form-header h2{font-size:22px;font-weight:700;color:var(--text-primary);letter-spacing:-.3px;}
-        .form-header p{font-size:13.5px;color:var(--text-muted);margin-top:5px;font-weight:400;}
+/* Error */
+.error-msg{display:none;background:#FEF2F2;color:#DC2626;padding:9px 13px;border-radius:9px;font-size:12.5px;font-weight:500;margin-bottom:14px;align-items:center;gap:7px;border:1px solid #FECACA;}
+.error-msg.show{display:flex;}
 
-        /* ===== WIZARD PROGRESS BAR ===== */
-        .wizard-progress{display:flex;align-items:flex-start;justify-content:center;margin:28px 0 8px;padding:0 10px;gap:0;}
-        .wz-step-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:70px;}
-        .wz-dot{width:36px;height:36px;border-radius:50%;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-muted);transition:all .35s;background:#fff;position:relative;z-index:2;}
-        .wz-dot.active{border-color:var(--accent);color:#fff;background:var(--accent);box-shadow:0 0 0 4px rgba(10,108,128,.12);}
-        .wz-dot.done{border-color:var(--green);color:#fff;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.12);}
-        .wz-label{font-size:10px;color:var(--text-muted);font-weight:500;transition:color .3s;text-align:center;}
-        .wz-label.active{color:var(--accent);font-weight:600;}
-        .wz-label.done{color:var(--green);font-weight:600;}
-        .wz-line-wrap{display:flex;align-items:center;padding-top:18px;}
-        .wz-line{width:60px;height:2.5px;background:var(--border);border-radius:2px;transition:background .4s;}
-        .wz-line.done{background:var(--green);}
+/* Nav */
+.wz-nav{display:flex;gap:10px;margin-top:6px;}
+.btn-next{flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .22s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn-next:hover{background:var(--accent-dark);box-shadow:0 4px 18px rgba(10,108,128,.28);transform:translateY(-1px);}
+.btn-next:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none;}
+.btn-next .spinner{display:none;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+.btn-next.loading .spinner{display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-back{padding:12px 20px;border:1.5px solid var(--border);border-radius:10px;background:#fff;color:var(--text-secondary);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-back:hover{border-color:var(--accent);color:var(--accent);}
 
-        /* ===== STEP PANELS ===== */
-        .wz-panel{display:none;}
-        .wz-panel.active{display:block;animation:wzSlideIn .35s ease;}
-        @keyframes wzSlideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+/* Terms */
+.terms{margin-bottom:14px;}
+.terms label{font-size:12.5px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.6;}
+.terms input{accent-color:var(--accent);margin-top:3px;flex-shrink:0;}
+.terms a{color:var(--accent);text-decoration:none;font-weight:500;}
 
-        /* Form fields */
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0;}
-        .form-row.full{grid-template-columns:1fr;}
+/* Success */
+.success-panel{display:none;text-align:center;padding:60px 20px;}
+.success-panel.show{display:block;animation:fadeUp .4s ease;}
+.success-check{width:78px;height:78px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:popIn .5s ease;}
+.success-check i{font-size:34px;color:var(--green);}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-panel h3{font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px;}
+.success-panel p{font-size:13.5px;color:var(--text-secondary);line-height:1.7;}
+.btn-login{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:11px 26px;border-radius:10px;background:var(--accent);color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;transition:all .22s;}
+.btn-login:hover{background:var(--accent-dark);box-shadow:0 4px 18px rgba(10,108,128,.28);transform:translateY(-1px);}
 
-        /* Floating label groups */
-        .fl-group{position:relative;margin-bottom:18px;}
-        .fl-group .form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:20px 14px 10px;font-size:14px;outline:none;background:var(--card);color:var(--text-primary);transition:border-color .2s,box-shadow .2s;font-family:'Inter',system-ui,sans-serif;}
-        .fl-group .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,108,128,.08);}
-        .fl-group label{position:absolute;left:14px;top:16px;font-size:14px;color:var(--text-muted);font-weight:400;transition:all .2s ease;pointer-events:none;background:transparent;}
-        .fl-group .form-input:focus+label,
-        .fl-group .form-input:not(:placeholder-shown)+label{top:6px;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
-        .fl-group label .req{color:var(--red);font-weight:700;}
-        select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-top:20px;padding-bottom:10px;}
-        /* Select always has value so label always floats */
-        .fl-group select+label{top:6px;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.3px;}
-        textarea.form-input{min-height:70px;resize:vertical;}
+/* Footer */
+.form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+.login-link{font-size:12.5px;color:var(--text-muted);text-decoration:none;font-weight:500;transition:color .2s;display:flex;align-items:center;gap:5px;}
+.login-link:hover{color:var(--accent);}
+.footer-copy{font-size:10.5px;color:var(--text-muted);opacity:.5;}
 
-        /* Section title inside step */
-        .step-title{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
-        .step-title .st-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0;}
-        .step-title h3{font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.5px;}
-
-        /* Error */
-        .error-msg{display:none;background:#FEF2F2;color:#DC2626;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px;align-items:center;gap:8px;border:1px solid #FECACA;}
-        .error-msg i{flex-shrink:0;}
-        .error-msg.show{display:flex;}
-
-        /* Success */
-        .success-panel{display:none;text-align:center;padding:60px 20px;}
-        .success-panel.show{display:block;animation:fadeUp .4s ease;}
-        .success-check{width:80px;height:80px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:popIn .5s ease;}
-        .success-check i{font-size:36px;color:var(--green);animation:checkScale .3s ease .35s both;}
-        @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-        @keyframes checkScale{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-        .success-panel h3{font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:10px;letter-spacing:-.3px;}
-        .success-panel p{font-size:14px;color:var(--text-secondary);line-height:1.7;}
-        .success-panel .btn-login{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:12px 28px;border-radius:10px;background:var(--accent);color:#fff;text-decoration:none;font-size:14px;font-weight:600;transition:all .25s;}
-        .success-panel .btn-login:hover{background:var(--accent-dark);box-shadow:0 4px 20px rgba(10,108,128,.3);transform:translateY(-1px);}
-
-        /* Terms */
-        .terms{margin-bottom:20px;}
-        .terms label{font-size:13px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.6;font-weight:400;}
-        .terms input{accent-color:var(--accent);margin-top:3px;flex-shrink:0;}
-        .terms a{color:var(--accent);text-decoration:none;font-weight:500;}
-        .terms a:hover{text-decoration:underline;}
-
-        /* Nav buttons */
-        .wz-nav{display:flex;gap:12px;margin-top:4px;}
-        .btn-next{flex:1;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
-        .btn-next:hover{background:var(--accent-dark);box-shadow:0 4px 20px rgba(10,108,128,.3);transform:translateY(-1px);}
-        .btn-next:active{transform:scale(.995) translateY(0);}
-        .btn-next:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none;}
-        .btn-next .spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
-        .btn-next.loading .spinner{display:inline-block;}
-        .btn-next.loading .btn-text{opacity:.8;}
-        .btn-back{padding:13px 24px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:6px;}
-        .btn-back:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
-        @keyframes spin{to{transform:rotate(360deg)}}
-
-        /* Footer */
-        .form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-        .login-link{font-size:13px;color:var(--text-muted);text-decoration:none;font-weight:500;transition:color .2s;display:flex;align-items:center;gap:6px;}
-        .login-link:hover{color:var(--accent);}
-        .footer-copy{font-size:11px;color:var(--text-muted);font-weight:400;opacity:.5;}
-
-        /* Responsive */
-        @media(max-width:768px){
-            .signup-wrapper{grid-template-columns:1fr;max-width:560px;}
-            .left-panel{padding:28px 24px;}
-            .left-heading{font-size:20px;}
-            .left-features{display:none;}
-            .left-stats-row{display:none;}
-            .form-panel{padding:32px 24px 22px;opacity:1;animation:none;}
-            .wz-line{width:40px;}
-        }
-        @media(max-width:520px){
-            body{padding:12px;}
-            .signup-wrapper{border-radius:14px;}
-            .left-panel{padding:24px 20px;}
-            .form-panel{padding:28px 20px 20px;}
-            .form-row{grid-template-columns:1fr;}
-            .wz-line{width:28px;}
-            .wz-step-wrap{min-width:56px;}
-        }
-    </style>
+@media(max-width:820px){
+    .signup-wrapper{grid-template-columns:1fr;max-width:540px;}
+    .left-panel{padding:26px 22px;}
+    .left-features,.left-stats{display:none;}
+    .form-panel{padding:28px 22px 18px;}
+    .wz-line{width:36px;}
+}
+@media(max-width:520px){
+    body{padding:10px;}
+    .signup-wrapper{border-radius:14px;}
+    .form-row,.form-row.tri{grid-template-columns:1fr;}
+    .wz-line{width:24px;}
+    .wz-step-wrap{min-width:52px;}
+}
+</style>
 </head>
 <body>
-
 <div class="signup-wrapper">
-    <!-- Left: Info Panel -->
-    <div class="left-panel">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-        <div class="orb orb-4"></div>
-        <div>
-            <div class="brand">
-                <h1>CLIMA</h1>
-                <div class="brand-dot"></div>
-            </div>
-            <div class="brand-sub">Affiliate Network</div>
 
-            <div class="left-content">
-                <!-- Step 1 content -->
-                <div class="left-step-panel active" id="leftStep1">
-                    <div class="left-heading">Start Earning with Top-Converting Offers</div>
-                    <div class="left-desc">Join hundreds of affiliates generating revenue with exclusive offers and real-time tracking.</div>
-                    <div class="left-features">
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-shield-alt"></i></div> Secure & Verified Network</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-chart-line"></i></div> Real-time Analytics Dashboard</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-headset"></i></div> Dedicated Account Manager</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-bolt"></i></div> Fast Approval Process</div>
-                    </div>
-                </div>
-                <!-- Step 2 content -->
-                <div class="left-step-panel" id="leftStep2">
-                    <div class="left-heading">We Work with All Traffic Sources</div>
-                    <div class="left-desc">Whether you run social, native, search, or push traffic — we have high-converting offers for you.</div>
-                    <div class="left-features">
-                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-facebook"></i></div> Facebook & Instagram</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-google"></i></div> Google & YouTube</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-ad"></i></div> Native & Push Ads</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-envelope"></i></div> Email & SEO Traffic</div>
-                    </div>
-                </div>
-                <!-- Step 3 content -->
-                <div class="left-step-panel" id="leftStep3">
-                    <div class="left-heading">Get Paid On Time, Every Time</div>
-                    <div class="left-desc">Choose your preferred payment method. We support all major options with transparent invoicing.</div>
-                    <div class="left-features">
-                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-paypal"></i></div> PayPal Payments</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-university"></i></div> Wire Transfer / ACH</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fab fa-bitcoin"></i></div> USDT (Crypto)</div>
-                        <div class="lf-item"><div class="lf-icon"><i class="fas fa-file-invoice-dollar"></i></div> Automated Invoices</div>
-                    </div>
+<!-- LEFT PANEL -->
+<div class="left-panel">
+    <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+    <div>
+        <div class="brand"><h1>CLIMA</h1><div class="brand-dot"></div></div>
+        <div class="brand-sub">Affiliate Network</div>
+        <div class="left-content">
+            <div class="left-step-panel active" id="leftStep1">
+                <div class="left-heading">Start Your Journey with Clima</div>
+                <div class="left-desc">Join elite affiliates generating consistent revenue with exclusive, high-converting offers.</div>
+                <div class="left-features">
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-shield-alt"></i></div> Secure & Verified Network</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-chart-line"></i></div> Real-Time Analytics Dashboard</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-headset"></i></div> Dedicated Account Manager</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-bolt"></i></div> Fast & Transparent Payments</div>
                 </div>
             </div>
-
-            <div class="left-stats-row">
-                <div class="ls-item"><div class="ls-val">500+</div><div class="ls-lbl">Affiliates</div></div>
-                <div class="ls-item"><div class="ls-val">50M+</div><div class="ls-lbl">Clicks</div></div>
-                <div class="ls-item"><div class="ls-val">99.9%</div><div class="ls-lbl">Uptime</div></div>
+            <div class="left-step-panel" id="leftStep2">
+                <div class="left-heading">We Support All Traffic Sources</div>
+                <div class="left-desc">Facebook, Google, Native, Push, Email — whatever you run, we have the right offers for you.</div>
+                <div class="left-features">
+                    <div class="lf-item"><div class="lf-icon"><i class="fab fa-facebook"></i></div> Facebook &amp; Instagram Ads</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fab fa-google"></i></div> Google &amp; YouTube Ads</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-ad"></i></div> Native &amp; Push Traffic</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-envelope"></i></div> Email &amp; SEO Traffic</div>
+                </div>
+            </div>
+            <div class="left-step-panel" id="leftStep3">
+                <div class="left-heading">Get Paid Fast, Every Time</div>
+                <div class="left-desc">Choose your preferred payment method — ACH, PayPal, Crypto, or Wire. Weekly & bi-weekly options.</div>
+                <div class="left-features">
+                    <div class="lf-item"><div class="lf-icon"><i class="fab fa-paypal"></i></div> PayPal</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-university"></i></div> ACH Bank Transfer</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fab fa-bitcoin"></i></div> Crypto (BTC, USDT, ETH)</div>
+                    <div class="lf-item"><div class="lf-icon"><i class="fas fa-globe"></i></div> International Wire</div>
+                </div>
             </div>
         </div>
-        <div class="left-footer">
-            <p>Trusted by affiliates worldwide. Enterprise-grade tracking.</p>
+        <div class="left-stats">
+            <div class="ls-item"><div class="ls-val">500+</div><div class="ls-lbl">Affiliates</div></div>
+            <div class="ls-item"><div class="ls-val">50M+</div><div class="ls-lbl">Clicks</div></div>
+            <div class="ls-item"><div class="ls-val">99.9%</div><div class="ls-lbl">Uptime</div></div>
+        </div>
+    </div>
+    <div class="left-footer"><p>Trusted by affiliates worldwide. Enterprise-grade tracking infrastructure.</p></div>
+</div>
+
+<!-- RIGHT FORM PANEL -->
+<div class="form-panel">
+<div id="signupForm">
+    <div class="form-header">
+        <h2>Apply as an Affiliate</h2>
+        <p>Complete all steps to submit your application. Takes about 3 minutes.</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="wizard-progress">
+        <div class="wz-step-wrap"><div class="wz-dot active" id="wzDot1">1</div><div class="wz-label active" id="wzLbl1">Personal</div></div>
+        <div class="wz-line-wrap"><div class="wz-line" id="wzLine1"></div></div>
+        <div class="wz-step-wrap"><div class="wz-dot" id="wzDot2">2</div><div class="wz-label" id="wzLbl2">Business</div></div>
+        <div class="wz-line-wrap"><div class="wz-line" id="wzLine2"></div></div>
+        <div class="wz-step-wrap"><div class="wz-dot" id="wzDot3">3</div><div class="wz-label" id="wzLbl3">Payment</div></div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"><i class="fas fa-exclamation-circle"></i><span id="errorText"></span></div>
+
+    <!-- ===== STEP 1: Personal + Address ===== -->
+    <div class="wz-panel active" id="step1">
+        <div class="step-section-title"><i class="fas fa-user" style="color:var(--accent)"></i> Personal Information</div>
+        <div class="form-row">
+            <div class="fl-group">
+                <input type="text" class="fi" id="sName" placeholder=" " autocomplete="off">
+                <label>Full Name <span class="req">*</span></label>
+            </div>
+            <div class="fl-group">
+                <input type="email" class="fi" id="sEmail" placeholder=" " autocomplete="off">
+                <label>Email Address <span class="req">*</span></label>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="fl-group">
+                <input type="tel" class="fi" id="sPhone" placeholder=" " autocomplete="off">
+                <label>Phone Number</label>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sTelegram" placeholder=" " autocomplete="off">
+                <label>Telegram / Skype</label>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="fl-group">
+                <input type="password" class="fi" id="sPassword" placeholder=" " autocomplete="new-password">
+                <label>Password <span class="req">*</span></label>
+            </div>
+            <div class="fl-group">
+                <input type="password" class="fi" id="sConfirmPass" placeholder=" " autocomplete="new-password">
+                <label>Confirm Password <span class="req">*</span></label>
+            </div>
+        </div>
+
+        <div class="step-section-title" style="margin-top:4px"><i class="fas fa-map-marker-alt" style="color:var(--accent)"></i> Address</div>
+        <div class="form-row">
+            <div class="fl-group">
+                <select class="fi" id="sCountry" autocomplete="off">
+                    <option value="">Select country</option>
+                    <option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option><option>Germany</option><option>France</option><option>Netherlands</option><option>Spain</option><option>Italy</option><option>Brazil</option><option>Mexico</option><option>India</option><option>Pakistan</option><option>Bangladesh</option><option>Philippines</option><option>Indonesia</option><option>Vietnam</option><option>Thailand</option><option>Malaysia</option><option>Singapore</option><option>UAE</option><option>Saudi Arabia</option><option>Egypt</option><option>Nigeria</option><option>South Africa</option><option>Kenya</option><option>Poland</option><option>Czech Republic</option><option>Romania</option><option>Ukraine</option><option>Russia</option><option>Turkey</option><option>Israel</option><option>Japan</option><option>South Korea</option><option>China</option><option>New Zealand</option><option>Sweden</option><option>Norway</option><option>Denmark</option><option>Finland</option><option>Portugal</option><option>Argentina</option><option>Colombia</option><option>Chile</option><option>Peru</option><option>Other</option>
+                </select>
+                <label>Country <span class="req">*</span></label>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sCity" placeholder=" " autocomplete="off">
+                <label>City</label>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="fl-group">
+                <input type="text" class="fi" id="sState" placeholder=" " autocomplete="off">
+                <label>State / Province</label>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sZip" placeholder=" " autocomplete="off">
+                <label>ZIP / Postal Code</label>
+            </div>
+        </div>
+
+        <div class="wz-nav">
+            <button class="btn-next" onclick="goToStep(2)"><span>Continue</span> <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
-    <!-- Right: Form Panel -->
-    <div class="form-panel">
-        <div id="signupForm">
-            <div class="form-header">
-                <h2>Apply as an Affiliate</h2>
-                <p>Complete the steps below to submit your application.</p>
+    <!-- ===== STEP 2: Business & Traffic ===== -->
+    <div class="wz-panel" id="step2">
+        <div class="step-section-title"><i class="fas fa-briefcase" style="color:#1B2A4A"></i> Company Info</div>
+        <div class="form-row">
+            <div class="fl-group">
+                <input type="text" class="fi" id="sCompany" placeholder=" " autocomplete="off">
+                <label>Company Name</label>
             </div>
-
-            <!-- Wizard Progress -->
-            <div class="wizard-progress">
-                <div class="wz-step-wrap">
-                    <div class="wz-dot active" id="wzDot1">1</div>
-                    <div class="wz-label active" id="wzLbl1">Personal</div>
-                </div>
-                <div class="wz-line-wrap"><div class="wz-line" id="wzLine1"></div></div>
-                <div class="wz-step-wrap">
-                    <div class="wz-dot" id="wzDot2">2</div>
-                    <div class="wz-label" id="wzLbl2">Business</div>
-                </div>
-                <div class="wz-line-wrap"><div class="wz-line" id="wzLine2"></div></div>
-                <div class="wz-step-wrap">
-                    <div class="wz-dot" id="wzDot3">3</div>
-                    <div class="wz-label" id="wzLbl3">Payment</div>
-                </div>
-            </div>
-
-            <div class="error-msg" id="errorMsg"><i class="fas fa-exclamation-circle"></i><span id="errorText"></span></div>
-
-            <!-- STEP 1: Personal Info -->
-            <div class="wz-panel active" id="step1">
-                <div class="step-title">
-                    <div class="st-icon" style="background:var(--accent)"><i class="fas fa-user"></i></div>
-                    <h3>Personal Information</h3>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <input type="text" class="form-input" id="sName" placeholder=" ">
-                        <label>Full Name <span class="req">*</span></label>
-                    </div>
-                    <div class="fl-group">
-                        <input type="email" class="form-input" id="sEmail" placeholder=" ">
-                        <label>Email Address <span class="req">*</span></label>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <input type="tel" class="form-input" id="sPhone" placeholder=" ">
-                        <label>Phone</label>
-                    </div>
-                    <div class="fl-group">
-                        <input type="text" class="form-input" id="sCountry" placeholder=" ">
-                        <label>Country <span class="req">*</span></label>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <input type="password" class="form-input" id="sPassword" placeholder=" ">
-                        <label>Password <span class="req">*</span></label>
-                    </div>
-                    <div class="fl-group">
-                        <input type="password" class="form-input" id="sConfirmPass" placeholder=" ">
-                        <label>Confirm Password <span class="req">*</span></label>
-                    </div>
-                </div>
-                <div class="wz-nav">
-                    <button class="btn-next" onclick="goToStep(2)"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
-
-            <!-- STEP 2: Business Details -->
-            <div class="wz-panel" id="step2">
-                <div class="step-title">
-                    <div class="st-icon" style="background:var(--navy)"><i class="fas fa-briefcase"></i></div>
-                    <h3>Business Details</h3>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <input type="text" class="form-input" id="sCompany" placeholder=" ">
-                        <label>Company Name</label>
-                    </div>
-                    <div class="fl-group">
-                        <input type="url" class="form-input" id="sWebsite" placeholder=" ">
-                        <label>Website</label>
-                    </div>
-                </div>
-                <div class="form-row full">
-                    <div class="fl-group">
-                        <input type="text" class="form-input" id="sSources" placeholder=" ">
-                        <label>Traffic Sources <span class="req">*</span></label>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <select class="form-input" id="sRevenue">
-                            <option value="">Select range</option>
-                            <option value="0-1000">$0 - $1,000</option>
-                            <option value="1000-5000">$1,000 - $5,000</option>
-                            <option value="5000-25000">$5,000 - $25,000</option>
-                            <option value="25000-100000">$25,000 - $100,000</option>
-                            <option value="100000+">$100,000+</option>
-                        </select>
-                        <label>Monthly Revenue</label>
-                    </div>
-                    <div class="fl-group">
-                        <textarea class="form-input" id="sNotes" placeholder=" "></textarea>
-                        <label>Experience / Notes</label>
-                    </div>
-                </div>
-                <div class="wz-nav">
-                    <button class="btn-back" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn-next" onclick="goToStep(3)"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
-
-            <!-- STEP 3: Payment & Submit -->
-            <div class="wz-panel" id="step3">
-                <div class="step-title">
-                    <div class="st-icon" style="background:var(--green)"><i class="fas fa-credit-card"></i></div>
-                    <h3>Payment & Submit</h3>
-                </div>
-                <div class="form-row">
-                    <div class="fl-group">
-                        <select class="form-input" id="sPayMethod">
-                            <option value="paypal">PayPal</option>
-                            <option value="wire">Wire Transfer</option>
-                            <option value="crypto">Crypto (USDT)</option>
-                        </select>
-                        <label>Payment Method</label>
-                    </div>
-                    <div class="fl-group">
-                        <input type="text" class="form-input" id="sPayDetails" placeholder=" ">
-                        <label>Payment Details</label>
-                    </div>
-                </div>
-                <div class="terms">
-                    <label><input type="checkbox" id="sTerms"> I agree to the Clima Affiliate Network <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>.</label>
-                </div>
-                <div class="wz-nav">
-                    <button class="btn-back" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn-next" id="btnSignup" onclick="doSignup()"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Application</span><span class="spinner"></span></button>
-                </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sWebsite" placeholder=" " autocomplete="off">
+                <label>Website / Domain</label>
             </div>
         </div>
 
-        <!-- Success Panel -->
-        <div class="success-panel" id="successPanel">
-            <div class="success-check"><i class="fas fa-check"></i></div>
-            <h3>Application Submitted!</h3>
-            <p>Thank you for applying to the Clima Affiliate Network. Our team will review your application and get back to you within 24-48 hours.</p>
-            <p style="margin-top:8px;font-weight:600;color:var(--text-primary);">You will receive an email with your login credentials once approved.</p>
-            <a href="index.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+        <div class="step-section-title"><i class="fas fa-bullhorn" style="color:#1B2A4A"></i> Promotion Methods <span style="color:var(--red);font-size:9px">*</span></div>
+        <div class="pill-grid" id="promoGrid">
+            <input class="pill-option" type="checkbox" id="pm_fb" value="Facebook Ads"><label for="pm_fb"><i class="fab fa-facebook"></i> Facebook Ads</label>
+            <input class="pill-option" type="checkbox" id="pm_google" value="Google Ads"><label for="pm_google"><i class="fab fa-google"></i> Google Ads</label>
+            <input class="pill-option" type="checkbox" id="pm_tiktok" value="TikTok Ads"><label for="pm_tiktok"><i class="fab fa-tiktok"></i> TikTok Ads</label>
+            <input class="pill-option" type="checkbox" id="pm_native" value="Native Ads"><label for="pm_native"><i class="fas fa-newspaper"></i> Native Ads</label>
+            <input class="pill-option" type="checkbox" id="pm_push" value="Push Ads"><label for="pm_push"><i class="fas fa-bell"></i> Push Ads</label>
+            <input class="pill-option" type="checkbox" id="pm_email" value="Email Marketing"><label for="pm_email"><i class="fas fa-envelope"></i> Email</label>
+            <input class="pill-option" type="checkbox" id="pm_seo" value="SEO / Organic"><label for="pm_seo"><i class="fas fa-search"></i> SEO</label>
+            <input class="pill-option" type="checkbox" id="pm_youtube" value="YouTube"><label for="pm_youtube"><i class="fab fa-youtube"></i> YouTube</label>
+            <input class="pill-option" type="checkbox" id="pm_influencer" value="Influencer / Content"><label for="pm_influencer"><i class="fas fa-star"></i> Influencer</label>
+            <input class="pill-option" type="checkbox" id="pm_other" value="Other"><label for="pm_other"><i class="fas fa-plus"></i> Other</label>
         </div>
 
-        <div class="form-footer">
-            <a class="login-link" href="index.html"><i class="fas fa-arrow-left"></i> Already have an account? Sign In</a>
-            <span class="footer-copy">CLIMA &copy; 2025</span>
+        <div class="step-section-title"><i class="fas fa-layer-group" style="color:#1B2A4A"></i> Verticals You Run <span style="color:var(--red);font-size:9px">*</span></div>
+        <div class="pill-grid" id="vertGrid">
+            <input class="pill-option" type="checkbox" id="vt_nutra" value="Nutra / Health"><label for="vt_nutra"><i class="fas fa-heartbeat"></i> Nutra / Health</label>
+            <input class="pill-option" type="checkbox" id="vt_dating" value="Dating"><label for="vt_dating"><i class="fas fa-heart"></i> Dating</label>
+            <input class="pill-option" type="checkbox" id="vt_sweeps" value="Sweepstakes"><label for="vt_sweeps"><i class="fas fa-gift"></i> Sweepstakes</label>
+            <input class="pill-option" type="checkbox" id="vt_survey" value="Surveys / Leads"><label for="vt_survey"><i class="fas fa-poll"></i> Surveys</label>
+            <input class="pill-option" type="checkbox" id="vt_finance" value="Finance / Insurance"><label for="vt_finance"><i class="fas fa-dollar-sign"></i> Finance</label>
+            <input class="pill-option" type="checkbox" id="vt_ecom" value="E-Commerce"><label for="vt_ecom"><i class="fas fa-shopping-cart"></i> E-Commerce</label>
+            <input class="pill-option" type="checkbox" id="vt_gaming" value="Gaming / Gambling"><label for="vt_gaming"><i class="fas fa-gamepad"></i> Gaming</label>
+            <input class="pill-option" type="checkbox" id="vt_crypto" value="Crypto / Forex"><label for="vt_crypto"><i class="fab fa-bitcoin"></i> Crypto</label>
+            <input class="pill-option" type="checkbox" id="vt_software" value="Software / SaaS"><label for="vt_software"><i class="fas fa-laptop-code"></i> Software</label>
+            <input class="pill-option" type="checkbox" id="vt_other" value="Other"><label for="vt_other"><i class="fas fa-plus"></i> Other</label>
+        </div>
+
+        <div class="step-section-title"><i class="fas fa-chart-bar" style="color:#1B2A4A"></i> Experience &amp; Budget</div>
+        <div class="form-row">
+            <div class="fl-group">
+                <select class="fi" id="sAdSpend" autocomplete="off">
+                    <option value="">Select monthly ad spend</option>
+                    <option value="Under $1,000">Under $1,000/mo</option>
+                    <option value="$1,000 - $5,000">$1,000 - $5,000/mo</option>
+                    <option value="$5,000 - $20,000">$5,000 - $20,000/mo</option>
+                    <option value="$20,000 - $50,000">$20,000 - $50,000/mo</option>
+                    <option value="$50,000 - $100,000">$50,000 - $100,000/mo</option>
+                    <option value="$100,000+">$100,000+/mo</option>
+                </select>
+                <label>Monthly Ad Spend</label>
+            </div>
+            <div class="fl-group">
+                <select class="fi" id="sExperience" autocomplete="off">
+                    <option value="">Years of experience</option>
+                    <option value="Less than 1 year">Less than 1 year</option>
+                    <option value="1-2 years">1-2 years</option>
+                    <option value="3-5 years">3-5 years</option>
+                    <option value="5+ years">5+ years</option>
+                </select>
+                <label>Affiliate Experience</label>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="fl-group">
+                <select class="fi" id="sHeardFrom" autocomplete="off">
+                    <option value="">How did you hear about us?</option>
+                    <option value="Google Search">Google Search</option>
+                    <option value="Facebook / Social Media">Facebook / Social Media</option>
+                    <option value="Friend / Referral">Friend / Referral</option>
+                    <option value="Forum / Community">Forum / Community</option>
+                    <option value="Conference / Event">Conference / Event</option>
+                    <option value="YouTube / Podcast">YouTube / Podcast</option>
+                    <option value="Other Affiliate Network">Other Affiliate Network</option>
+                    <option value="Other">Other</option>
+                </select>
+                <label>How Did You Find Us?</label>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sNetworks" placeholder=" " autocomplete="off">
+                <label>Other Networks You Work With</label>
+            </div>
+        </div>
+
+        <div class="wz-nav">
+            <button class="btn-back" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-next" onclick="goToStep(3)"><span>Continue</span> <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- ===== STEP 3: Payment & Submit ===== -->
+    <div class="wz-panel" id="step3">
+        <div class="step-section-title"><i class="fas fa-credit-card" style="color:var(--green)"></i> Payment Method</div>
+        <div class="fl-group">
+            <select class="fi" id="sPayMethod" onchange="switchPayMethod()" autocomplete="off">
+                <option value="">Select payment method</option>
+                <option value="paypal">PayPal</option>
+                <option value="ach">ACH (US Bank Transfer)</option>
+                <option value="crypto">Cryptocurrency</option>
+                <option value="wire">International Wire</option>
+            </select>
+            <label>Payment Method <span class="req">*</span></label>
+        </div>
+
+        <!-- PayPal -->
+        <div class="pay-section" id="pay_paypal">
+            <div class="fl-group">
+                <input type="email" class="fi" id="sPaypalEmail" placeholder=" " autocomplete="off">
+                <label>PayPal Email Address <span class="req">*</span></label>
+            </div>
+        </div>
+
+        <!-- ACH -->
+        <div class="pay-section" id="pay_ach">
+            <div class="form-row">
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sAchBank" placeholder=" " autocomplete="off">
+                    <label>Bank Name <span class="req">*</span></label>
+                </div>
+                <div class="fl-group">
+                    <select class="fi" id="sAchType" autocomplete="off">
+                        <option value="checking">Checking</option>
+                        <option value="savings">Savings</option>
+                    </select>
+                    <label>Account Type</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sAchRouting" placeholder=" " autocomplete="off" maxlength="9">
+                    <label>Routing Number (9 digits) <span class="req">*</span></label>
+                </div>
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sAchAccount" placeholder=" " autocomplete="off">
+                    <label>Account Number <span class="req">*</span></label>
+                </div>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sAchName" placeholder=" " autocomplete="off">
+                <label>Account Holder Name <span class="req">*</span></label>
+            </div>
+        </div>
+
+        <!-- Crypto -->
+        <div class="pay-section" id="pay_crypto">
+            <div class="fl-group">
+                <select class="fi" id="sCryptoCoin" autocomplete="off">
+                    <option value="">Select coin / network</option>
+                    <option value="USDT TRC20">USDT — TRC20 (Tron)</option>
+                    <option value="USDT ERC20">USDT — ERC20 (Ethereum)</option>
+                    <option value="USDT BEP20">USDT — BEP20 (BSC)</option>
+                    <option value="BTC">Bitcoin (BTC)</option>
+                    <option value="ETH">Ethereum (ETH)</option>
+                    <option value="USDC ERC20">USDC — ERC20</option>
+                    <option value="LTC">Litecoin (LTC)</option>
+                    <option value="XRP">XRP (Ripple)</option>
+                </select>
+                <label>Coin / Network <span class="req">*</span></label>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sCryptoWallet" placeholder=" " autocomplete="off">
+                <label>Wallet Address <span class="req">*</span></label>
+            </div>
+        </div>
+
+        <!-- Wire -->
+        <div class="pay-section" id="pay_wire">
+            <div class="form-row">
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sWireBank" placeholder=" " autocomplete="off">
+                    <label>Bank Name <span class="req">*</span></label>
+                </div>
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sWireSwift" placeholder=" " autocomplete="off">
+                    <label>SWIFT / BIC Code <span class="req">*</span></label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sWireIban" placeholder=" " autocomplete="off">
+                    <label>IBAN / Account Number <span class="req">*</span></label>
+                </div>
+                <div class="fl-group">
+                    <input type="text" class="fi" id="sWireCountry" placeholder=" " autocomplete="off">
+                    <label>Bank Country <span class="req">*</span></label>
+                </div>
+            </div>
+            <div class="fl-group">
+                <input type="text" class="fi" id="sWireName" placeholder=" " autocomplete="off">
+                <label>Beneficiary Name <span class="req">*</span></label>
+            </div>
+        </div>
+
+        <div class="terms" style="margin-top:10px">
+            <label><input type="checkbox" id="sTerms"> I agree to the Clima Affiliate Network <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a>.</label>
+        </div>
+        <div class="wz-nav">
+            <button class="btn-back" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-next" id="btnSignup" onclick="doSignup()"><i class="fas fa-paper-plane"></i> <span class="btn-text">Submit Application</span><span class="spinner"></span></button>
         </div>
     </div>
 </div>
+
+<!-- SUCCESS -->
+<div class="success-panel" id="successPanel">
+    <div class="success-check"><i class="fas fa-envelope-open-text"></i></div>
+    <h3>Check Your Email!</h3>
+    <p>We sent a <strong>verification link</strong> to your email address.<br>Click it to confirm your account, then our team will review your application.</p>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-muted)">Didn't receive it? Check your spam folder.</p>
+    <a href="index.html" class="btn-login" style="margin-top:20px"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+</div>
+
+<div class="form-footer">
+    <a class="login-link" href="index.html"><i class="fas fa-arrow-left"></i> Already have an account? Sign In</a>
+    <span class="footer-copy">CLIMA &copy; 2026</span>
+</div>
+</div><!-- /form-panel -->
+</div><!-- /signup-wrapper -->
 
 <script>
 var firebaseConfig = {
@@ -403,170 +518,216 @@ firebase.initializeApp(firebaseConfig);
 var FB = firebaseConfig.databaseURL;
 var currentStep = 1;
 
-/* ===== WIZARD NAVIGATION ===== */
 function goToStep(n) {
     hideError();
-    /* Validate current step before moving forward */
-    if (n > currentStep) {
-        var valid = validateStep(currentStep);
-        if (!valid) return;
-    }
-
-    /* Hide all panels */
+    if (n > currentStep && !validateStep(currentStep)) return;
     for (var i = 1; i <= 3; i++) {
         document.getElementById('step' + i).classList.remove('active');
         document.getElementById('leftStep' + i).classList.remove('active');
-        document.getElementById('wzDot' + i).classList.remove('active', 'done');
-        document.getElementById('wzDot' + i).innerHTML = i;
-        document.getElementById('wzLbl' + i).classList.remove('active', 'done');
+        var dot = document.getElementById('wzDot' + i);
+        dot.classList.remove('active','done');
+        dot.innerHTML = i;
+        document.getElementById('wzLbl' + i).classList.remove('active','done');
     }
     document.getElementById('wzLine1').classList.remove('done');
     document.getElementById('wzLine2').classList.remove('done');
-
-    /* Mark completed steps */
     for (var j = 1; j < n; j++) {
-        document.getElementById('wzDot' + j).classList.add('done');
-        document.getElementById('wzDot' + j).innerHTML = '<i class="fas fa-check" style="font-size:12px"></i>';
+        var d = document.getElementById('wzDot' + j);
+        d.classList.add('done');
+        d.innerHTML = '<i class="fas fa-check" style="font-size:11px"></i>';
         document.getElementById('wzLbl' + j).classList.add('done');
     }
     if (n > 1) document.getElementById('wzLine1').classList.add('done');
     if (n > 2) document.getElementById('wzLine2').classList.add('done');
-
-    /* Activate current step */
     document.getElementById('step' + n).classList.add('active');
     document.getElementById('leftStep' + n).classList.add('active');
     document.getElementById('wzDot' + n).classList.add('active');
     document.getElementById('wzLbl' + n).classList.add('active');
-
     currentStep = n;
 }
 
 function validateStep(step) {
     if (step === 1) {
-        var name = document.getElementById('sName').value.trim();
-        var email = document.getElementById('sEmail').value.trim();
-        var country = document.getElementById('sCountry').value.trim();
-        var pw = document.getElementById('sPassword').value;
-        var cpw = document.getElementById('sConfirmPass').value;
-        if (!name || !email || !country) { showError('Please fill in Name, Email, and Country.'); return false; }
-        if (!validateEmail(email)) { showError('Please enter a valid email address.'); return false; }
+        var name = v('sName'), email = v('sEmail'), country = document.getElementById('sCountry').value;
+        var pw = v('sPassword'), cpw = v('sConfirmPass');
+        if (!name) { showError('Full Name is required.'); return false; }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Valid email address is required.'); return false; }
+        if (!country) { showError('Please select your country.'); return false; }
         if (!pw || pw.length < 6) { showError('Password must be at least 6 characters.'); return false; }
         if (pw !== cpw) { showError('Passwords do not match.'); return false; }
         return true;
     }
     if (step === 2) {
-        var sources = document.getElementById('sSources').value.trim();
-        if (!sources) { showError('Please enter your traffic sources.'); return false; }
+        var promos = getChecked('promoGrid');
+        var verts = getChecked('vertGrid');
+        if (!promos.length) { showError('Please select at least one promotion method.'); return false; }
+        if (!verts.length) { showError('Please select at least one vertical you run.'); return false; }
         return true;
     }
     return true;
 }
 
+function getChecked(gridId) {
+    var vals = [];
+    document.getElementById(gridId).querySelectorAll('input[type=checkbox]:checked').forEach(function(el) { vals.push(el.value); });
+    return vals;
+}
+
+function v(id) { return document.getElementById(id).value.trim(); }
+
+function switchPayMethod() {
+    var m = document.getElementById('sPayMethod').value;
+    ['paypal','ach','crypto','wire'].forEach(function(s) {
+        document.getElementById('pay_' + s).classList.remove('active');
+    });
+    if (m) document.getElementById('pay_' + m).classList.add('active');
+}
+
 function doSignup() {
     hideError();
     if (!validateStep(1) || !validateStep(2)) return;
-    var terms = document.getElementById('sTerms').checked;
-    if (!terms) { showError('Please agree to the Terms & Conditions.'); return; }
-
-    var name = document.getElementById('sName').value.trim();
-    var email = document.getElementById('sEmail').value.trim();
-    var phone = document.getElementById('sPhone').value.trim();
-    var country = document.getElementById('sCountry').value.trim();
-    var password = document.getElementById('sPassword').value;
-    var company = document.getElementById('sCompany').value.trim();
-    var website = document.getElementById('sWebsite').value.trim();
-    var sources = document.getElementById('sSources').value.trim();
-    var revenue = document.getElementById('sRevenue').value;
-    var notes = document.getElementById('sNotes').value.trim();
+    if (!document.getElementById('sTerms').checked) { showError('Please agree to the Terms & Conditions.'); return; }
     var payMethod = document.getElementById('sPayMethod').value;
-    var payDetails = document.getElementById('sPayDetails').value.trim();
+    if (!payMethod) { showError('Please select a payment method.'); return; }
+    if (!validatePayment(payMethod)) return;
+
     var btn = document.getElementById('btnSignup');
+    btn.disabled = true; btn.classList.add('loading');
 
-    btn.classList.add('loading');
-    btn.disabled = true;
+    getSignupIP().then(function(ipData) {
+        var promos = getChecked('promoGrid');
+        var verts = getChecked('vertGrid');
+        var payDetails = buildPayDetails(payMethod);
+        var verifyToken = Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
+        var signupId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 
-    getIP().then(function(ip) {
-        var signupData = {
-            name: name,
-            email: email,
-            password: password,
-            phone: phone,
-            country: country,
-            company: company,
-            website: website,
-            channels: sources,
-            experience: revenue,
-            notes: notes,
+        var data = {
+            name: v('sName'),
+            email: v('sEmail'),
+            phone: v('sPhone'),
+            telegram: v('sTelegram'),
+            country: document.getElementById('sCountry').value,
+            city: v('sCity'),
+            state: v('sState'),
+            zip: v('sZip'),
+            company: v('sCompany'),
+            website: v('sWebsite'),
+            promoMethods: promos,
+            verticals: verts,
+            adSpend: document.getElementById('sAdSpend').value,
+            experience: document.getElementById('sExperience').value,
+            heardFrom: document.getElementById('sHeardFrom').value,
+            otherNetworks: v('sNetworks'),
             paymentMethod: payMethod,
             paymentDetails: payDetails,
-            ip: ip || 'unknown',
+            ip: ipData.ip || 'unknown',
+            ipCountry: ipData.country || '',
+            ipCity: ipData.city || '',
             userAgent: navigator.userAgent,
             status: 'pending',
+            emailVerified: false,
+            verifyToken: verifyToken,
+            password: document.getElementById('sPassword').value,
             timestamp: Date.now()
         };
 
-        var id = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-        return fetch(FB + '/signups/' + id + '.json', {
-            method: 'PUT',
-            body: JSON.stringify(signupData)
+        return fetch(FB + '/signups/' + signupId + '.json', {
+            method: 'PUT', body: JSON.stringify(data)
+        }).then(function(r) { return r.json(); }).then(function() {
+            return { signupId: signupId, verifyToken: verifyToken, data: data };
         });
-    }).then(function(r) {
-        return r.json();
-    }).then(function() {
-        btn.classList.remove('loading');
-        btn.disabled = false;
+    }).then(function(res) {
+        btn.disabled = false; btn.classList.remove('loading');
         document.getElementById('signupForm').style.display = 'none';
         document.getElementById('successPanel').classList.add('show');
-        sendSignupConfirmEmail(name, email);
-    }).catch(function(err) {
-        btn.classList.remove('loading');
-        btn.disabled = false;
+        sendVerifyEmail(res.data.name, res.data.email, res.signupId, res.verifyToken);
+        sendAdminNotification(res.data);
+    }).catch(function() {
+        btn.disabled = false; btn.classList.remove('loading');
         showError('Something went wrong. Please try again.');
     });
 }
 
-function getIP() {
-    return fetch('https://api.ipify.org?format=json')
-        .then(function(r) { return r.json(); })
-        .then(function(d) { return d.ip; })
-        .catch(function() { return 'unknown'; });
+function validatePayment(method) {
+    if (method === 'paypal') {
+        if (!v('sPaypalEmail') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('sPaypalEmail'))) { showError('Please enter a valid PayPal email.'); return false; }
+    } else if (method === 'ach') {
+        if (!v('sAchBank')) { showError('Bank name is required for ACH.'); return false; }
+        if (!v('sAchRouting') || !/^\d{9}$/.test(v('sAchRouting'))) { showError('Routing number must be 9 digits.'); return false; }
+        if (!v('sAchAccount')) { showError('Account number is required.'); return false; }
+        if (!v('sAchName')) { showError('Account holder name is required.'); return false; }
+    } else if (method === 'crypto') {
+        if (!document.getElementById('sCryptoCoin').value) { showError('Please select a crypto coin/network.'); return false; }
+        if (!v('sCryptoWallet')) { showError('Wallet address is required.'); return false; }
+    } else if (method === 'wire') {
+        if (!v('sWireBank') || !v('sWireSwift') || !v('sWireIban') || !v('sWireName')) { showError('Please fill in all wire transfer details.'); return false; }
+    }
+    return true;
 }
 
-function validateEmail(e) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function buildPayDetails(method) {
+    if (method === 'paypal') return { email: v('sPaypalEmail') };
+    if (method === 'ach') return { bankName: v('sAchBank'), accountType: document.getElementById('sAchType').value, routingNumber: v('sAchRouting'), accountNumber: v('sAchAccount'), accountHolder: v('sAchName') };
+    if (method === 'crypto') return { coin: document.getElementById('sCryptoCoin').value, wallet: v('sCryptoWallet') };
+    if (method === 'wire') return { bankName: v('sWireBank'), swift: v('sWireSwift'), iban: v('sWireIban'), bankCountry: v('sWireCountry'), beneficiary: v('sWireName') };
+    return {};
+}
+
+function getSignupIP() {
+    return fetch('https://ipwho.is/')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { return { ip: d.ip, country: d.country, city: d.city }; })
+        .catch(function() { return { ip: 'unknown', country: '', city: '' }; });
+}
+
+function sendVerifyEmail(name, email, signupId, token) {
+    Promise.all([
+        fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }),
+        fetch(FB + '/settings/network.json').then(function(r) { return r.json(); })
+    ]).then(function(res) {
+        var smtp = res[0]; var network = res[1] || {};
+        if (!smtp || !smtp.host || !smtp.password) return;
+        var networkName = network.networkName || 'Clima Affiliate Network';
+        var verifyUrl = window.location.origin + '/verify.html?id=' + signupId + '&token=' + token;
+        var subject = 'Verify Your Email - ' + networkName;
+        var body = '<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#f9fafb;padding:24px">'
+            + '<div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06)">'
+            + '<h2 style="color:#0A6C80;font-size:22px;margin-bottom:8px">Welcome, ' + name + '!</h2>'
+            + '<p style="color:#4B5563;font-size:14px;line-height:1.7">Thank you for applying to <strong>' + networkName + '</strong>. To complete your registration, please verify your email address by clicking the button below.</p>'
+            + '<div style="text-align:center;margin:28px 0">'
+            + '<a href="' + verifyUrl + '" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 32px;border-radius:10px;font-size:15px;font-weight:600">Verify My Email</a>'
+            + '</div>'
+            + '<p style="color:#9CA3AF;font-size:12px">If you did not sign up, you can safely ignore this email. This link expires in 48 hours.</p>'
+            + '</div></div>';
+        Email.send({ SecureToken: smtp.password, To: email, From: smtp.fromEmail || smtp.username, Subject: subject, Body: body })
+            .then(function() { console.log('Verify email sent'); }).catch(function(e) { console.warn('Email error:', e); });
+    }).catch(function() {});
+}
+
+function sendAdminNotification(data) {
+    fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }).then(function(smtp) {
+        if (!smtp || !smtp.fromEmail || !smtp.password) return;
+        var subject = 'New Affiliate Signup: ' + data.name;
+        var body = '<p>New affiliate application received.</p>'
+            + '<ul><li><strong>Name:</strong> ' + data.name + '</li>'
+            + '<li><strong>Email:</strong> ' + data.email + '</li>'
+            + '<li><strong>Country:</strong> ' + data.country + '</li>'
+            + '<li><strong>IP:</strong> ' + data.ip + '</li>'
+            + '<li><strong>Verticals:</strong> ' + (data.verticals || []).join(', ') + '</li>'
+            + '<li><strong>Ad Spend:</strong> ' + (data.adSpend || '-') + '</li></ul>';
+        Email.send({ SecureToken: smtp.password, To: smtp.fromEmail, From: smtp.fromEmail, Subject: subject, Body: body })
+            .catch(function() {});
+    }).catch(function() {});
 }
 
 function showError(msg) {
+    var el = document.getElementById('errorMsg');
     document.getElementById('errorText').textContent = msg;
-    document.getElementById('errorMsg').classList.add('show');
-    document.getElementById('errorMsg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
-function hideError() {
-    document.getElementById('errorMsg').classList.remove('show');
-}
+function hideError() { document.getElementById('errorMsg').classList.remove('show'); }
 
-/* ===== EMAIL: signup confirmation (fire-and-forget) ===== */
-function sendSignupConfirmEmail(name, email) {
-    Promise.all([
-        fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }),
-        fetch(FB + '/settings/emailTemplates/signup_confirm.json').then(function(r) { return r.json(); }),
-        fetch(FB + '/settings/network.json').then(function(r) { return r.json(); })
-    ]).then(function(res) {
-        var smtp = res[0]; var tpl = res[1]; var network = res[2] || {};
-        if (!smtp || !smtp.host || !smtp.password) return;
-        if (!tpl || tpl.enabled === false || tpl.enabled === 'false') return;
-        var networkName = network.networkName || 'Clima Affiliate Network';
-        var logo = smtp.logoUrl || '/images/logo.webp';
-        var vars = { name: name, email: email, networkName: networkName, loginUrl: window.location.origin, logo: logo };
-        var subject = tpl.subject || ''; var body = tpl.body || '';
-        Object.keys(vars).forEach(function(k) { var re = new RegExp('\\{\\{' + k + '\\}\\}', 'g'); subject = subject.replace(re, vars[k]); body = body.replace(re, vars[k]); });
-        Email.send({ SecureToken: smtp.password, To: email, From: smtp.fromEmail || smtp.username, Subject: subject, Body: body })
-            .then(function(msg) { console.log('Signup confirm email sent:', msg); })
-            .catch(function(err) { console.error('Email error:', err); });
-    }).catch(function() { /* Silently fail - email is not critical */ });
-}
-
-/* Enter key handlers */
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();

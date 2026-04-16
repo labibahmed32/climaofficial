@@ -704,12 +704,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div class="page-section" id="page-signups">
             <div class="toolbar">
                 <div class="toolbar-left">
+                    <input type="text" id="signupSearch" placeholder="Search name / email..." class="form-input-sm" onkeyup="renderSignups()">
                     <select id="signupStatusFilter" class="form-select-sm" onchange="renderSignups()"><option value="pending">Pending</option><option value="">All</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
                 </div>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Experience</th><th>IP</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="signupsTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th>Applicant</th><th>Contact</th><th>Location</th><th>Traffic / Vertical</th><th>Ad Spend</th><th>Payment</th><th>Email</th><th>IP</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="signupsTbody"></tbody></table>
             </div></div>
+        </div>
+
+        <!-- Signup Detail Modal -->
+        <div id="signupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:none;align-items:center;justify-content:center;padding:16px">
+            <div style="background:#fff;border-radius:18px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+                <div style="padding:22px 26px;border-bottom:1px solid #f0f4f8;display:flex;justify-content:space-between;align-items:center">
+                    <div><h3 style="font-size:16px;font-weight:700;color:#1a2332" id="smTitle">Signup Details</h3><p style="font-size:12px;color:#94a3b8;margin-top:2px" id="smSub"></p></div>
+                    <button onclick="closeSignupModal()" style="border:none;background:#f1f5f9;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;color:#64748b">&times;</button>
+                </div>
+                <div id="smBody" style="padding:22px 26px"></div>
+                <div style="padding:14px 26px;border-top:1px solid #f0f4f8;display:flex;gap:10px;justify-content:flex-end" id="smActions"></div>
+            </div>
         </div>
 
         <!-- ===== CLICK REPORTS ===== -->
@@ -3433,25 +3446,144 @@ function saveManager() {
 function loadSignups() { fbGet('signups').then(function(data) { allSignups = objToArr(data); renderSignups(); updateSignupBadge(); }); }
 function renderSignups() {
     var statusF = document.getElementById('signupStatusFilter').value;
-    var filtered = allSignups.filter(function(s) { return !statusF || s.status === statusF; });
+    var search = (document.getElementById('signupSearch').value || '').toLowerCase();
+    var filtered = allSignups.filter(function(s) {
+        if (statusF && s.status !== statusF) return false;
+        if (search && (s.name||'').toLowerCase().indexOf(search) === -1 && (s.email||'').toLowerCase().indexOf(search) === -1) return false;
+        return true;
+    });
     filtered.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
     var html = '';
     filtered.forEach(function(s) {
-        html += '<tr><td><strong>' + escHtml(s.name) + '</strong></td><td>' + escHtml(s.email) + '</td><td>' + escHtml(s.phone || '-') + '</td><td>' + escHtml(s.country || '-') + '</td><td>' + escHtml(s.experience || '-') + '</td><td style="font-family:monospace;font-size:11px">' + escHtml(s.ip || '-') + '</td><td>' + fmtDate(s.timestamp) + '</td><td>' + statusBadge(s.status) + '</td><td>';
-        if (s.status === 'pending') { html += '<button class="btn-primary-sm" style="padding:4px 10px;font-size:11px" onclick="approveSignup(\'' + s._id + '\')"><i class="fas fa-check"></i></button> <button class="btn-danger-sm" onclick="rejectSignup(\'' + s._id + '\')"><i class="fas fa-times"></i></button>'; } else { html += '-'; }
+        var promos = Array.isArray(s.promoMethods) ? s.promoMethods.join(', ') : (s.channels || s.promoMethods || '-');
+        var verts = Array.isArray(s.verticals) ? s.verticals.join(', ') : (s.verticals || '-');
+        var payBadge = s.paymentMethod ? '<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase">' + escHtml(s.paymentMethod) + '</span>' : '-';
+        var emailVerified = s.emailVerified ? '<span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700"><i class="fas fa-check-circle"></i> Verified</span>' : '<span style="background:#fef9c3;color:#b45309;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700"><i class="fas fa-clock"></i> Pending</span>';
+        html += '<tr style="cursor:pointer" onclick="viewSignup(\'' + s._id + '\')">'
+            + '<td><strong>' + escHtml(s.name) + '</strong><br><span style="font-size:11px;color:#94a3b8">' + escHtml(s.company || '') + '</span></td>'
+            + '<td style="font-size:12px">' + escHtml(s.email) + '<br><span style="color:#94a3b8">' + escHtml(s.phone || '') + '</span></td>'
+            + '<td style="font-size:12px">' + escHtml(s.country || '-') + (s.city ? '<br><span style="color:#94a3b8;font-size:11px">' + escHtml(s.city) + (s.state ? ', ' + escHtml(s.state) : '') + '</span>' : '') + '</td>'
+            + '<td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escHtml(promos) + '">' + escHtml(promos.substr ? promos.substr(0,40) + (promos.length > 40 ? '…' : '') : promos) + '<br><span style="color:#0a6c80">' + escHtml(verts.substr ? verts.substr(0,40) + (verts.length > 40 ? '…' : '') : verts) + '</span></td>'
+            + '<td style="font-size:12px">' + escHtml(s.adSpend || s.experience || '-') + '</td>'
+            + '<td>' + payBadge + '</td>'
+            + '<td>' + emailVerified + '</td>'
+            + '<td style="font-family:monospace;font-size:11px">' + escHtml(s.ip || '-') + '</td>'
+            + '<td style="font-size:12px">' + fmtDate(s.timestamp) + '</td>'
+            + '<td onclick="event.stopPropagation()">' + statusBadge(s.status) + '</td>'
+            + '<td onclick="event.stopPropagation()">';
+        if (s.status === 'pending') {
+            html += '<button class="btn-primary-sm" style="padding:4px 10px;font-size:11px;margin-right:4px" onclick="approveSignup(\'' + s._id + '\')"><i class="fas fa-check"></i></button>'
+                  + '<button class="btn-danger-sm" style="padding:4px 10px;font-size:11px" onclick="rejectSignup(\'' + s._id + '\')"><i class="fas fa-times"></i></button>';
+        } else { html += '-'; }
         html += '</td></tr>';
     });
-    document.getElementById('signupsTbody').innerHTML = html || '<tr><td colspan="9" class="no-data"><i class="fas fa-user-clock"></i>No signups found</td></tr>';
+    document.getElementById('signupsTbody').innerHTML = html || '<tr><td colspan="11" class="no-data"><i class="fas fa-user-clock"></i>No signups found</td></tr>';
 }
+
+function viewSignup(id) {
+    var s = allSignups.find(function(x) { return x._id === id; }); if (!s) return;
+    document.getElementById('smTitle').textContent = s.name;
+    document.getElementById('smSub').textContent = s.email + ' · Applied ' + fmtDate(s.timestamp);
+    var pd = s.paymentDetails || {};
+    var payHtml = '';
+    if (s.paymentMethod === 'paypal') payHtml = '<b>PayPal Email:</b> ' + escHtml(pd.email || '-');
+    else if (s.paymentMethod === 'ach') payHtml = '<b>Bank:</b> ' + escHtml(pd.bankName || '-') + ' &nbsp; <b>Type:</b> ' + escHtml(pd.accountType || '-') + '<br><b>Routing:</b> ' + escHtml(pd.routingNumber || '-') + ' &nbsp; <b>Account:</b> ' + escHtml(pd.accountNumber || '-') + '<br><b>Holder:</b> ' + escHtml(pd.accountHolder || '-');
+    else if (s.paymentMethod === 'crypto') payHtml = '<b>Coin:</b> ' + escHtml(pd.coin || '-') + '<br><b>Wallet:</b> <code style="font-size:11px;word-break:break-all">' + escHtml(pd.wallet || '-') + '</code>';
+    else if (s.paymentMethod === 'wire') payHtml = '<b>Bank:</b> ' + escHtml(pd.bankName || '-') + ' &nbsp; <b>SWIFT:</b> ' + escHtml(pd.swift || '-') + '<br><b>IBAN:</b> ' + escHtml(pd.iban || '-') + ' &nbsp; <b>Country:</b> ' + escHtml(pd.bankCountry || '-') + '<br><b>Beneficiary:</b> ' + escHtml(pd.beneficiary || '-');
+    var promos = Array.isArray(s.promoMethods) ? s.promoMethods : (s.channels ? [s.channels] : []);
+    var verts = Array.isArray(s.verticals) ? s.verticals : [];
+    var pillStyle = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin:3px;';
+    var promoHtml = promos.map(function(p) { return '<span style="' + pillStyle + 'background:#e3f2fd;color:#1565c0">' + escHtml(p) + '</span>'; }).join('') || '-';
+    var vertHtml = verts.map(function(v) { return '<span style="' + pillStyle + 'background:#f3e8ff;color:#7c3aed">' + escHtml(v) + '</span>'; }).join('') || '-';
+    var rows = function(label, val) { return '<tr><td style="padding:7px 12px;font-size:12px;font-weight:600;color:#64748b;width:150px;white-space:nowrap">' + label + '</td><td style="padding:7px 12px;font-size:13px;color:#1a2332">' + val + '</td></tr>'; };
+    document.getElementById('smBody').innerHTML =
+        '<table style="width:100%;border-collapse:collapse">'
+        + '<tr><td colspan="2" style="padding:4px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">Personal</td></tr>'
+        + rows('Full Name', escHtml(s.name || '-'))
+        + rows('Email', escHtml(s.email || '-') + ' &nbsp; ' + (s.emailVerified ? '<span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">✓ Verified</span>' : '<span style="background:#fef9c3;color:#b45309;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Unverified</span>'))
+        + rows('Phone', escHtml(s.phone || '-'))
+        + rows('Telegram/Skype', escHtml(s.telegram || '-'))
+        + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Address</td></tr>'
+        + rows('Country', escHtml(s.country || '-'))
+        + rows('City / State', escHtml([s.city, s.state].filter(Boolean).join(', ') || '-'))
+        + rows('ZIP', escHtml(s.zip || '-'))
+        + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Business</td></tr>'
+        + rows('Company', escHtml(s.company || '-'))
+        + rows('Website', escHtml(s.website || '-'))
+        + rows('Heard From', escHtml(s.heardFrom || '-'))
+        + rows('Other Networks', escHtml(s.otherNetworks || '-'))
+        + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Traffic & Experience</td></tr>'
+        + rows('Promo Methods', promoHtml)
+        + rows('Verticals', vertHtml)
+        + rows('Ad Spend', escHtml(s.adSpend || '-'))
+        + rows('Experience', escHtml(s.experience || '-'))
+        + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Payment</td></tr>'
+        + rows('Method', '<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase">' + escHtml(s.paymentMethod || '-') + '</span>')
+        + rows('Details', payHtml || '-')
+        + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Technical</td></tr>'
+        + rows('IP Address', '<code style="font-size:12px">' + escHtml(s.ip || '-') + '</code>' + (s.ipCity ? ' &nbsp; <span style="color:#94a3b8;font-size:11px">' + escHtml(s.ipCity) + (s.ipCountry ? ', ' + escHtml(s.ipCountry) : '') + '</span>' : ''))
+        + rows('Applied', fmtDate(s.timestamp))
+        + '</table>';
+    var actHtml = '';
+    if (s.status === 'pending') {
+        actHtml = '<button class="btn-danger-sm" onclick="closeSignupModal();rejectSignup(\'' + s._id + '\')"><i class="fas fa-times"></i> Reject</button>'
+                + '<button class="btn-primary-sm" onclick="closeSignupModal();approveSignup(\'' + s._id + '\')"><i class="fas fa-check"></i> Approve</button>';
+    } else {
+        actHtml = '<span style="font-size:13px;color:#64748b">' + statusBadge(s.status) + '</span>';
+    }
+    document.getElementById('smActions').innerHTML = actHtml;
+    var modal = document.getElementById('signupModal');
+    modal.style.display = 'flex';
+}
+function closeSignupModal() { document.getElementById('signupModal').style.display = 'none'; }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSignupModal(); });
 function approveSignup(id) {
     var s = allSignups.find(function(x) { return x._id === id; }); if (!s) return;
     if (!confirm('Approve signup for ' + s.name + '? This will create their affiliate account.')) return;
-    var pass = prompt('Set password for ' + s.email + ':', 'Affiliate@123');
+    var savedPass = s.password || '';
+    var pass = prompt('Set password for ' + s.email + ':', savedPass || 'Affiliate@123');
     if (!pass || pass.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
     var _pass = pass;
-    secondaryApp.auth().createUserWithEmailAndPassword(s.email, _pass).then(function(cred) { var uid = cred.user.uid; secondaryApp.auth().signOut(); return getNextAffiliateId().then(function(affId) { window._lastApprovedAffId = affId; return fbPut('users/' + uid, { affId: affId, name: s.name, email: s.email, role: 'affiliate', status: 'active', phone: s.phone || '', country: s.country || '', experience: s.experience || '', channels: s.channels || '', createdAt: Date.now() }).then(function() { return fbPut('affiliateIndex/' + affId, uid); }); }); }).then(function() { return fbPatch('signups/' + id, { status: 'approved', approvedAt: Date.now() }); }).then(function() {
+    secondaryApp.auth().createUserWithEmailAndPassword(s.email, _pass).then(function(cred) {
+        var uid = cred.user.uid; secondaryApp.auth().signOut();
+        return getNextAffiliateId().then(function(affId) {
+            window._lastApprovedAffId = affId;
+            var pd = s.paymentDetails || {};
+            var promos = Array.isArray(s.promoMethods) ? s.promoMethods : (s.channels ? [s.channels] : []);
+            var verts = Array.isArray(s.verticals) ? s.verticals : [];
+            var userRecord = {
+                affId: affId,
+                name: s.name,
+                email: s.email,
+                role: 'affiliate',
+                status: 'active',
+                phone: s.phone || '',
+                telegram: s.telegram || '',
+                country: s.country || '',
+                city: s.city || '',
+                state: s.state || '',
+                zip: s.zip || '',
+                company: s.company || '',
+                website: s.website || '',
+                promoMethods: promos,
+                verticals: verts,
+                adSpend: s.adSpend || '',
+                experience: s.experience || '',
+                heardFrom: s.heardFrom || '',
+                otherNetworks: s.otherNetworks || '',
+                paymentMethod: s.paymentMethod || '',
+                paymentDetails: pd,
+                signupIp: s.ip || '',
+                createdAt: Date.now()
+            };
+            return fbPut('users/' + uid, userRecord).then(function() {
+                return fbPut('affiliateIndex/' + affId, uid);
+            });
+        });
+    }).then(function() {
+        return fbPatch('signups/' + id, { status: 'approved', approvedAt: Date.now() });
+    }).then(function() {
         toast('Signup approved! Affiliate account created.'); loadSignups();
-        /* Fire approval email */
         sendTemplateEmail('signup_approved', s.email, { name: s.name, email: s.email, password: _pass, affId: window._lastApprovedAffId || '' });
     }).catch(function(err) { toast('Error: ' + (err.message || 'Could not approve'), 'error'); });
 }

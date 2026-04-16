@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Email - Clima Network</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F3F6F9;padding:20px;}
+.card{background:#fff;border-radius:20px;padding:48px 40px;max-width:480px;width:100%;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.05),0 20px 60px rgba(0,0,0,.1);}
+.icon-wrap{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:36px;animation:popIn .5s ease;}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.icon-wrap.loading{background:#e3f2fd;color:#1565c0;}
+.icon-wrap.success{background:#dcfce7;color:#22c55e;}
+.icon-wrap.error{background:#fce4ec;color:#e91e63;}
+h2{font-size:22px;font-weight:700;color:#111827;margin-bottom:10px;}
+p{font-size:14px;color:#6B7280;line-height:1.7;}
+.brand{font-size:13px;color:#9CA3AF;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;}
+.btn{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:12px 28px;border-radius:10px;background:#0A6C80;color:#fff;text-decoration:none;font-size:14px;font-weight:600;transition:all .22s;}
+.btn:hover{background:#085a6b;transform:translateY(-1px);box-shadow:0 4px 18px rgba(10,108,128,.28);}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="brand">CLIMA Network</div>
+    <div class="icon-wrap loading" id="iconWrap"><i class="fas fa-spinner fa-spin" id="statusIcon"></i></div>
+    <h2 id="statusTitle">Verifying your email...</h2>
+    <p id="statusMsg">Please wait while we confirm your email address.</p>
+    <div id="btnWrap"></div>
+</div>
+<script>
+var firebaseConfig = {
+    apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
+    authDomain: "clima-dashboard.firebaseapp.com",
+    databaseURL: "https://clima-dashboard-default-rtdb.firebaseio.com",
+    projectId: "clima-dashboard"
+};
+firebase.initializeApp(firebaseConfig);
+var FB = firebaseConfig.databaseURL;
+
+function qs(p) { return new URLSearchParams(window.location.search).get(p); }
+var signupId = qs('id'), token = qs('token');
+
+function setUI(type, title, msg, link) {
+    var wrap = document.getElementById('iconWrap');
+    wrap.className = 'icon-wrap ' + type;
+    var icons = { loading: 'fas fa-spinner fa-spin', success: 'fas fa-check', error: 'fas fa-times' };
+    document.getElementById('statusIcon').className = icons[type] || icons.loading;
+    document.getElementById('statusTitle').textContent = title;
+    document.getElementById('statusMsg').textContent = msg;
+    if (link) document.getElementById('btnWrap').innerHTML = '<a href="' + link.url + '" class="btn"><i class="fas fa-' + link.icon + '"></i> ' + link.text + '</a>';
+}
+
+if (!signupId || !token) {
+    setUI('error', 'Invalid Link', 'This verification link is invalid or has expired.', { url: 'signup.html', icon: 'arrow-left', text: 'Back to Signup' });
+} else {
+    fetch(FB + '/signups/' + signupId + '.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data) throw new Error('not_found');
+            if (data.emailVerified) {
+                setUI('success', 'Already Verified!', 'Your email has already been verified. Our team is reviewing your application — you\'ll be notified once approved.', { url: 'index.html', icon: 'sign-in-alt', text: 'Go to Login' });
+                return;
+            }
+            if (data.verifyToken !== token) throw new Error('invalid_token');
+            return fetch(FB + '/signups/' + signupId + '.json', {
+                method: 'PATCH',
+                body: JSON.stringify({ emailVerified: true, emailVerifiedAt: Date.now() })
+            });
+        })
+        .then(function() {
+            setUI('success', 'Email Verified!', 'Your email has been confirmed. Our team will review your application and notify you once approved — usually within 24 hours.', { url: 'index.html', icon: 'sign-in-alt', text: 'Go to Login' });
+        })
+        .catch(function(err) {
+            if (err && err.message === 'invalid_token') {
+                setUI('error', 'Invalid Token', 'This verification link is incorrect or has expired. Please request a new one.', { url: 'signup.html', icon: 'arrow-left', text: 'Sign Up Again' });
+            } else if (err && err.message === 'not_found') {
+                setUI('error', 'Not Found', 'Signup record not found. Please try signing up again.', { url: 'signup.html', icon: 'arrow-left', text: 'Sign Up Again' });
+            } else {
+                setUI('error', 'Something Went Wrong', 'Unable to verify your email. Please try again later.', { url: 'signup.html', icon: 'arrow-left', text: 'Back to Signup' });
+            }
+        });
+}
+</script>
+</body>
+</html>
