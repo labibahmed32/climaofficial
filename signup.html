@@ -259,7 +259,7 @@ select.fi{cursor:pointer;-webkit-appearance:none;appearance:none;background-imag
             <div class="fl-group">
                 <select class="fi" id="sCountry" autocomplete="off">
                     <option value="">Select country</option>
-                    <option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option><option>Germany</option><option>France</option><option>Netherlands</option><option>Spain</option><option>Italy</option><option>Brazil</option><option>Mexico</option><option>India</option><option>Pakistan</option><option>Bangladesh</option><option>Philippines</option><option>Indonesia</option><option>Vietnam</option><option>Thailand</option><option>Malaysia</option><option>Singapore</option><option>UAE</option><option>Saudi Arabia</option><option>Egypt</option><option>Nigeria</option><option>South Africa</option><option>Kenya</option><option>Poland</option><option>Czech Republic</option><option>Romania</option><option>Ukraine</option><option>Russia</option><option>Turkey</option><option>Israel</option><option>Japan</option><option>South Korea</option><option>China</option><option>New Zealand</option><option>Sweden</option><option>Norway</option><option>Denmark</option><option>Finland</option><option>Portugal</option><option>Argentina</option><option>Colombia</option><option>Chile</option><option>Peru</option><option>Other</option>
+                    <option>Afghanistan</option><option>Albania</option><option>Algeria</option><option>Argentina</option><option>Armenia</option><option>Australia</option><option>Austria</option><option>Azerbaijan</option><option>Bahrain</option><option>Bangladesh</option><option>Belarus</option><option>Belgium</option><option>Bolivia</option><option>Bosnia and Herzegovina</option><option>Brazil</option><option>Bulgaria</option><option>Cambodia</option><option>Canada</option><option>Chile</option><option>China</option><option>Colombia</option><option>Costa Rica</option><option>Croatia</option><option>Czech Republic</option><option>Denmark</option><option>Dominican Republic</option><option>Ecuador</option><option>Egypt</option><option>El Salvador</option><option>Estonia</option><option>Ethiopia</option><option>Finland</option><option>France</option><option>Georgia</option><option>Germany</option><option>Ghana</option><option>Greece</option><option>Guatemala</option><option>Honduras</option><option>Hong Kong</option><option>Hungary</option><option>India</option><option>Indonesia</option><option>Iran</option><option>Iraq</option><option>Ireland</option><option>Israel</option><option>Italy</option><option>Jamaica</option><option>Japan</option><option>Jordan</option><option>Kazakhstan</option><option>Kenya</option><option>Kuwait</option><option>Latvia</option><option>Lebanon</option><option>Lithuania</option><option>Luxembourg</option><option>Macedonia</option><option>Malaysia</option><option>Mexico</option><option>Moldova</option><option>Morocco</option><option>Myanmar</option><option>Nepal</option><option>Netherlands</option><option>New Zealand</option><option>Nicaragua</option><option>Nigeria</option><option>Norway</option><option>Oman</option><option>Pakistan</option><option>Panama</option><option>Paraguay</option><option>Peru</option><option>Philippines</option><option>Poland</option><option>Portugal</option><option>Qatar</option><option>Romania</option><option>Russia</option><option>Saudi Arabia</option><option>Senegal</option><option>Serbia</option><option>Singapore</option><option>Slovakia</option><option>Slovenia</option><option>South Africa</option><option>South Korea</option><option>Spain</option><option>Sri Lanka</option><option>Sweden</option><option>Switzerland</option><option>Taiwan</option><option>Tanzania</option><option>Thailand</option><option>Tunisia</option><option>Turkey</option><option>UAE</option><option>Uganda</option><option>Ukraine</option><option>United Kingdom</option><option>United States</option><option>Uruguay</option><option>Uzbekistan</option><option>Venezuela</option><option>Vietnam</option><option>Yemen</option><option>Zimbabwe</option><option>Other</option>
                 </select>
                 <label>Country <span class="req">*</span></label>
             </div>
@@ -674,50 +674,96 @@ function buildPayDetails(method) {
 }
 
 function getSignupIP() {
+    /* Try multiple APIs with fallbacks */
     return fetch('https://ipwho.is/')
         .then(function(r) { return r.json(); })
-        .then(function(d) { return { ip: d.ip, country: d.country, city: d.city }; })
+        .then(function(d) {
+            if (d && d.ip && d.success !== false) return { ip: d.ip, country: d.country || '', city: d.city || '' };
+            throw new Error('bad');
+        })
+        .catch(function() {
+            return fetch('https://api.ipify.org?format=json')
+                .then(function(r) { return r.json(); })
+                .then(function(d) { return { ip: d.ip || 'unknown', country: '', city: '' }; });
+        })
+        .catch(function() {
+            return fetch('https://api64.ipify.org?format=json')
+                .then(function(r) { return r.json(); })
+                .then(function(d) { return { ip: d.ip || 'unknown', country: '', city: '' }; });
+        })
         .catch(function() { return { ip: 'unknown', country: '', city: '' }; });
 }
 
-function sendVerifyEmail(name, email, signupId, token) {
-    Promise.all([
+function getSmtp() {
+    return Promise.all([
         fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }),
         fetch(FB + '/settings/network.json').then(function(r) { return r.json(); })
     ]).then(function(res) {
-        var smtp = res[0]; var network = res[1] || {};
-        if (!smtp || !smtp.host || !smtp.password) return;
+        return { smtp: res[0] || {}, network: res[1] || {} };
+    }).catch(function() { return { smtp: {}, network: {} }; });
+}
+
+function smtpSend(smtp, to, subject, body) {
+    if (!smtp || !smtp.password) { console.warn('SMTP not configured'); return Promise.resolve(); }
+    return Email.send({
+        SecureToken: smtp.password,
+        To: to,
+        From: (smtp.fromName ? smtp.fromName + ' <' : '') + (smtp.fromEmail || smtp.username || '') + (smtp.fromName ? '>' : ''),
+        Subject: subject,
+        Body: body
+    }).then(function(msg) {
+        console.log('Email sent to ' + to + ':', msg);
+    }).catch(function(err) {
+        console.warn('Email error:', err);
+    });
+}
+
+function sendVerifyEmail(name, email, signupId, token) {
+    getSmtp().then(function(cfg) {
+        var smtp = cfg.smtp, network = cfg.network;
         var networkName = network.networkName || 'Clima Affiliate Network';
-        var verifyUrl = window.location.origin + '/verify.html?id=' + signupId + '&token=' + token;
-        var subject = 'Verify Your Email - ' + networkName;
-        var body = '<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#f9fafb;padding:24px">'
-            + '<div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06)">'
-            + '<h2 style="color:#0A6C80;font-size:22px;margin-bottom:8px">Welcome, ' + name + '!</h2>'
-            + '<p style="color:#4B5563;font-size:14px;line-height:1.7">Thank you for applying to <strong>' + networkName + '</strong>. To complete your registration, please verify your email address by clicking the button below.</p>'
-            + '<div style="text-align:center;margin:28px 0">'
-            + '<a href="' + verifyUrl + '" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 32px;border-radius:10px;font-size:15px;font-weight:600">Verify My Email</a>'
+        var base = 'https://plan1.climaofficial.com';
+        var verifyUrl = base + '/verify.html?id=' + signupId + '&token=' + token;
+        var subject = 'Verify Your Email — ' + networkName;
+        var body = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F3F6F9;font-family:Inter,Arial,sans-serif">'
+            + '<div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)">'
+            + '<div style="background:linear-gradient(135deg,#0A6C80,#085a6b);padding:28px 32px;text-align:center">'
+            + '<h1 style="color:#fff;font-size:22px;margin:0;font-weight:800;letter-spacing:-.3px">' + networkName + '</h1>'
             + '</div>'
-            + '<p style="color:#9CA3AF;font-size:12px">If you did not sign up, you can safely ignore this email. This link expires in 48 hours.</p>'
-            + '</div></div>';
-        Email.send({ SecureToken: smtp.password, To: email, From: smtp.fromEmail || smtp.username, Subject: subject, Body: body })
-            .then(function() { console.log('Verify email sent'); }).catch(function(e) { console.warn('Email error:', e); });
-    }).catch(function() {});
+            + '<div style="padding:32px">'
+            + '<h2 style="color:#111827;font-size:18px;font-weight:700;margin-bottom:12px">Welcome, ' + name + '!</h2>'
+            + '<p style="color:#4B5563;font-size:14px;line-height:1.7;margin-bottom:20px">Thank you for applying to <strong>' + networkName + '</strong>. Please verify your email address to complete your registration.</p>'
+            + '<div style="text-align:center;margin:28px 0">'
+            + '<a href="' + verifyUrl + '" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">✓ Verify My Email</a>'
+            + '</div>'
+            + '<p style="color:#9CA3AF;font-size:12px;text-align:center">Or copy this link into your browser:<br><span style="font-size:11px;word-break:break-all;color:#0A6C80">' + verifyUrl + '</span></p>'
+            + '<hr style="border:none;border-top:1px solid #f0f4f8;margin:24px 0">'
+            + '<p style="color:#9CA3AF;font-size:12px;text-align:center">If you did not sign up for ' + networkName + ', you can safely ignore this email.</p>'
+            + '</div></div></body></html>';
+        smtpSend(smtp, email, subject, body);
+    });
 }
 
 function sendAdminNotification(data) {
-    fetch(FB + '/settings/smtp.json').then(function(r) { return r.json(); }).then(function(smtp) {
-        if (!smtp || !smtp.fromEmail || !smtp.password) return;
-        var subject = 'New Affiliate Signup: ' + data.name;
-        var body = '<p>New affiliate application received.</p>'
-            + '<ul><li><strong>Name:</strong> ' + data.name + '</li>'
-            + '<li><strong>Email:</strong> ' + data.email + '</li>'
-            + '<li><strong>Country:</strong> ' + data.country + '</li>'
-            + '<li><strong>IP:</strong> ' + data.ip + '</li>'
-            + '<li><strong>Verticals:</strong> ' + (data.verticals || []).join(', ') + '</li>'
-            + '<li><strong>Ad Spend:</strong> ' + (data.adSpend || '-') + '</li></ul>';
-        Email.send({ SecureToken: smtp.password, To: smtp.fromEmail, From: smtp.fromEmail, Subject: subject, Body: body })
-            .catch(function() {});
-    }).catch(function() {});
+    getSmtp().then(function(cfg) {
+        var smtp = cfg.smtp;
+        var adminEmail = smtp.fromEmail || smtp.username;
+        if (!adminEmail) return;
+        var subject = 'New Affiliate Application: ' + data.name;
+        var body = '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:20px">'
+            + '<h2 style="color:#0A6C80">New Affiliate Application</h2>'
+            + '<table style="width:100%;border-collapse:collapse">'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600;width:130px">Name</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + (data.name||'-') + '</td></tr>'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600">Email</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + (data.email||'-') + '</td></tr>'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600">Country</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + (data.country||'-') + '</td></tr>'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600">IP</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + (data.ip||'-') + ' ' + (data.ipCity||'') + '</td></tr>'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600">Verticals</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + ((data.verticals||[]).join(', ')||'-') + '</td></tr>'
+            + '<tr><td style="padding:7px;border-bottom:1px solid #f0f0f0;font-weight:600">Ad Spend</td><td style="padding:7px;border-bottom:1px solid #f0f0f0">' + (data.adSpend||'-') + '</td></tr>'
+            + '<tr><td style="padding:7px;font-weight:600">Payment</td><td style="padding:7px">' + (data.paymentMethod||'-') + '</td></tr>'
+            + '</table>'
+            + '<p style="margin-top:16px;font-size:12px;color:#888">Log in to admin panel to review and approve.</p></div>';
+        smtpSend(smtp, adminEmail, subject, body);
+    });
 }
 
 function showError(msg) {
