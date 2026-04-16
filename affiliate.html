@@ -503,9 +503,13 @@ body.impersonating .impersonate-banner{display:block;}
                             <option value="rejected">Rejected</option>
                         </select>
                     </div>
-                    <span class="pg-info" id="offerCount" style="font-weight:700"></span>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span class="pg-info" id="offerCount" style="font-weight:700"></span>
+                        <button onclick="toggleAffOfferView()" title="Toggle view" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--primary);font-size:12px;display:flex;align-items:center;gap:4px"><i class="fas fa-th" id="affOfferViewIcon"></i></button>
+                    </div>
                 </div>
-                <div class="aff-offer-grid" id="offersTb"></div>
+                <div class="aff-offer-grid" id="affOffersGrid"></div>
+                <div id="affOffersTable" style="display:none"><div class="tbl-wrap"><div class="tbl-scroll"><table class="dtbl"><thead><tr><th style="width:44px"></th><th>Offer</th><th>Category</th><th>Model</th><th>Countries</th><th>Payout</th><th>Status</th><th>Action</th></tr></thead><tbody id="affOffersTbody"></tbody></table></div></div></div>
                 <div class="pag-bar"><span class="pg-info" id="offerPgInfo"></span><div class="pag-ctrls" id="offerPag"></div></div>
             </div>
             <!-- DETAIL VIEW -->
@@ -1584,44 +1588,54 @@ function loadOffers() {
     });
 }
 function updateStatusCounts() {
-    var counts = { active: 0, paused: 0, approved: 0, pending: 0, rejected: 0 };
+    var counts = { active: 0, approved: 0, pending: 0, rejected: 0 };
     allOffers.forEach(function(o) {
         if (o.status === 'active') counts.active++;
-        if (o.status === 'paused') counts.paused++;
         var app = allApplications[o._id];
         if (app && counts[app.status] !== undefined) counts[app.status]++;
     });
     var sel = document.getElementById('offerStatusF');
-    sel.options[0].textContent = 'All Status (' + allOffers.length + ')';
-    sel.options[1].textContent = 'Active (' + counts.active + ')';
-    sel.options[2].textContent = 'Paused (' + counts.paused + ')';
-    sel.options[3].textContent = 'Approved (' + counts.approved + ')';
-    sel.options[4].textContent = 'Pending (' + counts.pending + ')';
-    sel.options[5].textContent = 'Rejected (' + counts.rejected + ')';
+    if (sel.options[0]) sel.options[0].textContent = 'All Status (' + allOffers.length + ')';
+    if (sel.options[1]) sel.options[1].textContent = 'Active (' + counts.active + ')';
+    if (sel.options[2]) sel.options[2].textContent = 'Approved (' + counts.approved + ')';
+    if (sel.options[3]) sel.options[3].textContent = 'Pending (' + counts.pending + ')';
+    if (sel.options[4]) sel.options[4].textContent = 'Rejected (' + counts.rejected + ')';
 }
 function filterOffers() { offerPage = 1; renderOffers(); }
+var affOfferView = 'grid'; /* 'grid' | 'list' */
+function toggleAffOfferView() {
+    affOfferView = affOfferView === 'grid' ? 'list' : 'grid';
+    document.getElementById('affOfferViewIcon').className = affOfferView === 'grid' ? 'fas fa-th' : 'fas fa-list';
+    document.getElementById('affOffersGrid').style.display = affOfferView === 'grid' ? '' : 'none';
+    document.getElementById('affOffersTable').style.display = affOfferView === 'list' ? '' : 'none';
+    renderOffers();
+}
 function renderOffers() {
     var s = (document.getElementById('offerSearch').value || '').toLowerCase();
     var catF = document.getElementById('offerCatF').value;
     var stF = document.getElementById('offerStatusF').value;
     var f = allOffers.filter(function(o) {
+        if (o.status !== 'active') return false; /* only show active offers */
         if (s && (o.name || '').toLowerCase().indexOf(s) === -1 && (o.category || '').toLowerCase().indexOf(s) === -1) return false;
         if (catF && (o.category || '') !== catF) return false;
         if (stF) {
-            if (stF === 'active' || stF === 'paused') { if ((o.status || '') !== stF) return false; }
+            if (stF === 'active') { /* already filtered above */ }
             else { var app = allApplications[o._id]; if (!app || app.status !== stF) return false; }
         }
         return true;
-    });
+    }).sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }); /* newest first */
+
     document.getElementById('offerCount').textContent = f.length + ' Offers';
     var st = (offerPage - 1) * PAGE_SIZE, pg = f.slice(st, st + PAGE_SIZE);
-    var h = '';
+    var gridH = '', listH = '';
     pg.forEach(function(o) {
         var app = allApplications[o._id];
         var isPublic = o.visibility === 'public';
         var todayRev = todayConvMap[o._id] || 0;
         var payType = (o.payoutModel || 'cpa').toUpperCase();
         var catLabel = (o.category || 'other').charAt(0).toUpperCase() + (o.category || 'other').slice(1);
+        var countries = (o.countryMode === 'specific' && o.allowedCountries) ? o.allowedCountries.split(',').map(function(c){return c.trim();}).filter(Boolean) : [];
+        var countryTag = countries.length > 0 ? '<span class="aff-offer-card-tag country"><i class="fas fa-map-marker-alt" style="font-size:9px"></i> ' + esc(countries.slice(0,3).join(', ')) + (countries.length > 3 ? ' +' + (countries.length-3) : '') + '</span>' : '<span class="aff-offer-card-tag country"><i class="fas fa-globe" style="font-size:9px"></i> Global</span>';
 
         /* Image + floating payout pill */
         var payoutPill = '<div class="aff-offer-card-payout-hero"><span class="amt">' + fmtM(o.payout) + '</span><span class="lbl">' + esc(payType) + '</span></div>';
@@ -1647,17 +1661,35 @@ function renderOffers() {
             btnH = '<button class="aff-offer-card-btn reapply" onclick="event.stopPropagation();openApply(\'' + o._id + '\')"><i class="fas fa-redo"></i> Reapply</button>';
         }
 
-        h += '<div class="aff-offer-card" onclick="viewOffer(\'' + o._id + '\')">' +
+        /* Grid card */
+        gridH += '<div class="aff-offer-card" onclick="viewOffer(\'' + o._id + '\')">' +
             imgH + statusH +
             '<div class="aff-offer-card-body">' +
             '<div class="aff-offer-card-name" title="' + esc(o.name) + '">' + esc(o.name || 'Untitled') + '</div>' +
-            '<div class="aff-offer-card-tags"><span class="aff-offer-card-tag cat">' + esc(catLabel) + '</span><span class="aff-offer-card-tag model">' + esc(payType) + '</span></div>' +
+            '<div class="aff-offer-card-tags"><span class="aff-offer-card-tag cat">' + esc(catLabel) + '</span><span class="aff-offer-card-tag model">' + esc(payType) + '</span>' + countryTag + '</div>' +
             '<div class="aff-offer-card-foot">' +
             '<span class="aff-offer-card-rev">Today: <b>' + fmtM(todayRev) + '</b></span>' +
-            btnH +
-            '</div></div></div>';
+            btnH + '</div></div></div>';
+
+        /* List row */
+        var thumbH = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" style="width:36px;height:36px;border-radius:8px;object-fit:contain;border:1px solid #e2e8f0;background:#f8fafc" onerror="this.style.display=\'none\'">' : '<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#0a6c80,#14b8a6);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:14px"><i class="fas fa-bullhorn"></i></div>';
+        var statusPill = isPublic ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Public</span>' :
+            (app && app.status === 'approved') ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Approved</span>' :
+            (app && app.status === 'pending') ? '<span style="background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Pending</span>' :
+            (app && app.status === 'rejected') ? '<span style="background:#fce4ec;color:#c62828;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Rejected</span>' :
+            '<span style="background:#f5f5f5;color:#666;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Apply</span>';
+        listH += '<tr onclick="viewOffer(\'' + o._id + '\')" style="cursor:pointer">' +
+            '<td>' + thumbH + '</td>' +
+            '<td><strong style="font-size:13px">' + esc(o.name || 'Untitled') + '</strong></td>' +
+            '<td><span style="background:#f0f4f8;color:#475569;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600">' + esc(catLabel) + '</span></td>' +
+            '<td><span style="background:#e3f2fd;color:#0d47a1;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700">' + esc(payType) + '</span></td>' +
+            '<td style="font-size:11px;color:#555">' + (countries.length ? esc(countries.slice(0,2).join(', ')) + (countries.length>2?' +' + (countries.length-2):'') : '<span style="color:#94a3b8">Global</span>') + '</td>' +
+            '<td style="font-weight:800;color:#0a6c80">' + fmtM(o.payout) + '</td>' +
+            '<td>' + statusPill + '</td>' +
+            '<td onclick="event.stopPropagation()">' + btnH + '</td></tr>';
     });
-    document.getElementById('offersTb').innerHTML = h || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-bullhorn" style="font-size:32px;opacity:.2;display:block;margin-bottom:10px"></i><p>No offers found</p></div>';
+    document.getElementById('affOffersGrid').innerHTML = gridH || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-bullhorn" style="font-size:32px;opacity:.2;display:block;margin-bottom:10px"></i><p>No offers found</p></div>';
+    document.getElementById('affOffersTbody').innerHTML = listH || '<tr><td colspan="8" class="no-data"><i class="fas fa-bullhorn"></i> No offers found</td></tr>';
     renderPag('offerPag', 'offerPgInfo', f.length, offerPage, PAGE_SIZE, 'goOfferPg');
 }
 function goOfferPg(p) { offerPage = p; renderOffers(); }
