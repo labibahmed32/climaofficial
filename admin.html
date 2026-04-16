@@ -3505,6 +3505,7 @@ function viewSignup(id) {
         + rows('Telegram/Skype', escHtml(s.telegram || '-'))
         + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Address</td></tr>'
         + rows('Country', escHtml(s.country || '-'))
+        + rows('Street', escHtml([s.street, s.street2].filter(Boolean).join(', ') || '-'))
         + rows('City / State', escHtml([s.city, s.state].filter(Boolean).join(', ') || '-'))
         + rows('ZIP', escHtml(s.zip || '-'))
         + '<tr><td colspan="2" style="padding:10px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f4f8">Business</td></tr>'
@@ -3560,6 +3561,8 @@ function approveSignup(id) {
                 phone: s.phone || '',
                 telegram: s.telegram || '',
                 country: s.country || '',
+                street: s.street || '',
+                street2: s.street2 || '',
                 city: s.city || '',
                 state: s.state || '',
                 zip: s.zip || '',

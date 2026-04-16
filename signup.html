@@ -255,9 +255,21 @@ select.fi{cursor:pointer;-webkit-appearance:none;appearance:none;background-imag
         </div>
 
         <div class="step-section-title" style="margin-top:4px"><i class="fas fa-map-marker-alt" style="color:var(--accent)"></i> Address</div>
+        <div class="form-row full">
+            <div class="fl-group">
+                <input type="text" class="fi" id="sStreet" placeholder=" " autocomplete="off">
+                <label>Street Address</label>
+            </div>
+        </div>
+        <div class="form-row full">
+            <div class="fl-group">
+                <input type="text" class="fi" id="sStreet2" placeholder=" " autocomplete="off">
+                <label>Apt / Suite / Unit (optional)</label>
+            </div>
+        </div>
         <div class="form-row">
             <div class="fl-group">
-                <select class="fi" id="sCountry" autocomplete="off">
+                <select class="fi" id="sCountry" onchange="onCountryChange()" autocomplete="off">
                     <option value="">Select country</option>
                     <option>Afghanistan</option><option>Albania</option><option>Algeria</option><option>Argentina</option><option>Armenia</option><option>Australia</option><option>Austria</option><option>Azerbaijan</option><option>Bahrain</option><option>Bangladesh</option><option>Belarus</option><option>Belgium</option><option>Bolivia</option><option>Bosnia and Herzegovina</option><option>Brazil</option><option>Bulgaria</option><option>Cambodia</option><option>Canada</option><option>Chile</option><option>China</option><option>Colombia</option><option>Costa Rica</option><option>Croatia</option><option>Czech Republic</option><option>Denmark</option><option>Dominican Republic</option><option>Ecuador</option><option>Egypt</option><option>El Salvador</option><option>Estonia</option><option>Ethiopia</option><option>Finland</option><option>France</option><option>Georgia</option><option>Germany</option><option>Ghana</option><option>Greece</option><option>Guatemala</option><option>Honduras</option><option>Hong Kong</option><option>Hungary</option><option>India</option><option>Indonesia</option><option>Iran</option><option>Iraq</option><option>Ireland</option><option>Israel</option><option>Italy</option><option>Jamaica</option><option>Japan</option><option>Jordan</option><option>Kazakhstan</option><option>Kenya</option><option>Kuwait</option><option>Latvia</option><option>Lebanon</option><option>Lithuania</option><option>Luxembourg</option><option>Macedonia</option><option>Malaysia</option><option>Mexico</option><option>Moldova</option><option>Morocco</option><option>Myanmar</option><option>Nepal</option><option>Netherlands</option><option>New Zealand</option><option>Nicaragua</option><option>Nigeria</option><option>Norway</option><option>Oman</option><option>Pakistan</option><option>Panama</option><option>Paraguay</option><option>Peru</option><option>Philippines</option><option>Poland</option><option>Portugal</option><option>Qatar</option><option>Romania</option><option>Russia</option><option>Saudi Arabia</option><option>Senegal</option><option>Serbia</option><option>Singapore</option><option>Slovakia</option><option>Slovenia</option><option>South Africa</option><option>South Korea</option><option>Spain</option><option>Sri Lanka</option><option>Sweden</option><option>Switzerland</option><option>Taiwan</option><option>Tanzania</option><option>Thailand</option><option>Tunisia</option><option>Turkey</option><option>UAE</option><option>Uganda</option><option>Ukraine</option><option>United Kingdom</option><option>United States</option><option>Uruguay</option><option>Uzbekistan</option><option>Venezuela</option><option>Vietnam</option><option>Yemen</option><option>Zimbabwe</option><option>Other</option>
                 </select>
@@ -265,11 +277,20 @@ select.fi{cursor:pointer;-webkit-appearance:none;appearance:none;background-imag
             </div>
             <div class="fl-group">
                 <input type="text" class="fi" id="sCity" placeholder=" " autocomplete="off">
-                <label>City</label>
+                <label>City <span class="req">*</span></label>
             </div>
         </div>
         <div class="form-row">
-            <div class="fl-group">
+            <!-- US States dropdown (shown when United States selected) -->
+            <div class="fl-group" id="stateDropdownWrap" style="display:none">
+                <select class="fi" id="sStateSelect" autocomplete="off">
+                    <option value="">Select state</option>
+                    <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option><option>Washington DC</option><option>Puerto Rico</option><option>Guam</option>
+                </select>
+                <label>State <span class="req">*</span></label>
+            </div>
+            <!-- Free text state (shown for all other countries) -->
+            <div class="fl-group" id="stateTextWrap">
                 <input type="text" class="fi" id="sState" placeholder=" " autocomplete="off">
                 <label>State / Province</label>
             </div>
@@ -575,6 +596,12 @@ function getChecked(gridId) {
 
 function v(id) { return document.getElementById(id).value.trim(); }
 
+function onCountryChange() {
+    var isUS = document.getElementById('sCountry').value === 'United States';
+    document.getElementById('stateDropdownWrap').style.display = isUS ? '' : 'none';
+    document.getElementById('stateTextWrap').style.display = isUS ? 'none' : '';
+}
+
 function switchPayMethod() {
     var m = document.getElementById('sPayMethod').value;
     ['paypal','ach','crypto','wire'].forEach(function(s) {
@@ -607,8 +634,10 @@ function doSignup() {
             phone: v('sPhone'),
             telegram: v('sTelegram'),
             country: document.getElementById('sCountry').value,
+            street: v('sStreet'),
+            street2: v('sStreet2'),
             city: v('sCity'),
-            state: v('sState'),
+            state: document.getElementById('sCountry').value === 'United States' ? document.getElementById('sStateSelect').value : v('sState'),
             zip: v('sZip'),
             company: v('sCompany'),
             website: v('sWebsite'),
