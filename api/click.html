@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <style>
-        body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;color:#333;}
-        .box{text-align:center;padding:40px;}
-        .spinner{width:32px;height:32px;border:3px solid #e0e6e8;border-top-color:#0A6C80;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .msg{font-size:14px;color:#888;}
-        .err{color:#dc3545;font-weight:600;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirecting...</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;color:#333;}
+.box{text-align:center;padding:40px;}
+.spinner{width:32px;height:32px;border:3px solid #e0e6e8;border-top-color:#0A6C80;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{font-size:14px;color:#888;}
+.err{color:#dc3545;font-weight:600;}
+</style>
 </head>
 <body>
 <div class="box">
@@ -31,13 +31,11 @@ var firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 var FB = firebaseConfig.databaseURL;
+var IPQS_PROXY = 'https://plan1.climaofficial.com/api/ipqs-proxy.php';
 
-function fbGet(path) { return fetch(FB + '/' + path + '.json').then(function(r) { return r.json(); }); }
-function fbPut(path, data) { return fetch(FB + '/' + path + '.json', { method: 'PUT', body: JSON.stringify(data) }).then(function(r) { return r.json(); }); }
-
-function genClickId() {
-    return 'c' + Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
-}
+function fbGet(path) { return fetch(FB + '/' + path + '.json').then(function(r){ return r.json(); }); }
+function fbPut(path, data) { return fetch(FB + '/' + path + '.json', { method:'PUT', body:JSON.stringify(data) }).then(function(r){ return r.json(); }); }
+function fbPatch(path, data) { return fetch(FB + '/' + path + '.json', { method:'PATCH', body:JSON.stringify(data) }).then(function(r){ return r.json(); }); }
 
 function showError(msg) {
     document.getElementById('spinner').style.display = 'none';
@@ -45,194 +43,339 @@ function showError(msg) {
     document.getElementById('msg').textContent = msg;
 }
 
+/* ── Browser / Device Parsing ── */
 function parseUA() {
     var ua = navigator.userAgent || '';
     var device = 'desktop';
     if (/Mobi|Android|iPhone|iPod/i.test(ua)) device = 'mobile';
     else if (/Tablet|iPad/i.test(ua)) device = 'tablet';
 
-    var browser = 'Other';
-    if (/Edg\//i.test(ua)) browser = 'Edge';
-    else if (/Chrome/i.test(ua)) browser = 'Chrome';
-    else if (/Firefox/i.test(ua)) browser = 'Firefox';
-    else if (/Safari/i.test(ua)) browser = 'Safari';
-    else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
+    var browser = 'Other', browserVer = 0;
+    var m;
+    if ((m = ua.match(/Edg\/(\d+)/i)))            { browser = 'Edge';    browserVer = parseInt(m[1]); }
+    else if ((m = ua.match(/OPR\/(\d+)/i)))        { browser = 'Opera';   browserVer = parseInt(m[1]); }
+    else if ((m = ua.match(/Firefox\/(\d+)/i)))    { browser = 'Firefox'; browserVer = parseInt(m[1]); }
+    else if ((m = ua.match(/Chrome\/(\d+)/i)))     { browser = 'Chrome';  browserVer = parseInt(m[1]); }
+    else if ((m = ua.match(/Version\/(\d+).*Safari/i))) { browser = 'Safari'; browserVer = parseInt(m[1]); }
 
-    var os = 'Other';
-    if (/Windows/i.test(ua)) os = 'Windows';
-    else if (/Mac OS/i.test(ua)) os = 'macOS';
-    else if (/Linux/i.test(ua)) os = 'Linux';
-    else if (/Android/i.test(ua)) os = 'Android';
-    else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+    /* Latest version thresholds (Apr 2026) */
+    var latestMap = { Chrome:124, Firefox:126, Edge:124, Safari:17, Opera:109 };
+    var isLatest = latestMap[browser] ? browserVer >= (latestMap[browser] - 10) : null;
 
-    return { device: device, browser: browser, os: os, userAgent: ua };
+    var os = 'Other', osVer = '';
+    if ((m = ua.match(/Windows NT ([\d.]+)/i)))       { os = 'Windows'; var wv = {'10.0':'10','6.3':'8.1','6.2':'8','6.1':'7'}; osVer = wv[m[1]] || m[1]; }
+    else if ((m = ua.match(/Android ([\d.]+)/i)))     { os = 'Android'; osVer = m[1]; }
+    else if ((m = ua.match(/iPhone OS ([\d_]+)/i)))   { os = 'iOS'; osVer = m[1].replace(/_/g,'.'); }
+    else if ((m = ua.match(/iPad.*OS ([\d_]+)/i)))    { os = 'iPadOS'; osVer = m[1].replace(/_/g,'.'); }
+    else if (/Mac OS X/i.test(ua))                    { os = 'macOS'; var mv = ua.match(/Mac OS X ([\d_]+)/i); osVer = mv ? mv[1].replace(/_/g,'.') : ''; }
+    else if (/Linux/i.test(ua))                       { os = 'Linux'; }
+
+    return { device:device, browser:browser, browserVer:browserVer, isLatestBrowser:isLatest, os:os, osVer:osVer, userAgent:ua };
 }
 
-function getIP() {
-    return fetch('https://api.ipify.org?format=json')
-        .then(function(r) { return r.json(); })
-        .then(function(d) { return d.ip || ''; })
-        .catch(function() { return ''; });
+/* ── Canvas Fingerprint ── */
+function canvasFingerprint() {
+    try {
+        var c = document.createElement('canvas');
+        c.width = 280; c.height = 60;
+        var ctx = c.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '16px Arial';
+        ctx.fillStyle = 'rgba(102,204,0,0.9)';
+        ctx.fillRect(0, 0, 100, 30);
+        ctx.fillStyle = '#0A6C80';
+        ctx.fillText('ClimaNet\u{1F4CA}', 4, 10);
+        ctx.fillStyle = 'rgba(200,50,30,0.6)';
+        ctx.fillText('\u2603\u2665\u2665', 80, 35);
+        ctx.strokeStyle = '#085a6b';
+        ctx.beginPath(); ctx.arc(200, 30, 20, 0, Math.PI * 2); ctx.stroke();
+        var data = c.toDataURL();
+        var h = 0;
+        for (var i = 0; i < data.length; i++) { h = Math.imul(31, h) + data.charCodeAt(i) | 0; }
+        return Math.abs(h).toString(16);
+    } catch(e) { return 'na'; }
 }
 
-function getGeoData(ip) {
-    if (!ip) return Promise.resolve({});
-    /* ipwho.is is free + HTTPS (ip-api.com free is HTTP-only → blocked as mixed content) */
-    return fetch('https://ipwho.is/' + ip)
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (!d || d.success === false) return {};
+/* ── WebGL Fingerprint ── */
+function webglFingerprint() {
+    try {
+        var c = document.createElement('canvas');
+        var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if (!gl) return 'na';
+        var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        var vendor   = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+        var renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+        return (vendor + '~' + renderer).replace(/\s+/g, ' ').trim();
+    } catch(e) { return 'na'; }
+}
+
+/* ── Persistent Device ID ── */
+function getDeviceId() {
+    var key = '_clima_did';
+    try {
+        var id = localStorage.getItem(key);
+        if (!id) {
+            id = 'd' + Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
+            localStorage.setItem(key, id);
+        }
+        return id;
+    } catch(e) {
+        return 'd' + Date.now().toString(36) + Math.random().toString(36).substr(2,6);
+    }
+}
+
+/* ── Composite Fingerprint Hash ── */
+function buildFingerprint(canvas, webgl, ua, tz, lang, screen) {
+    var raw = [canvas, webgl, ua, tz, lang, screen].join('|');
+    var h = 0;
+    for (var i = 0; i < raw.length; i++) { h = Math.imul(31, h) + raw.charCodeAt(i) | 0; }
+    return 'fp_' + Math.abs(h).toString(16);
+}
+
+/* ── Browser Extra Signals ── */
+function getBrowserSignals() {
+    var signals = {};
+    signals.cookiesEnabled  = navigator.cookieEnabled || false;
+    signals.doNotTrack      = navigator.doNotTrack === '1' || window.doNotTrack === '1';
+    signals.touchPoints     = navigator.maxTouchPoints || 0;
+    signals.hardwareConcurrency = navigator.hardwareConcurrency || 0;
+    signals.deviceMemory    = navigator.deviceMemory || 0;
+    signals.plugins         = navigator.plugins ? navigator.plugins.length : 0;
+    signals.languages       = navigator.languages ? navigator.languages.join(',') : (navigator.language || '');
+    signals.colorDepth      = screen ? screen.colorDepth : 0;
+    signals.pixelRatio      = window.devicePixelRatio || 1;
+    try { signals.sessionStorage = !!window.sessionStorage; } catch(e) { signals.sessionStorage = false; }
+    try { signals.localStorage = !!window.localStorage; } catch(e) { signals.localStorage = false; }
+    signals.adBlocker = false; /* placeholder — real check needs DOM test */
+    return signals;
+}
+
+/* ── Screen + Timezone ── */
+function getClientData() {
+    var tz = Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+    var tzOffset = new Date().getTimezoneOffset();
+    var res = (screen.width || 0) + 'x' + (screen.height || 0);
+    var avail = (screen.availWidth || 0) + 'x' + (screen.availHeight || 0);
+    return { timezone: tz, tzOffset: tzOffset, screenRes: res, screenAvail: avail };
+}
+
+/* ── IP Geo ── */
+function getGeoData() {
+    return fetch('https://ipwho.is/')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if (!d || d.success === false) throw new Error('ipwho failed');
             return {
-                countryCode: d.country_code || '',
-                country: d.country || '',
+                ip: d.ip || '',
+                country: d.country_code || '',
+                countryName: d.country || '',
                 city: d.city || '',
+                region: d.region || '',
                 isp: (d.connection && d.connection.isp) || '',
                 org: (d.connection && d.connection.org) || '',
-                as: (d.connection && d.connection.asn) ? ('AS' + d.connection.asn) : '',
-                timezone: (d.timezone && d.timezone.id) || '',
-                proxy: false,
-                hosting: false
+                asn: (d.connection && d.connection.asn) ? 'AS'+d.connection.asn : '',
+                ipTimezone: (d.timezone && d.timezone.id) || '',
+                lat: d.latitude || 0,
+                lon: d.longitude || 0
             };
         })
-        .catch(function() { return {}; });
+        .catch(function(){
+            return fetch('https://api.ipify.org?format=json')
+                .then(function(r){ return r.json(); })
+                .then(function(d){ return { ip: d.ip||'', country:'', countryName:'', city:'', region:'', isp:'', org:'', asn:'', ipTimezone:'', lat:0, lon:0 }; })
+                .catch(function(){ return { ip:'unknown', country:'', countryName:'', city:'', region:'', isp:'', org:'', asn:'', ipTimezone:'', lat:0, lon:0 }; });
+        });
 }
+
+/* ── IPQS Check (with race timeout) ── */
+function checkIPQS(ip, ipqsKey) {
+    if (!ip || ip === 'unknown' || !ipqsKey) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?key=' + encodeURIComponent(ipqsKey) + '&ip=' + encodeURIComponent(ip);
+    var timeout = new Promise(function(res){ setTimeout(function(){ res(null); }, 3000); });
+    var req = fetch(url).then(function(r){ return r.json(); }).then(function(d){
+        if (!d || d.error) return null;
+        return {
+            fraudScore: d.fraud_score || 0,
+            vpn: d.vpn || false,
+            tor: d.tor || false,
+            proxy: d.proxy || false,
+            botStatus: d.bot_status || false,
+            isCrawler: d.is_crawler || false,
+            mobileDevice: d.mobile || false,
+            recentAbuse: d.recent_abuse || false,
+            abuseVelocity: d.abuse_velocity || '',
+            isp: d.ISP || '',
+            organization: d.organization || '',
+            connectionType: d.connection_type || '',
+            country: d.country_code || '',
+            city: d.city || '',
+            timezone: d.timezone || '',
+            level: d.fraud_score >= 85 ? 'fraud' : d.fraud_score >= 60 ? 'risky' : d.fraud_score >= 30 ? 'suspect' : 'clean'
+        };
+    }).catch(function(){ return null; });
+    return Promise.race([req, timeout]);
+}
+
+/* ── URL Builders ── */
+function genClickId() { return 'c' + Date.now().toString(36) + Math.random().toString(36).substr(2,8); }
 
 function buildRedirectUrl(template, clickId, affId, subs) {
     var url = template;
     url = url.replace(/\{click_id\}/g, encodeURIComponent(clickId));
-    url = url.replace(/\{aff_id\}/g, encodeURIComponent(affId));
-    url = url.replace(/\{sub1\}/g, encodeURIComponent(subs.sub1 || ''));
-    url = url.replace(/\{sub2\}/g, encodeURIComponent(subs.sub2 || ''));
-    url = url.replace(/\{sub3\}/g, encodeURIComponent(subs.sub3 || ''));
-    url = url.replace(/\{sub4\}/g, encodeURIComponent(subs.sub4 || ''));
-    url = url.replace(/\{sub5\}/g, encodeURIComponent(subs.sub5 || ''));
+    url = url.replace(/\{aff_id\}/g,   encodeURIComponent(affId));
+    url = url.replace(/\{sub1\}/g, encodeURIComponent(subs.sub1||''));
+    url = url.replace(/\{sub2\}/g, encodeURIComponent(subs.sub2||''));
+    url = url.replace(/\{sub3\}/g, encodeURIComponent(subs.sub3||''));
+    url = url.replace(/\{sub4\}/g, encodeURIComponent(subs.sub4||''));
+    url = url.replace(/\{sub5\}/g, encodeURIComponent(subs.sub5||''));
     return url;
 }
 
-/* ===== MAIN ===== */
-var params = new URLSearchParams(window.location.search);
-var offerId = params.get('offer_id') || '';
-var affId = params.get('aff_id') || '';
+/* ── PARAMS ── */
+var params   = new URLSearchParams(window.location.search);
+var offerId  = params.get('offer_id') || '';
+var affId    = params.get('aff_id')   || '';
 
-// Clean URL support: /go/OFFER_ID/AFF_ID
-if (!offerId || !affId) {
-    var pathMatch = window.location.pathname.match(/^\/go\/([^\/]+)\/([^\/]+)/);
-    if (pathMatch) {
-        offerId = offerId || decodeURIComponent(pathMatch[1]);
-        affId = affId || decodeURIComponent(pathMatch[2]);
-    }
-}
+var pathMatch = window.location.pathname.match(/^\/go\/([^\/]+)\/([^\/]+)/);
+if (pathMatch) { offerId = offerId || decodeURIComponent(pathMatch[1]); affId = affId || decodeURIComponent(pathMatch[2]); }
 
-var sub1 = params.get('sub1') || '';
-var sub2 = params.get('sub2') || '';
-var sub3 = params.get('sub3') || '';
-var sub4 = params.get('sub4') || '';
-var sub5 = params.get('sub5') || '';
+var sub1 = params.get('sub1')||'', sub2 = params.get('sub2')||'', sub3 = params.get('sub3')||'';
+var sub4 = params.get('sub4')||'', sub5 = params.get('sub5')||'';
 var isTest = params.get('test') === '1';
 
-if (!offerId || !affId) {
-    showError('Missing required parameters: offer_id and aff_id');
-} else {
-    processClick();
-}
+if (!offerId || !affId) { showError('Missing required parameters.'); }
+else { processClick(); }
 
 function resolveAffId(id) {
-    /* If numeric, look up the real Firebase UID from affiliateIndex */
-    if (/^\d+$/.test(id)) {
-        return fbGet('affiliateIndex/' + id).then(function(uid) { return uid || id; });
-    }
+    if (/^\d+$/.test(id)) return fbGet('affiliateIndex/' + id).then(function(uid){ return uid || id; });
     return Promise.resolve(id);
 }
 
 function processClick() {
-    var uaInfo = parseUA();
+    var ua      = parseUA();
+    var client  = getClientData();
+    var canvasFp = canvasFingerprint();
+    var webglFp  = webglFingerprint();
+    var deviceId = getDeviceId();
+    var signals  = getBrowserSignals();
+    var fingerprint = buildFingerprint(canvasFp, webglFp, ua.userAgent, client.timezone, signals.languages, client.screenRes);
     var originalAffId = affId;
 
     resolveAffId(affId).then(function(realAffUid) {
-    affId = realAffUid;
-    return Promise.all([
-        fbGet('offers/' + offerId),
-        fbGet('users/' + affId),
-        getIP()
-    ]);
+        affId = realAffUid;
+        return Promise.all([
+            fbGet('offers/' + offerId),
+            fbGet('users/' + affId),
+            getGeoData(),
+            fbGet('settings/fraud')   /* IPQS key stored here */
+        ]);
     }).then(function(results) {
-        var offer = results[0];
-        var user = results[1];
-        var ip = results[2];
+        var offer       = results[0];
+        var user        = results[1];
+        var geo         = results[2] || {};
+        var fraudSettings = results[3] || {};
 
-        /* Validate offer */
-        if (!offer) { showError('Offer not found.'); return; }
+        if (!offer)                    { showError('Offer not found.'); return; }
         if (offer.status !== 'active') { showError('Offer is not active.'); return; }
-        if (!offer.finalUrl) { showError('Offer has no destination URL.'); return; }
-
-        /* Validate affiliate */
-        if (!user) { showError('Affiliate not found.'); return; }
+        if (!offer.finalUrl)           { showError('Offer has no destination URL.'); return; }
+        if (!user)                     { showError('Affiliate not found.'); return; }
         if (user.role !== 'affiliate') { showError('Invalid affiliate.'); return; }
-        if (user.status !== 'active') { showError('Affiliate account is not active.'); return; }
+        if (user.status !== 'active')  { showError('Affiliate account is not active.'); return; }
 
-        /* Check device targeting */
-        if (offer.deviceTargeting && offer.deviceTargeting !== 'all') {
-            if (offer.deviceTargeting !== uaInfo.device) {
-                /* Still redirect but don't track (or redirect to preview) */
-            }
+        /* Timezone match: compare browser tz vs IP tz */
+        var tzMatch = 'unknown';
+        if (client.timezone && geo.ipTimezone) {
+            tzMatch = client.timezone === geo.ipTimezone ? 'match' : 'mismatch';
         }
 
-        /* Get geo data for the click */
-        getGeoData(ip).then(function(geo) {
-            var country = geo.countryCode || '';
-            /* Check country targeting */
-            if (offer.allowedCountries && offer.allowedCountries.trim()) {
-                var allowed = offer.allowedCountries.toUpperCase().split(',').map(function(c) { return c.trim(); });
-                if (allowed.length > 0 && allowed[0] !== '' && country && allowed.indexOf(country.toUpperCase()) === -1) {
-                    /* Country not allowed - still redirect but could show warning */
+        var clickId = genClickId();
+        var subs = { sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5 };
+
+        var clickData = {
+            /* Core */
+            offerId:        offerId,
+            affiliateId:    affId,
+            affId:          originalAffId,
+            timestamp:      Date.now(),
+            converted:      false,
+            test:           isTest || false,
+
+            /* Traffic source */
+            referer:        document.referrer || '',
+            landingUrl:     window.location.href,
+
+            /* Network */
+            ip:             geo.ip || '',
+            country:        geo.country || '',
+            countryName:    geo.countryName || '',
+            city:           geo.city || '',
+            region:         geo.region || '',
+            isp:            geo.isp || '',
+            org:            geo.org || '',
+            asn:            geo.asn || '',
+            lat:            geo.lat || 0,
+            lon:            geo.lon || 0,
+            ipTimezone:     geo.ipTimezone || '',
+
+            /* Browser / Device */
+            userAgent:      ua.userAgent,
+            device:         ua.device,
+            browser:        ua.browser,
+            browserVer:     ua.browserVer,
+            isLatestBrowser: ua.isLatestBrowser,
+            os:             ua.os,
+            osVer:          ua.osVer,
+
+            /* Client */
+            screenRes:      client.screenRes,
+            screenAvail:    client.screenAvail,
+            timezone:       client.timezone,
+            tzOffset:       client.tzOffset,
+            tzMatch:        tzMatch,
+            language:       signals.languages,
+            colorDepth:     signals.colorDepth,
+            pixelRatio:     signals.pixelRatio,
+            touchPoints:    signals.touchPoints,
+            hardwareCores:  signals.hardwareConcurrency,
+            deviceMemory:   signals.deviceMemory,
+            cookiesEnabled: signals.cookiesEnabled,
+            doNotTrack:     signals.doNotTrack,
+            plugins:        signals.plugins,
+
+            /* Fingerprints */
+            deviceId:       deviceId,
+            canvasFp:       canvasFp,
+            webglRenderer:  webglFp,
+            fingerprint:    fingerprint,
+
+            /* Subs */
+            sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5
+        };
+
+        /* Save click then run IPQS (race 3s) then redirect */
+        var ipqsKey = fraudSettings.ipqsKey || '';
+
+        fbPut('clicks/' + clickId, clickData).then(function() {
+            var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
+
+            /* IPQS check - race 3s, update Firebase in background, redirect regardless */
+            checkIPQS(geo.ip, ipqsKey).then(function(ipqs) {
+                if (ipqs) {
+                    fbPatch('clicks/' + clickId, { ipqs: ipqs }).catch(function(){});
                 }
-            }
-
-            /* Generate click ID and record */
-            var clickId = genClickId();
-            var clickData = {
-                offerId: offerId,
-                affiliateId: affId,
-                affId: originalAffId,
-                ip: ip,
-                userAgent: uaInfo.userAgent,
-                country: country,
-                countryName: geo.country || '',
-                city: geo.city || '',
-                isp: geo.isp || '',
-                timezone: geo.timezone || '',
-                isProxy: geo.proxy || false,
-                isHosting: geo.hosting || false,
-                device: uaInfo.device,
-                browser: uaInfo.browser,
-                os: uaInfo.os,
-                screenRes: (typeof screen !== 'undefined') ? screen.width + 'x' + screen.height : '',
-                language: navigator.language || '',
-                referer: document.referrer || '',
-                sub1: sub1,
-                sub2: sub2,
-                sub3: sub3,
-                sub4: sub4,
-                sub5: sub5,
-                timestamp: Date.now(),
-                converted: false,
-                test: isTest || false
-            };
-
-            /* Save click and redirect */
-            fbPut('clicks/' + clickId, clickData).then(function() {
-                var subs = { sub1: sub1, sub2: sub2, sub3: sub3, sub4: sub4, sub5: sub5 };
-                var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
                 window.location.replace(redirectUrl);
             }).catch(function() {
-                /* Even if save fails, still redirect */
-                var subs = { sub1: sub1, sub2: sub2, sub3: sub3, sub4: sub4, sub5: sub5 };
-                var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
                 window.location.replace(redirectUrl);
             });
+
+        }).catch(function() {
+            /* Save failed — still redirect */
+            var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
+            window.location.replace(redirectUrl);
         });
+
     }).catch(function(err) {
-        showError('Error processing click: ' + (err.message || 'Unknown error'));
+        showError('Error: ' + (err && err.message ? err.message : 'Unknown error'));
     });
 }
 

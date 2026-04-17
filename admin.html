@@ -4770,27 +4770,113 @@ function openFraudDetail(clickId) {
 
     var html = '';
 
-    /* Click Details */
+    /* ── Click Details ── */
     html += '<div class="fraud-detail-section">';
     html += '<h5><i class="fas fa-mouse-pointer"></i> Click Details</h5>';
     html += '<div class="fraud-detail-grid">';
-    html += fraudDetailRow('Click ID', click._id);
-    html += fraudDetailRow('Offer', getOfferName(click.offerId));
-    html += fraudDetailRow('Affiliate', getUserName(click.affiliateId));
-    html += fraudDetailRow('IP Address', click.ip || '-');
-    html += fraudDetailRow('Country', click.country || '-');
-    html += fraudDetailRow('Device', click.device || '-');
-    html += fraudDetailRow('Browser', click.browser || '-');
-    html += fraudDetailRow('OS', click.os || '-');
-    html += fraudDetailRow('Timestamp', fmtDateTime(click.timestamp));
-    html += fraudDetailRow('Converted', click.converted ? 'Yes' : 'No');
+    html += fraudDetailRow('Click ID', '<code style="font-size:11px">' + escHtml(click._id) + '</code>');
+    html += fraudDetailRow('Offer', escHtml(getOfferName(click.offerId)));
+    html += fraudDetailRow('Affiliate', escHtml(getUserName(click.affiliateId)) + ' <span style="background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">' + escHtml(click.affId || '') + '</span>');
+    html += fraudDetailRow('Time', fmtDateTime(click.timestamp));
+    html += fraudDetailRow('Converted', click.converted ? '<span style="color:var(--green);font-weight:700">✓ Yes</span>' : '<span style="color:#94a3b8">No</span>');
+    html += fraudDetailRow('Test Click', click.test ? '<span style="background:#fef9c3;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">TEST</span>' : 'No');
     html += '</div></div>';
 
-    /* Full UA + Referer + Subs */
+    /* ── Network / IP ── */
     html += '<div class="fraud-detail-section">';
-    html += '<h5><i class="fas fa-info-circle"></i> Full Tracking Data</h5>';
-    html += '<div class="fraud-detail-full"><span class="fd-label">User Agent</span><span class="fd-value" style="font-family:monospace;font-size:11px;">' + escHtml(click.userAgent || '-') + '</span></div>';
-    html += '<div class="fraud-detail-full"><span class="fd-label">Referer</span><span class="fd-value">' + escHtml(click.referer || '(empty)') + '</span></div>';
+    html += '<h5><i class="fas fa-network-wired"></i> Network & Location</h5>';
+    html += '<div class="fraud-detail-grid">';
+    html += fraudDetailRow('IP Address', '<code style="font-size:12px">' + escHtml(click.ip || '-') + '</code>');
+    html += fraudDetailRow('Country', escHtml((click.countryName || click.country || '-')));
+    html += fraudDetailRow('City / Region', escHtml([click.city, click.region].filter(Boolean).join(', ') || '-'));
+    html += fraudDetailRow('ISP', escHtml(click.isp || '-'));
+    html += fraudDetailRow('Organization', escHtml(click.org || '-'));
+    html += fraudDetailRow('ASN', escHtml(click.asn || '-'));
+    html += fraudDetailRow('IP Timezone', escHtml(click.ipTimezone || '-'));
+    if (click.lat && click.lon) html += fraudDetailRow('Coordinates', click.lat + ', ' + click.lon);
+    html += '</div></div>';
+
+    /* ── Device & Browser ── */
+    var browserLabel = escHtml(click.browser || '-') + (click.browserVer ? ' v' + click.browserVer : '');
+    if (click.isLatestBrowser === true)  browserLabel += ' <span style="background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">Latest</span>';
+    if (click.isLatestBrowser === false) browserLabel += ' <span style="background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">Outdated</span>';
+    var tzBadge = click.tzMatch === 'match' ? '<span style="background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">✓ Match</span>'
+                : click.tzMatch === 'mismatch' ? '<span style="background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">⚠ Mismatch</span>'
+                : '-';
+    html += '<div class="fraud-detail-section">';
+    html += '<h5><i class="fas fa-laptop"></i> Device & Browser</h5>';
+    html += '<div class="fraud-detail-grid">';
+    html += fraudDetailRow('Device Type', escHtml(click.device || '-'));
+    html += fraudDetailRow('OS', escHtml(click.os || '-') + (click.osVer ? ' ' + escHtml(click.osVer) : ''));
+    html += fraudDetailRow('Browser', browserLabel);
+    html += fraudDetailRow('Screen', escHtml(click.screenRes || '-') + (click.pixelRatio && click.pixelRatio !== 1 ? ' @' + click.pixelRatio + 'x' : ''));
+    html += fraudDetailRow('Touch Points', click.touchPoints !== undefined ? click.touchPoints : '-');
+    html += fraudDetailRow('Language', escHtml(click.language || '-'));
+    html += fraudDetailRow('Color Depth', click.colorDepth ? click.colorDepth + '-bit' : '-');
+    html += fraudDetailRow('CPU Cores', click.hardwareCores || '-');
+    html += fraudDetailRow('RAM (GB)', click.deviceMemory || '-');
+    html += fraudDetailRow('Plugins', click.plugins !== undefined ? click.plugins : '-');
+    html += fraudDetailRow('Cookies', click.cookiesEnabled ? 'Enabled' : 'Disabled');
+    html += fraudDetailRow('Do Not Track', click.doNotTrack ? '<span style="color:#e65100;font-weight:600">On</span>' : 'Off');
+    html += '</div></div>';
+
+    /* ── Timezone & Referrer ── */
+    html += '<div class="fraud-detail-section">';
+    html += '<h5><i class="fas fa-globe"></i> Timezone & Traffic Source</h5>';
+    html += '<div class="fraud-detail-grid">';
+    html += fraudDetailRow('Browser Timezone', escHtml(click.timezone || '-'));
+    html += fraudDetailRow('IP Timezone', escHtml(click.ipTimezone || '-'));
+    html += fraudDetailRow('TZ Match', tzBadge);
+    html += fraudDetailRow('TZ Offset', click.tzOffset !== undefined ? click.tzOffset + ' min' : '-');
+    html += '</div>';
+    html += '<div class="fraud-detail-full"><span class="fd-label">Referrer URL</span><span class="fd-value" style="word-break:break-all;color:#0A6C80">' + (click.referer ? '<a href="' + escHtml(click.referer) + '" target="_blank" style="color:#0A6C80">' + escHtml(click.referer) + '</a>' : '<span style="color:#94a3b8">(direct / no referrer)</span>') + '</span></div>';
+    html += '<div class="fraud-detail-full"><span class="fd-label">Landing URL</span><span class="fd-value" style="word-break:break-all;font-size:11px;color:#64748b">' + escHtml(click.landingUrl || '-') + '</span></div>';
+    html += '</div></div>';
+
+    /* ── Fingerprints ── */
+    html += '<div class="fraud-detail-section">';
+    html += '<h5><i class="fas fa-fingerprint"></i> Device Fingerprints</h5>';
+    html += '<div class="fraud-detail-grid">';
+    html += fraudDetailRow('Device ID', '<code style="font-size:11px">' + escHtml(click.deviceId || '-') + '</code>');
+    html += fraudDetailRow('Fingerprint', '<code style="font-size:11px">' + escHtml(click.fingerprint || '-') + '</code>');
+    html += fraudDetailRow('Canvas FP', '<code style="font-size:11px">' + escHtml(click.canvasFp || '-') + '</code>');
+    html += fraudDetailRow('WebGL Renderer', '<span style="font-size:11px;color:#475569">' + escHtml(click.webglRenderer || '-') + '</span>');
+    html += '</div></div>';
+
+    /* ── IPQS ── */
+    var ipqs = click.ipqs || {};
+    if (ipqs.fraudScore !== undefined) {
+        var scoreColor = ipqs.level === 'fraud' ? '#c62828' : ipqs.level === 'risky' ? '#e65100' : ipqs.level === 'suspect' ? '#b45309' : '#16a34a';
+        var scoreBg    = ipqs.level === 'fraud' ? '#fce4ec' : ipqs.level === 'risky' ? '#fff3e0' : ipqs.level === 'suspect' ? '#fffbeb' : '#dcfce7';
+        html += '<div class="fraud-detail-section">';
+        html += '<h5><i class="fas fa-shield-alt"></i> IPQS — IP Quality Score</h5>';
+        html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
+        html += '<div style="background:' + scoreBg + ';border-radius:12px;padding:12px 20px;text-align:center"><div style="font-size:28px;font-weight:800;color:' + scoreColor + ';line-height:1">' + ipqs.fraudScore + '</div><div style="font-size:10px;color:' + scoreColor + ';font-weight:700;text-transform:uppercase;letter-spacing:.5px">Fraud Score</div></div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+        var badges = [
+            ['VPN',    ipqs.vpn,         '#7c3aed', '#f3e8ff'],
+            ['TOR',    ipqs.tor,         '#c62828', '#fce4ec'],
+            ['Proxy',  ipqs.proxy,       '#b45309', '#fffbeb'],
+            ['Bot',    ipqs.botStatus,   '#c62828', '#fce4ec'],
+            ['Crawler',ipqs.isCrawler,   '#1565c0', '#e3f2fd'],
+            ['Mobile', ipqs.mobileDevice,'#0d6efd', '#e3f2fd'],
+            ['Recent Abuse', ipqs.recentAbuse, '#c62828', '#fce4ec']
+        ];
+        badges.forEach(function(b) {
+            if (b[1]) html += '<span style="background:' + b[3] + ';color:' + b[2] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">' + b[0] + '</span>';
+        });
+        html += '</div></div>';
+        html += '<div class="fraud-detail-grid">';
+        html += fraudDetailRow('Connection Type', escHtml(ipqs.connectionType || '-'));
+        html += fraudDetailRow('Abuse Velocity', escHtml(ipqs.abuseVelocity || '-'));
+        html += fraudDetailRow('ISP (IPQS)', escHtml(ipqs.isp || '-'));
+        html += fraudDetailRow('Organization', escHtml(ipqs.organization || '-'));
+        html += '</div></div>';
+    }
+
+    /* ── Sub Params ── */
+    html += '<div class="fraud-detail-section">';
+    html += '<h5><i class="fas fa-tags"></i> Sub Parameters</h5>';
     html += '<div class="fraud-detail-grid">';
     html += fraudDetailRow('Sub1', click.sub1 || '-');
     html += fraudDetailRow('Sub2', click.sub2 || '-');
@@ -4798,6 +4884,12 @@ function openFraudDetail(clickId) {
     html += fraudDetailRow('Sub4', click.sub4 || '-');
     html += fraudDetailRow('Sub5', click.sub5 || '-');
     html += '</div></div>';
+
+    /* ── Full User Agent ── */
+    html += '<div class="fraud-detail-section">';
+    html += '<h5><i class="fas fa-code"></i> Raw User Agent</h5>';
+    html += '<div class="fraud-detail-full"><span class="fd-label">UA String</span><span class="fd-value" style="font-family:monospace;font-size:11px;word-break:break-all;color:#475569">' + escHtml(click.userAgent || '-') + '</span></div>';
+    html += '</div>';
 
     /* Fraud Flags */
     html += '<div class="fraud-detail-section">';
