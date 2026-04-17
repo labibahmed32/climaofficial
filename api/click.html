@@ -160,30 +160,77 @@ function getClientData() {
 }
 
 /* ── IP Geo ── */
-function getGeoData() {
-    return fetch('https://ipwho.is/')
+function parseIpapi(d) {
+    /* ipapi.co response */
+    if (!d || d.error) return null;
+    return {
+        ip: d.ip || '',
+        country: d.country_code || '',
+        countryName: d.country_name || '',
+        city: d.city || '',
+        region: d.region || '',
+        isp: d.org || '',
+        org: d.org || '',
+        asn: d.asn || '',
+        ipTimezone: d.timezone || '',
+        lat: d.latitude || 0,
+        lon: d.longitude || 0
+    };
+}
+function parseIpwho(d) {
+    /* ipwho.is — parse even if success=false, still has data */
+    if (!d || !d.ip) return null;
+    return {
+        ip: d.ip || '',
+        country: d.country_code || '',
+        countryName: d.country || '',
+        city: d.city || '',
+        region: d.region || '',
+        isp: (d.connection && d.connection.isp) || (d.connection && d.connection.org) || '',
+        org: (d.connection && d.connection.org) || '',
+        asn: (d.connection && d.connection.asn) ? 'AS' + d.connection.asn : '',
+        ipTimezone: (d.timezone && d.timezone.id) || '',
+        lat: d.latitude || 0,
+        lon: d.longitude || 0
+    };
+}
+function parseIpinfo(d) {
+    /* ipinfo.io response */
+    if (!d || !d.ip) return null;
+    var ll = (d.loc || '').split(',');
+    return {
+        ip: d.ip || '',
+        country: d.country || '',
+        countryName: d.country || '',
+        city: d.city || '',
+        region: d.region || '',
+        isp: d.org || '',
+        org: d.org || '',
+        asn: '',
+        ipTimezone: d.timezone || '',
+        lat: parseFloat(ll[0]) || 0,
+        lon: parseFloat(ll[1]) || 0
+    };
+}
+function emptyGeo(ip) {
+    return { ip: ip||'unknown', country:'', countryName:'', city:'', region:'', isp:'', org:'', asn:'', ipTimezone:'', lat:0, lon:0 };
+}
+function tryFetch(url, parser) {
+    return fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined })
         .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (!d || d.success === false) throw new Error('ipwho failed');
-            return {
-                ip: d.ip || '',
-                country: d.country_code || '',
-                countryName: d.country || '',
-                city: d.city || '',
-                region: d.region || '',
-                isp: (d.connection && d.connection.isp) || '',
-                org: (d.connection && d.connection.org) || '',
-                asn: (d.connection && d.connection.asn) ? 'AS'+d.connection.asn : '',
-                ipTimezone: (d.timezone && d.timezone.id) || '',
-                lat: d.latitude || 0,
-                lon: d.longitude || 0
-            };
-        })
-        .catch(function(){
+        .then(function(d){ var result = parser(d); if (!result || !result.ip) throw new Error('no data'); return result; });
+}
+function getGeoData() {
+    /* Try 3 APIs in sequence — first one that returns full data wins */
+    return tryFetch('https://ipapi.co/json/', parseIpapi)
+        .catch(function() { return tryFetch('https://ipwho.is/', parseIpwho); })
+        .catch(function() { return tryFetch('https://ipinfo.io/json', parseIpinfo); })
+        .catch(function() {
+            /* Last resort: just get IP */
             return fetch('https://api.ipify.org?format=json')
                 .then(function(r){ return r.json(); })
-                .then(function(d){ return { ip: d.ip||'', country:'', countryName:'', city:'', region:'', isp:'', org:'', asn:'', ipTimezone:'', lat:0, lon:0 }; })
-                .catch(function(){ return { ip:'unknown', country:'', countryName:'', city:'', region:'', isp:'', org:'', asn:'', ipTimezone:'', lat:0, lon:0 }; });
+                .then(function(d){ return emptyGeo(d.ip); })
+                .catch(function(){ return emptyGeo(''); });
         });
 }
 

@@ -3619,8 +3619,14 @@ function renderClicks() {
     var start = (clicksPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
     page.forEach(function(c) {
         var qualBadge = '';
-        if (c.isProxy || c.isHosting) qualBadge = '<span class="badge" style="background:#fef2f2;color:#991b1b;font-size:9px">Risky</span>';
-        else qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
+        var ipqsScore = c.ipqs ? (c.ipqs.fraudScore || 0) : 0;
+        var ipqsLevel = c.ipqs ? (c.ipqs.level || '') : '';
+        if (ipqsLevel === 'fraud' || ipqsScore >= 85)        qualBadge = '<span class="badge" style="background:#fce4ec;color:#b71c1c;font-size:9px">Fraud '+ipqsScore+'</span>';
+        else if (ipqsLevel === 'risky' || ipqsScore >= 60)   qualBadge = '<span class="badge" style="background:#fff3e0;color:#e65100;font-size:9px">Risky '+ipqsScore+'</span>';
+        else if (ipqsLevel === 'suspect' || ipqsScore >= 30) qualBadge = '<span class="badge" style="background:#fffbeb;color:#b45309;font-size:9px">Suspect '+ipqsScore+'</span>';
+        else if (c.ipqs)                                     qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean '+ipqsScore+'</span>';
+        else if (c.isProxy || c.isHosting)                   qualBadge = '<span class="badge" style="background:#fef2f2;color:#991b1b;font-size:9px">Risky</span>';
+        else                                                 qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
         html += '<tr><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-size:11px">' + escHtml(getOfferName(c.offerId)) + '</td><td style="font-size:11px">' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.ip || '-') + '</td><td>' + escHtml(c.country || '-') + '</td><td style="font-size:11px">' + escHtml(c.city || '-') + '</td><td>' + escHtml(c.device || '-') + '</td><td style="font-size:11px">' + escHtml(c.os || '-') + '</td><td style="font-size:11px">' + escHtml(c.browser || '-') + '</td><td style="font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.isp || '-') + '</td><td>' + qualBadge + '</td><td style="font-size:11px">' + fmtDateTime(c.timestamp) + '</td><td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td><td><button class="btn-sm" onclick="openClickDetail(\'' + c._id + '\')" title="Details"><i class="fas fa-eye"></i></button></td></tr>';
     });
     document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="14" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
