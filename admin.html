@@ -3677,38 +3677,156 @@ function openClickDetail(clickId) {
         else if (diff < 86400000) timeDelta = Math.floor(diff/3600000) + 'h ' + Math.floor((diff%3600000)/60000) + 'm';
         else timeDelta = Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
     }
-    var qualColor = (c.isProxy || c.isHosting) ? '#dc2626' : '#059669';
-    var qualLabel = (c.isProxy || c.isHosting) ? 'Risky' : 'Clean';
-    var flags = [];
-    if (c.isProxy) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Proxy</span>');
-    if (c.isHosting) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Hosting/DC</span>');
-    if (!c.referer) flags.push('<span style="background:#fffbeb;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">No Referer</span>');
 
-    var h = '<div style="max-width:700px;margin:0 auto">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="font-size:16px;font-weight:800">Click Detail</h3><button onclick="closeModal(\'clickDetailModal\')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">&times;</button></div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:4px 10px;border-radius:6px">' + escHtml(clickId) + '</span><span style="background:' + (c.converted ? '#ecfdf5' : '#f1f5f9') + ';color:' + (c.converted ? '#065f46' : '#94a3b8') + ';padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600">' + (c.converted ? 'Converted' : 'Not Converted') + '</span>' + flags.join('') + '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">' +
-        cdItem('IP Address', c.ip) + cdItem('Country', (c.country || '-') + (c.countryName ? ' (' + c.countryName + ')' : '')) +
-        cdItem('City', c.city) + cdItem('ISP', c.isp) +
-        cdItem('Device', c.device) + cdItem('OS', c.os) +
-        cdItem('Browser', c.browser) + cdItem('Timezone', c.timezone) +
-        cdItem('Screen', c.screenRes) + cdItem('Language', c.language) +
-        cdItem('Referer', c.referer || 'Direct') + cdItem('Quality', '<span style="color:' + qualColor + ';font-weight:700">' + qualLabel + '</span>') +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px">' +
-        cdItem('Sub1', c.sub1) + cdItem('Sub2', c.sub2) + cdItem('Sub3', c.sub3) + cdItem('Sub4', c.sub4) + cdItem('Sub5', c.sub5) +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">' +
-        cdItem('Offer', getOfferName(c.offerId)) + cdItem('Affiliate', getUserName(c.affiliateId)) +
-        cdItem('Click Time', fmtDateTime(c.timestamp)) + cdItem('Test Click', c.test ? 'Yes' : 'No') +
-        '</div>';
-    if (conv) {
-        h += '<div style="border-top:2px solid #e2e8f0;padding-top:14px;margin-top:8px"><h4 style="font-size:13px;font-weight:700;color:#059669;margin-bottom:10px"><i class="fas fa-check-circle"></i> Conversion Details</h4>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
-            cdItem('Revenue', fmtMoney(conv.revenue)) + cdItem('Payout', fmtMoney(conv.payout)) + cdItem('Status', conv.status) +
-            cdItem('Transaction', conv.transactionId || '-') + cdItem('Source', conv.source || '-') + cdItem('Time to Convert', timeDelta || '-') +
-            '</div></div>';
+    /* IPQS score badge */
+    var ipqs = c.ipqs || {};
+    var score = ipqs.fraud_score != null ? parseInt(ipqs.fraud_score) : null;
+    var scoreBadge = '-';
+    if (score !== null) {
+        var sc = score >= 85 ? ['#991b1b','#fef2f2','Fraud'] : score >= 60 ? ['#92400e','#fffbeb','Risky'] : score >= 40 ? ['#1e40af','#eff6ff','Suspect'] : ['#065f46','#ecfdf5','Clean'];
+        scoreBadge = '<span style="background:' + sc[1] + ';color:' + sc[0] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">' + sc[2] + ' (' + score + ')</span>';
     }
+
+    /* Header flags */
+    var flags = [];
+    if (c.converted) flags.push('<span style="background:#ecfdf5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700"><i class="fas fa-check-circle"></i> Converted</span>');
+    else flags.push('<span style="background:#f1f5f9;color:#94a3b8;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Not Converted</span>');
+    if (ipqs.vpn) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">VPN</span>');
+    if (ipqs.tor) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">TOR</span>');
+    if (ipqs.proxy) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Proxy</span>');
+    if (ipqs.bot_status) flags.push('<span style="background:#fdf2ff;color:#7c3aed;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Bot</span>');
+    if (!c.referer) flags.push('<span style="background:#fffbeb;color:#92400e;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">No Referer</span>');
+    if (c.test) flags.push('<span style="background:#f0fdf4;color:#166534;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Test</span>');
+
+    /* Timezone match badge */
+    var tzMatch = c.tzMatch;
+    var tzBadge = tzMatch === 'match' ? '<span style="background:#ecfdf5;color:#065f46;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700">Match</span>' :
+                  tzMatch === 'mismatch' ? '<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700">Mismatch ⚠</span>' : '-';
+
+    /* Browser version badge */
+    var browserDisplay = escHtml(c.browser || '-');
+    if (c.browserVer) browserDisplay += ' <span style="font-size:10px;color:#64748b">' + escHtml(c.browserVer) + '</span>';
+    if (c.isLatestBrowser === false) browserDisplay += ' <span style="background:#fffbeb;color:#92400e;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:600">Outdated</span>';
+    else if (c.isLatestBrowser === true) browserDisplay += ' <span style="background:#ecfdf5;color:#065f46;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:600">Latest</span>';
+
+    var sectionHd = function(icon, title, color) {
+        return '<div style="font-size:11px;font-weight:700;color:' + (color||'#475569') + ';text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px;display:flex;align-items:center;gap:6px"><i class="fas fa-' + icon + '"></i>' + title + '</div>';
+    };
+
+    var h = '<div style="max-width:740px;margin:0 auto">';
+    /* header */
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
+    h += '<div><div style="font-size:16px;font-weight:800;color:#0f172a">Click Detail</div>';
+    h += '<div style="font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px">' + escHtml(clickId) + '</div></div>';
+    h += '<button onclick="closeModal(\'clickDetailModal\')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;padding:0 4px">&times;</button></div>';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">' + flags.join('') + '</div>';
+
+    /* Click Info */
+    h += sectionHd('mouse-pointer', 'Click Info', '#0A6C80');
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    h += cdItem('Offer', escHtml(getOfferName(c.offerId)));
+    h += cdItem('Affiliate', escHtml(getUserName(c.affiliateId)));
+    h += cdItem('Click Time', fmtDateTime(c.timestamp));
+    h += '</div>';
+
+    /* Network & Location */
+    h += sectionHd('globe', 'Network & Location', '#1d4ed8');
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    h += cdItem('IP Address', '<span style="font-family:monospace">' + escHtml(c.ip || '-') + '</span>');
+    h += cdItem('Country', escHtml((c.country || '-') + (c.countryName ? ' — ' + c.countryName : '')));
+    h += cdItem('City', escHtml(c.city || '-'));
+    h += cdItem('Region', escHtml(c.region || '-'));
+    h += cdItem('ISP / Org', escHtml(c.isp || c.org || '-'));
+    h += cdItem('ASN', escHtml(c.asn || '-'));
+    h += cdItem('Lat / Lon', (c.lat && c.lon) ? escHtml(c.lat + ', ' + c.lon) : '-');
+    h += cdItem('IP Timezone', escHtml(c.ipTimezone || '-'));
+    h += cdItem('Referer', c.referer ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.referer) + '</span>' : '<em style="color:#94a3b8">Direct</em>');
+    h += '</div>';
+
+    /* Device & Browser */
+    h += sectionHd('laptop', 'Device & Browser', '#7c3aed');
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    h += cdItem('Device Type', escHtml(c.device || '-'));
+    h += cdItem('OS', escHtml((c.os || '-') + (c.osVer ? ' ' + c.osVer : '')));
+    h += cdItem('Browser', browserDisplay);
+    h += cdItem('Screen Res', escHtml(c.screenRes || '-'));
+    h += cdItem('Avail Screen', escHtml(c.screenAvail || '-'));
+    h += cdItem('Color Depth', escHtml(c.colorDepth ? c.colorDepth + '-bit' : '-'));
+    h += cdItem('Pixel Ratio', escHtml(c.pixelRatio ? 'x' + c.pixelRatio : '-'));
+    h += cdItem('Touch Points', escHtml(c.touchPoints != null ? String(c.touchPoints) : '-'));
+    h += cdItem('Hardware Cores', escHtml(c.hardwareCores ? String(c.hardwareCores) + ' cores' : '-'));
+    h += cdItem('Device Memory', escHtml(c.deviceMemory ? c.deviceMemory + ' GB' : '-'));
+    h += cdItem('Cookies', escHtml(c.cookiesEnabled != null ? (c.cookiesEnabled ? 'Enabled' : 'Disabled') : '-'));
+    h += cdItem('Do Not Track', escHtml(c.doNotTrack != null ? (c.doNotTrack ? 'On' : 'Off') : '-'));
+    h += cdItem('Language', escHtml(c.language || '-'));
+    h += cdItem('Plugins', c.plugins && c.plugins.length ? '<span style="font-size:10px">' + escHtml(c.plugins.join(', ')) + '</span>' : 'None');
+    h += '</div>';
+
+    /* Timezone & Traffic */
+    h += sectionHd('clock', 'Timezone & Traffic', '#0369a1');
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    h += cdItem('Browser TZ', escHtml(c.timezone || '-'));
+    h += cdItem('IP TZ', escHtml(c.ipTimezone || '-'));
+    h += cdItem('TZ Match', tzBadge);
+    h += cdItem('TZ Offset', escHtml(c.tzOffset != null ? 'UTC' + (c.tzOffset >= 0 ? '+' : '') + (-c.tzOffset/60) : '-'));
+    h += cdItem('Landing URL', c.landingUrl ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.landingUrl) + '</span>' : '-');
+    h += '</div>';
+
+    /* Fingerprints */
+    h += sectionHd('fingerprint', 'Device Fingerprints', '#065f46');
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    h += cdItem('Device ID', c.deviceId ? '<span style="font-family:monospace;font-size:10px">' + escHtml(c.deviceId) + '</span>' : '-');
+    h += cdItem('Canvas FP', c.canvasFp ? '<span style="font-family:monospace;font-size:10px">' + escHtml(c.canvasFp) + '</span>' : '-');
+    h += cdItem('WebGL Renderer', c.webglRenderer ? '<span style="font-size:10px">' + escHtml(c.webglRenderer) + '</span>' : '-');
+    h += cdItem('Composite FP', c.fingerprint ? '<span style="font-family:monospace;font-size:10px">' + escHtml(c.fingerprint) + '</span>' : '-');
+    h += '</div>';
+
+    /* IPQS */
+    h += sectionHd('shield-alt', 'IPQS Fraud Analysis', score !== null && score >= 60 ? '#991b1b' : '#065f46');
+    if (score === null && !ipqs.checked) {
+        h += '<div style="background:#f8fafc;border-radius:8px;padding:12px;color:#94a3b8;font-size:12px;text-align:center"><i class="fas fa-info-circle"></i> IPQS data not available for this click</div>';
+    } else {
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px">';
+        h += cdItem('Fraud Score', scoreBadge);
+        h += cdItem('VPN', ipqs.vpn ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
+        h += cdItem('TOR', ipqs.tor ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
+        h += cdItem('Proxy', ipqs.proxy ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
+        h += cdItem('Bot Status', ipqs.bot_status ? '<span style="color:#7c3aed;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
+        h += cdItem('Mobile', ipqs.mobile ? 'Yes' : 'No');
+        h += cdItem('Connection Type', escHtml(ipqs.connection_type || '-'));
+        h += cdItem('ISP (IPQS)', escHtml(ipqs.ISP || ipqs.isp || '-'));
+        h += '</div>';
+    }
+
+    /* Sub Parameters */
+    if (c.sub1 || c.sub2 || c.sub3 || c.sub4 || c.sub5) {
+        h += sectionHd('tags', 'Sub Parameters', '#92400e');
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px">';
+        h += cdItem('Sub 1', escHtml(c.sub1 || '-'));
+        h += cdItem('Sub 2', escHtml(c.sub2 || '-'));
+        h += cdItem('Sub 3', escHtml(c.sub3 || '-'));
+        h += cdItem('Sub 4', escHtml(c.sub4 || '-'));
+        h += cdItem('Sub 5', escHtml(c.sub5 || '-'));
+        h += '</div>';
+    }
+
+    /* Conversion */
+    if (conv) {
+        h += sectionHd('check-circle', 'Conversion Details', '#059669');
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+        h += cdItem('Revenue', fmtMoney(conv.revenue));
+        h += cdItem('Payout', fmtMoney(conv.payout));
+        h += cdItem('Status', conv.status);
+        h += cdItem('Transaction ID', escHtml(conv.transactionId || '-'));
+        h += cdItem('Source', escHtml(conv.source || '-'));
+        h += cdItem('Time to Convert', timeDelta || '-');
+        h += '</div>';
+    }
+
+    /* Raw UA */
+    h += sectionHd('code', 'Raw User Agent', '#475569');
+    h += '<div style="background:#f1f5f9;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:10px;color:#334155;word-break:break-all;line-height:1.6">' + escHtml(c.userAgent || '-') + '</div>';
+
     h += '</div>';
     document.getElementById('clickDetailBody').innerHTML = h;
     openModal('clickDetailModal');
