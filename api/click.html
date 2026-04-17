@@ -235,10 +235,11 @@ function getGeoData() {
 }
 
 /* ── IPQS Check (with race timeout) ── */
-function checkIPQS(ip, ipqsKey) {
+function checkIPQS(ip, ipqsKey, strictness) {
     if (!ip || ip === 'unknown' || !ipqsKey) return Promise.resolve(null);
-    var url = IPQS_PROXY + '?key=' + encodeURIComponent(ipqsKey) + '&ip=' + encodeURIComponent(ip);
-    var timeout = new Promise(function(res){ setTimeout(function(){ res(null); }, 3000); });
+    var strict = strictness !== undefined ? strictness : '1';
+    var url = IPQS_PROXY + '?key=' + encodeURIComponent(ipqsKey) + '&ip=' + encodeURIComponent(ip) + '&strictness=' + strict;
+    var timeout = new Promise(function(res){ setTimeout(function(){ res(null); }, 4000); });
     var req = fetch(url).then(function(r){ return r.json(); }).then(function(d){
         if (!d || d.error) return null;
         return {
@@ -401,12 +402,13 @@ function processClick() {
 
         /* Save click then run IPQS (race 3s) then redirect */
         var ipqsKey = fraudSettings.ipqsKey || '';
+        var strictness = fraudSettings.strictness || '1';
 
         fbPut('clicks/' + clickId, clickData).then(function() {
             var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
 
-            /* IPQS check - race 3s, update Firebase in background, redirect regardless */
-            checkIPQS(geo.ip, ipqsKey).then(function(ipqs) {
+            /* IPQS check - race 4s, update Firebase then redirect */
+            checkIPQS(geo.ip, ipqsKey, strictness).then(function(ipqs) {
                 if (ipqs) {
                     fbPatch('clicks/' + clickId, { ipqs: ipqs }).catch(function(){});
                 }

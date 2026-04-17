@@ -1076,6 +1076,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <button class="btn-primary-sm" onclick="changePassword()"><i class="fas fa-lock"></i> Update Password</button>
                 </div>
             </div>
+
+            <!-- Fraud / IPQS API Keys -->
+            <div class="st-card">
+                <div class="st-strip" style="background:#dc2626"></div>
+                <div class="st-body">
+                    <div class="st-header">
+                        <div class="st-icon" style="background:linear-gradient(135deg,#dc2626,#ef4444)"><i class="fas fa-shield-virus"></i></div>
+                        <div><div class="st-title">Fraud Detection APIs</div><div class="st-sub">IP Quality Score &amp; AbuseIPDB — auto-checked on every click</div></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>IPQualityScore API Key</label><input type="text" id="fraudIpqsKey" placeholder="Your IPQS API key from ipqualityscore.com"></div>
+                        <div class="form-group"><label>AbuseIPDB API Key <span style="font-size:10px;color:var(--text-muted)">(optional)</span></label><input type="text" id="fraudAbuseKey" placeholder="Your AbuseIPDB API key"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>IPQS Strictness <span style="font-size:10px;color:var(--text-muted)">(0=lenient, 3=strict)</span></label>
+                        <select id="fraudStrictness" class="form-select-sm" style="max-width:160px">
+                            <option value="0">0 — Lenient</option>
+                            <option value="1" selected>1 — Medium (recommended)</option>
+                            <option value="2">2 — Strict</option>
+                            <option value="3">3 — Very Strict</option>
+                        </select>
+                    </div>
+                    <div class="form-help" style="margin-bottom:12px">Every affiliate click will automatically check the IP through IPQS. Results (fraud score, VPN, proxy, bot) are stored per click and shown in Click Reports.</div>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn-primary-sm" onclick="saveFraudSettings()"><i class="fas fa-save"></i> Save API Keys</button>
+                        <button class="btn-secondary" onclick="testIpqsKey()"><i class="fas fa-vial"></i> Test IPQS Key</button>
+                    </div>
+                    <div id="ipqsTestResult" style="margin-top:10px;font-size:12px;display:none"></div>
+                </div>
+            </div>
         </div>
 
         <!-- ===== MAILER ===== -->
@@ -4480,6 +4510,7 @@ function copyPostback() { navigator.clipboard.writeText(document.getElementById(
 function loadSettings() {
     fbGet('settings/network').then(function(data) { if (data) { document.getElementById('setNetName').value = data.networkName || 'Clima Affiliate Network'; document.getElementById('setDomain').value = data.trackingDomain || ''; document.getElementById('setCurrency').value = data.defaultCurrency || 'USD'; document.getElementById('setDefPayout').value = data.defaultPayout || 0; } });
     loadSmtpSettings();
+    loadFraudSettings();
     loadDomains();
 }
 function saveSettings() {
@@ -4739,7 +4770,8 @@ function filterFraudByIP(ip) {
 }
 
 function fraudDetailRow(label, value) {
-    return '<div class="fraud-detail-row"><span class="fd-label">' + escHtml(label) + '</span><span class="fd-value">' + escHtml(value || '-') + '</span></div>';
+    /* value may contain intentional HTML (badges, code tags) — don't escape it */
+    return '<div class="fraud-detail-row"><span class="fd-label">' + escHtml(label) + '</span><span class="fd-value">' + (value || '-') + '</span></div>';
 }
 
 function getFraudExplanation(code) {
@@ -5128,6 +5160,42 @@ function sendTestEmail() {
         resultDiv.style.color = 'var(--red)';
         resultDiv.textContent = 'Error: ' + (err.message || err);
     });
+}
+
+/* ---------- FRAUD / IPQS SETTINGS ---------- */
+function loadFraudSettings() {
+    fbGet('settings/fraud').then(function(data) {
+        if (!data) return;
+        document.getElementById('fraudIpqsKey').value = data.ipqsKey || '';
+        document.getElementById('fraudAbuseKey').value = data.abuseKey || '';
+        document.getElementById('fraudStrictness').value = data.strictness !== undefined ? data.strictness : '1';
+    });
+}
+function saveFraudSettings() {
+    var data = {
+        ipqsKey: document.getElementById('fraudIpqsKey').value.trim(),
+        abuseKey: document.getElementById('fraudAbuseKey').value.trim(),
+        strictness: document.getElementById('fraudStrictness').value
+    };
+    if (!data.ipqsKey) { toast('Please enter an IPQS API key', 'error'); return; }
+    fbPut('settings/fraud', data).then(function() {
+        toast('Fraud API settings saved!');
+    }).catch(function() { toast('Error saving settings', 'error'); });
+}
+function testIpqsKey() {
+    var key = document.getElementById('fraudIpqsKey').value.trim();
+    if (!key) { toast('Enter an API key first', 'error'); return; }
+    var res = document.getElementById('ipqsTestResult');
+    res.style.display = 'block';
+    res.style.color = '#94a3b8';
+    res.textContent = 'Testing...';
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?key=' + encodeURIComponent(key) + '&ip=8.8.8.8')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) { res.style.color = '#dc2626'; res.textContent = '✗ Error: ' + d.error; }
+            else if (d.fraud_score !== undefined) { res.style.color = '#16a34a'; res.textContent = '✓ Key valid! Test IP 8.8.8.8 fraud score: ' + d.fraud_score; }
+            else { res.style.color = '#dc2626'; res.textContent = '✗ Unexpected response'; }
+        }).catch(function() { res.style.color = '#dc2626'; res.textContent = '✗ Connection failed'; });
 }
 
 /* ---------- TRACKING DOMAINS ---------- */
