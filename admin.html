@@ -3605,9 +3605,6 @@ var clicksPage = 1;
 function loadClicks() {
     Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users')]).then(function(res) {
         allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
-        var today = todayET();
-        if (!document.getElementById('clickDateFrom').value) document.getElementById('clickDateFrom').value = today;
-        if (!document.getElementById('clickDateTo').value) document.getElementById('clickDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('clickOfferFilter').innerHTML = ofHtml;
         var afHtml = '<option value="">All Affiliates</option>'; allUsers.filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; }); document.getElementById('clickAffFilter').innerHTML = afHtml;
         clicksPage = 1; renderClicks();
@@ -3687,9 +3684,6 @@ var convPage = 1;
 function loadConversionsPage() {
     Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('users')]).then(function(res) {
         allConversions = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
-        var today = todayET();
-        if (!document.getElementById('convDateFrom').value) document.getElementById('convDateFrom').value = today;
-        if (!document.getElementById('convDateTo').value) document.getElementById('convDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('convOfferFilter').innerHTML = ofHtml;
         convPage = 1; renderConversions();
     });
@@ -4501,9 +4495,6 @@ var fraudAnalyzedClicks = [];
 function loadFraud() {
     Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users'), fbGet('conversions')]).then(function(res) {
         allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]); allConversions = objToArr(res[3]);
-        var today = todayET();
-        if (!document.getElementById('fraudDateFrom').value) document.getElementById('fraudDateFrom').value = today;
-        if (!document.getElementById('fraudDateTo').value) document.getElementById('fraudDateTo').value = today;
         var ofHtml = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; });
         document.getElementById('fraudOfferFilter').innerHTML = ofHtml;

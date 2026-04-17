@@ -1956,9 +1956,6 @@ function loadClicks() {
     Promise.all([fbGet('clicks'), fbGet('offers')]).then(function(r) {
         allOffers = objToArr(r[1]);
         myClicks = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid; });
-        var today = todayET();
-        if (!document.getElementById('ckFrom').value) document.getElementById('ckFrom').value = today;
-        if (!document.getElementById('ckTo').value) document.getElementById('ckTo').value = today;
         var curOff = document.getElementById('ckOfferF').value;
         var oh = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
@@ -1999,9 +1996,6 @@ function loadAnalytics() {
         allOffers = objToArr(r[1]);
         myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid; });
-        var today = todayET();
-        if (!document.getElementById('cvFrom').value) document.getElementById('cvFrom').value = today;
-        if (!document.getElementById('cvTo').value) document.getElementById('cvTo').value = today;
         var curOff = document.getElementById('cvOfferF').value;
         var oh = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
