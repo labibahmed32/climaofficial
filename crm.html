@@ -4332,7 +4332,7 @@ function loadSettings() {
     document.getElementById('setAbuseipdbKey').value = _settings.abuseipdbKey || '';
     document.getElementById('setProxyUrl').value = _settings.phpProxyUrl || '';
     document.getElementById('setDomain').value = _settings.trackingDomain || '';
-    fbGet(INSTANCE_KEY + '/shaverApiUrl').then(function(v){ var url = v || _settings.shaverApiUrl || ''; document.getElementById('setShaverApiUrl').value = url; _settings._instanceShaverApiUrl = url; });
+    fbGet(INSTANCE_KEY + '/shaverApiUrl').then(function(v){ var url = (typeof v === 'string' ? v : '') || (typeof _settings.shaverApiUrl === 'string' ? _settings.shaverApiUrl : '') || ''; document.getElementById('setShaverApiUrl').value = url; _settings._instanceShaverApiUrl = url; });
     document.getElementById('setDefaultCPA').value = _settings.defaultCPA || 80;
     document.getElementById('setPostbackSecret').value = _settings.postbackSecret || '';
     /* Telegram */
