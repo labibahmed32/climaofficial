@@ -4455,7 +4455,7 @@ function saveAllSettings() {
   v = document.getElementById('setDomain').value.trim(); data.trackingDomain = v;
   data.defaultCPA = parseFloat(document.getElementById('setDefaultCPA').value) || 80;
   v = document.getElementById('setPostbackSecret').value.trim(); data.postbackSecret = v;
-  v = document.getElementById('setShaverApiUrl').value.trim(); data.shaverApiUrl = v; if (v) fbPut(INSTANCE_KEY + '/shaverApiUrl', v);
+  v = document.getElementById('setShaverApiUrl').value.trim(); if (v) fbPut(INSTANCE_KEY + '/shaverApiUrl', v);
   /* Fraud API */
   v = document.getElementById('setIpqsKey').value.trim(); data.ipqsKey = v;
   v = document.getElementById('setProxycheckKey').value.trim(); data.proxycheckKey = v;
