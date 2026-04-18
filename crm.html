@@ -2198,7 +2198,7 @@ var _sgShaverDomains = [];
 
 function populateScriptGenOffers() {
   /* Always reload settings to ensure latest API keys are used */
-  fbGet('tracker/settings').then(function(s) { _settings = s || {}; });
+  fbGet('tracker_settings/' + INSTANCE_KEY + '').then(function(s) { _settings = s || {}; });
   fbGet('tracker/offers').then(function(data) {
     _offers = data ? Object.keys(data).map(function(k) { var o = data[k]; o._id = k; return o; }) : [];
     var sel = document.getElementById('sgOffer');
@@ -4348,7 +4348,7 @@ function showIPQSResult(data, vid) {
 
 /* === SETTINGS === */
 function loadSettings() {
-  fbGet('tracker/settings').then(function(data) {
+  fbGet('tracker_settings/' + INSTANCE_KEY + '').then(function(data) {
     _settings = data || {};
     document.getElementById('setIpqsKey').value = _settings.ipqsKey || '';
     document.getElementById('setProxycheckKey').value = _settings.proxycheckKey || '';
@@ -4479,7 +4479,7 @@ function saveAllSettings() {
     unsubscribe_url: document.getElementById('setUnsubscribeUrl').value.trim()
   };
 
-  fbPatch('tracker/settings', data).then(function() {
+  fbPatch('tracker_settings/' + INSTANCE_KEY + '', data).then(function() {
     Object.keys(data).forEach(function(k) { _settings[k] = data[k]; });
     toast('All settings saved!', 'success');
   }).catch(function() { toast('Failed to save', 'error'); });
@@ -5827,7 +5827,7 @@ document.addEventListener('keydown', function(e) {
 function initApp() {
   var savedPreset = localStorage.getItem('_ct_datePreset') || 'today';
   /* Load settings, offers, and page data all in parallel */
-  fbGet('tracker/settings').then(function(data) { _settings = data || {}; });
+  fbGet('tracker_settings/' + INSTANCE_KEY + '').then(function(data) { _settings = data || {}; });
   fbGet('tracker/offers').then(function(data) {
     _offers = data ? Object.keys(data).map(function(k) { var o = data[k]; o._id = k; return o; }) : [];
   });
