@@ -1465,6 +1465,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 
 /* === CONFIG === */
 var FB = 'https://clima-dashboard-default-rtdb.firebaseio.com';
+var INSTANCE_KEY = 'instance_' + window.location.hostname.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 var firebaseConfig = {
   apiKey: "AIzaSyBhRIJFCipf842KdnlpOWgjJZvd6IiEED4",
   authDomain: "clima-dashboard.firebaseapp.com",
@@ -4331,7 +4332,7 @@ function loadSettings() {
     document.getElementById('setAbuseipdbKey').value = _settings.abuseipdbKey || '';
     document.getElementById('setProxyUrl').value = _settings.phpProxyUrl || '';
     document.getElementById('setDomain').value = _settings.trackingDomain || '';
-    document.getElementById('setShaverApiUrl').value = localStorage.getItem('shaverApiUrl') || _settings.shaverApiUrl || '';
+    fbGet(INSTANCE_KEY + '/shaverApiUrl').then(function(v){ var url = v || _settings.shaverApiUrl || ''; document.getElementById('setShaverApiUrl').value = url; _settings._instanceShaverApiUrl = url; });
     document.getElementById('setDefaultCPA').value = _settings.defaultCPA || 80;
     document.getElementById('setPostbackSecret').value = _settings.postbackSecret || '';
     /* Telegram */
@@ -4431,7 +4432,7 @@ function saveAllSettings() {
   v = document.getElementById('setDomain').value.trim(); data.trackingDomain = v;
   data.defaultCPA = parseFloat(document.getElementById('setDefaultCPA').value) || 80;
   v = document.getElementById('setPostbackSecret').value.trim(); data.postbackSecret = v;
-  v = document.getElementById('setShaverApiUrl').value.trim(); data.shaverApiUrl = v; if (v) localStorage.setItem('shaverApiUrl', v);
+  v = document.getElementById('setShaverApiUrl').value.trim(); data.shaverApiUrl = v; if (v) fbPut(INSTANCE_KEY + '/shaverApiUrl', v);
   /* Fraud API */
   v = document.getElementById('setIpqsKey').value.trim(); data.ipqsKey = v;
   v = document.getElementById('setProxycheckKey').value.trim(); data.proxycheckKey = v;
@@ -5830,7 +5831,7 @@ var _shaverTrafficPage = 0;
 var _shaverTrafficTotal = 0;
 
 function shaverAPI(action, data) {
-  var url = localStorage.getItem('shaverApiUrl') || (_settings && _settings.shaverApiUrl) || 'https://plan1.climaofficial.com/shaver/api.php';
+  var url = (_settings && _settings._instanceShaverApiUrl) || (_settings && _settings.shaverApiUrl) || 'https://plan1.climaofficial.com/shaver/api.php';
   var body = Object.assign({action: action}, data || {});
   return fetch(url, {
     method: 'POST',
