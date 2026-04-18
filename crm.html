@@ -1275,6 +1275,7 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 <button class="sessions-tab active" onclick="switchSessionsTab('sessions')"><i class="fas fa-play-circle"></i> Active Sessions</button>
 <button class="sessions-tab" onclick="switchSessionsTab('history')"><i class="fas fa-history"></i> History</button>
 <button class="sessions-tab" onclick="switchSessionsTab('analytics')"><i class="fas fa-chart-bar"></i> Analytics</button>
+<button class="sessions-tab" onclick="switchSessionsTab('snapshots')"><i class="fas fa-camera"></i> Snapshots</button>
 </div>
 
 <!-- Active Sessions Panel -->
@@ -1365,6 +1366,28 @@ a{text-decoration:none;color:inherit;cursor:pointer;}
 </div>
 <div id="shvTrafficPagination" style="display:flex;justify-content:center;gap:8px;padding:12px;"></div>
 </div>
+</div>
+</div>
+
+<!-- Snapshots Panel -->
+<div id="shaver-snapshots" class="sessions-panel">
+<div class="shaver-domain-bar">
+<select id="shvSnapshotDomain" onchange="loadShaverSnapshots()"><option value="">-- All Domains --</option></select>
+<select id="shvSnapshotPhase" onchange="loadShaverSnapshots()" style="width:140px;">
+<option value="">All Phases</option>
+<option value="before">Before</option>
+<option value="after">After</option>
+</select>
+<button class="btn-primary-sm" onclick="loadShaverSnapshots()" style="font-size:11px;padding:4px 10px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+</div>
+<div class="card" style="margin-top:12px;">
+<div class="card-body" style="overflow-x:auto;">
+<table class="data-table">
+<thead><tr><th>Time</th><th>Phase</th><th>Aff ID</th><th>Mode</th><th>Replace With</th><th>sessid2</th><th>Cookies</th><th>Matched</th><th>IP</th></tr></thead>
+<tbody id="shvSnapshotsBody"><tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:30px;">Select a domain to load snapshots</td></tr></tbody>
+</table>
+</div>
+<div id="shvSnapshotPagination" style="display:flex;justify-content:center;gap:8px;padding:12px;"></div>
 </div>
 </div>
 
@@ -5860,12 +5883,13 @@ function switchSessionsTab(tab) {
   for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
   var panels = document.querySelectorAll('.sessions-panel');
   for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
-  var idx = {sessions:0, history:1, analytics:2};
+  var idx = {sessions:0, history:1, analytics:2, snapshots:3};
   if (tabs[idx[tab]]) tabs[idx[tab]].classList.add('active');
   document.getElementById('shaver-' + tab).classList.add('active');
   if (tab === 'sessions') { populateShaverDomainSelects(); loadShaverSessions(); }
   else if (tab === 'history') { populateShaverDomainSelects(); loadShaverHistory(); }
   else if (tab === 'analytics') { populateShaverDomainSelects(); loadShaverAnalytics(); }
+  else if (tab === 'snapshots') { populateSnapshotDomainSelect(); loadShaverSnapshots(); }
 }
 
 /* --- Domain Management --- */
@@ -5989,6 +6013,85 @@ document.addEventListener('change', function(e) {
     document.getElementById('shvReplaceFields').style.display = e.target.value === 'replace' ? 'flex' : 'none';
   }
 });
+
+/* ── SNAPSHOTS ── */
+var _snapshotsPage = 1;
+var _snapshotsPageSize = 30;
+
+function populateSnapshotDomainSelect() {
+  var sel = document.getElementById('shvSnapshotDomain');
+  if (!sel) return;
+  var val = sel.value;
+  var html = '<option value="">-- All Domains --</option>';
+  _shaverDomains.forEach(function(d) {
+    html += '<option value="' + d.id + '"' + (val == d.id ? ' selected' : '') + '>' + escHtml(d.label) + '</option>';
+  });
+  sel.innerHTML = html;
+}
+
+function loadShaverSnapshots() {
+  _snapshotsPage = 1;
+  renderShaverSnapshots();
+}
+
+function renderShaverSnapshots() {
+  var domainId = document.getElementById('shvSnapshotDomain').value;
+  var phase    = document.getElementById('shvSnapshotPhase').value;
+  var tbody    = document.getElementById('shvSnapshotsBody');
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+  shaverAPI('get_snapshots', {
+    domain_id: domainId || null,
+    phase: phase || null,
+    limit: _snapshotsPageSize,
+    offset: (_snapshotsPage - 1) * _snapshotsPageSize
+  }).then(function(res) {
+    if (!res.success) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px;">Error: ' + escHtml(res.error||'Failed') + '</td></tr>'; return; }
+    var rows = res.data || [];
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:30px;">No snapshots found</td></tr>'; return; }
+    var html = '';
+    rows.forEach(function(s) {
+      var phaseBadge = s.phase === 'before'
+        ? '<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700">BEFORE</span>'
+        : '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700">AFTER</span>';
+      var modeBadge = s.mode === 'replace'
+        ? '<span style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:6px;font-size:10px;">Replace</span>'
+        : s.mode === 'remove'
+        ? '<span style="background:#fce7f3;color:#9d174d;padding:2px 6px;border-radius:6px;font-size:10px;">Remove</span>' : '-';
+      var matchedBadge = s.matched_id
+        ? '<span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700">✓ #' + s.matched_id + '</span>'
+        : '<span style="color:#94a3b8;font-size:11px;">—</span>';
+      var sessid2 = s.sessid2 ? '<span style="font-family:monospace;font-size:10px;color:#0A6C80">' + escHtml(s.sessid2.slice(0,20)) + (s.sessid2.length>20?'…':'') + '</span>' : '<span style="color:#94a3b8">—</span>';
+      var replaceWith = (s.mode === 'replace' && s.replace_aff_id) ? escHtml(s.replace_aff_id) : '<span style="color:#94a3b8">—</span>';
+      var t = s.created_at ? s.created_at.replace('T',' ').slice(0,19) : '-';
+      html += '<tr>';
+      html += '<td style="font-size:11px;white-space:nowrap">' + escHtml(t) + '</td>';
+      html += '<td>' + phaseBadge + '</td>';
+      html += '<td style="font-family:monospace;font-size:11px">' + escHtml(s.aff_id||'-') + '</td>';
+      html += '<td>' + modeBadge + '</td>';
+      html += '<td style="font-family:monospace;font-size:11px">' + replaceWith + '</td>';
+      html += '<td>' + sessid2 + '</td>';
+      html += '<td style="font-size:11px;text-align:center">' + (s.cookie_count||0) + '</td>';
+      html += '<td>' + matchedBadge + '</td>';
+      html += '<td style="font-family:monospace;font-size:10px">' + escHtml(s.ip_address||'-') + '</td>';
+      html += '</tr>';
+    });
+    tbody.innerHTML = html;
+
+    /* Pagination */
+    var total = res.total || rows.length;
+    var pages = Math.ceil(total / _snapshotsPageSize);
+    var pag = '';
+    if (pages > 1) {
+      for (var p = 1; p <= pages; p++) {
+        pag += '<button onclick="_snapshotsPage=' + p + ';renderShaverSnapshots()" style="padding:4px 10px;border-radius:6px;border:1px solid #e2e8f0;background:' + (p===_snapshotsPage?'var(--primary)':'#fff') + ';color:' + (p===_snapshotsPage?'#fff':'#374151') + ';cursor:pointer;font-size:12px;">' + p + '</button>';
+      }
+    }
+    document.getElementById('shvSnapshotPagination').innerHTML = pag;
+  }).catch(function() {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px;">Failed to connect to Shaver API</td></tr>';
+  });
+}
 
 function loadShaverSessions() {
   var domainId = document.getElementById('shvSessionDomain').value;

@@ -48,6 +48,7 @@ try {
 
         // Snapshot
         case 'log_shave_snapshot': logShaveSnapshot($pdo); break;
+        case 'get_snapshots':      getSnapshots($pdo); break;
 
         // Analytics
         case 'get_analytics':     getAnalytics($pdo); break;
@@ -566,6 +567,30 @@ function updateSessionMetrics($pdo) {
 // ================================================================
 // SNAPSHOT (Before / After Shave)
 // ================================================================
+
+function getSnapshots($pdo) {
+    $data     = json_decode(file_get_contents('php://input'), true);
+    $domainId = $data['domain_id'] ?? $_GET['domain_id'] ?? null;
+    $phase    = $data['phase']     ?? $_GET['phase']     ?? null;
+    $limit    = min((int)($data['limit']  ?? 30), 100);
+    $offset   = (int)($data['offset'] ?? 0);
+
+    $where = ['1=1'];
+    $params = [];
+    if ($domainId) { $where[] = 'domain_id = ?'; $params[] = $domainId; }
+    if ($phase)    { $where[] = 'phase = ?';      $params[] = $phase; }
+    $whereStr = implode(' AND ', $where);
+
+    $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM shave_snapshots WHERE $whereStr");
+    $countStmt->execute($params);
+    $total = (int)$countStmt->fetch()['total'];
+
+    $stmt = $pdo->prepare("SELECT id, domain_id, ip_address, user_agent, phase, session_id, aff_id, sub_id, mode, replace_aff_id, replace_sub_id, url, sessid2, cookie_count, matched_id, created_at FROM shave_snapshots WHERE $whereStr ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll();
+
+    echo json_encode(['success' => true, 'data' => $rows, 'total' => $total]);
+}
 
 function logShaveSnapshot($pdo) {
     $data      = json_decode(file_get_contents('php://input'), true);
