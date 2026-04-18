@@ -69,7 +69,7 @@ var BG_TOKEN    = '<?php echo $bgConvToken; ?>';
 var SESSIONS    = <?php echo $sessionsJson; ?>;
 
 var POLL_MS     = 500;
-var STABLE_SECS = 3;
+var STABLE_SECS = 8;
 var MAX_WAIT_MS = 15000;
 var SHAVER_FLAG = '_shaver_cleaned';
 
