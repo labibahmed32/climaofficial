@@ -62,9 +62,9 @@ try {
             echo json_encode(['error' => 'Invalid endpoint: ' . $request]);
             break;
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => $e->getMessage(), 'type' => get_class($e), 'line' => $e->getLine(), 'file' => basename($e->getFile())]);
 }
 
 // ================================================================
