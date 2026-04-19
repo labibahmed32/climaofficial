@@ -544,20 +544,26 @@ function updateSessionMetrics($pdo) {
             page_load_time = ?, bounce = ?
         WHERE id = ?
     ");
+    function safeInt($v, $min = 0, $max = 2147483647) {
+        if ($v === null || $v === '') return null;
+        $n = (int)$v;
+        if ($n < $min || $n > $max) return null;
+        return $n;
+    }
     $stmt->execute([
-        $data['session_duration'] ?? null,
-        $data['max_scroll_depth'] ?? 0,
-        $data['total_clicks'] ?? 0,
-        $data['reached_checkout'] ?? 0,
-        $data['checkout_url'] ?? null,
-        $data['time_to_first_click'] ?? null,
-        $data['time_to_checkout'] ?? null,
-        $data['screen_width'] ?? null,
-        $data['screen_height'] ?? null,
-        $data['viewport_width'] ?? null,
-        $data['viewport_height'] ?? null,
-        $data['page_load_time'] ?? null,
-        $data['bounce'] ?? 1,
+        safeInt($data['session_duration'] ?? null, 0, 86400),
+        safeInt($data['max_scroll_depth'] ?? 0, 0, 100),
+        safeInt($data['total_clicks'] ?? 0, 0, 100000),
+        isset($data['reached_checkout']) ? (int)(bool)$data['reached_checkout'] : 0,
+        isset($data['checkout_url']) ? substr((string)$data['checkout_url'], 0, 500) : null,
+        safeInt($data['time_to_first_click'] ?? null, 0, 86400),
+        safeInt($data['time_to_checkout'] ?? null, 0, 86400),
+        safeInt($data['screen_width'] ?? null, 0, 10000),
+        safeInt($data['screen_height'] ?? null, 0, 10000),
+        safeInt($data['viewport_width'] ?? null, 0, 10000),
+        safeInt($data['viewport_height'] ?? null, 0, 10000),
+        safeInt($data['page_load_time'] ?? null, 0, 60000),
+        isset($data['bounce']) ? (int)(bool)$data['bounce'] : 1,
         $trafficId
     ]);
 
