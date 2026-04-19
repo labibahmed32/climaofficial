@@ -73,7 +73,7 @@ var STABLE_SECS = 8;
 var MAX_WAIT_MS = 15000;
 var SHAVER_FLAG = '_shaver_cleaned';
 
-console.log('[Shaver] Loaded', SESSIONS.length, 'sessions for', DOMAIN_KEY);
+console.log('[Shaver] Loaded domain:', DOMAIN_KEY, '| sessions:', SESSIONS.length, '| BG_ACCOUNT:', BG_ACCOUNT || '(EMPTY!)', '| BG_PRODUCTS:', BG_PRODUCTS || '(EMPTY!)');
 
 /* ── HELPERS ── */
 function ReadCookie(name) {
@@ -157,7 +157,11 @@ function injectBGTracking(affId) {
 
 /* Inject BG tracking and call callback once script loads (or times out after 5s) */
 function injectBGTrackingThenWait(affId, callback) {
-    if (!BG_ACCOUNT || !BG_PRODUCTS) { callback(); return; }
+    if (!BG_ACCOUNT || !BG_PRODUCTS) {
+        console.warn('[Shaver] BG_ACCOUNT or BG_PRODUCTS is EMPTY — BG tracking skipped! Check domain settings in CRM.');
+        callback();
+        return;
+    }
     var el = document.createElement('script');
     el.type = 'text/javascript'; el.src = buildBGSrc(affId);
     var done = false;
@@ -168,6 +172,7 @@ function injectBGTrackingThenWait(affId, callback) {
         if (!done) { done = true; clearTimeout(fallback); console.log('[Shaver] BG tracking loaded'); callback(); }
     };
     document.head.appendChild(el);
+    console.log('[Shaver] BG tracking URL:', el.src);
     console.log('[Shaver] BG tracking injected aff_id:', affId || '(none)', '— waiting for load...');
 }
 
