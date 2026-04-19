@@ -201,9 +201,14 @@ if(_hasDomain&&_affId){
 /* BuyGoods tracking injection */
 function ReadCookie(n){n+='=';var p=document.cookie.split(/;\s*/);for(var i=0;i<p.length;i++)if(p[i].indexOf(n)===0)return p[i].substring(n.length);return '';}
 window.ReadCookie=ReadCookie;
+function _patchBGLinks(){var s2=ReadCookie('sessid2');if(!s2)return;document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a){try{var u=new URL(a.href);u.searchParams.set('sessid2',s2);a.href=u.toString();}catch(e){}});}
 if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES){
-  var _bgSrc='https://tracking.buygoods.com/track/?a='+BG_ACCOUNT_ID+'&firstcookie=0&tracking_redirect=&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+ReadCookie('sessid2')+'&product='+BG_PRODUCT_CODES+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
-  var _bgEl=document.createElement('script');_bgEl.type='text/javascript';_bgEl.defer=true;_bgEl.src=_bgSrc;document.head.appendChild(_bgEl);
+  var _curAff=(new URLSearchParams(window.location.search)).get('aff_id')||(new URLSearchParams(window.location.search)).get('affid')||'';
+  var _s2now=ReadCookie('sessid2');
+  var _bgSrc='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie='+(_s2now?'0':'1')+'&aff_id='+encodeURIComponent(_curAff)+'&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(_s2now)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
+  var _bgEl=document.createElement('script');_bgEl.type='text/javascript';_bgEl.src=_bgSrc;
+  _bgEl.onload=function(){[300,1500,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});};
+  document.head.appendChild(_bgEl);
 }
 if(BG_ACCOUNT_ID&&BG_CONVERSION_TOKEN){
   function _injectConvIframe(){var i=document.createElement('iframe');i.async=true;i.style.display='none';i.setAttribute('src','https://buygoods.com/affiliates/go/conversion/iframe/bg?a='+BG_ACCOUNT_ID+'&t='+BG_CONVERSION_TOKEN+'&s='+ReadCookie('sessid2'));document.body.appendChild(i);}
