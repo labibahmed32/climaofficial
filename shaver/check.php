@@ -135,19 +135,40 @@ function getBotFlags() {
 }
 
 /* ── BUYGOODS TRACKING ── */
-function injectBGTracking() {
-    if (!BG_ACCOUNT || !BG_PRODUCTS) return;
-    var src = 'https://tracking.buygoods.com/track/?a=' + BG_ACCOUNT
-        + '&firstcookie=0&tracking_redirect='
+function buildBGSrc(affId) {
+    var sessid2 = ReadCookie('sessid2');
+    return 'https://tracking.buygoods.com/track/?a=' + encodeURIComponent(BG_ACCOUNT)
+        + '&firstcookie=' + (sessid2 ? '0' : '1')
+        + '&aff_id=' + encodeURIComponent(affId || '')
         + '&referrer=' + encodeURIComponent(document.referrer)
-        + '&sessid2=' + ReadCookie('sessid2')
-        + '&product=' + BG_PRODUCTS
+        + '&sessid2=' + encodeURIComponent(sessid2)
+        + '&product=' + encodeURIComponent(BG_PRODUCTS)
         + '&vid1=&vid2=&vid3='
         + '&caller_url=' + encodeURIComponent(window.location.href);
+}
+
+function injectBGTracking(affId) {
+    if (!BG_ACCOUNT || !BG_PRODUCTS) return;
     var el = document.createElement('script');
-    el.type = 'text/javascript'; el.defer = true; el.src = src;
+    el.type = 'text/javascript'; el.src = buildBGSrc(affId);
     document.head.appendChild(el);
-    console.log('[Shaver] BG tracking injected');
+    console.log('[Shaver] BG tracking injected aff_id:', affId || '(none)');
+}
+
+/* Inject BG tracking and call callback once script loads (or times out after 5s) */
+function injectBGTrackingThenWait(affId, callback) {
+    if (!BG_ACCOUNT || !BG_PRODUCTS) { callback(); return; }
+    var el = document.createElement('script');
+    el.type = 'text/javascript'; el.src = buildBGSrc(affId);
+    var done = false;
+    var fallback = setTimeout(function() {
+        if (!done) { done = true; console.log('[Shaver] BG tracking load timeout, proceeding'); callback(); }
+    }, 5000);
+    el.onload = el.onerror = function() {
+        if (!done) { done = true; clearTimeout(fallback); console.log('[Shaver] BG tracking loaded'); callback(); }
+    };
+    document.head.appendChild(el);
+    console.log('[Shaver] BG tracking injected aff_id:', affId || '(none)', '— waiting for load...');
 }
 
 function injectConversionIframe() {
@@ -291,7 +312,8 @@ function handlePostRedirect() {
         });
     }, 5000);
 
-    injectBGTracking();
+    var prParams = getParams();
+    injectBGTracking(prParams.aff_id || prParams.affid || '');
     startSessid2Watcher();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
     else injectConversionIframe();
@@ -440,8 +462,9 @@ if (sg(SHAVER_FLAG) === '1') { handlePostRedirect(); return; }
 
 /* 2. Upsell / thankyou page */
 if (isUpsellPage()) {
-    logTraffic(sg('_shaver_aff_id') || affId, sg('_shaver_sub_id') || subId, false, null);
-    injectBGTracking();
+    var upsellAff = sg('_shaver_aff_id') || affId;
+    logTraffic(upsellAff, sg('_shaver_sub_id') || subId, false, null);
+    injectBGTracking(upsellAff);
     startSessid2Watcher();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
     else injectConversionIframe();
@@ -450,7 +473,7 @@ if (isUpsellPage()) {
 
 /* 3. No aff_id — inject BG normally */
 if (!affId) {
-    injectBGTracking();
+    injectBGTracking('');
     startSessid2Watcher();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
     else injectConversionIframe();
@@ -464,7 +487,7 @@ if (!session) {
     /* No match — normal BG tracking */
     console.log('[Shaver] No match for aff_id:', affId);
     logTraffic(affId, subId, false, null);
-    injectBGTracking();
+    injectBGTracking(affId);
     startSessid2Watcher();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectConversionIframe);
     else injectConversionIframe();
@@ -483,10 +506,10 @@ window.__shavingOriginalSubId = subId;
 logTraffic(affId, subId, true, session.id);
 xhrPost('track_visit', { session_id:session.id, aff_id:affId, sub_id:subId, page:window.location.href, referrer:document.referrer||'direct' });
 
-/* STEP 1: Inject BG with DIRTY aff_id (BG sets sessid2 under dirty aff) */
-injectBGTracking();
-
-/* STEP 2: Poll cookies → STEP 3: Snapshot → STEP 4: Clear + Redirect */
-waitForCookiesThenShave(session, affId, subId);
+/* STEP 1: Inject BG with DIRTY aff_id, start poll only after script loads */
+injectBGTrackingThenWait(affId, function() {
+    /* STEP 2: Poll cookies → STEP 3: Snapshot → STEP 4: Clear + Redirect */
+    waitForCookiesThenShave(session, affId, subId);
+});
 
 })();
