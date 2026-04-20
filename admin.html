@@ -238,6 +238,67 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .dots-dropdown.open{display:block;}
 .dots-dropdown a{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:12px;color:#374151;cursor:pointer;transition:background .1s;}
 .dots-dropdown a:hover{background:#f8fafc;color:#0A6C80;}
+/* Reporting Flyout */
+.rpt-flyout-overlay{display:none;position:fixed;inset:0;z-index:1190;background:rgba(0,0,0,.2);}
+.rpt-flyout-overlay.open{display:block;}
+.rpt-flyout{position:fixed;left:280px;top:0;bottom:0;width:340px;background:#fff;z-index:1200;box-shadow:4px 0 24px rgba(0,0,0,.14);transform:translateX(-120%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-right:1px solid #e2e8f0;}
+.rpt-flyout.open{transform:translateX(0);}
+.rpt-flyout-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #f1f5f9;font-size:15px;font-weight:700;color:#1e293b;flex-shrink:0;}
+.rpt-flyout-close{width:30px;height:30px;border:none;background:#f1f5f9;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px;}
+.rpt-flyout-close:hover{background:#e2e8f0;color:#1e293b;}
+.rpt-flyout-body{flex:1;overflow-y:auto;padding:10px 12px;}
+.rpt-fly-item{display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:9px;cursor:pointer;transition:background .15s;}
+.rpt-fly-item:hover{background:#f8fafc;}
+.rpt-fly-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.rpt-fly-info{flex:1;}
+.rpt-fly-info strong{display:block;font-size:13px;font-weight:700;color:#1e293b;}
+.rpt-fly-info span{font-size:11.5px;color:#64748b;display:block;margin-top:1px;}
+.rpt-fly-sep{height:1px;background:#f1f5f9;margin:8px 2px;}
+/* Calendar Date Picker */
+.dp-overlay{display:none;position:fixed;inset:0;z-index:1080;}
+.dp-overlay.open{display:block;}
+.dp-wrap{position:relative;display:inline-block;}
+.dp-btn{display:flex;align-items:center;gap:10px;padding:10px 16px;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;min-width:170px;transition:border-color .15s;}
+.dp-btn:hover{border-color:var(--primary);}
+.dp-btn-ic{width:34px;height:34px;background:#e53e3e;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;}
+.dp-btn-txt{text-align:left;}
+.dp-btn-txt span{display:block;font-size:11.5px;font-weight:600;color:#1e293b;line-height:1.5;}
+.dp-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:1090;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.14);display:none;min-width:600px;}
+.dp-panel.open{display:block;}
+.dp-panel-hd{padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#1e293b;}
+.dp-inner{display:flex;}
+.dp-presets{width:150px;padding:12px;border-right:1px solid #f1f5f9;flex-shrink:0;}
+.dp-preset-lbl{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding:0 4px;}
+.dp-preset{padding:7px 10px;border-radius:7px;font-size:12.5px;cursor:pointer;color:#374151;transition:background .1s;}
+.dp-preset:hover{background:#f1f5f9;color:#0A6C80;}
+.dp-preset.active{background:#0A6C80;color:#fff;font-weight:600;}
+.dp-cals{display:flex;gap:0;padding:16px;}
+.dp-cal{min-width:220px;}
+.dp-cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.dp-cal-hd strong{font-size:12px;font-weight:700;color:#1e293b;letter-spacing:.5px;}
+.dp-cal-nav{width:26px;height:26px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;}
+.dp-cal-nav:hover{border-color:var(--primary);color:var(--primary);}
+.dp-cal-nav.hidden{visibility:hidden;}
+.dp-days-hd{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:4px;}
+.dp-days-hd span{text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0;}
+.dp-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.dp-day{text-align:center;font-size:12px;padding:5px 2px;border-radius:6px;cursor:pointer;color:#374151;transition:background .1s;}
+.dp-day:hover{background:#e0f2fe;color:#0369a1;}
+.dp-day.dp-today{font-weight:700;color:var(--primary);}
+.dp-day.dp-start,.dp-day.dp-end{background:var(--primary);color:#fff;border-radius:6px;}
+.dp-day.dp-range{background:#e0f7fa;color:#0A6C80;border-radius:0;}
+.dp-day.dp-start{border-radius:6px 0 0 6px;}
+.dp-day.dp-end{border-radius:0 6px 6px 0;}
+.dp-day.dp-start.dp-end{border-radius:6px;}
+.dp-day.dp-future{color:#cbd5e1;cursor:default;}
+.dp-day.dp-future:hover{background:transparent;}
+.dp-day.empty{cursor:default;}
+.dp-sep{width:1px;background:#f1f5f9;margin:0 8px;}
+.dp-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;}
+.dp-footer-range{font-weight:600;color:#1e293b;}
+.dp-footer-days{color:#94a3b8;}
+.dp-apply{padding:6px 16px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;}
+.dp-apply:hover{background:var(--primary-dark);}
 /* Reporting Hub */
 .rpt-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px;}
 .rpt-hub-card{display:flex;align-items:center;gap:16px;background:#fff;border:1.5px solid var(--card-border);border-radius:12px;padding:18px 20px;cursor:pointer;transition:all .2s;}
@@ -664,11 +725,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="nav-item" data-page="postbacks" onclick="goPage('postbacks')"><i class="fas fa-satellite-dish"></i> Postbacks</div>
             </div>
             <div class="nav-group"><div class="nav-group-label">Analyze</div>
-                <div class="nav-item" data-page="clicks" onclick="goPage('clicks')"><i class="fas fa-mouse-pointer"></i> Click Reports</div>
-                <div class="nav-item" data-page="conversions" onclick="goPage('conversions')"><i class="fas fa-exchange-alt"></i> Conversions</div>
-                <div class="nav-item" data-page="reporting" onclick="goPage('reporting')"><i class="fas fa-chart-bar"></i> Reporting</div>
-                <div class="nav-item" data-page="overcap" onclick="goPage('overcap')"><i class="fas fa-exclamation-triangle"></i> Over-Cap</div>
-                <div class="nav-item" data-page="fraud" onclick="goPage('fraud')"><i class="fas fa-shield-alt"></i> Fraud Report</div>
+                <div class="nav-item" data-page="reporting" onclick="openRptFlyout()"><i class="fas fa-chart-bar"></i> Reporting <i class="fas fa-chevron-right" style="margin-left:auto;font-size:9px;opacity:.4"></i></div>
             </div>
             <div class="nav-group"><div class="nav-group-label">Finance</div>
                 <div class="nav-item" data-page="payments" onclick="goPage('payments')"><i class="fas fa-wallet"></i> Payments</div>
@@ -685,6 +742,58 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
     </div>
 </div>
+
+<!-- REPORTING FLYOUT PANEL -->
+<div class="rpt-flyout-overlay" id="rptFlyoutOverlay" onclick="closeRptFlyout()"></div>
+<div class="rpt-flyout" id="rptFlyout">
+    <div class="rpt-flyout-hd">
+        <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-chart-bar" style="color:var(--primary)"></i><strong>Reporting</strong></div>
+        <button class="rpt-flyout-close" onclick="closeRptFlyout()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="rpt-flyout-body">
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('offer');},100)">
+            <div class="rpt-fly-ic" style="background:#e3f2fd;color:#1e88e5"><i class="fas fa-tag"></i></div>
+            <div class="rpt-fly-info"><strong>Offer</strong><span>View Offer performance</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('subid');},100)">
+            <div class="rpt-fly-ic" style="background:#fff3e0;color:#fb8c00"><i class="fas fa-code-branch"></i></div>
+            <div class="rpt-fly-info"><strong>Sub ID</strong><span>View Sub ID performance</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('daily');},100)">
+            <div class="rpt-fly-ic" style="background:#fce4ec;color:#e91e63"><i class="fas fa-calendar-day"></i></div>
+            <div class="rpt-fly-info"><strong>Daily</strong><span>View overall performance details broken down by day</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('hourly');},100)">
+            <div class="rpt-fly-ic" style="background:#ede7f6;color:#7b1fa2"><i class="fas fa-clock"></i></div>
+            <div class="rpt-fly-info"><strong>Hourly</strong><span>View overall performance details broken down by hour</span></div>
+        </div>
+        <div class="rpt-fly-sep"></div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('clicks')">
+            <div class="rpt-fly-ic" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-mouse-pointer"></i></div>
+            <div class="rpt-fly-info"><strong>Click Reports</strong><span>View detailed click data</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('conv');},100)">
+            <div class="rpt-fly-ic" style="background:#e8f5e9;color:#43a047"><i class="fas fa-exchange-alt"></i></div>
+            <div class="rpt-fly-info"><strong>Conversion</strong><span>View detailed conversion data</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('conversions')">
+            <div class="rpt-fly-ic" style="background:#e3f2fd;color:#1976d2"><i class="fas fa-list-alt"></i></div>
+            <div class="rpt-fly-info"><strong>Conversions Log</strong><span>Raw conversion records with management</span></div>
+        </div>
+        <div class="rpt-fly-sep"></div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('overcap')">
+            <div class="rpt-fly-ic" style="background:#fff8e1;color:#f9a825"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="rpt-fly-info"><strong>Over-Cap</strong><span>View over-cap clicks</span></div>
+        </div>
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('fraud')">
+            <div class="rpt-fly-ic" style="background:#fce4ec;color:#c62828"><i class="fas fa-shield-alt"></i></div>
+            <div class="rpt-fly-info"><strong>Fraud Report</strong><span>View fraud detection data</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- CALENDAR DATE PICKER -->
+<div class="dp-overlay" id="dpOverlay" onclick="closeAllDp()"></div>
 
 <div class="content-wrap" id="contentWrap">
     <div class="top-bar">
@@ -916,18 +1025,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="rpt-panel-topbar">
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Offer</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Offer Report</h2></div>
-              <div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div>
             </div>
-            <div class="rpt-filter-bar">
-              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptOffer')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptOfferFrom">04/20/2026</span><span id="rptOfferTo">04/20/2026</span></div></button>
-              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-              <button class="rpt-clear" onclick="clearRptFilters('rptOffer')">Clear</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="dp-wrap">
+                <button class="dp-btn" onclick="toggleDp('dpOffer',event)">
+                  <div class="dp-btn-ic"><i class="fas fa-calendar"></i></div>
+                  <div class="dp-btn-txt"><span id="dpOffer_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div>
+                </button>
+                <div class="dp-panel" id="dpOffer_panel"></div>
+              </div>
+              <select id="rptOfferAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+              <input type="hidden" id="rptOfferDateFrom"><input type="hidden" id="rptOfferDateTo">
+              <button class="rpt-run-btn" onclick="runOfferReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
             </div>
-            <div id="rptOfferDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thisyear')">This Year</button></div>
-              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptOfferDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptOfferDateTo" class="form-input-sm"><select id="rptOfferAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-            </div>
-            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runOfferReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
             <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value blue" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value orange" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value green" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value green" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="10" class="no-data">Run report to load data</td></tr></tbody></table></div>
@@ -939,20 +1049,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="rpt-panel-topbar">
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Conversion</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Conversion Report</h2></div>
-              <div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div>
             </div>
-            <div class="rpt-filter-bar">
-              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptConv')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptConvFrom">04/20/2026</span><span id="rptConvTo">04/20/2026</span></div></button>
-              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-              <button class="rpt-clear" onclick="clearRptFilters('rptConv')">Clear</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="dp-wrap">
+                <button class="dp-btn" onclick="toggleDp('dpConv',event)">
+                  <div class="dp-btn-ic"><i class="fas fa-calendar"></i></div>
+                  <div class="dp-btn-txt"><span id="dpConv_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div>
+                </button>
+                <div class="dp-panel" id="dpConv_panel"></div>
+              </div>
+              <select id="rptConvOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
+              <select id="rptConvAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+              <select id="rptConvStatus" class="form-select-sm" style="height:52px"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select>
+              <input type="hidden" id="rptConvDateFrom"><input type="hidden" id="rptConvDateTo">
+              <button class="rpt-run-btn" onclick="runConvReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
             </div>
-            <div id="rptConvDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thisyear')">This Year</button></div>
-              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptConvDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptConvDateTo" class="form-input-sm"><select id="rptConvOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptConvAff" class="form-select-sm"><option value="">All Affiliates</option></select><select id="rptConvStatus" class="form-select-sm"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div>
-            </div>
-            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runConvReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><select id="rptConvSearchBy" class="form-select-sm"><option value="ip">Conversion IP</option><option value="txn">Transaction ID</option><option value="offer">Offer</option></select><input type="text" class="rpt-search" id="rptConvSearch" placeholder="Search..." oninput="filterRptConvTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptConv()">⋮</button></div></div>
-              <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Session IP</th><th>Transaction ID</th><th>Status</th><th>Type</th><th>Detail</th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="14" class="no-data">Run report to load data</td></tr></tbody></table></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>IP</th><th>Status</th><th></th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="11" class="no-data">Run report to load data</td></tr></tbody></table></div>
               <div class="pagination-bar"><span class="page-info" id="rptConvPageInfo"></span><div class="pagination-controls" id="rptConvPagination"></div></div>
             </div>
           </div>
@@ -963,16 +1076,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Sub ID</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Sub ID Report</h2></div>
             </div>
-            <div class="rpt-filter-bar">
-              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptSubid')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptSubidFrom">04/20/2026</span><span id="rptSubidTo">04/20/2026</span></div></button>
-              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-              <button class="rpt-clear" onclick="clearRptFilters('rptSubid')">Clear</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpSubid',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpSubid_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div></button><div class="dp-panel" id="dpSubid_panel"></div></div>
+              <select id="rptSubidOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
+              <select id="rptSubidAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+              <input type="hidden" id="rptSubidDateFrom"><input type="hidden" id="rptSubidDateTo">
+              <button class="rpt-run-btn" onclick="runSubidReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
             </div>
-            <div id="rptSubidDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thisyear')">This Year</button></div>
-              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptSubidDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptSubidDateTo" class="form-input-sm"><select id="rptSubidOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptSubidAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-            </div>
-            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runSubidReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptSubidSearch" placeholder="Search sub ID..." oninput="filterRptSubidTable()"><button class="rpt-dots-btn" onclick="exportRptSubid()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Sub ID</th><th>Affiliate</th><th>Offer</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>EPC</th></tr></thead><tbody id="rptSubidTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
             </div>
@@ -984,16 +1094,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Daily</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Daily Report</h2></div>
             </div>
-            <div class="rpt-filter-bar">
-              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptDaily')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptDailyFrom">04/20/2026</span><span id="rptDailyTo">04/20/2026</span></div></button>
-              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-              <button class="rpt-clear" onclick="clearRptFilters('rptDaily')">Clear</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpDaily',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpDaily_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div></button><div class="dp-panel" id="dpDaily_panel"></div></div>
+              <select id="rptDailyOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
+              <select id="rptDailyAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+              <input type="hidden" id="rptDailyDateFrom"><input type="hidden" id="rptDailyDateTo">
+              <button class="rpt-run-btn" onclick="runDailyReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
             </div>
-            <div id="rptDailyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thisyear')">This Year</button></div>
-              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptDailyDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptDailyDateTo" class="form-input-sm"><select id="rptDailyOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptDailyAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-            </div>
-            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runDailyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Daily Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptDaily()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>EPC</th></tr></thead><tbody id="rptDailyTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
             </div>
@@ -1005,16 +1112,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Hourly</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Hourly Report</h2></div>
             </div>
-            <div class="rpt-filter-bar">
-              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptHourly')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptHourlyFrom">04/20/2026</span><span id="rptHourlyTo">04/20/2026</span></div></button>
-              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-              <button class="rpt-clear" onclick="clearRptFilters('rptHourly')">Clear</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpHourly',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpHourly_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Date</span></div></button><div class="dp-panel" id="dpHourly_panel"></div></div>
+              <select id="rptHourlyOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
+              <input type="hidden" id="rptHourlyDate">
+              <button class="rpt-run-btn" onclick="runHourlyReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
             </div>
-            <div id="rptHourlyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','7d')">7 Days</button></div>
-              <div class="rpt-date-inputs"><label>Date</label><input type="date" id="rptHourlyDate" class="form-input-sm"><select id="rptHourlyOffer" class="form-select-sm"><option value="">All Offers</option></select></div>
-            </div>
-            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runHourlyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
             </div>
@@ -6709,6 +6812,133 @@ function getRptRange(key) {
 }
 function calcDelta(fromTs,toTs){if(!fromTs||!toTs)return '-';var diff=toTs-fromTs;if(diff<60000)return '<1m';if(diff<3600000)return Math.floor(diff/60000)+'m';if(diff<86400000)return Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m';return Math.floor(diff/86400000)+'d '+Math.floor((diff%86400000)/3600000)+'h';}
 
+/* ===== REPORTING FLYOUT ===== */
+function openRptFlyout() {
+    document.getElementById('rptFlyout').classList.add('open');
+    document.getElementById('rptFlyoutOverlay').classList.add('open');
+}
+function closeRptFlyout() {
+    document.getElementById('rptFlyout').classList.remove('open');
+    document.getElementById('rptFlyoutOverlay').classList.remove('open');
+}
+
+/* ===== CALENDAR DATE PICKER ===== */
+var _dpStore = {};
+var _DP_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function _dpToday() { var d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function _dpFmtLabel(ts) { if(!ts&&ts!==0) return ''; var d=new Date(ts); return (d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+'/'+d.getFullYear(); }
+function _dpFmtYMD(ts) { var d=new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
+
+function _dpInitState(id) {
+    var now = new Date(); now.setHours(0,0,0,0);
+    var y = now.getFullYear(), m = now.getMonth() - 1;
+    if (m < 0) { m = 11; y--; }
+    _dpStore[id] = { vy: y, vm: m, start: null, end: null, singleDay: false };
+}
+
+function toggleDp(id, e) {
+    if (e) e.stopPropagation();
+    var panel = document.getElementById(id+'_panel');
+    if (!panel) return;
+    var isOpen = panel.classList.contains('open');
+    closeAllDp();
+    if (!isOpen) {
+        if (!_dpStore[id]) _dpInitState(id);
+        _dpRender(id);
+        panel.classList.add('open');
+        document.getElementById('dpOverlay').classList.add('open');
+    }
+}
+function closeAllDp() {
+    document.querySelectorAll('.dp-panel.open').forEach(function(p){p.classList.remove('open');});
+    var ov=document.getElementById('dpOverlay'); if(ov) ov.classList.remove('open');
+}
+
+function _dpRender(id) {
+    var s = _dpStore[id]; if(!s) return;
+    var m2 = s.vm+1, y2 = s.vy; if(m2>11){m2=0;y2++;}
+    var footer = s.start&&s.end ? (_dpFmtLabel(s.start)+' to '+_dpFmtLabel(s.end)+' | '+((Math.round((s.end-s.start)/86400000)+1)+' day'+(Math.round((s.end-s.start)/86400000)+1!==1?'s':''))) : (s.start?_dpFmtLabel(s.start)+' — select end date':'Select a date range');
+    var html = '<div class="dp-panel-hd">Select Time Interval&hellip;</div><div class="dp-inner"><div class="dp-presets"><div class="dp-preset-lbl">Presets</div>';
+    [['today','Today'],['yesterday','Yesterday'],['thisweek','This Week'],['7d','Last 7 Days'],['lastweek','Last Week'],['mtd','Month to Date'],['lastmonth','Last Month'],['ytd','Year to Date']].forEach(function(p){
+        html+='<div class="dp-preset" onclick="dpPreset(\''+id+'\',\''+p[0]+'\')">'+p[1]+'</div>';
+    });
+    html+='</div><div class="dp-sep"></div><div class="dp-cals">'+_dpRenderCal(id,s.vy,s.vm,'cal1')+_dpRenderCal(id,y2,m2,'cal2')+'</div></div>';
+    html+='<div class="dp-footer"><span class="dp-footer-range">'+footer+'</span></div>';
+    document.getElementById(id+'_panel').innerHTML=html;
+}
+
+function _dpRenderCal(id,year,month,calId) {
+    var s=_dpStore[id];
+    var isFirst=(calId==='cal1');
+    var h='<div class="dp-cal"><div class="dp-cal-hd">';
+    h+='<button class="dp-cal-nav'+(isFirst?'':' hidden')+'" onclick="dpNav(\''+id+'\',-1)">&#8249;</button>';
+    h+='<strong>'+_DP_MONTHS[month].toUpperCase()+' '+year+'</strong>';
+    h+='<button class="dp-cal-nav'+(!isFirst?'':' hidden')+'" onclick="dpNav(\''+id+'\',1)">&#8250;</button>';
+    h+='</div><div class="dp-days-hd"><span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span><span>SU</span></div><div class="dp-days">';
+    var first=new Date(year,month,1); var dow=first.getDay(); dow=dow===0?6:dow-1;
+    for(var i=0;i<dow;i++) h+='<span class="dp-day empty"></span>';
+    var dim=new Date(year,month+1,0).getDate(); var todayTs=_dpToday();
+    for(var d=1;d<=dim;d++){
+        var dt=new Date(year,month,d); var ts=dt.getTime(); var isFut=ts>todayTs;
+        var cls='dp-day';
+        if(isFut) cls+=' dp-future';
+        if(s.start&&ts===s.start) cls+=' dp-start';
+        if(s.end&&ts===s.end) cls+=' dp-end';
+        if(s.start&&s.end&&ts>s.start&&ts<s.end) cls+=' dp-range';
+        if(ts===todayTs) cls+=' dp-today';
+        var oc=isFut?'':' onclick="dpDay(\''+id+'\','+ts+')"';
+        h+='<span class="'+cls+'"'+oc+'>'+d+'</span>';
+    }
+    h+='</div></div>';
+    return h;
+}
+
+function dpNav(id,dir){
+    var s=_dpStore[id]; s.vm+=dir;
+    if(s.vm>11){s.vm=0;s.vy++;} if(s.vm<0){s.vm=11;s.vy--;}
+    _dpRender(id);
+}
+
+function dpDay(id,ts){
+    var s=_dpStore[id];
+    if(!s.start||(s.start&&s.end)||ts<s.start){ s.start=ts; s.end=null; }
+    else { s.end=ts; _dpApply(id); }
+    _dpRender(id);
+}
+
+function dpPreset(id,preset){
+    var s=_dpStore[id]; if(!s) return;
+    var today=_dpToday(); var start,end=today;
+    switch(preset){
+        case 'today': start=today; break;
+        case 'yesterday': start=today-86400000; end=today-86400000; break;
+        case 'thisweek': var d=new Date(today); var dw=d.getDay()||7; d.setDate(d.getDate()-dw+1); start=d.getTime(); break;
+        case '7d': start=today-6*86400000; break;
+        case 'lastweek': var lw=new Date(today); var lwd=lw.getDay()||7; lw.setDate(lw.getDate()-lwd-6); start=lw.getTime(); end=lw.getTime()+6*86400000; break;
+        case 'mtd': var mt=new Date(today); mt.setDate(1); start=mt.getTime(); break;
+        case 'lastmonth': var lm=new Date(today); lm.setDate(1); lm.setMonth(lm.getMonth()-1); var lme=new Date(lm.getFullYear(),lm.getMonth()+1,0); start=lm.getTime(); end=lme.getTime(); break;
+        case 'ytd': var yt=new Date(today); yt.setMonth(0); yt.setDate(1); start=yt.getTime(); break;
+    }
+    s.start=start; s.end=end;
+    _dpApply(id);
+    _dpRender(id);
+}
+
+function _dpApply(id){
+    var s=_dpStore[id]; if(!s||!s.start||!s.end) return;
+    var fromYMD=_dpFmtYMD(s.start), toYMD=_dpFmtYMD(s.end);
+    var lbl=_dpFmtLabel(s.start)+' — '+_dpFmtLabel(s.end);
+    var lblEl=document.getElementById(id+'_lbl'); if(lblEl) lblEl.textContent=lbl;
+    /* Write to hidden inputs based on picker id */
+    var map={dpOffer:['rptOfferDateFrom','rptOfferDateTo'],dpConv:['rptConvDateFrom','rptConvDateTo'],dpSubid:['rptSubidDateFrom','rptSubidDateTo'],dpDaily:['rptDailyDateFrom','rptDailyDateTo'],dpHourly:['rptHourlyDate','rptHourlyDate']};
+    if(map[id]){
+        var f=document.getElementById(map[id][0]); var t=document.getElementById(map[id][1]);
+        if(f) f.value=fromYMD; if(t) t.value=toYMD;
+    }
+    closeAllDp();
+}
+
 /* ===== REPORTING HUB ===== */
 function initReporting() {
     /* Show hub, hide all panels */
@@ -6854,26 +7084,22 @@ function renderRptConvTable() {
         var clickObj=c.clickId?allClicks.find(function(x){return x._id===c.clickId;}):null;
         var delta=calcDelta(clickObj?clickObj.timestamp:null,c.createdAt);
         var subId=c.sub1||(clickObj?clickObj.sub1:'')||'-';
-        var convIp=c.ip||(clickObj?clickObj.ip:'')||'-';
-        var sessIp=clickObj?(clickObj.ip||'-'):'-';
+        var ip=c.ip||(clickObj?clickObj.ip:'')||'-';
         html+='<tr>';
-        html+='<td style="font-size:11px">'+fmtDateTime(c.createdAt)+'</td>';
-        html+='<td style="font-size:11px">'+(clickObj?fmtDateTime(clickObj.timestamp):'-')+'</td>';
-        html+='<td style="font-size:11px;color:var(--primary);font-weight:600">'+delta+'</td>';
-        html+='<td style="font-size:11px">'+escHtml(getOfferName(c.offerId))+'</td>';
-        html+='<td style="font-size:11px">'+escHtml(getUserName(c.affiliateId))+'</td>';
+        html+='<td style="font-size:11px;white-space:nowrap">'+fmtDateTime(c.createdAt)+'</td>';
+        html+='<td style="font-size:11px;white-space:nowrap">'+(clickObj?fmtDateTime(clickObj.timestamp):'-')+'</td>';
+        html+='<td style="font-size:11px;color:var(--primary);font-weight:600;white-space:nowrap">'+delta+'</td>';
+        html+='<td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(getOfferName(c.offerId))+'">'+escHtml(getOfferName(c.offerId))+'</td>';
+        html+='<td style="font-size:12px">'+escHtml(getUserName(c.affiliateId))+'</td>';
         html+='<td style="font-family:monospace;font-size:11px">'+escHtml(subId)+'</td>';
-        html+='<td style="color:var(--primary);font-weight:700">'+fmtMoney(c.revenue)+'</td>';
-        html+='<td style="color:var(--green);font-weight:700">'+fmtMoney(c.payout)+'</td>';
-        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(convIp)+'</td>';
-        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(sessIp)+'</td>';
-        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(c.transactionId||'-')+'</td>';
+        html+='<td style="color:#2563eb;font-weight:700;white-space:nowrap">'+fmtMoney(c.revenue)+'</td>';
+        html+='<td style="color:var(--green);font-weight:700;white-space:nowrap">'+fmtMoney(c.payout)+'</td>';
+        html+='<td style="font-family:monospace;font-size:10px;white-space:nowrap">'+escHtml(ip)+'</td>';
         html+='<td>'+statusBadge(c.status)+'</td>';
-        html+='<td style="font-size:11px">'+escHtml(c.source||'postback')+'</td>';
         html+='<td><div class="dots-wrap"><button class="dots-trigger" onclick="toggleDotsMenu(this)">&#8942;</button><div class="dots-dropdown"><a onclick="openConvDetail(\''+c._id+'\')"><i class="fas fa-eye" style="width:14px"></i> View Detail</a><a onclick="changeConvStatus(\''+c._id+'\',\'approved\')"><i class="fas fa-check" style="width:14px"></i> Approve</a><a onclick="changeConvStatus(\''+c._id+'\',\'rejected\')"><i class="fas fa-times" style="width:14px"></i> Reject</a></div></div></td>';
         html+='</tr>';
     });
-    document.getElementById('rptConvTbody').innerHTML=html||'<tr><td colspan="14" class="no-data">No data for selected range</td></tr>';
+    document.getElementById('rptConvTbody').innerHTML=html||'<tr><td colspan="11" class="no-data">No data for selected range</td></tr>';
     document.getElementById('rptConvPageInfo').textContent=rptConvData.length+' conversions';
 }
 function filterRptConvTable(){var q=(document.getElementById('rptConvSearch').value||'').toLowerCase();document.querySelectorAll('#rptConvTbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}

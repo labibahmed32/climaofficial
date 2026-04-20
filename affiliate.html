@@ -215,6 +215,34 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .tz-opt.active{background:#eef7f9;color:var(--accent);font-weight:600;}
 .tz-opt i{color:var(--accent);font-size:11px;visibility:hidden;}
 .tz-opt.active i{visibility:visible;}
+/* Affiliate Reporting Hub */
+.aff-rpt-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:22px;}
+.aff-rpt-card{display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all .2s;}
+.aff-rpt-card:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(44,82,130,.1);transform:translateY(-1px);}
+.aff-rpt-ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.aff-rpt-info{flex:1;min-width:0;}
+.aff-rpt-info strong{display:block;font-size:13px;font-weight:700;color:var(--td);}
+.aff-rpt-info span{font-size:11px;color:var(--tl);display:block;margin-top:2px;}
+.aff-rpt-arrow{color:#cbd5e1;font-size:10px;}
+.aff-rpt-panel{display:none;}
+.aff-rpt-panel.active{display:block;}
+.aff-panel-top{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.aff-back-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;color:var(--tl);transition:all .15s;}
+.aff-back-btn:hover{border-color:var(--accent);color:var(--accent);}
+.aff-panel-top h2{font-size:17px;font-weight:700;color:var(--td);margin:0;}
+/* Summary metrics strip */
+.aff-metrics{display:flex;flex-wrap:wrap;gap:0;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.aff-metric{flex:1;min-width:110px;padding:16px 20px;border-right:1px solid var(--border);}
+.aff-metric:last-child{border-right:none;}
+.aff-metric-lbl{font-size:9.5px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.aff-metric-val{font-size:20px;font-weight:700;color:var(--td);}
+.aff-metric-val.green{color:#059669;}
+.aff-metric-val.blue{color:#2563eb;}
+.aff-metric-val.orange{color:#d97706;}
+/* Filter bar for affiliate reports */
+.aff-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.aff-run-btn{padding:8px 20px;border:none;background:#e53e3e;color:#fff;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.aff-run-btn:hover{background:#c53030;}
 .btn-p:hover{opacity:.88;}
 .tbl-wrap{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
 .tbl-scroll{overflow-x:auto;}
@@ -418,7 +446,6 @@ body.impersonating .impersonate-banner{display:block;}
         <div class="nav-item" data-page="postbacks" onclick="goPage('postbacks')"><i class="fas fa-exchange-alt"></i> Postbacks</div>
         <div class="nav-sec">Analyze</div>
         <div class="nav-item" data-page="reporting" onclick="goPage('reporting')"><i class="fas fa-chart-bar"></i> Reporting</div>
-        <div class="nav-item" data-page="analytics" onclick="goPage('analytics')"><i class="fas fa-chart-pie"></i> Analytics</div>
         <div class="nav-sec">Finance</div>
         <div class="nav-item" data-page="invoices" onclick="goPage('invoices')"><i class="fas fa-file-invoice-dollar"></i> Invoices</div>
         <div class="nav-sec">Tools</div>
