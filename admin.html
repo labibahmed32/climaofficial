@@ -210,10 +210,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rpt-section-hd h3{font-size:14px;font-weight:700;color:#1e293b;margin:0;}
 .rpt-section-body{padding:18px;}
 .rpt-section-body.hidden{display:none;}
-.rpt-metrics{display:flex;flex-wrap:wrap;gap:24px 40px;}
-.rpt-metric{display:flex;flex-direction:column;gap:4px;}
-.rpt-metric-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;}
-.rpt-metric-value{font-size:20px;font-weight:700;color:#1e293b;}
+.rpt-metrics{display:flex;flex-wrap:wrap;gap:0;}
+.rpt-metric{display:flex;flex-direction:column;gap:6px;padding:20px 32px 20px 0;min-width:110px;}
+.rpt-metric:not(:last-child){border-right:1px solid #f1f5f9;margin-right:32px;}
+.rpt-metric-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;}
+.rpt-metric-value{font-size:22px;font-weight:700;color:#1e293b;}
+.rpt-metric-value.green{color:#059669;}
+.rpt-metric-value.blue{color:#2563eb;}
+.rpt-metric-value.orange{color:#d97706;}
 .rpt-detail-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e2e8f0;}
 .rpt-detail-hd h3{font-size:14px;font-weight:700;color:#1e293b;margin:0;}
 .rpt-search-wrap{display:flex;align-items:center;gap:8px;}
@@ -234,6 +238,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .dots-dropdown.open{display:block;}
 .dots-dropdown a{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:12px;color:#374151;cursor:pointer;transition:background .1s;}
 .dots-dropdown a:hover{background:#f8fafc;color:#0A6C80;}
+/* Reporting Hub */
+.rpt-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px;}
+.rpt-hub-card{display:flex;align-items:center;gap:16px;background:#fff;border:1.5px solid var(--card-border);border-radius:12px;padding:18px 20px;cursor:pointer;transition:all .2s;}
+.rpt-hub-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(10,108,128,.12);transform:translateY(-2px);}
+.rpt-hub-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.rpt-hub-info{flex:1;min-width:0;}
+.rpt-hub-info strong{display:block;font-size:14px;font-weight:700;color:var(--text-dark);}
+.rpt-hub-info span{font-size:12px;color:var(--text-muted);display:block;margin-top:2px;}
+.rpt-hub-arrow{color:#cbd5e1;font-size:11px;flex-shrink:0;}
+.rpt-panel{display:none;}
+.rpt-panel.active{display:block;}
+.rpt-panel-topbar{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.rpt-back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--card-border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;color:var(--text-muted);white-space:nowrap;transition:all .15s;}
+.rpt-back-btn:hover{border-color:var(--primary);color:var(--primary);}
+.rpt-panel-topbar .rpt-title-area{flex:1;}
+/* Top Offers Admin */
+.top-offer-row{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid var(--card-border);border-radius:9px;padding:10px 14px;margin-bottom:8px;}
+.top-offer-row input,.top-offer-row select{padding:6px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:12px;background:#fff;outline:none;}
+.top-offer-row input:focus,.top-offer-row select:focus{border-color:var(--primary);}
+.top-offer-del{width:30px;height:30px;border:none;background:#fee2e2;border-radius:6px;color:#dc2626;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.top-offer-del:hover{background:#dc2626;color:#fff;}
 .dots-dropdown .dots-sep{height:1px;background:#f1f5f9;margin:2px 0;}
 /* Conversion detail panel */
 .conv-detail-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
@@ -641,15 +666,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="nav-group"><div class="nav-group-label">Analyze</div>
                 <div class="nav-item" data-page="clicks" onclick="goPage('clicks')"><i class="fas fa-mouse-pointer"></i> Click Reports</div>
                 <div class="nav-item" data-page="conversions" onclick="goPage('conversions')"><i class="fas fa-exchange-alt"></i> Conversions</div>
+                <div class="nav-item" data-page="reporting" onclick="goPage('reporting')"><i class="fas fa-chart-bar"></i> Reporting</div>
                 <div class="nav-item" data-page="overcap" onclick="goPage('overcap')"><i class="fas fa-exclamation-triangle"></i> Over-Cap</div>
                 <div class="nav-item" data-page="fraud" onclick="goPage('fraud')"><i class="fas fa-shield-alt"></i> Fraud Report</div>
-            </div>
-            <div class="nav-group"><div class="nav-group-label">Reporting</div>
-                <div class="nav-item" data-page="rpt-offer" onclick="goPage('rpt-offer')"><i class="fas fa-tag"></i> Offer Report</div>
-                <div class="nav-item" data-page="rpt-conv" onclick="goPage('rpt-conv')"><i class="fas fa-exchange-alt"></i> Conversion Report</div>
-                <div class="nav-item" data-page="rpt-subid" onclick="goPage('rpt-subid')"><i class="fas fa-code-branch"></i> Sub ID Report</div>
-                <div class="nav-item" data-page="rpt-daily" onclick="goPage('rpt-daily')"><i class="fas fa-calendar-day"></i> Daily Report</div>
-                <div class="nav-item" data-page="rpt-hourly" onclick="goPage('rpt-hourly')"><i class="fas fa-clock"></i> Hourly Report</div>
             </div>
             <div class="nav-group"><div class="nav-group-label">Finance</div>
                 <div class="nav-item" data-page="payments" onclick="goPage('payments')"><i class="fas fa-wallet"></i> Payments</div>
@@ -855,95 +874,150 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
         </div>
 
-        <!-- ===== OFFER REPORT ===== -->
-        <div class="page-section" id="page-rpt-offer">
-          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Offer</div><h2>Offer Report</h2></div><div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div></div>
-          <div class="rpt-filter-bar">
-            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptOffer')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptOfferFrom">04/20/2026</span><span id="rptOfferTo">04/20/2026</span></div></button>
-            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-            <button class="rpt-clear" onclick="clearRptFilters('rptOffer')">Clear</button>
+        <!-- ===== REPORTING HUB ===== -->
+        <div class="page-section" id="page-reporting">
+          <!-- Hub: report type selector -->
+          <div id="rptHub">
+            <div style="margin-bottom:20px;">
+              <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0 0 4px">Reports</h2>
+              <p style="font-size:13px;color:#64748b;margin:0">Select a report type to view analytics</p>
+            </div>
+            <div class="rpt-hub">
+              <div class="rpt-hub-card" onclick="switchRpt('offer')">
+                <div class="rpt-hub-icon" style="background:#e3f2fd;color:#1e88e5"><i class="fas fa-tag"></i></div>
+                <div class="rpt-hub-info"><strong>Offer Report</strong><span>Performance breakdown by offer — clicks, conversions, revenue, CVR, EPC</span></div>
+                <i class="fas fa-chevron-right rpt-hub-arrow"></i>
+              </div>
+              <div class="rpt-hub-card" onclick="switchRpt('conv')">
+                <div class="rpt-hub-icon" style="background:#e8f5e9;color:#43a047"><i class="fas fa-exchange-alt"></i></div>
+                <div class="rpt-hub-info"><strong>Conversion Report</strong><span>Individual conversions with IP, ISP, click delta, Sub IDs and payout detail</span></div>
+                <i class="fas fa-chevron-right rpt-hub-arrow"></i>
+              </div>
+              <div class="rpt-hub-card" onclick="switchRpt('subid')">
+                <div class="rpt-hub-icon" style="background:#fff3e0;color:#fb8c00"><i class="fas fa-code-branch"></i></div>
+                <div class="rpt-hub-info"><strong>Sub ID Report</strong><span>Traffic breakdown by Sub ID — see which sources convert best</span></div>
+                <i class="fas fa-chevron-right rpt-hub-arrow"></i>
+              </div>
+              <div class="rpt-hub-card" onclick="switchRpt('daily')">
+                <div class="rpt-hub-icon" style="background:#fce4ec;color:#e91e63"><i class="fas fa-calendar-day"></i></div>
+                <div class="rpt-hub-info"><strong>Daily Report</strong><span>Day-by-day performance trends across all offers and affiliates</span></div>
+                <i class="fas fa-chevron-right rpt-hub-arrow"></i>
+              </div>
+              <div class="rpt-hub-card" onclick="switchRpt('hourly')">
+                <div class="rpt-hub-icon" style="background:#ede7f6;color:#7b1fa2"><i class="fas fa-clock"></i></div>
+                <div class="rpt-hub-info"><strong>Hourly Report</strong><span>Hour-by-hour traffic analysis for a specific day</span></div>
+                <i class="fas fa-chevron-right rpt-hub-arrow"></i>
+              </div>
+            </div>
           </div>
-          <div id="rptOfferDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thisyear')">This Year</button></div>
-            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptOfferDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptOfferDateTo" class="form-input-sm"><select id="rptOfferAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-          </div>
-          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runOfferReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
-          <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
-          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
-            <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="10" class="no-data">Run report to load data</td></tr></tbody></table></div>
-          </div>
-        </div>
 
-        <!-- ===== CONVERSION REPORT ===== -->
-        <div class="page-section" id="page-rpt-conv">
-          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Conversion</div><h2>Conversion Report</h2></div><div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div></div>
-          <div class="rpt-filter-bar">
-            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptConv')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptConvFrom">04/20/2026</span><span id="rptConvTo">04/20/2026</span></div></button>
-            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-            <button class="rpt-clear" onclick="clearRptFilters('rptConv')">Clear</button>
+          <!-- Offer Report Panel -->
+          <div id="rptPanel-offer" class="rpt-panel">
+            <div class="rpt-panel-topbar">
+              <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
+              <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Offer</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Offer Report</h2></div>
+              <div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div>
+            </div>
+            <div class="rpt-filter-bar">
+              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptOffer')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptOfferFrom">04/20/2026</span><span id="rptOfferTo">04/20/2026</span></div></button>
+              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+              <button class="rpt-clear" onclick="clearRptFilters('rptOffer')">Clear</button>
+            </div>
+            <div id="rptOfferDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thisyear')">This Year</button></div>
+              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptOfferDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptOfferDateTo" class="form-input-sm"><select id="rptOfferAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+            </div>
+            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runOfferReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+            <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value blue" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value orange" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value green" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value green" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
+            <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="10" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            </div>
           </div>
-          <div id="rptConvDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thisyear')">This Year</button></div>
-            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptConvDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptConvDateTo" class="form-input-sm"><select id="rptConvOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptConvAff" class="form-select-sm"><option value="">All Affiliates</option></select><select id="rptConvStatus" class="form-select-sm"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div>
-          </div>
-          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runConvReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
-          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><select id="rptConvSearchBy" class="form-select-sm"><option value="ip">Conversion IP</option><option value="txn">Transaction ID</option><option value="offer">Offer</option></select><input type="text" class="rpt-search" id="rptConvSearch" placeholder="Search..." oninput="filterRptConvTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptConv()">⋮</button></div></div>
-            <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Session IP</th><th>Transaction ID</th><th>Status</th><th>Type</th><th>Detail</th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="14" class="no-data">Run report to load data</td></tr></tbody></table></div>
-            <div class="pagination-bar"><span class="page-info" id="rptConvPageInfo"></span><div class="pagination-controls" id="rptConvPagination"></div></div>
-          </div>
-        </div>
 
-        <!-- ===== SUB ID REPORT ===== -->
-        <div class="page-section" id="page-rpt-subid">
-          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Sub ID</div><h2>Sub ID Report</h2></div></div>
-          <div class="rpt-filter-bar">
-            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptSubid')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptSubidFrom">04/20/2026</span><span id="rptSubidTo">04/20/2026</span></div></button>
-            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-            <button class="rpt-clear" onclick="clearRptFilters('rptSubid')">Clear</button>
+          <!-- Conversion Report Panel -->
+          <div id="rptPanel-conv" class="rpt-panel">
+            <div class="rpt-panel-topbar">
+              <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
+              <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Conversion</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Conversion Report</h2></div>
+              <div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div>
+            </div>
+            <div class="rpt-filter-bar">
+              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptConv')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptConvFrom">04/20/2026</span><span id="rptConvTo">04/20/2026</span></div></button>
+              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+              <button class="rpt-clear" onclick="clearRptFilters('rptConv')">Clear</button>
+            </div>
+            <div id="rptConvDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thisyear')">This Year</button></div>
+              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptConvDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptConvDateTo" class="form-input-sm"><select id="rptConvOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptConvAff" class="form-select-sm"><option value="">All Affiliates</option></select><select id="rptConvStatus" class="form-select-sm"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div>
+            </div>
+            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runConvReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+            <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><select id="rptConvSearchBy" class="form-select-sm"><option value="ip">Conversion IP</option><option value="txn">Transaction ID</option><option value="offer">Offer</option></select><input type="text" class="rpt-search" id="rptConvSearch" placeholder="Search..." oninput="filterRptConvTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptConv()">⋮</button></div></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Session IP</th><th>Transaction ID</th><th>Status</th><th>Type</th><th>Detail</th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="14" class="no-data">Run report to load data</td></tr></tbody></table></div>
+              <div class="pagination-bar"><span class="page-info" id="rptConvPageInfo"></span><div class="pagination-controls" id="rptConvPagination"></div></div>
+            </div>
           </div>
-          <div id="rptSubidDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thisyear')">This Year</button></div>
-            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptSubidDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptSubidDateTo" class="form-input-sm"><select id="rptSubidOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptSubidAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-          </div>
-          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runSubidReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
-          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptSubidSearch" placeholder="Search sub ID..." oninput="filterRptSubidTable()"><button class="rpt-dots-btn" onclick="exportRptSubid()">⋮</button></div></div>
-            <div class="table-scroll"><table class="data-table"><thead><tr><th>Sub ID</th><th>Affiliate</th><th>Offer</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>EPC</th></tr></thead><tbody id="rptSubidTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
-          </div>
-        </div>
 
-        <!-- ===== DAILY REPORT ===== -->
-        <div class="page-section" id="page-rpt-daily">
-          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Daily</div><h2>Daily Report</h2></div></div>
-          <div class="rpt-filter-bar">
-            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptDaily')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptDailyFrom">04/20/2026</span><span id="rptDailyTo">04/20/2026</span></div></button>
-            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-            <button class="rpt-clear" onclick="clearRptFilters('rptDaily')">Clear</button>
+          <!-- Sub ID Report Panel -->
+          <div id="rptPanel-subid" class="rpt-panel">
+            <div class="rpt-panel-topbar">
+              <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
+              <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Sub ID</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Sub ID Report</h2></div>
+            </div>
+            <div class="rpt-filter-bar">
+              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptSubid')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptSubidFrom">04/20/2026</span><span id="rptSubidTo">04/20/2026</span></div></button>
+              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+              <button class="rpt-clear" onclick="clearRptFilters('rptSubid')">Clear</button>
+            </div>
+            <div id="rptSubidDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thisyear')">This Year</button></div>
+              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptSubidDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptSubidDateTo" class="form-input-sm"><select id="rptSubidOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptSubidAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+            </div>
+            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runSubidReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+            <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptSubidSearch" placeholder="Search sub ID..." oninput="filterRptSubidTable()"><button class="rpt-dots-btn" onclick="exportRptSubid()">⋮</button></div></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Sub ID</th><th>Affiliate</th><th>Offer</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>EPC</th></tr></thead><tbody id="rptSubidTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            </div>
           </div>
-          <div id="rptDailyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thisyear')">This Year</button></div>
-            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptDailyDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptDailyDateTo" class="form-input-sm"><select id="rptDailyOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptDailyAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
-          </div>
-          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runDailyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
-          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Daily Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptDaily()">⋮</button></div></div>
-            <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>EPC</th></tr></thead><tbody id="rptDailyTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
-          </div>
-        </div>
 
-        <!-- ===== HOURLY REPORT ===== -->
-        <div class="page-section" id="page-rpt-hourly">
-          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Hourly</div><h2>Hourly Report</h2></div></div>
-          <div class="rpt-filter-bar">
-            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptHourly')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptHourlyFrom">04/20/2026</span><span id="rptHourlyTo">04/20/2026</span></div></button>
-            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
-            <button class="rpt-clear" onclick="clearRptFilters('rptHourly')">Clear</button>
+          <!-- Daily Report Panel -->
+          <div id="rptPanel-daily" class="rpt-panel">
+            <div class="rpt-panel-topbar">
+              <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
+              <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Daily</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Daily Report</h2></div>
+            </div>
+            <div class="rpt-filter-bar">
+              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptDaily')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptDailyFrom">04/20/2026</span><span id="rptDailyTo">04/20/2026</span></div></button>
+              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+              <button class="rpt-clear" onclick="clearRptFilters('rptDaily')">Clear</button>
+            </div>
+            <div id="rptDailyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thisyear')">This Year</button></div>
+              <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptDailyDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptDailyDateTo" class="form-input-sm"><select id="rptDailyOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptDailyAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+            </div>
+            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runDailyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+            <div class="rpt-section"><div class="rpt-detail-hd"><h3>Daily Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptDaily()">⋮</button></div></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>EPC</th></tr></thead><tbody id="rptDailyTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            </div>
           </div>
-          <div id="rptHourlyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
-            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','7d')">7 Days</button></div>
-            <div class="rpt-date-inputs"><label>Date</label><input type="date" id="rptHourlyDate" class="form-input-sm"><select id="rptHourlyOffer" class="form-select-sm"><option value="">All Offers</option></select></div>
-          </div>
-          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runHourlyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
-          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
-            <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
+
+          <!-- Hourly Report Panel -->
+          <div id="rptPanel-hourly" class="rpt-panel">
+            <div class="rpt-panel-topbar">
+              <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
+              <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Hourly</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Hourly Report</h2></div>
+            </div>
+            <div class="rpt-filter-bar">
+              <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptHourly')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptHourlyFrom">04/20/2026</span><span id="rptHourlyTo">04/20/2026</span></div></button>
+              <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+              <button class="rpt-clear" onclick="clearRptFilters('rptHourly')">Clear</button>
+            </div>
+            <div id="rptHourlyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+              <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','7d')">7 Days</button></div>
+              <div class="rpt-date-inputs"><label>Date</label><input type="date" id="rptHourlyDate" class="form-input-sm"><select id="rptHourlyOffer" class="form-select-sm"><option value="">All Offers</option></select></div>
+            </div>
+            <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runHourlyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+            <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            </div>
           </div>
         </div>
 
@@ -1289,6 +1363,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         <button class="btn-secondary" onclick="testIpqsKey()"><i class="fas fa-vial"></i> Test IPQS Key</button>
                     </div>
                     <div id="ipqsTestResult" style="margin-top:10px;font-size:12px;display:none"></div>
+                </div>
+            </div>
+
+            <!-- Top Network Offers -->
+            <div class="st-card" style="max-width:none;display:block;padding:0;">
+                <div style="display:flex;overflow:hidden;border-radius:14px 14px 0 0;">
+                    <div class="st-strip" style="background:#e67e22;min-width:6px;"></div>
+                    <div class="st-body" style="flex:1;padding:22px 24px 0;">
+                        <div class="st-header">
+                            <div class="st-icon" style="background:linear-gradient(135deg,#e67e22,#f39c12)"><i class="fas fa-fire"></i></div>
+                            <div><div class="st-title">Top Network Offers</div><div class="st-sub">Shown on every affiliate's dashboard sidebar</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding:0 24px 22px 30px;">
+                    <div id="topOffersAdminList" style="margin-bottom:14px;"></div>
+                    <button class="btn-primary-sm" onclick="addTopOfferRow()"><i class="fas fa-plus"></i> Add Offer</button>
                 </div>
             </div>
         </div>
@@ -2134,8 +2225,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 function doLogout() { firebase.auth().signOut().then(function() { window.location.href = 'index.html'; }); }
 
 /* ===== NAVIGATION ===== */
-var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings', 'rpt-offer':'Offer Report', 'rpt-conv':'Conversion Report', 'rpt-subid':'Sub ID Report', 'rpt-daily':'Daily Report', 'rpt-hourly':'Hourly Report' };
-var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools', 'rpt-offer':'Reporting', 'rpt-conv':'Reporting', 'rpt-subid':'Reporting', 'rpt-daily':'Reporting', 'rpt-hourly':'Reporting' };
+var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', reporting:'Reporting', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings' };
+var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', reporting:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools' };
 var currentPage = 'dashboard';
 
 function goPage(page) {
@@ -2167,11 +2258,7 @@ function goPage(page) {
         else if (page === 'linkgen') loadLinkGen();
         else if (page === 'mailer') loadMailer();
         else if (page === 'settings') loadSettings();
-        else if (page === 'rpt-offer') initRptOffer();
-        else if (page === 'rpt-conv') initRptConv();
-        else if (page === 'rpt-subid') initRptSubid();
-        else if (page === 'rpt-daily') initRptDaily();
-        else if (page === 'rpt-hourly') initRptHourly();
+        else if (page === 'reporting') initReporting();
     });
     /* Close mobile sidebar */
     document.getElementById('appSidebar').classList.remove('mob-open');
@@ -4824,6 +4911,7 @@ function loadSettings() {
     loadSmtpSettings();
     loadFraudSettings();
     loadDomains();
+    loadTopOffersAdmin();
 }
 function saveSettings() {
     var data = { networkName: document.getElementById('setNetName').value.trim(), trackingDomain: document.getElementById('setDomain').value.trim(), defaultCurrency: document.getElementById('setCurrency').value, defaultPayout: parseFloat(document.getElementById('setDefPayout').value) || 0 };
@@ -6620,6 +6708,85 @@ function getRptRange(key) {
     return {fromTs:fromTs,toTs:toTs};
 }
 function calcDelta(fromTs,toTs){if(!fromTs||!toTs)return '-';var diff=toTs-fromTs;if(diff<60000)return '<1m';if(diff<3600000)return Math.floor(diff/60000)+'m';if(diff<86400000)return Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m';return Math.floor(diff/86400000)+'d '+Math.floor((diff%86400000)/3600000)+'h';}
+
+/* ===== REPORTING HUB ===== */
+function initReporting() {
+    /* Show hub, hide all panels */
+    switchRpt(null);
+    /* Pre-populate dropdowns in all panels */
+    initRptOffer(); initRptConv(); initRptSubid(); initRptDaily(); initRptHourly();
+}
+function switchRpt(type) {
+    var hub = document.getElementById('rptHub');
+    var panels = document.querySelectorAll('.rpt-panel');
+    if (!type) {
+        if (hub) hub.style.display = '';
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        document.getElementById('pageTitle').textContent = 'Reporting';
+        return;
+    }
+    if (hub) hub.style.display = 'none';
+    panels.forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('rptPanel-' + type);
+    if (panel) panel.classList.add('active');
+    var labels = {offer:'Offer Report', conv:'Conversion Report', subid:'Sub ID Report', daily:'Daily Report', hourly:'Hourly Report'};
+    document.getElementById('pageTitle').textContent = labels[type] || 'Report';
+}
+
+/* ===== TOP NETWORK OFFERS ADMIN ===== */
+var _topOffersData = {};
+function loadTopOffersAdmin() {
+    fbGet('network/topOffers').then(function(data) {
+        _topOffersData = data || {};
+        renderTopOffersAdmin();
+    });
+}
+function renderTopOffersAdmin() {
+    var items = objToArr(_topOffersData);
+    items.sort(function(a,b){return (a.order||0)-(b.order||0);});
+    var h = '';
+    if (!items.length) {
+        h = '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">No top offers yet. Click "Add Offer" to create one.</p>';
+    } else {
+        items.forEach(function(item) {
+            h += '<div class="top-offer-row" data-id="'+item._id+'">' +
+                 '<span style="font-size:11px;color:var(--text-muted);width:20px;text-align:center">'+(item.order||'')+'</span>' +
+                 '<input type="text" placeholder="Offer Name" value="'+escHtml(item.name||'')+'" onchange="updateTopOfferField(\''+item._id+'\',\'name\',this.value)" style="flex:1;min-width:120px">' +
+                 '<input type="number" placeholder="CPA $" value="'+(item.cpa||'')+'" step="0.01" onchange="updateTopOfferField(\''+item._id+'\',\'cpa\',parseFloat(this.value)||0)" style="width:80px">' +
+                 '<input type="number" placeholder="CR %" value="'+(item.cr||'')+'" step="0.1" onchange="updateTopOfferField(\''+item._id+'\',\'cr\',parseFloat(this.value)||0)" style="width:70px">' +
+                 '<select onchange="updateTopOfferField(\''+item._id+'\',\'status\',this.value)">' +
+                 ['hot','new','top','active'].map(function(s){return '<option value="'+s+'"'+(item.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';}).join('') +
+                 '</select>' +
+                 '<input type="number" placeholder="Order" value="'+(item.order||0)+'" step="1" onchange="updateTopOfferField(\''+item._id+'\',\'order\',parseInt(this.value)||0)" style="width:60px">' +
+                 '<button class="top-offer-del" onclick="deleteTopOffer(\''+item._id+'\')"><i class="fas fa-trash"></i></button>' +
+                 '</div>';
+        });
+    }
+    h += '<div style="margin-top:10px;"><button class="btn-primary-sm" onclick="saveTopOffers()"><i class="fas fa-save"></i> Save All</button></div>';
+    document.getElementById('topOffersAdminList').innerHTML = h;
+}
+function updateTopOfferField(id, field, val) {
+    if (!_topOffersData[id]) _topOffersData[id] = {};
+    _topOffersData[id][field] = val;
+}
+function addTopOfferRow() {
+    var newId = 'offer_' + Date.now();
+    _topOffersData[newId] = { name:'', cpa:0, cr:0, status:'active', order: Object.keys(_topOffersData).length + 1, active:true };
+    renderTopOffersAdmin();
+}
+function deleteTopOffer(id) {
+    delete _topOffersData[id];
+    fbDelete('network/topOffers/' + id).then(function(){ toast('Offer removed'); renderTopOffersAdmin(); });
+}
+function saveTopOffers() {
+    /* Rebuild clean object without _id injected by objToArr */
+    var clean = {};
+    Object.keys(_topOffersData).forEach(function(k) {
+        var o = _topOffersData[k];
+        clean[k] = { name: o.name||'', cpa: o.cpa||0, cr: o.cr||0, status: o.status||'active', order: o.order||0, active: o.active !== false };
+    });
+    fbPut('network/topOffers', clean).then(function(){ toast('Top offers saved!'); }).catch(function(){ toast('Error saving', 'error'); });
+}
 
 /* --- Offer Report --- */
 function initRptOffer() { var sel=document.getElementById('rptOfferAff'); if(!sel) return; var h='<option value="">All Affiliates</option>'; allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>';}); sel.innerHTML=h; }

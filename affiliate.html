@@ -199,6 +199,22 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .f-inp:focus{border-color:var(--accent);}
 .f-sel{padding:6px 11px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;outline:none;background:#fff;cursor:pointer;font-family:inherit;}
 .btn-p{padding:7px 16px;border:none;background:var(--teal);color:#fff;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit;}
+/* Timezone Picker */
+.tz-wrap{position:relative;display:inline-block;}
+.tz-btn{display:flex;align-items:center;gap:7px;padding:6px 12px;border:1.5px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:var(--tm);white-space:nowrap;transition:border-color .15s;}
+.tz-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tz-btn i{color:var(--tl);font-size:11px;}
+.tz-drop{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.14);width:300px;overflow:hidden;display:none;}
+.tz-drop.open{display:block;}
+.tz-search-wrap{padding:8px 10px;border-bottom:1px solid var(--border);}
+.tz-search{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;outline:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 9px center;font-family:inherit;}
+.tz-search:focus{border-color:var(--accent);}
+.tz-list{max-height:220px;overflow-y:auto;}
+.tz-opt{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;cursor:pointer;color:var(--tm);transition:background .1s;}
+.tz-opt:hover{background:#f8fafc;color:var(--accent);}
+.tz-opt.active{background:#eef7f9;color:var(--accent);font-weight:600;}
+.tz-opt i{color:var(--accent);font-size:11px;visibility:hidden;}
+.tz-opt.active i{visibility:visible;}
 .btn-p:hover{opacity:.88;}
 .tbl-wrap{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
 .tbl-scroll{overflow-x:auto;}
@@ -654,6 +670,13 @@ body.impersonating .impersonate-banner{display:block;}
                     <input type="date" id="ckFrom" class="f-inp" onchange="renderClicks()">
                     <input type="date" id="ckTo" class="f-inp" onchange="renderClicks()">
                     <select id="ckOfferF" class="f-sel" onchange="renderClicks()"><option value="">All Offers</option></select>
+                    <div class="tz-wrap" id="tzWrap">
+                        <button class="tz-btn" onclick="toggleTzDrop(event)"><i class="fas fa-globe"></i><span id="tzLabel">ET (New York)</span><i class="fas fa-chevron-down" style="font-size:9px"></i></button>
+                        <div class="tz-drop" id="tzDrop">
+                            <div class="tz-search-wrap"><input type="text" class="tz-search" placeholder="Search timezone..." oninput="filterTzList(this.value)" id="tzSearchInp"></div>
+                            <div class="tz-list" id="tzList"></div>
+                        </div>
+                    </div>
                 </div>
                 <span class="pg-info" id="ckSum"></span>
             </div>
@@ -882,6 +905,63 @@ function objToArr(obj) {
     return Object.keys(obj).map(function(k) { var it = typeof obj[k] === 'object' && obj[k] !== null ? obj[k] : { value: obj[k] }; it._id = k; return it; });
 }
 var TZ = 'America/New_York'; /* Florida (US Eastern) */
+var TZ_LIST = [
+    {z:'America/New_York',label:'(GMT-04:00) America/New_York',short:'ET (New York)'},
+    {z:'America/Chicago',label:'(GMT-05:00) America/Chicago',short:'CT (Chicago)'},
+    {z:'America/Denver',label:'(GMT-06:00) America/Denver',short:'MT (Denver)'},
+    {z:'America/Los_Angeles',label:'(GMT-07:00) America/Los_Angeles',short:'PT (Los Angeles)'},
+    {z:'America/Phoenix',label:'(GMT-07:00) America/Phoenix',short:'MST (Phoenix)'},
+    {z:'America/Anchorage',label:'(GMT-08:00) America/Anchorage',short:'AKT (Anchorage)'},
+    {z:'Pacific/Honolulu',label:'(GMT-10:00) Pacific/Honolulu',short:'HST (Hawaii)'},
+    {z:'America/Sao_Paulo',label:'(GMT-03:00) America/Sao_Paulo',short:'BRT (Sao Paulo)'},
+    {z:'America/Halifax',label:'(GMT-03:00) America/Halifax',short:'ADT (Halifax)'},
+    {z:'America/Argentina/Buenos_Aires',label:'(GMT-03:00) America/Argentina/Buenos_Aires',short:'ART (Buenos Aires)'},
+    {z:'Atlantic/Cape_Verde',label:'(GMT-01:00) Atlantic/Cape_Verde',short:'CVT (Cape Verde)'},
+    {z:'UTC',label:'(GMT+00:00) UTC',short:'UTC'},
+    {z:'Europe/London',label:'(GMT+01:00) Europe/London',short:'BST (London)'},
+    {z:'Europe/Paris',label:'(GMT+02:00) Europe/Paris',short:'CEST (Paris)'},
+    {z:'Europe/Berlin',label:'(GMT+02:00) Europe/Berlin',short:'CEST (Berlin)'},
+    {z:'Europe/Istanbul',label:'(GMT+03:00) Europe/Istanbul',short:'TRT (Istanbul)'},
+    {z:'Europe/Moscow',label:'(GMT+03:00) Europe/Moscow',short:'MSK (Moscow)'},
+    {z:'Asia/Dubai',label:'(GMT+04:00) Asia/Dubai',short:'GST (Dubai)'},
+    {z:'Asia/Karachi',label:'(GMT+05:00) Asia/Karachi',short:'PKT (Karachi)'},
+    {z:'Asia/Kolkata',label:'(GMT+05:30) Asia/Kolkata',short:'IST (India)'},
+    {z:'Asia/Dhaka',label:'(GMT+06:00) Asia/Dhaka',short:'BST (Dhaka)'},
+    {z:'Asia/Bangkok',label:'(GMT+07:00) Asia/Bangkok',short:'ICT (Bangkok)'},
+    {z:'Asia/Singapore',label:'(GMT+08:00) Asia/Singapore',short:'SGT (Singapore)'},
+    {z:'Asia/Shanghai',label:'(GMT+08:00) Asia/Shanghai',short:'CST (China)'},
+    {z:'Asia/Tokyo',label:'(GMT+09:00) Asia/Tokyo',short:'JST (Tokyo)'},
+    {z:'Australia/Sydney',label:'(GMT+10:00) Australia/Sydney',short:'AEST (Sydney)'},
+    {z:'Pacific/Auckland',label:'(GMT+12:00) Pacific/Auckland',short:'NZST (Auckland)'}
+];
+function buildTzList(filter) {
+    var list = document.getElementById('tzList'); if (!list) return;
+    var f = (filter || '').toLowerCase();
+    var h = '';
+    TZ_LIST.forEach(function(t) {
+        if (f && t.label.toLowerCase().indexOf(f) < 0 && t.short.toLowerCase().indexOf(f) < 0) return;
+        h += '<div class="tz-opt'+(TZ===t.z?' active':'')+'" onclick="selectTz(\''+t.z+'\',\''+t.short+'\')"><i class="fas fa-check"></i>'+t.label+'</div>';
+    });
+    list.innerHTML = h || '<div style="padding:12px;font-size:12px;color:var(--tl);text-align:center">No results</div>';
+}
+function filterTzList(v) { buildTzList(v); }
+function toggleTzDrop(e) {
+    e.stopPropagation();
+    var drop = document.getElementById('tzDrop');
+    var isOpen = drop.classList.contains('open');
+    document.querySelectorAll('.tz-drop.open').forEach(function(d){d.classList.remove('open');});
+    if (!isOpen) { drop.classList.add('open'); buildTzList(''); document.getElementById('tzSearchInp').focus(); }
+}
+function selectTz(tz, shortLabel) {
+    TZ = tz;
+    var lbl = document.getElementById('tzLabel'); if (lbl) lbl.textContent = shortLabel;
+    document.getElementById('tzDrop').classList.remove('open');
+    renderClicks();
+    if (typeof renderAnalytics === 'function') renderAnalytics();
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#tzWrap')) document.querySelectorAll('.tz-drop.open').forEach(function(d){d.classList.remove('open');});
+});
 function fmtDate(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: TZ }); }
 function fmtDT(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: TZ }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: TZ }); }
 function todayET() { var d = new Date(); var p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(d); return p; }
@@ -1507,44 +1587,73 @@ function setChartType(type, btn) {
 
 /* ── Dashboard Offers Tables ── */
 function renderDashOffers() {
+    /* Today in Florida (ET) time */
+    var etNow = new Date().toLocaleString('en-US', {timeZone: 'America/New_York'});
+    var etDate = new Date(etNow);
+    var todayStart = new Date(etDate.getFullYear(), etDate.getMonth(), etDate.getDate()).getTime();
+    var todayEnd = todayStart + 86400000;
+
     var search = (document.getElementById('dashOfferSearch').value || '').toLowerCase();
-    var filtered = allOffers.filter(function(o) {
-        return !search || (o.name || '').toLowerCase().indexOf(search) !== -1;
+
+    /* Build per-offer stats for TODAY only */
+    var offerMap = {};
+    myClicks.filter(function(c) {
+        return (c.timestamp || 0) >= todayStart && (c.timestamp || 0) < todayEnd;
+    }).forEach(function(c) {
+        if (!c.offerId) return;
+        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, earnings:0};
+        offerMap[c.offerId].clicks++;
     });
+    myConversions.filter(function(c) {
+        return (c.createdAt||0) >= todayStart && (c.createdAt||0) < todayEnd && c.status === 'approved';
+    }).forEach(function(c) {
+        if (!c.offerId) return;
+        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, earnings:0};
+        offerMap[c.offerId].convs++;
+        offerMap[c.offerId].earnings += (parseFloat(c.payout) || 0);
+    });
+
+    /* Only offers with at least 1 click today */
+    var rows = Object.keys(offerMap).filter(function(oid) {
+        return offerMap[oid].clicks > 0;
+    }).map(function(oid) {
+        var offer = allOffers.find(function(o) { return o._id === oid; });
+        return { oid: oid, name: offer ? (offer.name || oid) : oid, clicks: offerMap[oid].clicks, convs: offerMap[oid].convs, earnings: offerMap[oid].earnings };
+    });
+
+    /* Sort: most conversions first, then most clicks */
+    rows.sort(function(a, b) { return b.convs - a.convs || b.clicks - a.clicks; });
+
+    if (search) rows = rows.filter(function(r) { return r.name.toLowerCase().indexOf(search) !== -1; });
+
     var h = '';
-    filtered.forEach(function(o) {
-        var oCk = myClicks.filter(function(c) { return c.offerId === o._id; }).length;
-        var oCv = myConversions.filter(function(c) { return c.offerId === o._id; }).length;
-        var oRv = myConversions.filter(function(c) { return c.offerId === o._id && c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
-        h += '<tr><td style="font-weight:600">' + esc(o.name) + '</td><td>' + oCk + '</td><td>' + oCv + '</td><td style="font-weight:700;color:var(--green)">' + fmtM(oRv) + '</td></tr>';
+    rows.forEach(function(r) {
+        h += '<tr><td style="font-weight:600">' + esc(r.name) + '</td><td>' + r.clicks + '</td><td>' + r.convs + '</td><td style="font-weight:700;color:var(--green)">' + fmtM(r.earnings) + '</td></tr>';
     });
-    document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-bullhorn"></i><p>No offers</p></td></tr>';
+    document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-mouse-pointer"></i><p style="margin:4px 0 0">No clicks today</p></td></tr>';
     renderTopOffers();
 }
 
 function renderTopOffers() {
-    /* Show only offers marked as topOffer by admin + calculate network-wide CR */
-    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions')]).then(function(r) {
-        var netOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active' && o.topOffer === true; });
-        var allCk = objToArr(r[1]);
-        var allCv = objToArr(r[2]);
-        var offerStats = [];
-        netOffers.forEach(function(o) {
-            var ck = allCk.filter(function(c) { return c.offerId === o._id; }).length;
-            var cv = allCv.filter(function(c) { return c.offerId === o._id && c.status === 'approved'; }).length;
-            var cr = ck > 0 ? ((cv / ck) * 100).toFixed(1) : '0.0';
-            offerStats.push({ name: o.name, payout: parseFloat(o.payout) || 0, cr: parseFloat(cr), crStr: cr + '%', status: o.status, ck: ck, cv: cv });
-        });
-        offerStats.sort(function(a, b) { return b.cv - a.cv || b.cr - a.cr; });
+    /* Admin-managed top offers from network/topOffers */
+    fbGet('network/topOffers').then(function(data) {
+        var items = objToArr(data || {}).filter(function(o) { return o.active !== false; });
+        items.sort(function(a, b) { return (a.order || 0) - (b.order || 0) || b.convs - a.convs; });
         var h = '';
-        offerStats.forEach(function(o) {
-            var crColor = o.cr >= 5 ? 'var(--green)' : (o.cr >= 1 ? 'var(--orange)' : 'var(--tl)');
-            h += '<tr><td style="font-weight:600">' + esc(o.name) + '</td>' +
-                '<td style="font-weight:700;color:var(--accent)">' + fmtM(o.payout) + '</td>' +
-                '<td style="font-weight:700;color:' + crColor + '">' + o.crStr + '</td>' +
-                '<td>' + (o.status === 'active' ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-pending">' + esc(o.status) + '</span>') + '</td></tr>';
+        items.forEach(function(o) {
+            var crColor = parseFloat(o.cr) >= 5 ? 'var(--green)' : (parseFloat(o.cr) >= 1 ? 'var(--orange)' : 'var(--tl)');
+            var stBadge = o.status === 'hot' ? '<span class="badge" style="background:#fef2f2;color:#dc2626">🔥 Hot</span>' :
+                          o.status === 'new' ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8">✨ New</span>' :
+                          o.status === 'top' ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">⭐ Top</span>' :
+                          '<span class="badge badge-active">Active</span>';
+            h += '<tr><td style="font-weight:600">' + esc(o.name||'') + '</td>' +
+                 '<td style="font-weight:700;color:var(--accent)">$' + (parseFloat(o.cpa)||0).toFixed(0) + '</td>' +
+                 '<td style="font-weight:700;color:' + crColor + '">' + (o.cr||'0') + '%</td>' +
+                 '<td>' + stBadge + '</td></tr>';
         });
-        document.getElementById('topOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p>No top offers set</p></td></tr>';
+        document.getElementById('topOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p style="margin:4px 0 0">No top offers set</p></td></tr>';
+    }).catch(function() {
+        document.getElementById('topOffersTb').innerHTML = '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p style="margin:4px 0 0">No top offers set</p></td></tr>';
     });
 }
 
