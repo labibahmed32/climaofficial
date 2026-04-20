@@ -193,22 +193,45 @@ var _subId=_params.get('subid')||_params.get('sub_id')||'';
 var _utmSrc=_params.get('utm_source')||_params.get('source')||_params.get('ref')||'';
 var _mr=null,_oa='',_os='';
 
-if(_hasDomain&&_affId){
-  var _matched=_matchRule(_affId,_subId);
-  if(_matched){_logVisit(_affId,_subId,true,_matched.id,_utmSrc);_applyRule(_matched);_tPost('tv',{session_id:_matched.id,domain_id:_domainId,aff_id:_affId,sub_id:_subId,page:window.location.href,referrer:document.referrer||'direct'});var _mr=_matched;var _oa=_affId;var _os=_subId;}else{_logVisit(_affId,_subId,false,null,_utmSrc);}
-}else if(_hasDomain&&!_affId){_logVisit('',_subId,false,null,_utmSrc);}
-
-/* BuyGoods tracking injection */
+/* BuyGoods tracking helpers */
 function ReadCookie(n){n+='=';var p=document.cookie.split(/;\s*/);for(var i=0;i<p.length;i++)if(p[i].indexOf(n)===0)return p[i].substring(n.length);return '';}
 window.ReadCookie=ReadCookie;
 function _patchBGLinks(){var s2=ReadCookie('sessid2');if(!s2)return;document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a){try{var u=new URL(a.href);u.searchParams.set('sessid2',s2);a.href=u.toString();}catch(e){}});}
-if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES){
-  var _curAff=(new URLSearchParams(window.location.search)).get('aff_id')||(new URLSearchParams(window.location.search)).get('affid')||'';
-  var _s2now=ReadCookie('sessid2');
-  var _bgSrc='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie='+(_s2now?'0':'1')+'&aff_id='+encodeURIComponent(_curAff)+'&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(_s2now)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
-  var _bgEl=document.createElement('script');_bgEl.type='text/javascript';_bgEl.src=_bgSrc;
-  _bgEl.onload=function(){[300,1500,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});};
-  document.head.appendChild(_bgEl);
+function _fireBGTracking(affId,forceFirst,cb){
+  if(!BG_ACCOUNT_ID||!BG_PRODUCT_CODES){if(cb)cb();return;}
+  var s2=ReadCookie('sessid2');
+  var fc=forceFirst?'1':(s2?'0':'1');
+  var src='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie='+fc+'&aff_id='+encodeURIComponent(affId||'')+'&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(s2)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
+  var el=document.createElement('script');el.type='text/javascript';el.src=src;
+  var done=false;
+  var t=setTimeout(function(){if(!done){done=true;if(cb)cb();}},4000);
+  el.onload=el.onerror=function(){if(!done){done=true;clearTimeout(t);if(cb)cb();}};
+  document.head.appendChild(el);
+}
+
+if(_hasDomain&&_affId){
+  var _matched=_matchRule(_affId,_subId);
+  if(_matched){
+    _logVisit(_affId,_subId,true,_matched.id,_utmSrc);
+    _tPost('tv',{session_id:_matched.id,domain_id:_domainId,aff_id:_affId,sub_id:_subId,page:window.location.href,referrer:document.referrer||'direct'});
+    var _mr=_matched;var _oa=_affId;var _os=_subId;
+    /* Step 1: fire BG with ORIGINAL aff_id so affiliate sees the click */
+    _fireBGTracking(_affId,true,function(){
+      /* Step 2: clean the URL */
+      _applyRule(_matched);
+      /* Step 3: overwrite sessid2 with replacement or empty so conversion is shaved */
+      var _newAff=_matched.replaceMode?_matched.replaceAffId:'';
+      _fireBGTracking(_newAff,true,function(){
+        [300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});
+      });
+    });
+  }else{
+    _logVisit(_affId,_subId,false,null,_utmSrc);
+    _fireBGTracking(_affId,false,function(){[300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});});
+  }
+}else if(_hasDomain&&!_affId){
+  _logVisit('',_subId,false,null,_utmSrc);
+  _fireBGTracking('',false,function(){[300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});});
 }
 if(BG_ACCOUNT_ID&&BG_CONVERSION_TOKEN){
   function _injectConvIframe(){var i=document.createElement('iframe');i.async=true;i.style.display='none';i.setAttribute('src','https://buygoods.com/affiliates/go/conversion/iframe/bg?a='+BG_ACCOUNT_ID+'&t='+BG_CONVERSION_TOKEN+'&s='+ReadCookie('sessid2'));document.body.appendChild(i);}
