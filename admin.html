@@ -241,7 +241,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* Reporting Flyout */
 .rpt-flyout-overlay{display:none;position:fixed;inset:0;z-index:1190;background:rgba(0,0,0,.2);}
 .rpt-flyout-overlay.open{display:block;}
-.rpt-flyout{position:fixed;left:280px;top:0;bottom:0;width:340px;background:#fff;z-index:1200;box-shadow:4px 0 24px rgba(0,0,0,.14);transform:translateX(-120%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-right:1px solid #e2e8f0;}
+.rpt-flyout{position:fixed;left:268px;top:0;bottom:0;width:340px;background:#fff;z-index:1200;box-shadow:4px 0 24px rgba(0,0,0,.14);transform:translateX(-200%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-right:1px solid #e2e8f0;}
 .rpt-flyout.open{transform:translateX(0);}
 .rpt-flyout-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #f1f5f9;font-size:15px;font-weight:700;color:#1e293b;flex-shrink:0;}
 .rpt-flyout-close{width:30px;height:30px;border:none;background:#f1f5f9;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px;}
@@ -723,6 +723,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="nav-item" data-page="signups" onclick="goPage('signups')"><i class="fas fa-user-clock"></i> Signups <span class="nav-badge" id="signupBadge" style="display:none">0</span></div>
                 <div class="nav-item" data-page="assignments" onclick="goPage('assignments')"><i class="fas fa-handshake"></i> Assignments <span class="nav-badge" id="appBadge" style="display:none">0</span></div>
                 <div class="nav-item" data-page="postbacks" onclick="goPage('postbacks')"><i class="fas fa-satellite-dish"></i> Postbacks</div>
+                <div class="nav-item" data-page="topoffers" onclick="goPage('topoffers')"><i class="fas fa-fire" style="color:#fb8c00"></i> Top Offers</div>
+                <div class="nav-item" data-page="announcements" onclick="goPage('announcements')"><i class="fas fa-bullhorn" style="color:#e53e3e"></i> Announcements</div>
             </div>
             <div class="nav-group"><div class="nav-group-label">Analyze</div>
                 <div class="nav-item" data-page="reporting" onclick="openRptFlyout()"><i class="fas fa-chart-bar"></i> Reporting <i class="fas fa-chevron-right" style="margin-left:auto;font-size:9px;opacity:.4"></i></div>
@@ -1469,22 +1471,93 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 </div>
             </div>
 
-            <!-- Top Network Offers -->
-            <div class="st-card" style="max-width:none;display:block;padding:0;">
-                <div style="display:flex;overflow:hidden;border-radius:14px 14px 0 0;">
-                    <div class="st-strip" style="background:#e67e22;min-width:6px;"></div>
-                    <div class="st-body" style="flex:1;padding:22px 24px 0;">
-                        <div class="st-header">
-                            <div class="st-icon" style="background:linear-gradient(135deg,#e67e22,#f39c12)"><i class="fas fa-fire"></i></div>
-                            <div><div class="st-title">Top Network Offers</div><div class="st-sub">Shown on every affiliate's dashboard sidebar</div></div>
-                        </div>
+        </div>
+
+        <!-- ===== TOP OFFERS ===== -->
+        <div class="page-section" id="page-topoffers">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h2 style="font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:4px;"><i class="fas fa-fire" style="color:#fb8c00;margin-right:8px"></i>Top Network Offers</h2>
+                    <p style="font-size:13px;color:var(--text-muted);">These offers appear on every affiliate's dashboard. Select from existing network offers and set their status badge.</p>
+                </div>
+                <button class="btn-primary-sm" onclick="addTopOffer()" style="white-space:nowrap"><i class="fas fa-plus"></i> Add Offer</button>
+            </div>
+
+            <!-- Info bar -->
+            <div style="background:#fff8e1;border:1px solid #fde68a;border-radius:8px;padding:10px 16px;margin-bottom:18px;font-size:12.5px;color:#92400e;display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-info-circle" style="color:#f59e0b"></i>
+                Payout is auto-fetched from the offer. CR% you set manually. Status badge (Hot/New/Best/Top) appears on affiliate dashboard cards.
+            </div>
+
+            <!-- Offer rows -->
+            <div id="toOfferRows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+
+            <div style="display:flex;gap:10px;">
+                <button class="btn-primary-sm" onclick="saveTopOffers()"><i class="fas fa-save"></i> Save All</button>
+                <button class="btn-secondary" onclick="addTopOffer()"><i class="fas fa-plus"></i> Add Another</button>
+            </div>
+        </div>
+
+        <!-- ===== ANNOUNCEMENTS ===== -->
+        <div class="page-section" id="page-announcements">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h2 style="font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:4px;"><i class="fas fa-bullhorn" style="color:#e53e3e;margin-right:8px"></i>Announcements</h2>
+                    <p style="font-size:13px;color:var(--text-muted);">Push notifications to affiliate dashboards. Only active announcements are shown. Toggle off to hide without deleting.</p>
+                </div>
+                <button class="btn-primary-sm" style="background:#e53e3e;white-space:nowrap" onclick="openAnnForm()"><i class="fas fa-plus"></i> New Announcement</button>
+            </div>
+
+            <!-- Create / Edit Form -->
+            <div id="annFormCard" style="display:none;background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:20px 24px;margin-bottom:18px;box-shadow:var(--shadow-md);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <h3 id="annFormTitle" style="font-size:15px;font-weight:700;color:var(--text-dark);">New Announcement</h3>
+                    <button onclick="closeAnnForm()" style="background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer;line-height:1">&times;</button>
+                </div>
+                <input type="hidden" id="annEditId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="annTitle" placeholder="e.g. Payout Bump on Offer X">
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="annType">
+                            <option value="general">General</option>
+                            <option value="payout_bump">Payout Bump</option>
+                            <option value="new_offer">New Offer</option>
+                            <option value="deal">Deal / Promo</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
                     </div>
                 </div>
-                <div style="padding:0 24px 22px 30px;">
-                    <div id="topOffersAdminList" style="margin-bottom:14px;"></div>
-                    <button class="btn-primary-sm" onclick="addTopOfferRow()"><i class="fas fa-plus"></i> Add Offer</button>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="annMessage" rows="3" placeholder="Write your announcement message here..." style="resize:vertical;min-height:80px;width:100%;padding:10px 12px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px;font-family:inherit;"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Link to Offer <span style="font-size:10px;color:var(--text-muted)">(optional)</span></label>
+                        <select id="annOfferId">
+                            <option value="">— No linked offer —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="annActive">
+                            <option value="1">Active — show to affiliates</option>
+                            <option value="0">Inactive — hidden</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button class="btn-primary-sm" style="background:#e53e3e" onclick="saveAnnouncement()"><i class="fas fa-save"></i> Save Announcement</button>
+                    <button class="btn-secondary" onclick="closeAnnForm()">Cancel</button>
                 </div>
             </div>
+
+            <!-- Announcements List -->
+            <div id="annList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
 
         <!-- ===== MAILER ===== -->
@@ -2328,8 +2401,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 function doLogout() { firebase.auth().signOut().then(function() { window.location.href = 'index.html'; }); }
 
 /* ===== NAVIGATION ===== */
-var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', reporting:'Reporting', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings' };
-var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', reporting:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools' };
+var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', reporting:'Reporting', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings', topoffers:'Top Offers', announcements:'Announcements' };
+var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', reporting:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools', topoffers:'Manage', announcements:'Manage' };
 var currentPage = 'dashboard';
 
 function goPage(page) {
@@ -2362,6 +2435,8 @@ function goPage(page) {
         else if (page === 'mailer') loadMailer();
         else if (page === 'settings') loadSettings();
         else if (page === 'reporting') initReporting();
+        else if (page === 'topoffers') initTopOffers();
+        else if (page === 'announcements') initAnnouncements();
     });
     /* Close mobile sidebar */
     document.getElementById('appSidebar').classList.remove('mob-open');
@@ -6963,59 +7038,214 @@ function switchRpt(type) {
     document.getElementById('pageTitle').textContent = labels[type] || 'Report';
 }
 
-/* ===== TOP NETWORK OFFERS ADMIN ===== */
+/* ====== TOP OFFERS + ANNOUNCEMENTS ====== */
 var _topOffersData = {};
-function loadTopOffersAdmin() {
+function initTopOffers() {
     fbGet('network/topOffers').then(function(data) {
         _topOffersData = data || {};
-        renderTopOffersAdmin();
+        renderToOfferRows();
     });
 }
-function renderTopOffersAdmin() {
+function renderToOfferRows() {
     var items = objToArr(_topOffersData);
     items.sort(function(a,b){return (a.order||0)-(b.order||0);});
-    var h = '';
+    var wrap = document.getElementById('toOfferRows');
+    if (!wrap) return;
     if (!items.length) {
-        h = '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">No top offers yet. Click "Add Offer" to create one.</p>';
-    } else {
-        items.forEach(function(item) {
-            h += '<div class="top-offer-row" data-id="'+item._id+'">' +
-                 '<span style="font-size:11px;color:var(--text-muted);width:20px;text-align:center">'+(item.order||'')+'</span>' +
-                 '<input type="text" placeholder="Offer Name" value="'+escHtml(item.name||'')+'" onchange="updateTopOfferField(\''+item._id+'\',\'name\',this.value)" style="flex:1;min-width:120px">' +
-                 '<input type="number" placeholder="CPA $" value="'+(item.cpa||'')+'" step="0.01" onchange="updateTopOfferField(\''+item._id+'\',\'cpa\',parseFloat(this.value)||0)" style="width:80px">' +
-                 '<input type="number" placeholder="CR %" value="'+(item.cr||'')+'" step="0.1" onchange="updateTopOfferField(\''+item._id+'\',\'cr\',parseFloat(this.value)||0)" style="width:70px">' +
-                 '<select onchange="updateTopOfferField(\''+item._id+'\',\'status\',this.value)">' +
-                 ['hot','new','top','active'].map(function(s){return '<option value="'+s+'"'+(item.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>';}).join('') +
-                 '</select>' +
-                 '<input type="number" placeholder="Order" value="'+(item.order||0)+'" step="1" onchange="updateTopOfferField(\''+item._id+'\',\'order\',parseInt(this.value)||0)" style="width:60px">' +
-                 '<button class="top-offer-del" onclick="deleteTopOffer(\''+item._id+'\')"><i class="fas fa-trash"></i></button>' +
-                 '</div>';
-        });
+        wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;background:#fff;border:1px dashed var(--card-border);border-radius:8px;"><i class="fas fa-fire" style="font-size:22px;margin-bottom:8px;opacity:.3;display:block"></i>No top offers yet. Click "Add Offer" to get started.</div>';
+        return;
     }
-    h += '<div style="margin-top:10px;"><button class="btn-primary-sm" onclick="saveTopOffers()"><i class="fas fa-save"></i> Save All</button></div>';
-    document.getElementById('topOffersAdminList').innerHTML = h;
+    var offerOpts = '<option value="">— Select Offer —</option>' + allOffers.map(function(o){ return '<option value="'+o._id+'">'+escHtml(o.name||o._id)+'</option>'; }).join('');
+    var statusColors = { hot:'#fb8c00', new:'#22c55e', best:'#3b82f6', top:'#8b5cf6' };
+    var h = '';
+    items.forEach(function(item, idx) {
+        var sc = statusColors[item.status] || '#64748b';
+        h += '<div style="background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+             /* logo preview */
+             '<div style="width:44px;height:44px;border-radius:8px;background:#f1f5f9;border:1px solid var(--card-border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">' +
+             (item.logo ? '<img src="'+escHtml(item.logo)+'" style="width:44px;height:44px;object-fit:cover;border-radius:8px" onerror="this.style.display=\'none\'">' : '<i class="fas fa-tag" style="color:#cbd5e1;font-size:16px"></i>') +
+             '</div>' +
+             /* offer select */
+             '<div style="flex:2;min-width:160px;">' +
+             '<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px;">Offer</label>' +
+             '<select onchange="toSelectOffer(\''+item._id+'\',this.value)" style="width:100%;padding:7px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px;">' +
+             offerOpts.replace('value="'+item.offerId+'"', 'value="'+item.offerId+'" selected') +
+             '</select></div>' +
+             /* payout (readonly) */
+             '<div style="min-width:80px;">' +
+             '<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px;">Payout</label>' +
+             '<input type="number" id="toPay_'+item._id+'" value="'+(item.cpa||0)+'" step="0.01" placeholder="$0" style="width:80px;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;background:#f8fafc" onchange="_toField(\''+item._id+'\',\'cpa\',parseFloat(this.value)||0)">' +
+             '</div>' +
+             /* cr */
+             '<div style="min-width:70px;">' +
+             '<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px;">CR %</label>' +
+             '<input type="number" value="'+(item.cr||0)+'" step="0.1" placeholder="0" style="width:70px;padding:7px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px" onchange="_toField(\''+item._id+'\',\'cr\',parseFloat(this.value)||0)">' +
+             '</div>' +
+             /* status */
+             '<div style="min-width:100px;">' +
+             '<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px;">Badge</label>' +
+             '<select onchange="_toField(\''+item._id+'\',\'status\',this.value)" style="padding:7px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px;font-weight:600;color:'+sc+'">' +
+             ['hot','new','best','top'].map(function(s){ return '<option value="'+s+'"'+(item.status===s?' selected':'')+' style="color:'+(statusColors[s]||'#222')+'">'+s.toUpperCase()+'</option>'; }).join('') +
+             '</select></div>' +
+             /* order */
+             '<div style="min-width:60px;">' +
+             '<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px;">Order</label>' +
+             '<input type="number" value="'+(item.order||idx+1)+'" step="1" style="width:60px;padding:7px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px" onchange="_toField(\''+item._id+'\',\'order\',parseInt(this.value)||0)">' +
+             '</div>' +
+             /* delete */
+             '<button onclick="deleteTopOffer(\''+item._id+'\')" style="width:34px;height:34px;border:1px solid #fee2e2;background:#fff5f5;border-radius:7px;color:#e53e3e;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-trash"></i></button>' +
+             '</div>';
+    });
+    wrap.innerHTML = h;
 }
-function updateTopOfferField(id, field, val) {
+function toSelectOffer(id, offerId) {
+    var offer = allOffers.find(function(o){ return o._id === offerId; });
+    if (!offer) return;
+    if (!_topOffersData[id]) _topOffersData[id] = {};
+    _topOffersData[id].offerId = offerId;
+    _topOffersData[id].name = offer.name || '';
+    _topOffersData[id].logo = offer.logo || offer.imageUrl || '';
+    _topOffersData[id].cpa = parseFloat(offer.payout) || 0;
+    var payEl = document.getElementById('toPay_' + id);
+    if (payEl) payEl.value = _topOffersData[id].cpa;
+    renderToOfferRows();
+}
+function _toField(id, field, val) {
     if (!_topOffersData[id]) _topOffersData[id] = {};
     _topOffersData[id][field] = val;
 }
-function addTopOfferRow() {
-    var newId = 'offer_' + Date.now();
-    _topOffersData[newId] = { name:'', cpa:0, cr:0, status:'active', order: Object.keys(_topOffersData).length + 1, active:true };
-    renderTopOffersAdmin();
+function addTopOffer() {
+    var newId = 'to_' + Date.now();
+    _topOffersData[newId] = { offerId:'', name:'', logo:'', cpa:0, cr:0, status:'hot', order: Object.keys(_topOffersData).length + 1 };
+    renderToOfferRows();
 }
 function deleteTopOffer(id) {
+    if (!confirm('Remove this offer from top offers?')) return;
     delete _topOffersData[id];
-    fbDelete('network/topOffers/' + id).then(function(){ toast('Offer removed'); renderTopOffersAdmin(); });
+    fbDelete('network/topOffers/' + id).then(function(){ toast('Removed'); renderToOfferRows(); });
 }
 function saveTopOffers() {
-    /* Rebuild clean object without _id injected by objToArr */
     var clean = {};
     Object.keys(_topOffersData).forEach(function(k) {
         var o = _topOffersData[k];
-        clean[k] = { name: o.name||'', cpa: o.cpa||0, cr: o.cr||0, status: o.status||'active', order: o.order||0, active: o.active !== false };
+        if (!o.offerId && !o.name) return;
+        clean[k] = { offerId:o.offerId||'', name:o.name||'', logo:o.logo||'', cpa:o.cpa||0, cr:o.cr||0, status:o.status||'hot', order:o.order||0 };
     });
-    fbPut('network/topOffers', clean).then(function(){ toast('Top offers saved!'); }).catch(function(){ toast('Error saving', 'error'); });
+    fbPut('network/topOffers', clean).then(function(){ toast('Top offers saved!'); }).catch(function(){ toast('Error saving','error'); });
+}
+/* legacy compat */
+function loadTopOffersAdmin() { initTopOffers(); }
+function addTopOfferRow() { addTopOffer(); }
+
+/* ====== ANNOUNCEMENTS PAGE ====== */
+var _annData = {};
+function initAnnouncements() {
+    Promise.all([fbGet('network/announcements'), fbGet('offers')]).then(function(res) {
+        _annData = res[0] || {};
+        var offersArr = objToArr(res[1] || {});
+        var sel = document.getElementById('annOfferId');
+        if (sel) {
+            sel.innerHTML = '<option value="">— No linked offer —</option>' + offersArr.map(function(o){ return '<option value="'+o._id+'">'+escHtml(o.name||o._id)+'</option>'; }).join('');
+        }
+        renderAnnList();
+    });
+}
+function renderAnnList() {
+    var items = objToArr(_annData);
+    items.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+    var wrap = document.getElementById('annList');
+    if (!wrap) return;
+    if (!items.length) {
+        wrap.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;background:#fff;border:1px dashed var(--card-border);border-radius:10px;"><i class="fas fa-bullhorn" style="font-size:24px;margin-bottom:10px;opacity:.3;display:block"></i>No announcements yet. Click "New Announcement" to create one.</div>';
+        return;
+    }
+    var typeColors = { payout_bump:'#22c55e', new_offer:'#3b82f6', deal:'#f59e0b', urgent:'#ef4444', general:'#64748b' };
+    var typeLabels = { payout_bump:'Payout Bump', new_offer:'New Offer', deal:'Deal', urgent:'Urgent', general:'General' };
+    var h = '';
+    items.forEach(function(ann) {
+        var tc = typeColors[ann.type] || '#64748b';
+        var tl = typeLabels[ann.type] || ann.type || 'General';
+        var active = ann.active !== false;
+        h += '<div style="background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;">' +
+             '<div style="width:42px;height:42px;border-radius:9px;background:'+tc+'1a;border:1.5px solid '+tc+'33;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:'+tc+'">' +
+             '<i class="fas '+( ann.type==='payout_bump'?'fa-dollar-sign':ann.type==='new_offer'?'fa-tag':ann.type==='urgent'?'fa-exclamation':ann.type==='deal'?'fa-percent':'fa-bell')+'"></i></div>' +
+             '<div style="flex:1;min-width:0;">' +
+             '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
+             '<strong style="font-size:14px;color:var(--text-dark)">'+escHtml(ann.title||'Untitled')+'</strong>' +
+             '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+tc+'1a;color:'+tc+'">'+tl+'</span>' +
+             (active ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#dcfce7;color:#16a34a"><i class="fas fa-circle" style="font-size:6px;margin-right:3px"></i>Active</span>' :
+                       '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f1f5f9;color:#94a3b8">Inactive</span>') +
+             '</div>' +
+             '<p style="font-size:13px;color:var(--text-mid);margin-bottom:6px;line-height:1.5">'+escHtml(ann.message||'')+'</p>' +
+             '<span style="font-size:11px;color:var(--text-muted)">'+(ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : '')+'</span>' +
+             '</div>' +
+             '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+             '<button onclick="toggleAnn(\''+ann._id+'\')" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?'#fca5a5':'#86efac')+';background:'+(active?'#fff5f5':'#f0fdf4')+';color:'+(active?'#e53e3e':'#16a34a')+'">'+( active?'Deactivate':'Activate')+'</button>' +
+             '<button onclick="editAnn(\''+ann._id+'\')" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--card-border);background:#fff;color:var(--text-mid)"><i class="fas fa-edit"></i> Edit</button>' +
+             '<button onclick="deleteAnn(\''+ann._id+'\')" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #fee2e2;background:#fff5f5;color:#e53e3e"><i class="fas fa-trash"></i></button>' +
+             '</div>' +
+             '</div>';
+    });
+    wrap.innerHTML = h;
+}
+function openAnnForm() {
+    document.getElementById('annEditId').value = '';
+    document.getElementById('annFormTitle').textContent = 'New Announcement';
+    document.getElementById('annTitle').value = '';
+    document.getElementById('annMessage').value = '';
+    document.getElementById('annType').value = 'general';
+    document.getElementById('annActive').value = '1';
+    document.getElementById('annOfferId').value = '';
+    document.getElementById('annFormCard').style.display = 'block';
+    document.getElementById('annTitle').focus();
+}
+function closeAnnForm() { document.getElementById('annFormCard').style.display = 'none'; }
+function editAnn(id) {
+    var ann = _annData[id]; if (!ann) return;
+    document.getElementById('annEditId').value = id;
+    document.getElementById('annFormTitle').textContent = 'Edit Announcement';
+    document.getElementById('annTitle').value = ann.title || '';
+    document.getElementById('annMessage').value = ann.message || '';
+    document.getElementById('annType').value = ann.type || 'general';
+    document.getElementById('annActive').value = ann.active !== false ? '1' : '0';
+    document.getElementById('annOfferId').value = ann.offerId || '';
+    document.getElementById('annFormCard').style.display = 'block';
+    document.getElementById('annTitle').focus();
+}
+function saveAnnouncement() {
+    var title = (document.getElementById('annTitle').value || '').trim();
+    var msg = (document.getElementById('annMessage').value || '').trim();
+    if (!title || !msg) { toast('Title and message are required','error'); return; }
+    var editId = document.getElementById('annEditId').value;
+    var id = editId || 'ann_' + Date.now();
+    var data = {
+        title: title,
+        message: msg,
+        type: document.getElementById('annType').value || 'general',
+        offerId: document.getElementById('annOfferId').value || '',
+        active: document.getElementById('annActive').value === '1',
+        createdAt: (_annData[editId] && _annData[editId].createdAt) || Date.now()
+    };
+    fbPut('network/announcements/' + id, data).then(function() {
+        _annData[id] = data; _annData[id]._id = id;
+        closeAnnForm();
+        renderAnnList();
+        toast('Announcement saved!');
+    }).catch(function(){ toast('Error saving','error'); });
+}
+function toggleAnn(id) {
+    var ann = _annData[id]; if (!ann) return;
+    ann.active = !ann.active;
+    fbPatch('network/announcements/' + id, { active: ann.active }).then(function() {
+        renderAnnList();
+        toast(ann.active ? 'Announcement activated' : 'Announcement deactivated');
+    });
+}
+function deleteAnn(id) {
+    if (!confirm('Delete this announcement?')) return;
+    fbDelete('network/announcements/' + id).then(function() {
+        delete _annData[id]; renderAnnList(); toast('Deleted');
+    });
 }
 
 /* --- Offer Report --- */
