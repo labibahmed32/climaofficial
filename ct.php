@@ -203,8 +203,7 @@ function ReadCookie(n){n+='=';var p=document.cookie.split(/;\s*/);for(var i=0;i<
 window.ReadCookie=ReadCookie;
 function _patchBGLinks(){var s2=ReadCookie('sessid2');if(!s2)return;document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a){try{var u=new URL(a.href);u.searchParams.set('sessid2',s2);a.href=u.toString();}catch(e){}});}
 if(BG_ACCOUNT_ID&&BG_PRODUCT_CODES){
-  var _curAff=_affId||'';
-  console.log('[CT] BG tracking: _affId='+_affId+' _curAff='+_curAff+' URL='+window.location.search);
+  var _curAff=(new URLSearchParams(window.location.search)).get('aff_id')||(new URLSearchParams(window.location.search)).get('affid')||'';
   var _s2now=ReadCookie('sessid2');
   var _bgSrc='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie='+(_s2now?'0':'1')+'&aff_id='+encodeURIComponent(_curAff)+'&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(_s2now)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
   var _bgEl=document.createElement('script');_bgEl.type='text/javascript';_bgEl.src=_bgSrc;
