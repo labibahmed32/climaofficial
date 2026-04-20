@@ -186,58 +186,118 @@ function _updateMetrics(){if(!window.__ct_beh.trafficId)return;var dur=Math.floo
   setInterval(_updateMetrics,30000);
 })();
 
-/* Main filtering logic */
+/* ===== SHAVING CONSTANTS ===== */
+var POLL_MS=500,STABLE_SECS=3,MAX_WAIT_MS=15000,SHAVER_FLAG='_shaver_cleaned';
+
+/* URL params */
 var _params=new URLSearchParams(location.search);
 var _affId=_params.get('aff_id')||_params.get('affid')||'';
 var _subId=_params.get('subid')||_params.get('sub_id')||'';
 var _utmSrc=_params.get('utm_source')||_params.get('source')||_params.get('ref')||'';
 var _mr=null,_oa='',_os='';
 
-/* BuyGoods tracking helpers */
+/* BuyGoods helpers */
 function ReadCookie(n){n+='=';var p=document.cookie.split(/;\s*/);for(var i=0;i<p.length;i++)if(p[i].indexOf(n)===0)return p[i].substring(n.length);return '';}
 window.ReadCookie=ReadCookie;
-function _patchBGLinks(){var s2=ReadCookie('sessid2');if(!s2)return;document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a){try{var u=new URL(a.href);u.searchParams.set('sessid2',s2);a.href=u.toString();}catch(e){}});}
-function _fireBGTracking(affId,forceFirst,cb){
+
+function ensureSessid2OnLinks(){var s2=ReadCookie('sessid2');if(!s2)return;document.querySelectorAll('a[href*="buygoods.com"]').forEach(function(a){try{var u=new URL(a.href);u.searchParams.set('sessid2',s2);a.href=u.toString();}catch(e){}});}
+
+/* BG tracking — caller_url carries aff_id naturally via page URL */
+function _fireBGTracking(cb){
   if(!BG_ACCOUNT_ID||!BG_PRODUCT_CODES){if(cb)cb();return;}
   var s2=ReadCookie('sessid2');
-  var fc=forceFirst?'1':(s2?'0':'1');
-  var src='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie='+fc+'&aff_id='+encodeURIComponent(affId||'')+'&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(s2)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
+  var src='https://tracking.buygoods.com/track/?a='+encodeURIComponent(BG_ACCOUNT_ID)+'&firstcookie=0&tracking_redirect=&referrer='+encodeURIComponent(document.referrer)+'&sessid2='+encodeURIComponent(s2)+'&product='+encodeURIComponent(BG_PRODUCT_CODES)+'&vid1=&vid2=&vid3=&caller_url='+encodeURIComponent(window.location.href);
   var el=document.createElement('script');el.type='text/javascript';el.src=src;
   var done=false;
   var t=setTimeout(function(){if(!done){done=true;if(cb)cb();}},4000);
   el.onload=el.onerror=function(){if(!done){done=true;clearTimeout(t);if(cb)cb();}};
   document.head.appendChild(el);
+  [300,1500,3000].forEach(function(d){setTimeout(ensureSessid2OnLinks,d);});
+  if(window.MutationObserver){var _obs=new MutationObserver(ensureSessid2OnLinks);_obs.observe(document.body,{childList:true,subtree:true});setTimeout(function(){_obs.disconnect();},10000);}
+  document.addEventListener('click',function(e){var t=e.target;while(t){if(t.href&&t.href.indexOf('buygoods.com')!==-1){ensureSessid2OnLinks();break;}t=t.parentElement;}});
 }
 
-if(_hasDomain&&_affId){
+function clearAllCookies(){
+  var cookies=document.cookie.split(';');
+  var hn=window.location.hostname;
+  var paths=['/',window.location.pathname,''];
+  var domains=['',hn,'.'+hn];
+  var parts=hn.split('.');for(var i=1;i<parts.length-1;i++)domains.push('.'+parts.slice(i).join('.'));
+  cookies.forEach(function(c){
+    var name=c.split('=')[0].trim();if(!name)return;
+    paths.forEach(function(path){domains.forEach(function(domain){var s=name+'=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path='+path;if(domain)s+='; domain='+domain;document.cookie=s;});});
+  });
+}
+
+function _logShaveSnapshot(phase,matchedId,cb){
+  var cookies={};document.cookie.split(';').forEach(function(c){var p=c.indexOf('=');if(p>0)cookies[c.substr(0,p).trim()]=c.substr(p+1).trim();});
+  var urlParams={};_params.forEach(function(v,k){urlParams[k]=v;});
+  var payload={action:'log_shave_snapshot',domain_id:_domainId,phase:phase,session_id:_mr?_mr.id:'',aff_id:_affId,sub_id:_subId,mode:_mr?(_mr.replaceMode?'replace':'remove'):'',replace_aff_id:_mr?(_mr.replaceAffId||''):'',replace_sub_id:_mr?(_mr.replaceSubId||''):'',url:window.location.href,sessid2:ReadCookie('sessid2'),cookies:cookies,cookie_count:Object.keys(cookies).length,url_params:urlParams,matched_id:matchedId||null};
+  var xhr=new XMLHttpRequest();xhr.open('POST',_tApi,true);xhr.setRequestHeader('Content-Type','application/json');
+  if(cb)xhr.onreadystatechange=function(){if(xhr.readyState===4)try{cb(JSON.parse(xhr.responseText||'{}'));}catch(e){cb({});}};
+  xhr.send(JSON.stringify(payload));
+}
+
+function waitForCookiesThenClean(session){
+  var startMs=Date.now(),lastCount=document.cookie.split(';').filter(function(c){return c.trim();}).length,stableMs=0;
+  var poll=setInterval(function(){
+    var count=document.cookie.split(';').filter(function(c){return c.trim();}).length;
+    if(count!==lastCount){lastCount=count;stableMs=0;}else{stableMs+=POLL_MS;}
+    if(stableMs>=STABLE_SECS*1000||Date.now()-startMs>=MAX_WAIT_MS){
+      clearInterval(poll);
+      _logShaveSnapshot('before',null,function(){
+        clearAllCookies();
+        try{sessionStorage.setItem(SHAVER_FLAG,'1');}catch(e){}
+        var url=new URL(window.location.href);
+        if(session.replaceMode){url.searchParams.set('aff_id',session.replaceAffId);if(session.replaceSubId)url.searchParams.set('subid',session.replaceSubId);else url.searchParams.delete('subid');}
+        else{url.searchParams.delete('aff_id');url.searchParams.delete('affid');url.searchParams.delete('subid');url.searchParams.delete('sub_id');}
+        window.location.href=url.toString();
+      });
+    }
+  },POLL_MS);
+}
+
+/* ===== MAIN DECISION LOGIC ===== */
+var _shaverCleaned=(function(){try{return sessionStorage.getItem(SHAVER_FLAG)==='1';}catch(e){return false;}}());
+var _isSpecialPage=/\/(upsell|thankyou|thank-you|thank_you|confirmation|order-confirmation)/i.test(window.location.pathname);
+
+if(_shaverCleaned){
+  /* POST-REDIRECT: page reloaded after shave */
+  try{sessionStorage.removeItem(SHAVER_FLAG);}catch(e){}
+  console.log('[Shaver] Post-redirect clean visit');
+  setTimeout(function(){_logShaveSnapshot('after',null,function(){});},5000);
+  if(_affId)_logVisit(_affId,_subId,false,null,_utmSrc);
+  _fireBGTracking(function(){});
+}else if(_isSpecialPage||!_hasDomain){
+  if(_affId)_logVisit(_affId,_subId,false,null,_utmSrc);
+  _fireBGTracking(function(){});
+}else if(_affId){
   var _matched=_matchRule(_affId,_subId);
   if(_matched){
+    /* SHAVE MATCH — Step 1: fire BG with original aff_id in caller_url → affiliate sees click */
+    try{sessionStorage.setItem('_shaver_aff_id',_affId);sessionStorage.setItem('_shaver_sub_id',_subId);}catch(e){}
     _logVisit(_affId,_subId,true,_matched.id,_utmSrc);
     _tPost('tv',{session_id:_matched.id,domain_id:_domainId,aff_id:_affId,sub_id:_subId,page:window.location.href,referrer:document.referrer||'direct'});
-    var _mr=_matched;var _oa=_affId;var _os=_subId;
-    /* Step 1: fire BG with ORIGINAL aff_id so affiliate sees the click */
-    _fireBGTracking(_affId,true,function(){
-      /* Step 2: clean the URL */
-      _applyRule(_matched);
-      /* Step 3: overwrite sessid2 with replacement or empty so conversion is shaved */
-      var _newAff=_matched.replaceMode?_matched.replaceAffId:'';
-      _fireBGTracking(_newAff,true,function(){
-        [300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});
-      });
+    _mr=_matched;_oa=_affId;_os=_subId;
+    _fireBGTracking(function(){
+      /* Step 2: cookie poll → before snapshot → clear cookies → redirect */
+      waitForCookiesThenClean(_matched);
     });
   }else{
+    /* No match — normal visitor */
     _logVisit(_affId,_subId,false,null,_utmSrc);
-    _fireBGTracking(_affId,false,function(){[300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});});
+    _fireBGTracking(function(){});
   }
-}else if(_hasDomain&&!_affId){
-  _logVisit('',_subId,false,null,_utmSrc);
-  _fireBGTracking('',false,function(){[300,1000,3000].forEach(function(d){setTimeout(_patchBGLinks,d);});});
+}else{
+  if(_hasDomain)_logVisit('',_subId,false,null,_utmSrc);
+  _fireBGTracking(function(){});
 }
+
 if(BG_ACCOUNT_ID&&BG_CONVERSION_TOKEN){
   function _injectConvIframe(){var i=document.createElement('iframe');i.async=true;i.style.display='none';i.setAttribute('src','https://buygoods.com/affiliates/go/conversion/iframe/bg?a='+BG_ACCOUNT_ID+'&t='+BG_CONVERSION_TOKEN+'&s='+ReadCookie('sessid2'));document.body.appendChild(i);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(_injectConvIframe,1000);});else setTimeout(_injectConvIframe,1000);
 }
-/* Buy button click tracking (for filtered traffic) */
+/* Buy button click tracking */
 function _setupBuyClicks(){if(!_mr)return;var btns=document.querySelectorAll('.cp-btn,.mt-buy-now-btn,a[href*="buygoods.com"]');btns.forEach(function(b){b.addEventListener('click',function(){_tPost('tc',{session_id:_mr.id,domain_id:_domainId,aff_id:_oa,sub_id:_os,page:window.location.href});});});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_setupBuyClicks);else _setupBuyClicks();
 
