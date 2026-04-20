@@ -183,6 +183,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .badge-hold{background:#fde8e8;color:#c62828;}
 .badge-yes{background:#e8f5e9;color:#2e7d32;}
 .badge-no{background:#f5f5f5;color:#999;}
+/* ═══ REPORTING UI ═══ */
+.rpt-page{max-width:100%;}
+.rpt-topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.rpt-title-area h2{font-size:22px;font-weight:700;color:#1e293b;margin:0;}
+.rpt-breadcrumb{font-size:12px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.rpt-breadcrumb span{color:#0A6C80;font-weight:600;}
+.rpt-tz{font-size:12px;color:#64748b;display:flex;align-items:center;gap:8px;}
+.rpt-filter-bar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;display:flex;align-items:stretch;margin-bottom:0;overflow:hidden;}
+.rpt-date-btn{display:flex;align-items:center;gap:10px;padding:14px 18px;border:none;background:none;cursor:pointer;border-right:1px solid #e2e8f0;min-width:170px;}
+.rpt-date-btn .rpt-cal-icon{width:36px;height:36px;background:#e53e3e;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0;}
+.rpt-date-btn .rpt-date-text{text-align:left;}
+.rpt-date-btn .rpt-date-text span{display:block;font-size:12px;font-weight:600;color:#1e293b;line-height:1.5;}
+.rpt-add-filter{display:flex;align-items:center;gap:8px;padding:14px 18px;border:none;background:none;cursor:pointer;color:#64748b;font-size:13px;font-weight:500;flex:1;}
+.rpt-add-filter:hover{color:#0A6C80;}
+.rpt-add-filter .rpt-filter-icon{width:28px;height:28px;background:#e53e3e;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;}
+.rpt-clear{margin-left:auto;padding:14px 18px;border:none;background:none;cursor:pointer;color:#94a3b8;font-size:12px;}
+.rpt-clear:hover{color:#e53e3e;}
+.rpt-run-wrap{margin:0 0 20px;background:#e53e3e;border-radius:0 0 10px 10px;overflow:hidden;}
+.rpt-run-btn{width:100%;padding:14px;border:none;background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;}
+.rpt-run-btn:hover{background:rgba(0,0,0,.08);}
+.rpt-section{background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.rpt-section-hd{display:flex;align-items:center;gap:8px;padding:14px 18px;cursor:pointer;user-select:none;border-bottom:1px solid #e2e8f0;}
+.rpt-section-hd i{color:#64748b;font-size:12px;transition:transform .2s;}
+.rpt-section-hd.open i{transform:rotate(90deg);}
+.rpt-section-hd h3{font-size:14px;font-weight:700;color:#1e293b;margin:0;}
+.rpt-section-body{padding:18px;}
+.rpt-section-body.hidden{display:none;}
+.rpt-metrics{display:flex;flex-wrap:wrap;gap:24px 40px;}
+.rpt-metric{display:flex;flex-direction:column;gap:4px;}
+.rpt-metric-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;}
+.rpt-metric-value{font-size:20px;font-weight:700;color:#1e293b;}
+.rpt-detail-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e2e8f0;}
+.rpt-detail-hd h3{font-size:14px;font-weight:700;color:#1e293b;margin:0;}
+.rpt-search-wrap{display:flex;align-items:center;gap:8px;}
+.rpt-search{padding:7px 12px 7px 32px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;outline:none;width:200px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;}
+.rpt-search:focus{border-color:#0A6C80;}
+.rpt-dots-btn{width:32px;height:32px;border:1.5px solid #e2e8f0;border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#64748b;font-weight:700;letter-spacing:1px;}
+.rpt-dots-btn:hover{border-color:#0A6C80;color:#0A6C80;}
+.rpt-date-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.rpt-preset-btn{padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;font-size:11px;font-weight:600;cursor:pointer;color:#475569;transition:all .15s;}
+.rpt-preset-btn:hover,.rpt-preset-btn.active{background:#0A6C80;color:#fff;border-color:#0A6C80;}
+.rpt-date-inputs{display:flex;gap:10px;align-items:center;}
+.rpt-date-inputs label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;}
+/* 3-dots dropdown */
+.dots-wrap{position:relative;display:inline-block;}
+.dots-trigger{width:28px;height:28px;border:1px solid #e2e8f0;border-radius:5px;background:#fff;cursor:pointer;font-size:14px;color:#64748b;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.dots-trigger:hover{border-color:#0A6C80;color:#0A6C80;}
+.dots-dropdown{position:absolute;right:0;top:32px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;min-width:150px;overflow:hidden;display:none;}
+.dots-dropdown.open{display:block;}
+.dots-dropdown a{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:12px;color:#374151;cursor:pointer;transition:background .1s;}
+.dots-dropdown a:hover{background:#f8fafc;color:#0A6C80;}
+.dots-dropdown .dots-sep{height:1px;background:#f1f5f9;margin:2px 0;}
+/* Conversion detail panel */
+.conv-detail-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.conv-detail-section{background:#f8fafc;border-radius:8px;padding:14px;}
+.conv-detail-section h4{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin:0 0 10px;}
+.conv-detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #e2e8f0;}
+.conv-detail-row:last-child{border-bottom:none;}
+.conv-detail-row .cdl{font-size:11px;color:#64748b;font-weight:500;}
+.conv-detail-row .cdv{font-size:11px;color:#1e293b;font-weight:600;text-align:right;max-width:180px;word-break:break-all;}
 /* ═══ OFFER CARD GRID — MODERN REDESIGN ═══ */
 .offer-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
 .offer-card{background:#fff;border:1px solid #e8edf3;border-radius:16px;overflow:hidden;position:relative;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
@@ -584,6 +644,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="nav-item" data-page="overcap" onclick="goPage('overcap')"><i class="fas fa-exclamation-triangle"></i> Over-Cap</div>
                 <div class="nav-item" data-page="fraud" onclick="goPage('fraud')"><i class="fas fa-shield-alt"></i> Fraud Report</div>
             </div>
+            <div class="nav-group"><div class="nav-group-label">Reporting</div>
+                <div class="nav-item" data-page="rpt-offer" onclick="goPage('rpt-offer')"><i class="fas fa-tag"></i> Offer Report</div>
+                <div class="nav-item" data-page="rpt-conv" onclick="goPage('rpt-conv')"><i class="fas fa-exchange-alt"></i> Conversion Report</div>
+                <div class="nav-item" data-page="rpt-subid" onclick="goPage('rpt-subid')"><i class="fas fa-code-branch"></i> Sub ID Report</div>
+                <div class="nav-item" data-page="rpt-daily" onclick="goPage('rpt-daily')"><i class="fas fa-calendar-day"></i> Daily Report</div>
+                <div class="nav-item" data-page="rpt-hourly" onclick="goPage('rpt-hourly')"><i class="fas fa-clock"></i> Hourly Report</div>
+            </div>
             <div class="nav-group"><div class="nav-group-label">Finance</div>
                 <div class="nav-item" data-page="payments" onclick="goPage('payments')"><i class="fas fa-wallet"></i> Payments</div>
             </div>
@@ -728,16 +795,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <!-- ===== CLICK REPORTS ===== -->
         <div class="page-section" id="page-clicks">
             <div class="toolbar">
-                <div class="toolbar-left">
-                    <input type="date" id="clickDateFrom" class="form-input-sm" onchange="renderClicks()">
-                    <input type="date" id="clickDateTo" class="form-input-sm" onchange="renderClicks()">
-                    <select id="clickOfferFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Offers</option></select>
-                    <select id="clickAffFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Affiliates</option></select>
+                <div class="toolbar-left" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                    <div class="rpt-date-presets">
+                        <button class="rpt-preset-btn" onclick="setClickPreset('today')">Today</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('yesterday')">Yesterday</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('7d')">7 Days</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('30d')">30 Days</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('thismonth')">This Month</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('lastmonth')">Last Month</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('thisyear')">This Year</button>
+                        <button class="rpt-preset-btn" onclick="setClickPreset('custom')">Custom</button>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="date" id="clickDateFrom" class="form-input-sm" onchange="renderClicks()">
+                        <input type="date" id="clickDateTo" class="form-input-sm" onchange="renderClicks()">
+                        <select id="clickOfferFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Offers</option></select>
+                        <select id="clickAffFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Affiliates</option></select>
+                        <input type="text" id="clickSubIdFilter" class="form-input-sm" placeholder="Sub ID..." style="min-width:100px" onchange="renderClicks()">
+                    </div>
                 </div>
                 <span class="page-info" id="clickSummary"></span>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>City</th><th>Device</th><th>OS</th><th>Browser</th><th>ISP</th><th>Quality</th><th>Time</th><th>Conv?</th><th></th></tr></thead><tbody id="clicksTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>IP</th><th>Country</th><th>City</th><th>Device</th><th>OS</th><th>Browser</th><th>ISP</th><th>Quality</th><th>Time</th><th>Conv?</th><th></th></tr></thead><tbody id="clicksTbody"></tbody></table>
             </div><div class="pagination-bar"><span class="page-info" id="clicksPageInfo"></span><div class="pagination-controls" id="clicksPagination"></div></div></div>
         </div>
 
@@ -745,21 +825,126 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div class="page-section" id="page-conversions">
             <div class="stat-cards" id="convStats"></div>
             <div class="toolbar">
-                <div class="toolbar-left">
-                    <input type="date" id="convDateFrom" class="form-input-sm" onchange="renderConversions()">
-                    <input type="date" id="convDateTo" class="form-input-sm" onchange="renderConversions()">
-                    <select id="convStatusFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
-                    <select id="convOfferFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Offers</option></select>
+                <div class="toolbar-left" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                    <div class="rpt-date-presets">
+                        <button class="rpt-preset-btn" onclick="setConvPreset('today')">Today</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('yesterday')">Yesterday</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('7d')">7 Days</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('30d')">30 Days</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('thismonth')">This Month</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('lastmonth')">Last Month</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('thisyear')">This Year</button>
+                        <button class="rpt-preset-btn" onclick="setConvPreset('custom')">Custom</button>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="date" id="convDateFrom" class="form-input-sm" onchange="renderConversions()">
+                        <input type="date" id="convDateTo" class="form-input-sm" onchange="renderConversions()">
+                        <select id="convStatusFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+                        <select id="convOfferFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Offers</option></select>
+                        <select id="convAffFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Affiliates</option></select>
+                    </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <button class="btn-sm" onclick="bulkConvAction('approved')" title="Approve Selected"><i class="fas fa-check"></i> Approve</button>
-                    <button class="btn-sm" onclick="bulkConvAction('rejected')" title="Reject Selected"><i class="fas fa-times"></i> Reject</button>
+                    <button class="btn-sm" onclick="bulkConvAction('approved')"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn-sm" onclick="bulkConvAction('rejected')"><i class="fas fa-times"></i> Reject</button>
                     <button class="btn-primary-sm" onclick="openConvModal()"><i class="fas fa-plus"></i> Manual</button>
                 </div>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Revenue</th><th>Payout</th><th>Status</th><th>Source</th><th>TTC</th><th>Date</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Conv ID</th><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
             </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
+        </div>
+
+        <!-- ===== OFFER REPORT ===== -->
+        <div class="page-section" id="page-rpt-offer">
+          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Offer</div><h2>Offer Report</h2></div><div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div></div>
+          <div class="rpt-filter-bar">
+            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptOffer')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptOfferFrom">04/20/2026</span><span id="rptOfferTo">04/20/2026</span></div></button>
+            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+            <button class="rpt-clear" onclick="clearRptFilters('rptOffer')">Clear</button>
+          </div>
+          <div id="rptOfferDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptOffer','thisyear')">This Year</button></div>
+            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptOfferDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptOfferDateTo" class="form-input-sm"><select id="rptOfferAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+          </div>
+          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runOfferReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+          <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
+          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="10" class="no-data">Run report to load data</td></tr></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ===== CONVERSION REPORT ===== -->
+        <div class="page-section" id="page-rpt-conv">
+          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Conversion</div><h2>Conversion Report</h2></div><div class="rpt-tz"><i class="fas fa-globe"></i> (GMT-04:00) America/New_York</div></div>
+          <div class="rpt-filter-bar">
+            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptConv')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptConvFrom">04/20/2026</span><span id="rptConvTo">04/20/2026</span></div></button>
+            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+            <button class="rpt-clear" onclick="clearRptFilters('rptConv')">Clear</button>
+          </div>
+          <div id="rptConvDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptConv','thisyear')">This Year</button></div>
+            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptConvDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptConvDateTo" class="form-input-sm"><select id="rptConvOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptConvAff" class="form-select-sm"><option value="">All Affiliates</option></select><select id="rptConvStatus" class="form-select-sm"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></div>
+          </div>
+          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runConvReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><select id="rptConvSearchBy" class="form-select-sm"><option value="ip">Conversion IP</option><option value="txn">Transaction ID</option><option value="offer">Offer</option></select><input type="text" class="rpt-search" id="rptConvSearch" placeholder="Search..." oninput="filterRptConvTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptConv()">⋮</button></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Session IP</th><th>Transaction ID</th><th>Status</th><th>Type</th><th>Detail</th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="14" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            <div class="pagination-bar"><span class="page-info" id="rptConvPageInfo"></span><div class="pagination-controls" id="rptConvPagination"></div></div>
+          </div>
+        </div>
+
+        <!-- ===== SUB ID REPORT ===== -->
+        <div class="page-section" id="page-rpt-subid">
+          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Sub ID</div><h2>Sub ID Report</h2></div></div>
+          <div class="rpt-filter-bar">
+            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptSubid')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptSubidFrom">04/20/2026</span><span id="rptSubidTo">04/20/2026</span></div></button>
+            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+            <button class="rpt-clear" onclick="clearRptFilters('rptSubid')">Clear</button>
+          </div>
+          <div id="rptSubidDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptSubid','thisyear')">This Year</button></div>
+            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptSubidDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptSubidDateTo" class="form-input-sm"><select id="rptSubidOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptSubidAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+          </div>
+          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runSubidReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptSubidSearch" placeholder="Search sub ID..." oninput="filterRptSubidTable()"><button class="rpt-dots-btn" onclick="exportRptSubid()">⋮</button></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Sub ID</th><th>Affiliate</th><th>Offer</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>EPC</th></tr></thead><tbody id="rptSubidTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ===== DAILY REPORT ===== -->
+        <div class="page-section" id="page-rpt-daily">
+          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Daily</div><h2>Daily Report</h2></div></div>
+          <div class="rpt-filter-bar">
+            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptDaily')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptDailyFrom">04/20/2026</span><span id="rptDailyTo">04/20/2026</span></div></button>
+            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+            <button class="rpt-clear" onclick="clearRptFilters('rptDaily')">Clear</button>
+          </div>
+          <div id="rptDailyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','7d')">7 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','30d')">30 Days</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thismonth')">This Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','lastmonth')">Last Month</button><button class="rpt-preset-btn" onclick="setRptPreset('rptDaily','thisyear')">This Year</button></div>
+            <div class="rpt-date-inputs"><label>From</label><input type="date" id="rptDailyDateFrom" class="form-input-sm"><label>To</label><input type="date" id="rptDailyDateTo" class="form-input-sm"><select id="rptDailyOffer" class="form-select-sm"><option value="">All Offers</option></select><select id="rptDailyAff" class="form-select-sm"><option value="">All Affiliates</option></select></div>
+          </div>
+          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runDailyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Daily Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptDaily()">⋮</button></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>EPC</th></tr></thead><tbody id="rptDailyTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ===== HOURLY REPORT ===== -->
+        <div class="page-section" id="page-rpt-hourly">
+          <div class="rpt-topbar"><div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-line"></i> <span>Reporting</span> / Hourly</div><h2>Hourly Report</h2></div></div>
+          <div class="rpt-filter-bar">
+            <button class="rpt-date-btn" onclick="toggleRptDatePicker('rptHourly')"><div class="rpt-cal-icon"><i class="fas fa-calendar"></i></div><div class="rpt-date-text"><span id="rptHourlyFrom">04/20/2026</span><span id="rptHourlyTo">04/20/2026</span></div></button>
+            <button class="rpt-add-filter"><div class="rpt-filter-icon"><i class="fas fa-filter"></i></div> Add Filter</button>
+            <button class="rpt-clear" onclick="clearRptFilters('rptHourly')">Clear</button>
+          </div>
+          <div id="rptHourlyDatePicker" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-1px;">
+            <div class="rpt-date-presets"><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','today')">Today</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','yesterday')">Yesterday</button><button class="rpt-preset-btn" onclick="setRptPreset('rptHourly','7d')">7 Days</button></div>
+            <div class="rpt-date-inputs"><label>Date</label><input type="date" id="rptHourlyDate" class="form-input-sm"><select id="rptHourlyOffer" class="form-select-sm"><option value="">All Offers</option></select></div>
+          </div>
+          <div class="rpt-run-wrap"><button class="rpt-run-btn" onclick="runHourlyReport()"><i class="fas fa-sync-alt"></i> Run Report</button></div>
+          <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
+          </div>
         </div>
 
         <!-- ===== ASSIGNMENTS ===== -->
@@ -1169,6 +1354,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <!-- ===== MODALS ===== -->
 <div class="modal-overlay" id="clickDetailModal"><div class="modal-panel" style="max-width:750px;"><div class="modal-body" id="clickDetailBody" style="padding:24px"></div></div></div>
+<div class="modal-overlay" id="convDetailModal"><div class="modal-panel" style="max-width:820px;">
+  <div class="modal-header"><h3 id="convDetailTitle">Conversion Detail</h3><button class="modal-close" onclick="closeModal('convDetailModal')">&times;</button></div>
+  <div class="modal-body" id="convDetailBody" style="padding:20px"></div>
+</div></div>
 <div class="modal-overlay" id="advModal"><div class="modal-panel" style="max-width:620px;">
     <div class="modal-header"><h3 id="advModalTitle">New Advertiser</h3><button class="modal-close" onclick="closeModal('advModal')">&times;</button></div>
     <div class="modal-body">
@@ -1945,8 +2134,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 function doLogout() { firebase.auth().signOut().then(function() { window.location.href = 'index.html'; }); }
 
 /* ===== NAVIGATION ===== */
-var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings' };
-var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools' };
+var pageTitles = { dashboard:'Today\'s Stats', advertisers:'Advertisers', offers:'Offers', assignments:'Offer Assignments', affiliates:'Affiliates', managers:'Managers', signups:'Signups', postbacks:'Postback Management', clicks:'Click Reports', conversions:'Conversions', overcap:'Over-Cap Report', fraud:'Fraud Detection', payments:'Payments', linkgen:'Link Generator', mailer:'Email Templates', settings:'Settings', 'rpt-offer':'Offer Report', 'rpt-conv':'Conversion Report', 'rpt-subid':'Sub ID Report', 'rpt-daily':'Daily Report', 'rpt-hourly':'Hourly Report' };
+var pageCrumbs = { dashboard:'Dashboard', advertisers:'Manage', offers:'Manage', assignments:'Manage', affiliates:'Manage', managers:'Manage', signups:'Manage', postbacks:'Manage', clicks:'Analyze', conversions:'Analyze', overcap:'Analyze', fraud:'Analyze', payments:'Finance', linkgen:'Tools', mailer:'Tools', settings:'Tools', 'rpt-offer':'Reporting', 'rpt-conv':'Reporting', 'rpt-subid':'Reporting', 'rpt-daily':'Reporting', 'rpt-hourly':'Reporting' };
 var currentPage = 'dashboard';
 
 function goPage(page) {
@@ -1978,6 +2167,11 @@ function goPage(page) {
         else if (page === 'linkgen') loadLinkGen();
         else if (page === 'mailer') loadMailer();
         else if (page === 'settings') loadSettings();
+        else if (page === 'rpt-offer') initRptOffer();
+        else if (page === 'rpt-conv') initRptConv();
+        else if (page === 'rpt-subid') initRptSubid();
+        else if (page === 'rpt-daily') initRptDaily();
+        else if (page === 'rpt-hourly') initRptHourly();
     });
     /* Close mobile sidebar */
     document.getElementById('appSidebar').classList.remove('mob-open');
@@ -6203,6 +6397,402 @@ function deleteAdvertiser(id) {
         loadAdvertisers();
     });
 }
+
+/* ===== DATE PRESETS ===== */
+function getDateRange(preset) {
+    var now = new Date(); var y = now.getFullYear(); var m = now.getMonth(); var d = now.getDate();
+    var fmt = function(dt) { return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); };
+    if (preset==='today') return { from: fmt(new Date(y,m,d)), to: fmt(new Date(y,m,d)) };
+    if (preset==='yesterday') return { from: fmt(new Date(y,m,d-1)), to: fmt(new Date(y,m,d-1)) };
+    if (preset==='7d') return { from: fmt(new Date(y,m,d-6)), to: fmt(new Date(y,m,d)) };
+    if (preset==='30d') return { from: fmt(new Date(y,m,d-29)), to: fmt(new Date(y,m,d)) };
+    if (preset==='thismonth') return { from: fmt(new Date(y,m,1)), to: fmt(new Date(y,m,d)) };
+    if (preset==='lastmonth') return { from: fmt(new Date(y,m-1,1)), to: fmt(new Date(y,m,0)) };
+    if (preset==='thisyear') return { from: fmt(new Date(y,0,1)), to: fmt(new Date(y,m,d)) };
+    return null;
+}
+function setClickPreset(p) {
+    document.querySelectorAll('#page-clicks .rpt-preset-btn').forEach(function(b){b.classList.remove('active');});
+    event.target.classList.add('active');
+    if (p==='custom') return;
+    var r=getDateRange(p); if(!r) return;
+    document.getElementById('clickDateFrom').value=r.from; document.getElementById('clickDateTo').value=r.to;
+    renderClicks();
+}
+function setConvPreset(p) {
+    document.querySelectorAll('#page-conversions .rpt-preset-btn').forEach(function(b){b.classList.remove('active');});
+    event.target.classList.add('active');
+    if (p==='custom') return;
+    var r=getDateRange(p); if(!r) return;
+    document.getElementById('convDateFrom').value=r.from; document.getElementById('convDateTo').value=r.to;
+    renderConversions();
+}
+
+/* ===== UPGRADED CONVERSIONS RENDER (with 3-dots) ===== */
+var _origRenderConversions = renderConversions;
+renderConversions = function() {
+    var fromDate = document.getElementById('convDateFrom').value; var toDate = document.getElementById('convDateTo').value;
+    var statusF = document.getElementById('convStatusFilter').value; var offerF = document.getElementById('convOfferFilter').value;
+    var affF = (document.getElementById('convAffFilter') || {}).value || '';
+    var fromTs = fromDate ? dayStart(new Date(fromDate)) : 0; var toTs = toDate ? dayEnd(new Date(toDate)) : Infinity;
+    var filtered = allConversions.filter(function(c) {
+        if ((c.createdAt||0) < fromTs || (c.createdAt||0) > toTs) return false;
+        if (statusF && c.status !== statusF) return false;
+        if (offerF && c.offerId !== offerF) return false;
+        if (affF && c.affiliateId !== affF) return false;
+        return true;
+    }).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    var totalRev=filtered.reduce(function(s,c){return s+(parseFloat(c.revenue)||0);},0);
+    var totalPay=filtered.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+    var approved=filtered.filter(function(c){return c.status==='approved';}).length;
+    var pending=filtered.filter(function(c){return c.status==='pending';}).length;
+    document.getElementById('convStats').innerHTML=statCardSm('fa-exchange-alt','#e3f2fd','#1565c0',filtered.length,'Total Conversions')+statCardSm('fa-check-circle','#e8f5e9','#2e7d32',approved,'Approved')+statCardSm('fa-clock','#fff3e0','#e65100',pending,'Pending')+statCardSm('fa-dollar-sign','#f3e5f5','#7b1fa2',fmtMoney(totalRev),'Revenue')+statCardSm('fa-hand-holding-usd','#e8f5e9','#2e7d32',fmtMoney(totalPay),'Payout');
+    var start=(convPage-1)*PAGE_SIZE,end=start+PAGE_SIZE; var page=filtered.slice(start,end); var html='';
+    page.forEach(function(c) {
+        var clickObj = c.clickId ? allClicks.find(function(x){return x._id===c.clickId;}) : null;
+        var delta='-';
+        if (clickObj && clickObj.timestamp && c.createdAt) {
+            var diff=c.createdAt-clickObj.timestamp;
+            if(diff<60000) delta='<1m'; else if(diff<3600000) delta=Math.floor(diff/60000)+'m'; else if(diff<86400000) delta=Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m'; else delta=Math.floor(diff/86400000)+'d '+Math.floor((diff%86400000)/3600000)+'h';
+        }
+        var subId = c.sub1 || c.subId || (clickObj ? clickObj.sub1 : '') || '-';
+        var convIp = c.ip || (clickObj ? clickObj.ip : '') || '-';
+        html+='<tr><td><input type="checkbox" class="conv-check" value="'+c._id+'"></td>';
+        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(c._id)+'</td>';
+        html+='<td style="font-size:11px">'+fmtDateTime(c.createdAt)+'</td>';
+        html+='<td style="font-size:11px">'+(clickObj?fmtDateTime(clickObj.timestamp):'-')+'</td>';
+        html+='<td style="font-size:11px;color:var(--primary);font-weight:600">'+delta+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(getOfferName(c.offerId))+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(getUserName(c.affiliateId))+'</td>';
+        html+='<td style="font-size:11px;font-family:monospace">'+escHtml(subId)+'</td>';
+        html+='<td style="font-weight:700;color:var(--primary)">'+fmtMoney(c.revenue)+'</td>';
+        html+='<td style="font-weight:700;color:var(--green)">'+fmtMoney(c.payout)+'</td>';
+        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(convIp)+'</td>';
+        html+='<td>'+statusBadge(c.status)+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(c.source||'-')+'</td>';
+        html+='<td><div class="dots-wrap"><button class="dots-trigger" onclick="toggleDotsMenu(this)">&#8942;</button><div class="dots-dropdown"><a onclick="openConvDetail(\''+c._id+'\')"><i class="fas fa-eye" style="width:14px"></i> View Detail</a><a onclick="changeConvStatus(\''+c._id+'\',\'approved\')"><i class="fas fa-check" style="width:14px"></i> Approve</a><a onclick="changeConvStatus(\''+c._id+'\',\'rejected\')"><i class="fas fa-times" style="width:14px"></i> Reject</a><div class="dots-sep"></div><a onclick="changeConvStatus(\''+c._id+'\',\'pending\')"><i class="fas fa-clock" style="width:14px"></i> Set Pending</a></div></div></td></tr>';
+    });
+    document.getElementById('convTbody').innerHTML=html||'<tr><td colspan="14" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions found</td></tr>';
+    renderPagination('convPagination','convPageInfo',filtered.length,convPage,PAGE_SIZE,'goConvPage');
+    /* populate affiliate filter */
+    if (allUsers && allUsers.length) {
+        var el=document.getElementById('convAffFilter'); if(!el) return;
+        var cur=el.value; var h='<option value="">All Affiliates</option>';
+        allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'"'+( cur===a._id?' selected':'')+'>'+escHtml(a.name||a.email)+'</option>';});
+        el.innerHTML=h;
+    }
+};
+
+function toggleDotsMenu(btn) {
+    var dd = btn.nextElementSibling;
+    document.querySelectorAll('.dots-dropdown.open').forEach(function(d){if(d!==dd)d.classList.remove('open');});
+    dd.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dots-wrap')) document.querySelectorAll('.dots-dropdown.open').forEach(function(d){d.classList.remove('open');});
+});
+
+function openConvDetail(convId) {
+    var c = allConversions.find(function(x){return x._id===convId;});
+    if (!c) return;
+    var clickObj = c.clickId ? allClicks.find(function(x){return x._id===c.clickId;}) : null;
+    var aff = allUsers.find(function(u){return u._id===c.affiliateId;});
+    var offer = allOffers.find(function(o){return o._id===c.offerId;});
+    var delta='-';
+    if (clickObj && clickObj.timestamp && c.createdAt) {
+        var diff=c.createdAt-clickObj.timestamp;
+        if(diff<60000) delta='< 1 min'; else if(diff<3600000) delta=Math.floor(diff/60000)+' min'; else if(diff<86400000) delta=Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m'; else delta=Math.floor(diff/86400000)+'d '+Math.floor((diff%86400000)/3600000)+'h';
+    }
+    var ipqs = clickObj ? (clickObj.ipqs || {}) : {};
+    var proxyTxt = ipqs.proxy ? '<span style="color:#dc2626;font-weight:700">YES</span>' : (clickObj ? '<span style="color:#16a34a;font-weight:700">NO</span>' : '-');
+    var vpnTxt = ipqs.vpn ? '<span style="color:#dc2626;font-weight:700">YES</span>' : (clickObj ? '<span style="color:#16a34a;font-weight:700">NO</span>' : '-');
+    var r = function(label,val){return '<div class="conv-detail-row"><span class="cdl">'+label+'</span><span class="cdv">'+val+'</span></div>';};
+    var h = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">';
+    h += '<span style="background:#e8f5e9;color:#2e7d32;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:700">'+statusBadge(c.status)+'</span>';
+    h += '<span style="background:#f1f5f9;color:#475569;padding:4px 12px;border-radius:10px;font-size:12px">Conv: '+escHtml(c._id)+'</span>';
+    h += '</div>';
+    h += '<div class="conv-detail-panel">';
+    h += '<div class="conv-detail-section"><h4>Conversion Info</h4>';
+    h += r('Conv ID', '<span style="font-family:monospace;font-size:11px">'+escHtml(c._id)+'</span>');
+    h += r('Date', fmtDateTime(c.createdAt));
+    h += r('Transaction ID', escHtml(c.transactionId || '-'));
+    h += r('Offer', escHtml(offer ? offer.name : c.offerId));
+    h += r('Affiliate', escHtml(aff ? (aff.name || aff.email) : c.affiliateId));
+    h += r('Revenue', '<strong style="color:var(--primary)">'+fmtMoney(c.revenue)+'</strong>');
+    h += r('Payout', '<strong style="color:var(--green)">'+fmtMoney(c.payout)+'</strong>');
+    h += r('Profit', '<strong>'+fmtMoney((c.revenue||0)-(c.payout||0))+'</strong>');
+    h += r('Source', escHtml(c.source || '-'));
+    h += r('Status', statusBadge(c.status));
+    h += '</div>';
+    h += '<div class="conv-detail-section"><h4>Traffic / IP Info</h4>';
+    h += r('Conversion IP', '<span style="font-family:monospace">'+escHtml(c.ip || (clickObj?clickObj.ip:'-') || '-')+'</span>');
+    h += r('Session IP', '<span style="font-family:monospace">'+escHtml(clickObj ? (clickObj.ip||'-') : '-')+'</span>');
+    h += r('Country', escHtml(clickObj ? (clickObj.country||'-') : '-'));
+    h += r('City', escHtml(clickObj ? (clickObj.city||'-') : '-'));
+    h += r('ISP', escHtml(clickObj ? (clickObj.isp||'-') : '-'));
+    h += r('Proxy', proxyTxt);
+    h += r('VPN', vpnTxt);
+    h += r('Fraud Score', ipqs.fraudScore!=null ? ipqs.fraudScore : '-');
+    h += '</div>';
+    h += '<div class="conv-detail-section"><h4>Click Info</h4>';
+    h += r('Click ID', '<span style="font-family:monospace;font-size:11px">'+escHtml(c.clickId||'-')+'</span>');
+    h += r('Click Date', clickObj ? fmtDateTime(clickObj.timestamp) : '-');
+    h += r('Time to Convert (Delta)', delta);
+    h += r('Device', escHtml(clickObj ? (clickObj.device||'-') : '-'));
+    h += r('OS', escHtml(clickObj ? (clickObj.os||'-') : '-'));
+    h += r('Browser', escHtml(clickObj ? (clickObj.browser||'-') : '-'));
+    h += r('Referrer', '<span style="word-break:break-all;font-size:10px">'+escHtml(clickObj ? (clickObj.referer||'Direct') : '-')+'</span>');
+    h += '</div>';
+    h += '<div class="conv-detail-section"><h4>Sub IDs & Payout</h4>';
+    h += r('Sub ID 1', escHtml(c.sub1 || (clickObj?clickObj.sub1:'-') || '-'));
+    h += r('Sub ID 2', escHtml(c.sub2 || (clickObj?clickObj.sub2:'-') || '-'));
+    h += r('Sub ID 3', escHtml(c.sub3 || (clickObj?clickObj.sub3:'-') || '-'));
+    h += r('Sub ID 4', escHtml(c.sub4 || (clickObj?clickObj.sub4:'-') || '-'));
+    h += r('Sub ID 5', escHtml(c.sub5 || (clickObj?clickObj.sub5:'-') || '-'));
+    h += r('User Agent', '<span style="word-break:break-all;font-size:10px">'+escHtml(clickObj?(clickObj.userAgent||'-'):'-')+'</span>');
+    h += '</div>';
+    h += '</div>';
+    document.getElementById('convDetailTitle').textContent = 'Conversion — ' + c._id;
+    document.getElementById('convDetailBody').innerHTML = h;
+    openModal('convDetailModal');
+}
+
+/* ===== CLICKS SUB ID FILTER ===== */
+var _origRenderClicks = renderClicks;
+renderClicks = function() {
+    var fromDate=document.getElementById('clickDateFrom').value; var toDate=document.getElementById('clickDateTo').value;
+    var offerF=document.getElementById('clickOfferFilter').value; var affF=document.getElementById('clickAffFilter').value;
+    var subIdF=(document.getElementById('clickSubIdFilter')||{}).value||'';
+    var fromTs=fromDate?dayStart(new Date(fromDate)):0; var toTs=toDate?dayEnd(new Date(toDate)):Infinity;
+    var filtered=allClicks.filter(function(c){
+        if(c.timestamp<fromTs||c.timestamp>toTs) return false;
+        if(offerF&&c.offerId!==offerF) return false;
+        if(affF&&c.affiliateId!==affF) return false;
+        if(subIdF&&(c.sub1||'').indexOf(subIdF)===-1) return false;
+        return true;
+    }).sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);});
+    document.getElementById('clickSummary').textContent=filtered.length+' clicks';
+    var start=(clicksPage-1)*PAGE_SIZE,end=start+PAGE_SIZE; var page=filtered.slice(start,end); var html='';
+    page.forEach(function(c){
+        var qualBadge='';
+        var ipqsScore=c.ipqs?(c.ipqs.fraudScore||0):0; var ipqsLevel=c.ipqs?(c.ipqs.level||''):'';
+        if(ipqsLevel==='fraud'||ipqsScore>=85) qualBadge='<span class="badge" style="background:#fce4ec;color:#b71c1c;font-size:9px">Fraud '+ipqsScore+'</span>';
+        else if(ipqsLevel==='risky'||ipqsScore>=60) qualBadge='<span class="badge" style="background:#fff3e0;color:#e65100;font-size:9px">Risky '+ipqsScore+'</span>';
+        else if(ipqsLevel==='suspect'||ipqsScore>=30) qualBadge='<span class="badge" style="background:#fffbeb;color:#b45309;font-size:9px">Suspect '+ipqsScore+'</span>';
+        else if(c.ipqs) qualBadge='<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean '+ipqsScore+'</span>';
+        else qualBadge='<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
+        html+='<tr><td style="font-family:monospace;font-size:10px">'+escHtml(c._id)+'</td><td style="font-size:11px">'+escHtml(getOfferName(c.offerId))+'</td><td style="font-size:11px">'+escHtml(getUserName(c.affiliateId))+'</td><td style="font-family:monospace;font-size:11px">'+escHtml(c.sub1||'-')+'</td><td style="font-family:monospace;font-size:10px">'+escHtml(c.ip||'-')+'</td><td>'+escHtml(c.country||'-')+'</td><td style="font-size:11px">'+escHtml(c.city||'-')+'</td><td>'+escHtml(c.device||'-')+'</td><td style="font-size:11px">'+escHtml(c.os||'-')+'</td><td style="font-size:11px">'+escHtml(c.browser||'-')+'</td><td style="font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+escHtml(c.isp||'-')+'</td><td>'+qualBadge+'</td><td style="font-size:11px">'+fmtDateTime(c.timestamp)+'</td><td>'+(c.converted?'<span class="badge badge-yes">Yes</span>':'<span class="badge badge-no">No</span>')+'</td><td><button class="btn-sm" onclick="openClickDetail(\''+c._id+'\')" title="Details"><i class="fas fa-info-circle"></i></button></td></tr>';
+    });
+    document.getElementById('clicksTbody').innerHTML=html||'<tr><td colspan="15" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
+    renderPagination('clicksPagination','clicksPageInfo',filtered.length,clicksPage,PAGE_SIZE,'goClicksPage');
+};
+
+/* ===== REPORTING PAGES ===== */
+var rptDates = {};
+function fmtRptDate(d) { return (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear(); }
+function setRptPreset(key, preset) {
+    var r = getDateRange(preset); if(!r) return;
+    rptDates[key] = r;
+    var fromEl=document.getElementById(key+'DateFrom'); var toEl=document.getElementById(key+'DateTo');
+    if(fromEl) fromEl.value=r.from; if(toEl) toEl.value=r.to;
+    var fromSpan=document.getElementById(key+'From'); var toSpan=document.getElementById(key+'To');
+    if(fromSpan) fromSpan.textContent=r.from; if(toSpan) toSpan.textContent=r.to;
+    document.querySelectorAll('#rpt'+key.replace('rpt','')+' .rpt-preset-btn').forEach(function(b){b.classList.remove('active');});
+    event.target.classList.add('active');
+}
+function toggleRptDatePicker(key) {
+    var el = document.getElementById(key+'DatePicker');
+    if(el) el.style.display = el.style.display==='none'?'block':'none';
+}
+function clearRptFilters(key) {
+    var today = new Date(); var fmt = function(dt){return (dt.getMonth()+1)+'/'+dt.getDate()+'/'+dt.getFullYear();};
+    var todayStr = fmt(today);
+    var fromSpan=document.getElementById(key+'From'); var toSpan=document.getElementById(key+'To');
+    if(fromSpan) fromSpan.textContent=todayStr; if(toSpan) toSpan.textContent=todayStr;
+    var fromEl=document.getElementById(key+'DateFrom'); var toEl=document.getElementById(key+'DateTo');
+    if(fromEl) fromEl.value=''; if(toEl) toEl.value='';
+    delete rptDates[key];
+}
+function getRptRange(key) {
+    var fromEl=document.getElementById(key+'DateFrom'); var toEl=document.getElementById(key+'DateTo');
+    var fromDate=fromEl?fromEl.value:''; var toDate=toEl?toEl.value:'';
+    var fromTs=fromDate?dayStart(new Date(fromDate)):0; var toTs=toDate?dayEnd(new Date(toDate)):Infinity;
+    return {fromTs:fromTs,toTs:toTs};
+}
+function calcDelta(fromTs,toTs){if(!fromTs||!toTs)return '-';var diff=toTs-fromTs;if(diff<60000)return '<1m';if(diff<3600000)return Math.floor(diff/60000)+'m';if(diff<86400000)return Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m';return Math.floor(diff/86400000)+'d '+Math.floor((diff%86400000)/3600000)+'h';}
+
+/* --- Offer Report --- */
+function initRptOffer() { var sel=document.getElementById('rptOfferAff'); if(!sel) return; var h='<option value="">All Affiliates</option>'; allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>';}); sel.innerHTML=h; }
+function runOfferReport() {
+    var range=getRptRange('rptOffer'); var affF=(document.getElementById('rptOfferAff')||{}).value||'';
+    var offerMap={};
+    allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!affF||c.affiliateId===affF);}).forEach(function(c){
+        var oid=c.offerId||'unknown'; if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{}};
+        offerMap[oid].clicks++; if(c.ip) offerMap[oid].ips[c.ip]=(offerMap[oid].ips[c.ip]||0)+1;
+        if(c.converted) offerMap[oid].convs++;
+    });
+    allConversions.filter(function(c){return (c.createdAt||0)>=range.fromTs&&(c.createdAt||0)<=range.toTs&&(!affF||c.affiliateId===affF)&&c.status==='approved';}).forEach(function(c){
+        var oid=c.offerId||'unknown'; if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{}};
+        offerMap[oid].rev+=(parseFloat(c.revenue)||0); offerMap[oid].pay+=(parseFloat(c.payout)||0);
+    });
+    var rows=Object.keys(offerMap).map(function(oid){var d=offerMap[oid];var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';var rpc=d.clicks?(d.rev/d.clicks).toFixed(2):'0.00';var epc=d.clicks?(d.pay/d.clicks).toFixed(2):'0.00';var uq=Object.keys(d.ips).length;return{oid:oid,clicks:d.clicks,uq:uq,convs:d.convs,cvr:cvr,rev:d.rev,pay:d.pay,profit:d.rev-d.pay,rpc:rpc,epc:epc};});
+    var totClicks=rows.reduce(function(s,r){return s+r.clicks;},0);
+    var totConvs=rows.reduce(function(s,r){return s+r.convs;},0);
+    var totRev=rows.reduce(function(s,r){return s+r.rev;},0);
+    var totPay=rows.reduce(function(s,r){return s+r.pay;},0);
+    var totCvr=totClicks?((totConvs/totClicks)*100).toFixed(1)+'%':'0%';
+    var rpc=totClicks?(totRev/totClicks).toFixed(2):'0.00';
+    document.getElementById('rptOS_clicks').textContent=totClicks;
+    document.getElementById('rptOS_convs').textContent=totConvs;
+    document.getElementById('rptOS_cvr').textContent=totCvr;
+    document.getElementById('rptOS_rev').textContent=fmtMoney(totRev);
+    document.getElementById('rptOS_pay').textContent=fmtMoney(totPay);
+    document.getElementById('rptOS_profit').textContent=fmtMoney(totRev-totPay);
+    document.getElementById('rptOS_rpc').textContent='$'+rpc;
+    var html='';
+    rows.sort(function(a,b){return b.clicks-a.clicks;}).forEach(function(r){
+        html+='<tr><td><strong>'+escHtml(getOfferName(r.oid))+'</strong></td><td>'+r.clicks+'</td><td>'+r.uq+'</td><td>'+r.convs+'</td><td>'+r.cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(r.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(r.pay)+'</td><td style="font-weight:700">'+fmtMoney(r.profit)+'</td><td>$'+r.rpc+'</td><td>$'+r.epc+'</td></tr>';
+    });
+    document.getElementById('rptOfferTbody').innerHTML=html||'<tr><td colspan="10" class="no-data">No data for selected range</td></tr>';
+    if(document.getElementById('rptOfferDatePicker')) document.getElementById('rptOfferDatePicker').style.display='none';
+}
+function filterRptOfferTable(){var q=(document.getElementById('rptOfferSearch').value||'').toLowerCase();document.querySelectorAll('#rptOfferTbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}
+function exportRptOffer(){var rows=[['Offer','Clicks','Unique Clicks','Conversions','CVR','Revenue','Payout','Profit','RPC','EPC']];document.querySelectorAll('#rptOfferTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return c.textContent.trim();}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='offer-report.csv';a.click();}
+
+/* --- Conversion Report --- */
+var rptConvPage=1, rptConvData=[];
+function initRptConv() {
+    var ofSel=document.getElementById('rptConvOffer'); var affSel=document.getElementById('rptConvAff');
+    if(ofSel){var h='<option value="">All Offers</option>';allOffers.forEach(function(o){h+='<option value="'+o._id+'">'+escHtml(o.name)+'</option>';});ofSel.innerHTML=h;}
+    if(affSel){var h='<option value="">All Affiliates</option>';allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>';});affSel.innerHTML=h;}
+}
+function runConvReport() {
+    var range=getRptRange('rptConv');
+    var offerF=(document.getElementById('rptConvOffer')||{}).value||'';
+    var affF=(document.getElementById('rptConvAff')||{}).value||'';
+    var stF=(document.getElementById('rptConvStatus')||{}).value||'';
+    rptConvData=allConversions.filter(function(c){
+        if((c.createdAt||0)<range.fromTs||(c.createdAt||0)>range.toTs) return false;
+        if(offerF&&c.offerId!==offerF) return false;
+        if(affF&&c.affiliateId!==affF) return false;
+        if(stF&&c.status!==stF) return false;
+        return true;
+    }).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    rptConvPage=1; renderRptConvTable();
+    if(document.getElementById('rptConvDatePicker')) document.getElementById('rptConvDatePicker').style.display='none';
+}
+function renderRptConvTable() {
+    var html='';
+    rptConvData.forEach(function(c){
+        var clickObj=c.clickId?allClicks.find(function(x){return x._id===c.clickId;}):null;
+        var delta=calcDelta(clickObj?clickObj.timestamp:null,c.createdAt);
+        var subId=c.sub1||(clickObj?clickObj.sub1:'')||'-';
+        var convIp=c.ip||(clickObj?clickObj.ip:'')||'-';
+        var sessIp=clickObj?(clickObj.ip||'-'):'-';
+        html+='<tr>';
+        html+='<td style="font-size:11px">'+fmtDateTime(c.createdAt)+'</td>';
+        html+='<td style="font-size:11px">'+(clickObj?fmtDateTime(clickObj.timestamp):'-')+'</td>';
+        html+='<td style="font-size:11px;color:var(--primary);font-weight:600">'+delta+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(getOfferName(c.offerId))+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(getUserName(c.affiliateId))+'</td>';
+        html+='<td style="font-family:monospace;font-size:11px">'+escHtml(subId)+'</td>';
+        html+='<td style="color:var(--primary);font-weight:700">'+fmtMoney(c.revenue)+'</td>';
+        html+='<td style="color:var(--green);font-weight:700">'+fmtMoney(c.payout)+'</td>';
+        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(convIp)+'</td>';
+        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(sessIp)+'</td>';
+        html+='<td style="font-family:monospace;font-size:10px">'+escHtml(c.transactionId||'-')+'</td>';
+        html+='<td>'+statusBadge(c.status)+'</td>';
+        html+='<td style="font-size:11px">'+escHtml(c.source||'postback')+'</td>';
+        html+='<td><div class="dots-wrap"><button class="dots-trigger" onclick="toggleDotsMenu(this)">&#8942;</button><div class="dots-dropdown"><a onclick="openConvDetail(\''+c._id+'\')"><i class="fas fa-eye" style="width:14px"></i> View Detail</a><a onclick="changeConvStatus(\''+c._id+'\',\'approved\')"><i class="fas fa-check" style="width:14px"></i> Approve</a><a onclick="changeConvStatus(\''+c._id+'\',\'rejected\')"><i class="fas fa-times" style="width:14px"></i> Reject</a></div></div></td>';
+        html+='</tr>';
+    });
+    document.getElementById('rptConvTbody').innerHTML=html||'<tr><td colspan="14" class="no-data">No data for selected range</td></tr>';
+    document.getElementById('rptConvPageInfo').textContent=rptConvData.length+' conversions';
+}
+function filterRptConvTable(){var q=(document.getElementById('rptConvSearch').value||'').toLowerCase();document.querySelectorAll('#rptConvTbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}
+function exportRptConv(){var rows=[['Date','Click Date','Delta','Offer','Affiliate','Sub ID','Revenue','Payout','Conv IP','Session IP','Transaction ID','Status','Type']];document.querySelectorAll('#rptConvTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).slice(0,13).map(function(c){return '"'+c.textContent.trim().replace(/"/g,'""')+'"';}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='conversion-report.csv';a.click();}
+
+/* --- Sub ID Report --- */
+function initRptSubid(){
+    var ofSel=document.getElementById('rptSubidOffer'); var affSel=document.getElementById('rptSubidAff');
+    if(ofSel){var h='<option value="">All Offers</option>';allOffers.forEach(function(o){h+='<option value="'+o._id+'">'+escHtml(o.name)+'</option>';});ofSel.innerHTML=h;}
+    if(affSel){var h='<option value="">All Affiliates</option>';allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>';});affSel.innerHTML=h;}
+}
+function runSubidReport() {
+    var range=getRptRange('rptSubid');
+    var offerF=(document.getElementById('rptSubidOffer')||{}).value||'';
+    var affF=(document.getElementById('rptSubidAff')||{}).value||'';
+    var subMap={};
+    allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
+        var key=(c.sub1||'(none)')+'||'+(c.affiliateId||'')+'||'+(c.offerId||'');
+        if(!subMap[key]) subMap[key]={sub:c.sub1||'(none)',aff:c.affiliateId,offer:c.offerId,clicks:0,convs:0,rev:0,pay:0};
+        subMap[key].clicks++; if(c.converted) subMap[key].convs++;
+    });
+    allConversions.filter(function(c){return (c.createdAt||0)>=range.fromTs&&(c.createdAt||0)<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF)&&c.status==='approved';}).forEach(function(c){
+        var click=c.clickId?allClicks.find(function(x){return x._id===c.clickId;}):null;
+        var sub=click?(click.sub1||'(none)'):'(none)';
+        var key=sub+'||'+(c.affiliateId||'')+'||'+(c.offerId||'');
+        if(subMap[key]){subMap[key].rev+=(parseFloat(c.revenue)||0);subMap[key].pay+=(parseFloat(c.payout)||0);}
+    });
+    var html='';
+    Object.values(subMap).sort(function(a,b){return b.clicks-a.clicks;}).forEach(function(d){
+        var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';
+        var epc=d.clicks?(d.pay/d.clicks).toFixed(2):'0.00';
+        html+='<tr><td style="font-family:monospace;font-weight:600">'+escHtml(d.sub)+'</td><td>'+escHtml(getUserName(d.aff))+'</td><td>'+escHtml(getOfferName(d.offer))+'</td><td>'+d.clicks+'</td><td>'+d.convs+'</td><td>'+cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(d.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(d.pay)+'</td><td>$'+epc+'</td></tr>';
+    });
+    document.getElementById('rptSubidTbody').innerHTML=html||'<tr><td colspan="9" class="no-data">No data for selected range</td></tr>';
+    if(document.getElementById('rptSubidDatePicker')) document.getElementById('rptSubidDatePicker').style.display='none';
+}
+function filterRptSubidTable(){var q=(document.getElementById('rptSubidSearch').value||'').toLowerCase();document.querySelectorAll('#rptSubidTbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}
+function exportRptSubid(){var rows=[['Sub ID','Affiliate','Offer','Clicks','Conversions','CVR','Revenue','Payout','EPC']];document.querySelectorAll('#rptSubidTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return '"'+c.textContent.trim()+'"';}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='subid-report.csv';a.click();}
+
+/* --- Daily Report --- */
+function initRptDaily(){
+    var ofSel=document.getElementById('rptDailyOffer'); var affSel=document.getElementById('rptDailyAff');
+    if(ofSel){var h='<option value="">All Offers</option>';allOffers.forEach(function(o){h+='<option value="'+o._id+'">'+escHtml(o.name)+'</option>';});ofSel.innerHTML=h;}
+    if(affSel){var h='<option value="">All Affiliates</option>';allUsers.filter(function(u){return u.role==='affiliate';}).forEach(function(a){h+='<option value="'+a._id+'">'+escHtml(a.name||a.email)+'</option>';});affSel.innerHTML=h;}
+}
+function runDailyReport() {
+    var range=getRptRange('rptDaily');
+    var offerF=(document.getElementById('rptDailyOffer')||{}).value||'';
+    var affF=(document.getElementById('rptDailyAff')||{}).value||'';
+    var dayMap={};
+    var dayKey=function(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+    allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
+        var k=dayKey(c.timestamp); if(!dayMap[k]) dayMap[k]={clicks:0,uips:{},convs:0,rev:0,pay:0};
+        dayMap[k].clicks++; if(c.ip) dayMap[k].uips[c.ip]=1; if(c.converted) dayMap[k].convs++;
+    });
+    allConversions.filter(function(c){return (c.createdAt||0)>=range.fromTs&&(c.createdAt||0)<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF)&&c.status==='approved';}).forEach(function(c){
+        var k=dayKey(c.createdAt); if(!dayMap[k]) dayMap[k]={clicks:0,uips:{},convs:0,rev:0,pay:0};
+        dayMap[k].rev+=(parseFloat(c.revenue)||0); dayMap[k].pay+=(parseFloat(c.payout)||0);
+    });
+    var html='';
+    Object.keys(dayMap).sort().reverse().forEach(function(day){
+        var d=dayMap[day]; var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%'; var epc=d.clicks?(d.pay/d.clicks).toFixed(2):'0.00'; var uq=Object.keys(d.uips).length;
+        html+='<tr><td style="font-weight:600">'+day+'</td><td>'+d.clicks+'</td><td>'+uq+'</td><td>'+d.convs+'</td><td>'+cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(d.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(d.pay)+'</td><td style="font-weight:700">'+fmtMoney(d.rev-d.pay)+'</td><td>$'+epc+'</td></tr>';
+    });
+    document.getElementById('rptDailyTbody').innerHTML=html||'<tr><td colspan="9" class="no-data">No data for selected range</td></tr>';
+    if(document.getElementById('rptDailyDatePicker')) document.getElementById('rptDailyDatePicker').style.display='none';
+}
+function exportRptDaily(){var rows=[['Date','Clicks','Unique Clicks','Conversions','CVR','Revenue','Payout','Profit','EPC']];document.querySelectorAll('#rptDailyTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return c.textContent.trim();}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='daily-report.csv';a.click();}
+
+/* --- Hourly Report --- */
+function initRptHourly(){var ofSel=document.getElementById('rptHourlyOffer');if(ofSel){var h='<option value="">All Offers</option>';allOffers.forEach(function(o){h+='<option value="'+o._id+'">'+escHtml(o.name)+'</option>';});ofSel.innerHTML=h;}}
+function runHourlyReport() {
+    var dateVal=(document.getElementById('rptHourlyDate')||{}).value||'';
+    var offerF=(document.getElementById('rptHourlyOffer')||{}).value||'';
+    var fromTs=dateVal?dayStart(new Date(dateVal)):dayStart(new Date()); var toTs=dateVal?dayEnd(new Date(dateVal)):dayEnd(new Date());
+    var hourMap={};for(var i=0;i<24;i++) hourMap[i]={clicks:0,convs:0,rev:0,pay:0};
+    allClicks.filter(function(c){return c.timestamp>=fromTs&&c.timestamp<=toTs&&(!offerF||c.offerId===offerF);}).forEach(function(c){var h=new Date(c.timestamp).getHours();hourMap[h].clicks++;if(c.converted)hourMap[h].convs++;});
+    allConversions.filter(function(c){return (c.createdAt||0)>=fromTs&&(c.createdAt||0)<=toTs&&(!offerF||c.offerId===offerF)&&c.status==='approved';}).forEach(function(c){var h=new Date(c.createdAt).getHours();hourMap[h].rev+=(parseFloat(c.revenue)||0);hourMap[h].pay+=(parseFloat(c.payout)||0);});
+    var html='';
+    for(var h=0;h<24;h++){var d=hourMap[h];var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';var label=String(h).padStart(2,'0')+':00 - '+String(h+1).padStart(2,'0')+':00';html+='<tr><td style="font-weight:600">'+label+'</td><td>'+d.clicks+'</td><td>'+d.convs+'</td><td>'+cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(d.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(d.pay)+'</td></tr>';}
+    document.getElementById('rptHourlyTbody').innerHTML=html;
+    if(document.getElementById('rptHourlyDatePicker')) document.getElementById('rptHourlyDatePicker').style.display='none';
+}
+function exportRptHourly(){var rows=[['Hour','Clicks','Conversions','CVR','Revenue','Payout']];document.querySelectorAll('#rptHourlyTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return c.textContent.trim();}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='hourly-report.csv';a.click();}
+
+function toggleRptSection(hd) { hd.classList.toggle('open'); var body=hd.nextElementSibling; if(body) body.classList.toggle('hidden'); }
 </script>
 </body>
 </html>
