@@ -7015,13 +7015,14 @@ function _dpApply(id){
 }
 
 /* ===== REPORTING HUB ===== */
+var _currentRptPanel = null;
 function initReporting() {
-    /* Show hub, hide all panels */
-    switchRpt(null);
-    /* Pre-populate dropdowns in all panels */
     initRptOffer(); initRptConv(); initRptSubid(); initRptDaily(); initRptHourly();
+    /* Restore whatever panel was open — null = hub */
+    switchRpt(_currentRptPanel);
 }
 function switchRpt(type) {
+    _currentRptPanel = type;
     var hub = document.getElementById('rptHub');
     var panels = document.querySelectorAll('.rpt-panel');
     if (!type) {
@@ -7060,10 +7061,10 @@ function renderToOfferRows() {
     var h = '';
     items.forEach(function(item, idx) {
         var sc = statusColors[item.status] || '#64748b';
-        h += '<div style="background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+        h += '<div class="to-row" data-id="'+item._id+'" style="background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
              /* logo preview */
              '<div style="width:44px;height:44px;border-radius:8px;background:#f1f5f9;border:1px solid var(--card-border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">' +
-             (item.logo ? '<img src="'+escHtml(item.logo)+'" style="width:44px;height:44px;object-fit:cover;border-radius:8px" onerror="this.style.display=\'none\'">' : '<i class="fas fa-tag" style="color:#cbd5e1;font-size:16px"></i>') +
+             (item.logo ? '<img class="to-logo-img" src="'+escHtml(item.logo)+'" style="width:44px;height:44px;object-fit:cover;border-radius:8px" onerror="this.style.display=\'none\'">' : '<i class="fas fa-tag" style="color:#cbd5e1;font-size:16px"></i>') +
              '</div>' +
              /* offer select */
              '<div style="flex:2;min-width:160px;">' +
@@ -7100,15 +7101,22 @@ function renderToOfferRows() {
 }
 function toSelectOffer(id, offerId) {
     var offer = allOffers.find(function(o){ return o._id === offerId; });
-    if (!offer) return;
     if (!_topOffersData[id]) _topOffersData[id] = {};
     _topOffersData[id].offerId = offerId;
-    _topOffersData[id].name = offer.name || '';
-    _topOffersData[id].logo = offer.logo || offer.imageUrl || '';
-    _topOffersData[id].cpa = parseFloat(offer.payout) || 0;
-    var payEl = document.getElementById('toPay_' + id);
-    if (payEl) payEl.value = _topOffersData[id].cpa;
-    renderToOfferRows();
+    if (offer) {
+        _topOffersData[id].name = offer.name || '';
+        _topOffersData[id].logo = offer.logo || offer.imageUrl || '';
+        _topOffersData[id].cpa = parseFloat(offer.payout) || 0;
+        /* update payout field in-place without full re-render */
+        var payEl = document.getElementById('toPay_' + id);
+        if (payEl) payEl.value = _topOffersData[id].cpa;
+        /* update logo preview in-place */
+        var row = document.querySelector('.to-row[data-id="' + id + '"]');
+        if (row) {
+            var logoEl = row.querySelector('.to-logo-img');
+            if (logoEl) { logoEl.src = _topOffersData[id].logo; logoEl.style.display = _topOffersData[id].logo ? '' : 'none'; }
+        }
+    }
 }
 function _toField(id, field, val) {
     if (!_topOffersData[id]) _topOffersData[id] = {};

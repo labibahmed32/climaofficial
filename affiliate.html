@@ -226,6 +226,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .aff-rpt-arrow{color:#cbd5e1;font-size:10px;}
 .aff-rpt-panel{display:none;}
 .aff-rpt-panel.active{display:block;}
+.f-preset-btn{padding:5px 11px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11px;font-weight:600;color:var(--tl);cursor:pointer;transition:all .15s;}
+.f-preset-btn:hover{border-color:var(--accent);color:var(--accent);}
+.f-preset-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.ofp-metric{background:#fff;border:1px solid var(--border);border-radius:9px;padding:14px 18px;flex:1;min-width:120px;}
+.ofp-metric .om-val{font-size:20px;font-weight:800;color:var(--td);}
+.ofp-metric .om-lbl{font-size:10px;color:var(--tl);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
 .aff-panel-top{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
 .aff-back-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;color:var(--tl);transition:all .15s;}
 .aff-back-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -692,11 +698,16 @@ body.impersonating .impersonate-banner{display:block;}
 
         <!-- REPORTING (Clicks) -->
         <div class="section" id="pg-reporting">
-            <div class="toolbar">
-                <div class="toolbar-l">
-                    <input type="date" id="ckFrom" class="f-inp" onchange="renderClicks()">
-                    <input type="date" id="ckTo" class="f-inp" onchange="renderClicks()">
-                    <select id="ckOfferF" class="f-sel" onchange="renderClicks()"><option value="">All Offers</option></select>
+
+            <!-- Hub -->
+            <div id="affRptHub">
+                <div style="margin-bottom:18px;">
+                    <h2 style="font-size:18px;font-weight:700;color:var(--td);margin:0 0 4px">Reports</h2>
+                    <p style="font-size:12px;color:var(--tl);margin:0">Select a report type to view your analytics</p>
+                </div>
+                <!-- Timezone selector in hub -->
+                <div style="margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <span style="font-size:12px;color:var(--tl);font-weight:600;">Timezone:</span>
                     <div class="tz-wrap" id="tzWrap">
                         <button class="tz-btn" onclick="toggleTzDrop(event)"><i class="fas fa-globe"></i><span id="tzLabel">ET (New York)</span><i class="fas fa-chevron-down" style="font-size:9px"></i></button>
                         <div class="tz-drop" id="tzDrop">
@@ -705,14 +716,121 @@ body.impersonating .impersonate-banner{display:block;}
                         </div>
                     </div>
                 </div>
-                <span class="pg-info" id="ckSum"></span>
-            </div>
-            <div class="tbl-wrap">
-                <div class="tbl-scroll">
-                    <table class="dtbl"><thead><tr><th>Click ID</th><th>Offer</th><th>IP</th><th>Country</th><th>Device</th><th>Browser</th><th>Sub1</th><th>Sub2</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="ckTb"></tbody></table>
+                <div class="aff-rpt-hub">
+                    <div class="aff-rpt-card" onclick="switchAffRpt('offer')">
+                        <div class="aff-rpt-ic" style="background:#e3f2fd;color:#1e88e5"><i class="fas fa-tag"></i></div>
+                        <div class="aff-rpt-info"><strong>Offer Performance</strong><span>Clicks, conversions, CVR &amp; earnings per offer</span></div>
+                        <i class="fas fa-chevron-right aff-rpt-arrow"></i>
+                    </div>
+                    <div class="aff-rpt-card" onclick="switchAffRpt('conv')">
+                        <div class="aff-rpt-ic" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-exchange-alt"></i></div>
+                        <div class="aff-rpt-info"><strong>Conversion Report</strong><span>All your conversions with status &amp; payout details</span></div>
+                        <i class="fas fa-chevron-right aff-rpt-arrow"></i>
+                    </div>
+                    <div class="aff-rpt-card" onclick="switchAffRpt('clicks')">
+                        <div class="aff-rpt-ic" style="background:#fff3e0;color:#e65100"><i class="fas fa-mouse-pointer"></i></div>
+                        <div class="aff-rpt-info"><strong>Click Reports</strong><span>Raw click log with country, device &amp; sub IDs</span></div>
+                        <i class="fas fa-chevron-right aff-rpt-arrow"></i>
+                    </div>
                 </div>
-                <div class="pag-bar"><span class="pg-info" id="ckPgInfo"></span><div class="pag-ctrls" id="ckPag"></div></div>
             </div>
+
+            <!-- Offer Performance Panel -->
+            <div class="aff-rpt-panel" id="affRptPanel-offer">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button onclick="switchAffRpt(null)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;font-weight:700;color:var(--tl);cursor:pointer;"><i class="fas fa-arrow-left"></i> All Reports</button>
+                    <div>
+                        <div style="font-size:11px;color:var(--tl);margin-bottom:2px;"><i class="fas fa-chart-bar"></i> Reporting</div>
+                        <div style="font-size:16px;font-weight:700;color:var(--td);">Offer Performance</div>
+                    </div>
+                </div>
+                <!-- Filters -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px 16px;margin-bottom:16px;">
+                    <input type="date" id="ofpFrom" class="f-inp" onchange="renderAffOfferPerf()">
+                    <input type="date" id="ofpTo" class="f-inp" onchange="renderAffOfferPerf()">
+                    <button onclick="setAffPreset('today','ofp');renderAffOfferPerf()" class="f-preset-btn">Today</button>
+                    <button onclick="setAffPreset('yesterday','ofp');renderAffOfferPerf()" class="f-preset-btn">Yesterday</button>
+                    <button onclick="setAffPreset('7d','ofp');renderAffOfferPerf()" class="f-preset-btn">Last 7 Days</button>
+                    <button onclick="setAffPreset('mtd','ofp');renderAffOfferPerf()" class="f-preset-btn">This Month</button>
+                    <button onclick="setAffPreset('all','ofp');renderAffOfferPerf()" class="f-preset-btn active" id="ofpPresetAll">All Time</button>
+                </div>
+                <!-- Summary metrics -->
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;" id="ofpMetrics"></div>
+                <!-- Table -->
+                <div class="tbl-wrap">
+                    <div class="tbl-scroll">
+                        <table class="dtbl">
+                            <thead><tr>
+                                <th>Offer</th><th>Clicks</th><th>Unique</th><th>Conversions</th><th>CVR</th><th>Approved</th><th>Pending</th><th>Earnings</th><th>EPC</th>
+                            </tr></thead>
+                            <tbody id="ofpTb"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Report Panel -->
+            <div class="aff-rpt-panel" id="affRptPanel-conv">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button onclick="switchAffRpt(null)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;font-weight:700;color:var(--tl);cursor:pointer;"><i class="fas fa-arrow-left"></i> All Reports</button>
+                    <div>
+                        <div style="font-size:11px;color:var(--tl);margin-bottom:2px;"><i class="fas fa-chart-bar"></i> Reporting</div>
+                        <div style="font-size:16px;font-weight:700;color:var(--td);">Conversion Report</div>
+                    </div>
+                </div>
+                <!-- Filters -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px 16px;margin-bottom:16px;">
+                    <input type="date" id="cvFrom" class="f-inp" onchange="renderAffConv()">
+                    <input type="date" id="cvTo" class="f-inp" onchange="renderAffConv()">
+                    <select id="cvOfferF" class="f-sel" onchange="renderAffConv()"><option value="">All Offers</option></select>
+                    <select id="cvStatusF" class="f-sel" onchange="renderAffConv()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+                    <button onclick="setAffPreset('today','cv');renderAffConv()" class="f-preset-btn">Today</button>
+                    <button onclick="setAffPreset('7d','cv');renderAffConv()" class="f-preset-btn">Last 7 Days</button>
+                    <button onclick="setAffPreset('mtd','cv');renderAffConv()" class="f-preset-btn">This Month</button>
+                    <button onclick="setAffPreset('all','cv');renderAffConv()" class="f-preset-btn">All Time</button>
+                </div>
+                <!-- Summary metrics -->
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;" id="cvMetrics"></div>
+                <!-- Table -->
+                <div class="tbl-wrap">
+                    <div class="tbl-scroll">
+                        <table class="dtbl">
+                            <thead><tr><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Payout</th><th>Status</th><th>Sub1</th><th>Date</th></tr></thead>
+                            <tbody id="cvTb"></tbody>
+                        </table>
+                    </div>
+                    <div class="pag-bar"><span class="pg-info" id="cvPgInfo"></span><div class="pag-ctrls" id="cvPag"></div></div>
+                </div>
+            </div>
+
+            <!-- Click Reports Panel -->
+            <div class="aff-rpt-panel" id="affRptPanel-clicks">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button onclick="switchAffRpt(null)" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;font-weight:700;color:var(--tl);cursor:pointer;"><i class="fas fa-arrow-left"></i> All Reports</button>
+                    <div>
+                        <div style="font-size:11px;color:var(--tl);margin-bottom:2px;"><i class="fas fa-chart-bar"></i> Reporting</div>
+                        <div style="font-size:16px;font-weight:700;color:var(--td);">Click Reports</div>
+                    </div>
+                </div>
+                <!-- Filters -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px 16px;margin-bottom:16px;">
+                    <input type="date" id="ckFrom" class="f-inp" onchange="renderClicks()">
+                    <input type="date" id="ckTo" class="f-inp" onchange="renderClicks()">
+                    <select id="ckOfferF" class="f-sel" onchange="renderClicks()"><option value="">All Offers</option></select>
+                    <button onclick="setAffPreset('today','ck');renderClicks()" class="f-preset-btn">Today</button>
+                    <button onclick="setAffPreset('7d','ck');renderClicks()" class="f-preset-btn">Last 7 Days</button>
+                    <button onclick="setAffPreset('mtd','ck');renderClicks()" class="f-preset-btn">This Month</button>
+                    <button onclick="setAffPreset('all','ck');renderClicks()" class="f-preset-btn">All Time</button>
+                    <span class="pg-info" id="ckSum"></span>
+                </div>
+                <div class="tbl-wrap">
+                    <div class="tbl-scroll">
+                        <table class="dtbl"><thead><tr><th>Click ID</th><th>Offer</th><th>IP</th><th>Country</th><th>Device</th><th>Browser</th><th>Sub1</th><th>Sub2</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="ckTb"></tbody></table>
+                    </div>
+                    <div class="pag-bar"><span class="pg-info" id="ckPgInfo"></span><div class="pag-ctrls" id="ckPag"></div></div>
+                </div>
+            </div>
+
         </div>
 
         <!-- ANALYTICS -->
@@ -1262,7 +1380,7 @@ function goPage(pg) {
     if (pg === 'dashboard') loadAllData();
     else if (pg === 'offers') { if (!pendingOfferView) backToOffers(); loadOffers(); }
     else if (pg === 'postbacks') loadPostbacks();
-    else if (pg === 'reporting') loadClicks();
+    else if (pg === 'reporting') initAffReporting();
     else if (pg === 'analytics') loadAnalytics();
     else if (pg === 'invoices') loadInvoices();
     else if (pg === 'linkgen') loadLinkGen();
@@ -2088,6 +2206,161 @@ function fmtDt(ts) { if (!ts) return '-'; var d = new Date(ts); return d.toLocal
 
 /* ── Reporting (Clicks) ── */
 var ckPage = 1;
+/* ══════════ AFFILIATE REPORTING HUB ══════════ */
+var _affRptPanel = null;
+
+function initAffReporting() {
+    Promise.all([fbGet('clicks'), fbGet('conversions'), fbGet('offers')]).then(function(r) {
+        allOffers = objToArr(r[2]);
+        myClicks = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid; });
+        myConversions = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
+        /* populate offer dropdowns */
+        var oh = '<option value="">All Offers</option>';
+        allOffers.forEach(function(o) { oh += '<option value="' + o._id + '">' + esc(o.name) + '</option>'; });
+        ['ckOfferF','cvOfferF'].forEach(function(id) { var el = document.getElementById(id); if (el) el.innerHTML = oh; });
+        /* restore last open panel */
+        switchAffRpt(_affRptPanel);
+    });
+}
+
+function switchAffRpt(type) {
+    _affRptPanel = type;
+    var hub = document.getElementById('affRptHub');
+    var panels = document.querySelectorAll('.aff-rpt-panel');
+    if (!type) {
+        if (hub) hub.style.display = '';
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        return;
+    }
+    if (hub) hub.style.display = 'none';
+    panels.forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('affRptPanel-' + type);
+    if (panel) panel.classList.add('active');
+    if (type === 'offer')  { setAffPreset('all','ofp'); renderAffOfferPerf(); }
+    if (type === 'conv')   { setAffPreset('all','cv'); renderAffConv(); }
+    if (type === 'clicks') { setAffPreset('all','ck'); renderClicks(); }
+}
+
+function setAffPreset(preset, pfx) {
+    var now = new Date();
+    var from, to;
+    to = new Date(now); to.setHours(23,59,59,999);
+    if (preset === 'today') {
+        from = new Date(now); from.setHours(0,0,0,0);
+    } else if (preset === 'yesterday') {
+        from = new Date(now); from.setDate(from.getDate()-1); from.setHours(0,0,0,0);
+        to = new Date(from); to.setHours(23,59,59,999);
+    } else if (preset === '7d') {
+        from = new Date(now); from.setDate(from.getDate()-6); from.setHours(0,0,0,0);
+    } else if (preset === 'mtd') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else {
+        /* all time */
+        var fEl = document.getElementById(pfx+'From'); var tEl = document.getElementById(pfx+'To');
+        if (fEl) fEl.value = ''; if (tEl) tEl.value = '';
+        /* clear active on all preset buttons in the panel */
+        var activePanel = document.getElementById('affRptPanel-' + _affRptPanel);
+        if (activePanel) activePanel.querySelectorAll('.f-preset-btn').forEach(function(b){ b.classList.remove('active'); });
+        return;
+    }
+    var fStr = from.toISOString().slice(0,10), tStr = to.toISOString().slice(0,10);
+    var fEl = document.getElementById(pfx+'From'); var tEl = document.getElementById(pfx+'To');
+    if (fEl) fEl.value = fStr; if (tEl) tEl.value = tStr;
+}
+
+/* ── Offer Performance ── */
+function renderAffOfferPerf() {
+    var fD = document.getElementById('ofpFrom').value, tD = document.getElementById('ofpTo').value;
+    var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
+    var offerMap = {};
+    myClicks.filter(function(c){ return c.timestamp >= fTs && c.timestamp <= tTs; }).forEach(function(c) {
+        var oid = c.offerId || '__unknown';
+        if (!offerMap[oid]) offerMap[oid] = {clicks:0, ips:{}, convs:0, approved:0, pending:0, earnings:0};
+        offerMap[oid].clicks++;
+        if (c.ip) offerMap[oid].ips[c.ip] = 1;
+    });
+    myConversions.filter(function(c){ return (c.createdAt||0) >= fTs && (c.createdAt||0) <= tTs; }).forEach(function(c) {
+        var oid = c.offerId || '__unknown';
+        if (!offerMap[oid]) offerMap[oid] = {clicks:0, ips:{}, convs:0, approved:0, pending:0, earnings:0};
+        offerMap[oid].convs++;
+        if (c.status === 'approved') { offerMap[oid].approved++; offerMap[oid].earnings += parseFloat(c.payout)||0; }
+        if (c.status === 'pending')  { offerMap[oid].pending++; }
+    });
+    var rows = Object.keys(offerMap).map(function(oid) {
+        var d = offerMap[oid];
+        var cvr = d.clicks ? ((d.convs/d.clicks)*100).toFixed(1)+'%' : '0%';
+        var epc = d.clicks ? '$'+(d.earnings/d.clicks).toFixed(2) : '$0.00';
+        return { oid:oid, clicks:d.clicks, uniq:Object.keys(d.ips).length, convs:d.convs, cvr:cvr, approved:d.approved, pending:d.pending, earnings:d.earnings, epc:epc };
+    }).sort(function(a,b){ return b.clicks - a.clicks; });
+    /* metrics */
+    var totClicks = rows.reduce(function(s,r){return s+r.clicks;},0);
+    var totConvs  = rows.reduce(function(s,r){return s+r.convs;},0);
+    var totEarn   = rows.reduce(function(s,r){return s+r.earnings;},0);
+    var totCVR    = totClicks ? ((totConvs/totClicks)*100).toFixed(1)+'%' : '0%';
+    document.getElementById('ofpMetrics').innerHTML =
+        '<div class="ofp-metric"><div class="om-val">'+totClicks+'</div><div class="om-lbl">Total Clicks</div></div>' +
+        '<div class="ofp-metric"><div class="om-val">'+totConvs+'</div><div class="om-lbl">Conversions</div></div>' +
+        '<div class="ofp-metric"><div class="om-val">'+totCVR+'</div><div class="om-lbl">CVR</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid var(--green)"><div class="om-val" style="color:var(--green)">$'+totEarn.toFixed(2)+'</div><div class="om-lbl">Total Earned</div></div>';
+    var h = '';
+    rows.forEach(function(r) {
+        h += '<tr>' +
+            '<td style="font-weight:600">'+esc(offerName(r.oid))+'</td>' +
+            '<td>'+r.clicks+'</td>' +
+            '<td style="color:var(--tl)">'+r.uniq+'</td>' +
+            '<td><strong>'+r.convs+'</strong></td>' +
+            '<td style="font-weight:700;color:var(--accent)">'+r.cvr+'</td>' +
+            '<td><span style="color:var(--green);font-weight:700">'+r.approved+'</span></td>' +
+            '<td><span style="color:#f59e0b;font-weight:700">'+r.pending+'</span></td>' +
+            '<td style="font-weight:800;color:var(--green)">$'+r.earnings.toFixed(2)+'</td>' +
+            '<td style="color:var(--tl)">'+r.epc+'</td>' +
+            '</tr>';
+    });
+    document.getElementById('ofpTb').innerHTML = h || '<tr><td colspan="9" class="no-data"><i class="fas fa-tag"></i>No data for selected period</td></tr>';
+}
+
+/* ── Conversion Report ── */
+var cvPage = 1;
+function renderAffConv() {
+    var fD = document.getElementById('cvFrom').value, tD = document.getElementById('cvTo').value;
+    var oF = document.getElementById('cvOfferF').value, sF = document.getElementById('cvStatusF').value;
+    var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
+    var fil = myConversions.filter(function(c) {
+        if ((c.createdAt||0) < fTs || (c.createdAt||0) > tTs) return false;
+        if (oF && c.offerId !== oF) return false;
+        if (sF && c.status !== sF) return false;
+        return true;
+    }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+    /* metrics */
+    var appr = fil.filter(function(c){return c.status==='approved';}), pend = fil.filter(function(c){return c.status==='pending';});
+    var totEarn = appr.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+    var pendEarn = pend.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+    document.getElementById('cvMetrics').innerHTML =
+        '<div class="ofp-metric"><div class="om-val">'+fil.length+'</div><div class="om-lbl">Total</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid var(--green)"><div class="om-val" style="color:var(--green)">'+appr.length+'</div><div class="om-lbl">Approved</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid #f59e0b"><div class="om-val" style="color:#f59e0b">'+pend.length+'</div><div class="om-lbl">Pending</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid var(--green)"><div class="om-val" style="color:var(--green)">$'+totEarn.toFixed(2)+'</div><div class="om-lbl">Earned</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid #f59e0b"><div class="om-val" style="color:#f59e0b">$'+pendEarn.toFixed(2)+'</div><div class="om-lbl">Pending Pay</div></div>';
+    var st = (cvPage-1)*PAGE_SIZE, pg = fil.slice(st, st+PAGE_SIZE);
+    var h = '';
+    pg.forEach(function(c) {
+        var st_col = c.status==='approved'?'var(--green)':c.status==='rejected'?'var(--red)':'#f59e0b';
+        h += '<tr>' +
+            '<td style="font-family:monospace;font-size:10px">'+esc(c._id)+'</td>' +
+            '<td style="font-family:monospace;font-size:10px">'+esc(c.clickId||'-')+'</td>' +
+            '<td>'+esc(offerName(c.offerId))+'</td>' +
+            '<td style="font-weight:800;color:var(--green)">$'+parseFloat(c.payout||0).toFixed(2)+'</td>' +
+            '<td><span style="font-size:11px;font-weight:700;color:'+st_col+'">'+esc(c.status||'-')+'</span></td>' +
+            '<td style="font-size:11px">'+esc(c.sub1||'-')+'</td>' +
+            '<td style="white-space:nowrap;font-size:11px">'+fmtDT(c.createdAt)+'</td>' +
+            '</tr>';
+    });
+    document.getElementById('cvTb').innerHTML = h || '<tr><td colspan="7" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions for selected filters</td></tr>';
+    renderPag('cvPag','cvPgInfo',fil.length,cvPage,PAGE_SIZE,'goAffCvPg');
+}
+function goAffCvPg(p) { cvPage = p; renderAffConv(); }
+
+/* ══════════════════════════════════════════ */
 function loadClicks() {
     Promise.all([fbGet('clicks'), fbGet('offers')]).then(function(r) {
         allOffers = objToArr(r[1]);
@@ -2126,7 +2399,6 @@ function renderClicks() {
 function goCkPg(p) { ckPage = p; renderClicks(); }
 
 /* ── Analytics (Conversions + Earnings) ── */
-var cvPage = 1;
 function loadAnalytics() {
     Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('payments/records')]).then(function(r) {
         allOffers = objToArr(r[1]);
