@@ -488,6 +488,8 @@ body.impersonating .impersonate-banner{display:block;}
 
         <!-- DASHBOARD -->
         <div class="section" id="pg-dashboard">
+            <!-- Announcement Banners -->
+            <div id="annBanners" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;"></div>
             <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--td)">My Stats</h3>
             <div class="stat-grid" id="dashStats"></div>
             <div class="chart-box">
@@ -1473,7 +1475,49 @@ function renderAffSparkline(canvasId, data, color) {
 }
 
 /* ── Dashboard ── */
+function loadAnnouncements() {
+    Promise.all([fbGet('network/announcements'), fbGet('offers')]).then(function(res) {
+        var wrap = document.getElementById('annBanners');
+        if (!wrap) return;
+        var offersMap = {};
+        objToArr(res[1] || {}).forEach(function(o) { offersMap[o._id] = o; });
+        var items = objToArr(res[0] || {}).filter(function(a) { return a.active !== false && a.active !== 0; });
+        items.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+        if (!items.length) { wrap.innerHTML = ''; return; }
+        var typeStyles = {
+            'Payout Bump': { bg:'#fffbeb', border:'#fbbf24', icon:'fa-arrow-up', badge:'#fef3c7', badgeC:'#92400e' },
+            'New Offer':   { bg:'#eff6ff', border:'#60a5fa', icon:'fa-tag',      badge:'#dbeafe', badgeC:'#1e40af' },
+            'Deal':        { bg:'#f0fdf4', border:'#4ade80', icon:'fa-gift',     badge:'#dcfce7', badgeC:'#14532d' },
+            'Urgent':      { bg:'#fef2f2', border:'#f87171', icon:'fa-bell',     badge:'#fee2e2', badgeC:'#991b1b' },
+            'General':     { bg:'#f8fafc', border:'#94a3b8', icon:'fa-bullhorn', badge:'#f1f5f9', badgeC:'#334155' }
+        };
+        wrap.innerHTML = items.map(function(a) {
+            var t = typeStyles[a.type] || typeStyles['General'];
+            var linkedOffer = a.offerId ? offersMap[a.offerId] : null;
+            var offerLogo = linkedOffer ? (linkedOffer.logo || linkedOffer.imageUrl || '') : '';
+            /* Left icon: offer logo if available, else type icon */
+            var leftIcon = offerLogo
+                ? '<img src="'+esc(offerLogo)+'" style="width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(0,0,0,.08)" onerror="this.style.display=\'none\'">'
+                : '<div style="width:44px;height:44px;border-radius:8px;background:'+t.border+';display:flex;align-items:center;justify-content:center;"><i class="fas '+t.icon+'" style="color:#fff;font-size:16px"></i></div>';
+            var offerTag = linkedOffer ? '<span style="font-size:10px;color:var(--tl);margin-top:2px;display:block">Offer: <b style="color:var(--td)">'+esc(linkedOffer.name||'')+'</b></span>' : '';
+            return '<div style="display:flex;align-items:flex-start;gap:12px;background:'+t.bg+';border:1.5px solid '+t.border+';border-radius:10px;padding:13px 16px;">' +
+                '<div style="flex-shrink:0">'+leftIcon+'</div>' +
+                '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
+                '<span style="font-size:13px;font-weight:700;color:#1e293b">'+esc(a.title||'Announcement')+'</span>' +
+                '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+t.badge+';color:'+t.badgeC+'">'+esc(a.type||'General')+'</span>' +
+                '</div>' +
+                '<div style="font-size:12.5px;color:#475569;line-height:1.5">'+esc(a.message||'')+'</div>' +
+                offerTag +
+                '</div>' +
+                '<button onclick="this.parentNode.remove()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:0;flex-shrink:0;line-height:1">&times;</button>' +
+                '</div>';
+        }).join('');
+    }).catch(function() {});
+}
+
 function loadDashboard() {
+    loadAnnouncements();
     var now = new Date();
     var ms = mStart(now), ts = dayS(now);
     var ys = dayS(new Date(now.getTime() - 86400000)), ye = dayE(new Date(now.getTime() - 86400000));
