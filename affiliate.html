@@ -1503,48 +1503,52 @@ function loadAnnouncements() {
             var offerLogo = a.offerLogo || (linkedOffer && (linkedOffer.thumbnail || linkedOffer.logo || linkedOffer.imageUrl)) || '';
             var offerName = a.offerName || (linkedOffer && linkedOffer.name) || '';
 
-            /* ── Payout bump layout ── */
+            /* ── Logo section (left) ── */
+            var logoSection = offerLogo
+                ? '<div style="flex-shrink:0;width:72px;align-self:stretch;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.12);background:rgba(0,0,0,.2)">' +
+                  '<img src="'+esc(offerLogo)+'" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentNode.style.display=\'none\'"></div>'
+                : '<div style="flex-shrink:0;width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center">' +
+                  '<i class="fas '+c.icon+'" style="font-size:26px;color:'+c.accent+'"></i></div>';
+
+            /* ── Payout bump: two-column (info | big payout) ── */
             if (a.type === 'payout_bump') {
-                var logoLeft = offerLogo
-                    ? '<img src="'+esc(offerLogo)+'" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:2px solid rgba(255,255,255,.15);flex-shrink:0" onerror="this.style.display=\'none\'">'
-                    : '<div style="width:52px;height:52px;border-radius:10px;background:rgba(255,255,255,.08);border:1.5px solid '+c.accent+'44;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas '+c.icon+'" style="font-size:20px;color:'+c.accent+'"></i></div>';
-                var payDisp = (a.payFrom||a.payTo)
-                    ? '<div style="display:flex;align-items:baseline;gap:8px;">'+(a.payFrom?'<span style="font-size:16px;font-weight:700;color:rgba(255,255,255,.4);text-decoration:line-through">$'+a.payFrom+'</span><i class="fas fa-arrow-right" style="color:'+c.accent+';font-size:11px"></i>':'')+
-                      '<span style="font-size:30px;font-weight:900;color:'+c.accent+';line-height:1">$'+(a.payTo||0)+'</span>'+
-                      '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">/ conv</span></div>'
-                    : '';
-                var msgLine = a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.6);margin:4px 0 0;line-height:1.5">'+esc(a.message)+'</p>' : '';
-                return '<div style="background:'+c.grad+';border-radius:12px;padding:16px 50px 16px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);position:relative;overflow:hidden">' +
-                    '<div style="position:absolute;right:-20px;top:-20px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
-                    logoLeft +
-                    '<div style="flex:1;min-width:0">' +
-                    '<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">' +
-                    '<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
-                    (offerName?'<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.85)">'+esc(offerName)+'</span>':'') +
+                var paySection = '';
+                if (a.payFrom || a.payTo) {
+                    paySection = '<div style="flex-shrink:0;text-align:right;padding-left:20px;border-left:1px solid rgba(255,255,255,.1);margin-left:10px">' +
+                        '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">New Payout</div>' +
+                        (a.payFrom ? '<div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.35);text-decoration:line-through;margin-bottom:2px">$'+a.payFrom+'</div>' : '') +
+                        '<div style="font-size:36px;font-weight:900;color:'+c.accent+';line-height:1;letter-spacing:-1px">$'+(a.payTo||0)+'</div>' +
+                        '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-top:2px;text-transform:uppercase;letter-spacing:.5px">per conversion</div>' +
+                        '</div>';
+                }
+                return '<div style="background:'+c.grad+';border-radius:12px;padding:16px;display:flex;align-items:stretch;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);position:relative;overflow:hidden">' +
+                    '<div style="position:absolute;right:200px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
+                    logoSection +
+                    '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">' +
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+                    '<span style="font-size:9px;font-weight:800;padding:3px 10px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
+                    (offerName ? '<span style="font-size:13px;font-weight:700;color:#fff">'+esc(offerName)+'</span>' : '') +
                     '</div>' +
-                    payDisp + msgLine +
+                    (a.message ? '<p style="font-size:12.5px;color:rgba(255,255,255,.6);margin:0;line-height:1.55">'+esc(a.message)+'</p>' : '') +
                     '</div>' +
-                    '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center">&times;</button>' +
+                    paySection +
+                    '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.07);border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'">&times;</button>' +
                     '</div>';
             }
 
-            /* ── General / New Offer / Deal / Urgent layout ── */
-            var logoLeft2 = offerLogo
-                ? '<img src="'+esc(offerLogo)+'" style="width:52px;height:52px;object-fit:cover;border-radius:9px;border:2px solid rgba(255,255,255,.15);flex-shrink:0" onerror="this.style.display=\'none\'">'
-                : '<div style="width:48px;height:48px;border-radius:9px;background:rgba(255,255,255,.08);border:1.5px solid '+c.accent+'44;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas '+c.icon+'" style="font-size:18px;color:'+c.accent+'"></i></div>';
-            var msgLine2 = a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.65);margin:4px 0 0;line-height:1.5">'+esc(a.message)+'</p>' : '';
-            var offerLine = offerName ? '<div style="margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:20px;padding:2px 9px"><i class="fas fa-tag" style="font-size:8px;color:'+c.accent+'"></i><span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.8)">'+esc(offerName)+'</span></div>' : '';
-            return '<div style="background:'+c.grad+';border-radius:12px;padding:14px 46px 14px 14px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);position:relative;overflow:hidden">' +
-                '<div style="position:absolute;right:-15px;top:-15px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
-                logoLeft2 +
-                '<div style="flex:1;min-width:0">' +
-                '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">' +
-                '<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
+            /* ── Other types (New Offer / Deal / Urgent / General) ── */
+            return '<div style="background:'+c.grad+';border-radius:12px;padding:16px;display:flex;align-items:stretch;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.18);position:relative;overflow:hidden">' +
+                '<div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
+                logoSection +
+                '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">' +
+                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+                '<span style="font-size:9px;font-weight:800;padding:3px 10px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
+                (offerName ? '<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8)"><i class="fas fa-tag" style="font-size:9px;margin-right:3px;color:'+c.accent+'"></i>'+esc(offerName)+'</span>' : '') +
                 '</div>' +
-                '<h4 style="font-size:14px;font-weight:800;color:#fff;margin:0;line-height:1.3">'+esc(a.title||'Announcement')+'</h4>' +
-                msgLine2 + offerLine +
+                '<h4 style="font-size:15px;font-weight:800;color:#fff;margin:0 0 4px;line-height:1.3">'+esc(a.title||'Announcement')+'</h4>' +
+                (a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.6);margin:0;line-height:1.55">'+esc(a.message)+'</p>' : '') +
                 '</div>' +
-                '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center">&times;</button>' +
+                '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.07);border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'">&times;</button>' +
                 '</div>';
         }).join('');
     }).catch(function() {});
