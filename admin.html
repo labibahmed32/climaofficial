@@ -201,8 +201,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rpt-clear{margin-left:auto;padding:14px 18px;border:none;background:none;cursor:pointer;color:#94a3b8;font-size:12px;}
 .rpt-clear:hover{color:#e53e3e;}
 .rpt-run-wrap{margin:0 0 20px;background:#e53e3e;border-radius:0 0 10px 10px;overflow:hidden;}
-.rpt-run-btn{width:100%;padding:14px;border:none;background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.3px;}
-.rpt-run-btn:hover{background:rgba(0,0,0,.08);}
+.rpt-run-btn{display:inline-flex;align-items:center;gap:8px;padding:0 22px;height:44px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;}
+.rpt-run-btn:hover{background:var(--primary-dark);}
+.rpt-filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:14px 18px;margin-bottom:18px;}
+.rpt-filter-bar .form-select-sm{height:44px;}
+.rpt-filter-bar .dp-btn{height:44px;min-width:180px;}
 .rpt-section{background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px;overflow:hidden;}
 .rpt-section-hd{display:flex;align-items:center;gap:8px;padding:14px 18px;cursor:pointer;user-select:none;border-bottom:1px solid #e2e8f0;}
 .rpt-section-hd i{color:#64748b;font-size:12px;transition:transform .2s;}
@@ -753,43 +756,52 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <button class="rpt-flyout-close" onclick="closeRptFlyout()"><i class="fas fa-times"></i></button>
     </div>
     <div class="rpt-flyout-body">
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('offer');},100)">
+        <div class="rpt-fly-item" onclick="_currentRptPanel='offer';closeRptFlyout();goPage('reporting');">
             <div class="rpt-fly-ic" style="background:#e3f2fd;color:#1e88e5"><i class="fas fa-tag"></i></div>
             <div class="rpt-fly-info"><strong>Offer</strong><span>View Offer performance</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('subid');},100)">
+        <div class="rpt-fly-item" onclick="_currentRptPanel='subid';closeRptFlyout();goPage('reporting');">
             <div class="rpt-fly-ic" style="background:#fff3e0;color:#fb8c00"><i class="fas fa-code-branch"></i></div>
             <div class="rpt-fly-info"><strong>Sub ID</strong><span>View Sub ID performance</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('daily');},100)">
+        <div class="rpt-fly-item" onclick="_currentRptPanel='daily';closeRptFlyout();goPage('reporting');">
             <div class="rpt-fly-ic" style="background:#fce4ec;color:#e91e63"><i class="fas fa-calendar-day"></i></div>
             <div class="rpt-fly-info"><strong>Daily</strong><span>View overall performance details broken down by day</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('hourly');},100)">
+        <div class="rpt-fly-item" onclick="_currentRptPanel='hourly';closeRptFlyout();goPage('reporting');">
             <div class="rpt-fly-ic" style="background:#ede7f6;color:#7b1fa2"><i class="fas fa-clock"></i></div>
             <div class="rpt-fly-info"><strong>Hourly</strong><span>View overall performance details broken down by hour</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
         <div class="rpt-fly-sep"></div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('clicks')">
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('clicks');">
             <div class="rpt-fly-ic" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-mouse-pointer"></i></div>
             <div class="rpt-fly-info"><strong>Click Reports</strong><span>View detailed click data</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('reporting');setTimeout(function(){switchRpt('conv');},100)">
+        <div class="rpt-fly-item" onclick="_currentRptPanel='conv';closeRptFlyout();goPage('reporting');">
             <div class="rpt-fly-ic" style="background:#e8f5e9;color:#43a047"><i class="fas fa-exchange-alt"></i></div>
             <div class="rpt-fly-info"><strong>Conversion</strong><span>View detailed conversion data</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('conversions')">
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('conversions');">
             <div class="rpt-fly-ic" style="background:#e3f2fd;color:#1976d2"><i class="fas fa-list-alt"></i></div>
             <div class="rpt-fly-info"><strong>Conversions Log</strong><span>Raw conversion records with management</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
         <div class="rpt-fly-sep"></div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('overcap')">
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('overcap');">
             <div class="rpt-fly-ic" style="background:#fff8e1;color:#f9a825"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="rpt-fly-info"><strong>Over-Cap</strong><span>View over-cap clicks</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
-        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('fraud')">
+        <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('fraud');">
             <div class="rpt-fly-ic" style="background:#fce4ec;color:#c62828"><i class="fas fa-shield-alt"></i></div>
             <div class="rpt-fly-info"><strong>Fraud Report</strong><span>View fraud detection data</span></div>
+            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:10px"></i>
         </div>
     </div>
 </div>
@@ -1028,17 +1040,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Offer</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Offer Report</h2></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+            <div class="rpt-filter-bar">
               <div class="dp-wrap">
                 <button class="dp-btn" onclick="toggleDp('dpOffer',event)">
                   <div class="dp-btn-ic"><i class="fas fa-calendar"></i></div>
-                  <div class="dp-btn-txt"><span id="dpOffer_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div>
+                  <div class="dp-btn-txt"><span id="dpOffer_lbl">Select Dates</span></div>
                 </button>
                 <div class="dp-panel" id="dpOffer_panel"></div>
               </div>
-              <select id="rptOfferAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+              <select id="rptOfferAff" class="form-select-sm"><option value="">All Affiliates</option></select>
               <input type="hidden" id="rptOfferDateFrom"><input type="hidden" id="rptOfferDateTo">
-              <button class="rpt-run-btn" onclick="runOfferReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
+              <button class="rpt-run-btn" onclick="runOfferReport()"><i class="fas fa-play"></i> Run Report</button>
             </div>
             <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value blue" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value orange" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value green" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value green" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
@@ -1052,19 +1064,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Conversion</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Conversion Report</h2></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+            <div class="rpt-filter-bar">
               <div class="dp-wrap">
                 <button class="dp-btn" onclick="toggleDp('dpConv',event)">
                   <div class="dp-btn-ic"><i class="fas fa-calendar"></i></div>
-                  <div class="dp-btn-txt"><span id="dpConv_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div>
+                  <div class="dp-btn-txt"><span id="dpConv_lbl">Select Dates</span></div>
                 </button>
                 <div class="dp-panel" id="dpConv_panel"></div>
               </div>
-              <select id="rptConvOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
-              <select id="rptConvAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
-              <select id="rptConvStatus" class="form-select-sm" style="height:52px"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select>
+              <select id="rptConvOffer" class="form-select-sm"><option value="">All Offers</option></select>
+              <select id="rptConvAff" class="form-select-sm"><option value="">All Affiliates</option></select>
+              <select id="rptConvStatus" class="form-select-sm"><option value="">All Status</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select>
               <input type="hidden" id="rptConvDateFrom"><input type="hidden" id="rptConvDateTo">
-              <button class="rpt-run-btn" onclick="runConvReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
+              <button class="rpt-run-btn" onclick="runConvReport()"><i class="fas fa-play"></i> Run Report</button>
             </div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><select id="rptConvSearchBy" class="form-select-sm"><option value="ip">Conversion IP</option><option value="txn">Transaction ID</option><option value="offer">Offer</option></select><input type="text" class="rpt-search" id="rptConvSearch" placeholder="Search..." oninput="filterRptConvTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptConv()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>IP</th><th>Status</th><th></th></tr></thead><tbody id="rptConvTbody"><tr><td colspan="11" class="no-data">Run report to load data</td></tr></tbody></table></div>
@@ -1078,12 +1090,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Sub ID</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Sub ID Report</h2></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpSubid',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpSubid_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div></button><div class="dp-panel" id="dpSubid_panel"></div></div>
-              <select id="rptSubidOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
-              <select id="rptSubidAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+            <div class="rpt-filter-bar">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpSubid',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpSubid_lbl">Select Dates</span></div></button><div class="dp-panel" id="dpSubid_panel"></div></div>
+              <select id="rptSubidOffer" class="form-select-sm"><option value="">All Offers</option></select>
+              <select id="rptSubidAff" class="form-select-sm"><option value="">All Affiliates</option></select>
               <input type="hidden" id="rptSubidDateFrom"><input type="hidden" id="rptSubidDateTo">
-              <button class="rpt-run-btn" onclick="runSubidReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
+              <button class="rpt-run-btn" onclick="runSubidReport()"><i class="fas fa-play"></i> Run Report</button>
             </div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptSubidSearch" placeholder="Search sub ID..." oninput="filterRptSubidTable()"><button class="rpt-dots-btn" onclick="exportRptSubid()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Sub ID</th><th>Affiliate</th><th>Offer</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>EPC</th></tr></thead><tbody id="rptSubidTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
@@ -1096,12 +1108,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Daily</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Daily Report</h2></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpDaily',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpDaily_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Dates</span></div></button><div class="dp-panel" id="dpDaily_panel"></div></div>
-              <select id="rptDailyOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
-              <select id="rptDailyAff" class="form-select-sm" style="height:52px"><option value="">All Affiliates</option></select>
+            <div class="rpt-filter-bar">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpDaily',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpDaily_lbl">Select Dates</span></div></button><div class="dp-panel" id="dpDaily_panel"></div></div>
+              <select id="rptDailyOffer" class="form-select-sm"><option value="">All Offers</option></select>
+              <select id="rptDailyAff" class="form-select-sm"><option value="">All Affiliates</option></select>
               <input type="hidden" id="rptDailyDateFrom"><input type="hidden" id="rptDailyDateTo">
-              <button class="rpt-run-btn" onclick="runDailyReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
+              <button class="rpt-run-btn" onclick="runDailyReport()"><i class="fas fa-play"></i> Run Report</button>
             </div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Daily Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptDaily()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>EPC</th></tr></thead><tbody id="rptDailyTbody"><tr><td colspan="9" class="no-data">Run report to load data</td></tr></tbody></table></div>
@@ -1114,11 +1126,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
               <button class="rpt-back-btn" onclick="switchRpt(null)"><i class="fas fa-arrow-left"></i> All Reports</button>
               <div class="rpt-title-area"><div class="rpt-breadcrumb"><i class="fas fa-chart-bar"></i> <span>Reporting</span> / Hourly</div><h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0">Hourly Report</h2></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpHourly',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpHourly_lbl" style="font-size:12.5px;font-weight:600;color:#1e293b;">Select Date</span></div></button><div class="dp-panel" id="dpHourly_panel"></div></div>
-              <select id="rptHourlyOffer" class="form-select-sm" style="height:52px"><option value="">All Offers</option></select>
+            <div class="rpt-filter-bar">
+              <div class="dp-wrap"><button class="dp-btn" onclick="toggleDp('dpHourly',event)"><div class="dp-btn-ic"><i class="fas fa-calendar"></i></div><div class="dp-btn-txt"><span id="dpHourly_lbl">Select Date</span></div></button><div class="dp-panel" id="dpHourly_panel"></div></div>
+              <select id="rptHourlyOffer" class="form-select-sm"><option value="">All Offers</option></select>
               <input type="hidden" id="rptHourlyDate">
-              <button class="rpt-run-btn" onclick="runHourlyReport()" style="height:52px;padding:0 24px;border-radius:9px;font-size:13px"><i class="fas fa-sync-alt"></i> Run Report</button>
+              <button class="rpt-run-btn" onclick="runHourlyReport()"><i class="fas fa-play"></i> Run Report</button>
             </div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
