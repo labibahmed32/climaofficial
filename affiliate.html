@@ -522,9 +522,9 @@ body.impersonating .impersonate-banner{display:block;}
             </div>
             <div class="dash-split" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
                 <div class="chart-box" style="margin-bottom:0">
-                    <div class="chart-hd"><h5>My Offer Performance</h5><input type="text" class="f-inp" id="dashOfferSearch" placeholder="Search..." oninput="renderDashOffers()" style="max-width:160px"></div>
+                    <div class="chart-hd"><h5>My Offer Performance <span style="font-size:9px;font-weight:600;color:var(--tl);background:#f1f5f9;border-radius:4px;padding:2px 6px;margin-left:4px">Today · ET</span></h5><input type="text" class="f-inp" id="dashOfferSearch" placeholder="Search..." oninput="renderDashOffers()" style="max-width:160px"></div>
                     <div class="tbl-scroll">
-                        <table class="dtbl"><thead><tr><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead><tbody id="dashOffersTb"></tbody></table>
+                        <table class="dtbl"><thead><tr><th>Offer</th><th>Clicks</th><th>Sales</th><th>Earnings</th></tr></thead><tbody id="dashOffersTb"></tbody></table>
                     </div>
                 </div>
                 <div class="chart-box" style="margin-bottom:0">
@@ -1798,53 +1798,67 @@ function setChartType(type, btn) {
 
 /* ── Dashboard Offers Tables ── */
 function renderDashOffers() {
-    /* Today in Florida (ET) time */
-    var etNow = new Date().toLocaleString('en-US', {timeZone: 'America/New_York'});
-    var etDate = new Date(etNow);
-    var todayStart = new Date(etDate.getFullYear(), etDate.getMonth(), etDate.getDate()).getTime();
-    var todayEnd = todayStart + 86400000;
+    /* Correct ET (Florida) midnight → UTC timestamp */
+    var now = new Date();
+    var etWall = new Date(now.toLocaleString('en-US', {timeZone: 'America/New_York'}));
+    var utcOffset = now - etWall; /* ms difference between real UTC and ET wall clock */
+    var etMidnight = new Date(etWall.getFullYear(), etWall.getMonth(), etWall.getDate()).getTime() + utcOffset;
+    var todayStart = etMidnight;
+    var todayEnd   = etMidnight + 86400000;
 
     var search = (document.getElementById('dashOfferSearch').value || '').toLowerCase();
 
-    /* Build per-offer stats for TODAY only */
+    /* Build per-offer stats for TODAY (ET) */
     var offerMap = {};
     myClicks.filter(function(c) {
         return (c.timestamp || 0) >= todayStart && (c.timestamp || 0) < todayEnd;
     }).forEach(function(c) {
         if (!c.offerId) return;
-        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, earnings:0};
+        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, pending:0, earnings:0};
         offerMap[c.offerId].clicks++;
     });
     myConversions.filter(function(c) {
-        return (c.createdAt||0) >= todayStart && (c.createdAt||0) < todayEnd && c.status === 'approved';
+        return (c.createdAt||0) >= todayStart && (c.createdAt||0) < todayEnd;
     }).forEach(function(c) {
         if (!c.offerId) return;
-        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, earnings:0};
-        offerMap[c.offerId].convs++;
-        offerMap[c.offerId].earnings += (parseFloat(c.payout) || 0);
+        if (!offerMap[c.offerId]) offerMap[c.offerId] = {clicks:0, convs:0, pending:0, earnings:0};
+        if (c.status === 'approved') {
+            offerMap[c.offerId].convs++;
+            offerMap[c.offerId].earnings += (parseFloat(c.payout) || 0);
+        } else if (c.status === 'pending') {
+            offerMap[c.offerId].pending++;
+        }
     });
 
-    /* Only offers with at least 1 click today */
-    var rows = Object.keys(offerMap).filter(function(oid) {
-        return offerMap[oid].clicks > 0;
-    }).map(function(oid) {
+    /* All offers that had clicks OR conversions today */
+    var rows = Object.keys(offerMap).map(function(oid) {
         var offer = allOffers.find(function(o) { return o._id === oid; });
-        return { oid: oid, name: offer ? (offer.name || oid) : oid, clicks: offerMap[oid].clicks, convs: offerMap[oid].convs, earnings: offerMap[oid].earnings };
+        var d = offerMap[oid];
+        return { oid: oid, name: offer ? (offer.name || oid) : oid, clicks: d.clicks, convs: d.convs, pending: d.pending, earnings: d.earnings };
     });
 
-    /* Sort: most conversions first, then most clicks */
-    rows.sort(function(a, b) { return b.convs - a.convs || b.clicks - a.clicks; });
+    /* Sort: sales first (desc), then pending, then clicks */
+    rows.sort(function(a, b) {
+        if (b.convs !== a.convs) return b.convs - a.convs;
+        if (b.pending !== a.pending) return b.pending - a.pending;
+        return b.clicks - a.clicks;
+    });
 
     if (search) rows = rows.filter(function(r) { return r.name.toLowerCase().indexOf(search) !== -1; });
 
     var h = '';
     rows.forEach(function(r) {
-        h += '<tr>' +
-             '<td><span style="font-size:9px;font-weight:700;color:var(--tl);background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;margin-right:5px;font-family:monospace;letter-spacing:.3px">' + esc(r.oid) + '</span><span style="font-weight:600">' + esc(r.name) + '</span></td>' +
-             '<td>' + r.clicks + '</td><td>' + r.convs + '</td>' +
+        var convCell = r.convs > 0
+            ? '<span style="font-weight:800;color:var(--green)">'+r.convs+'</span>'+(r.pending>0?'<span style="font-size:10px;color:var(--orange);margin-left:3px">(+'+r.pending+' pend)</span>':'')
+            : (r.pending > 0 ? '<span style="color:var(--orange);font-weight:700">'+r.pending+' pend</span>' : '0');
+        var rowStyle = r.convs > 0 ? 'background:#f0fdf4;' : '';
+        h += '<tr style="'+rowStyle+'">' +
+             '<td><span style="font-size:9px;font-weight:700;color:var(--tl);background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;margin-right:5px;font-family:monospace">' + esc(r.oid) + '</span><span style="font-weight:600">' + esc(r.name) + '</span></td>' +
+             '<td style="font-weight:600">' + r.clicks + '</td>' +
+             '<td>' + convCell + '</td>' +
              '<td style="font-weight:700;color:var(--green)">' + fmtM(r.earnings) + '</td></tr>';
     });
-    document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-mouse-pointer"></i><p style="margin:4px 0 0">No clicks today</p></td></tr>';
+    document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-mouse-pointer"></i><p style="margin:4px 0 0">No activity today (ET)</p></td></tr>';
     renderTopOffers();
 }
 
