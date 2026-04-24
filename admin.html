@@ -1525,39 +1525,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div>
 
             <!-- Create / Edit Form -->
-            <div id="annFormCard" style="display:none;background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:20px 24px;margin-bottom:18px;box-shadow:var(--shadow-md);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div id="annFormCard" style="display:none;background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:22px 26px;margin-bottom:18px;box-shadow:var(--shadow-md);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
                     <h3 id="annFormTitle" style="font-size:15px;font-weight:700;color:var(--text-dark);">New Announcement</h3>
-                    <button onclick="closeAnnForm()" style="background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer;line-height:1">&times;</button>
+                    <button onclick="closeAnnForm()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1">&times;</button>
                 </div>
                 <input type="hidden" id="annEditId">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" id="annTitle" placeholder="e.g. Payout Bump on Offer X">
+
+                <!-- Type selector (pill tabs) -->
+                <div style="margin-bottom:18px;">
+                    <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px">Announcement Type</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="ann-type-btn active" data-type="general"      onclick="setAnnType('general')"      style="padding:7px 14px;border-radius:20px;border:1.5px solid #94a3b8;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-bullhorn"></i> General</button>
+                        <button type="button" class="ann-type-btn"        data-type="payout_bump"  onclick="setAnnType('payout_bump')"  style="padding:7px 14px;border-radius:20px;border:1.5px solid #86efac;background:#f0fdf4;color:#16a34a;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-arrow-up"></i> Payout Bump</button>
+                        <button type="button" class="ann-type-btn"        data-type="new_offer"    onclick="setAnnType('new_offer')"    style="padding:7px 14px;border-radius:20px;border:1.5px solid #93c5fd;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-tag"></i> New Offer</button>
+                        <button type="button" class="ann-type-btn"        data-type="deal"         onclick="setAnnType('deal')"         style="padding:7px 14px;border-radius:20px;border:1.5px solid #fcd34d;background:#fffbeb;color:#d97706;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-gift"></i> Deal / Promo</button>
+                        <button type="button" class="ann-type-btn"        data-type="urgent"       onclick="setAnnType('urgent')"       style="padding:7px 14px;border-radius:20px;border:1.5px solid #fca5a5;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-bell"></i> Urgent</button>
                     </div>
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="annType">
-                            <option value="general">General</option>
-                            <option value="payout_bump">Payout Bump</option>
-                            <option value="new_offer">New Offer</option>
-                            <option value="deal">Deal / Promo</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
+                    <input type="hidden" id="annType" value="general">
+                </div>
+
+                <!-- Title -->
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Title</label>
+                    <input type="text" id="annTitle" placeholder="e.g. Big Payout Bump on Turbo Hard Male Enhancement!">
+                </div>
+
+                <!-- Payout Bump fields (shown only for payout_bump) -->
+                <div id="annPayFields" style="display:none;margin-bottom:14px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign" style="color:#94a3b8;margin-right:4px"></i>Old Payout (From)</label>
+                            <input type="number" id="annPayFrom" placeholder="130" step="0.01" style="font-size:15px;font-weight:700;">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-arrow-up" style="color:#16a34a;margin-right:4px"></i>New Payout (Now)</label>
+                            <input type="number" id="annPayTo" placeholder="150" step="0.01" style="font-size:15px;font-weight:700;border-color:#86efac;">
+                        </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Message</label>
-                    <textarea id="annMessage" rows="3" placeholder="Write your announcement message here..." style="resize:vertical;min-height:80px;width:100%;padding:10px 12px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px;font-family:inherit;"></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Link to Offer <span style="font-size:10px;color:var(--text-muted)">(optional)</span></label>
-                        <select id="annOfferId">
+
+                <!-- Offer selector -->
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Linked Offer <span style="font-size:10px;color:var(--text-muted)">(optional — shows offer logo in banner)</span></label>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <select id="annOfferId" onchange="onAnnOfferChange()" style="flex:1;">
                             <option value="">— No linked offer —</option>
                         </select>
+                        <div id="annOfferLogoPreview" style="display:none;width:44px;height:44px;border-radius:8px;border:1px solid var(--card-border);overflow:hidden;flex-shrink:0;">
+                            <img id="annOfferLogoImg" src="" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
                     </div>
+                </div>
+
+                <!-- Message -->
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Message / Details</label>
+                    <textarea id="annMessage" rows="3" placeholder="Write your announcement message..." style="resize:vertical;min-height:80px;width:100%;padding:10px 12px;border:1.5px solid var(--card-border);border-radius:6px;font-size:13px;font-family:inherit;"></textarea>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
                         <label>Status</label>
                         <select id="annActive">
@@ -1566,7 +1593,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         </select>
                     </div>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:4px;">
+                <div style="display:flex;gap:10px;margin-top:6px;">
                     <button class="btn-primary-sm" style="background:#e53e3e" onclick="saveAnnouncement()"><i class="fas fa-save"></i> Save Announcement</button>
                     <button class="btn-secondary" onclick="closeAnnForm()">Cancel</button>
                 </div>
@@ -7224,14 +7251,39 @@ function renderAnnList() {
     });
     wrap.innerHTML = h;
 }
+function setAnnType(type) {
+    document.getElementById('annType').value = type;
+    document.querySelectorAll('.ann-type-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+        btn.style.fontWeight = '600';
+        btn.style.opacity = '0.7';
+    });
+    var active = document.querySelector('.ann-type-btn[data-type="'+type+'"]');
+    if (active) { active.classList.add('active'); active.style.opacity = '1'; active.style.fontWeight = '700'; }
+    document.getElementById('annPayFields').style.display = type === 'payout_bump' ? '' : 'none';
+}
+function onAnnOfferChange() {
+    var oid = document.getElementById('annOfferId').value;
+    var preview = document.getElementById('annOfferLogoPreview');
+    var img = document.getElementById('annOfferLogoImg');
+    if (!oid) { preview.style.display = 'none'; return; }
+    var offer = allOffers.find(function(o) { return o._id === oid; });
+    var logo = offer ? (offer.logo || offer.imageUrl || '') : '';
+    if (logo) { img.src = logo; preview.style.display = ''; } else { preview.style.display = 'none'; }
+}
 function openAnnForm() {
     document.getElementById('annEditId').value = '';
     document.getElementById('annFormTitle').textContent = 'New Announcement';
     document.getElementById('annTitle').value = '';
     document.getElementById('annMessage').value = '';
-    document.getElementById('annType').value = 'general';
     document.getElementById('annActive').value = '1';
     document.getElementById('annOfferId').value = '';
+    document.getElementById('annPayFrom').value = '';
+    document.getElementById('annPayTo').value = '';
+    setAnnType('general');
+    document.getElementById('annOfferLogoPreview').style.display = 'none';
+    document.querySelectorAll('.ann-type-btn').forEach(function(b){ b.style.opacity='0.7'; });
+    document.querySelector('.ann-type-btn[data-type="general"]').style.opacity='1';
     document.getElementById('annFormCard').style.display = 'block';
     document.getElementById('annTitle').focus();
 }
@@ -7242,30 +7294,42 @@ function editAnn(id) {
     document.getElementById('annFormTitle').textContent = 'Edit Announcement';
     document.getElementById('annTitle').value = ann.title || '';
     document.getElementById('annMessage').value = ann.message || '';
-    document.getElementById('annType').value = ann.type || 'general';
     document.getElementById('annActive').value = ann.active !== false ? '1' : '0';
     document.getElementById('annOfferId').value = ann.offerId || '';
+    document.getElementById('annPayFrom').value = ann.payFrom || '';
+    document.getElementById('annPayTo').value = ann.payTo || '';
+    setAnnType(ann.type || 'general');
+    onAnnOfferChange();
     document.getElementById('annFormCard').style.display = 'block';
     document.getElementById('annTitle').focus();
 }
 function saveAnnouncement() {
     var title = (document.getElementById('annTitle').value || '').trim();
-    var msg = (document.getElementById('annMessage').value || '').trim();
-    if (!title || !msg) { toast('Title and message are required','error'); return; }
+    if (!title) { toast('Title is required','error'); return; }
+    var type = document.getElementById('annType').value || 'general';
     var editId = document.getElementById('annEditId').value;
     var id = editId || 'ann_' + Date.now();
     var data = {
         title: title,
-        message: msg,
-        type: document.getElementById('annType').value || 'general',
+        message: (document.getElementById('annMessage').value || '').trim(),
+        type: type,
         offerId: document.getElementById('annOfferId').value || '',
         active: document.getElementById('annActive').value === '1',
         createdAt: (_annData[editId] && _annData[editId].createdAt) || Date.now()
     };
+    if (type === 'payout_bump') {
+        data.payFrom = parseFloat(document.getElementById('annPayFrom').value) || 0;
+        data.payTo   = parseFloat(document.getElementById('annPayTo').value)   || 0;
+    }
+    /* store offer logo snapshot */
+    var offer = data.offerId ? allOffers.find(function(o){ return o._id === data.offerId; }) : null;
+    if (offer) {
+        data.offerName = offer.name || '';
+        data.offerLogo = offer.logo || offer.imageUrl || '';
+    }
     fbPut('network/announcements/' + id, data).then(function() {
         _annData[id] = data; _annData[id]._id = id;
-        closeAnnForm();
-        renderAnnList();
+        closeAnnForm(); renderAnnList();
         toast('Announcement saved!');
     }).catch(function(){ toast('Error saving','error'); });
 }

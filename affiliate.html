@@ -1484,33 +1484,62 @@ function loadAnnouncements() {
         var items = objToArr(res[0] || {}).filter(function(a) { return a.active !== false && a.active !== 0; });
         items.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
         if (!items.length) { wrap.innerHTML = ''; return; }
-        var typeStyles = {
-            'Payout Bump': { bg:'#fffbeb', border:'#fbbf24', icon:'fa-arrow-up', badge:'#fef3c7', badgeC:'#92400e' },
-            'New Offer':   { bg:'#eff6ff', border:'#60a5fa', icon:'fa-tag',      badge:'#dbeafe', badgeC:'#1e40af' },
-            'Deal':        { bg:'#f0fdf4', border:'#4ade80', icon:'fa-gift',     badge:'#dcfce7', badgeC:'#14532d' },
-            'Urgent':      { bg:'#fef2f2', border:'#f87171', icon:'fa-bell',     badge:'#fee2e2', badgeC:'#991b1b' },
-            'General':     { bg:'#f8fafc', border:'#94a3b8', icon:'fa-bullhorn', badge:'#f1f5f9', badgeC:'#334155' }
+
+        var cfg = {
+            payout_bump: { bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)', border:'#4ade80', iconBg:'#16a34a', icon:'fa-arrow-trend-up', label:'Payout Bump',  lbg:'#dcfce7', lc:'#14532d' },
+            new_offer:   { bg:'linear-gradient(135deg,#eff6ff,#dbeafe)', border:'#60a5fa', iconBg:'#2563eb', icon:'fa-tag',           label:'New Offer',    lbg:'#dbeafe', lc:'#1e40af' },
+            deal:        { bg:'linear-gradient(135deg,#fffbeb,#fef3c7)', border:'#fbbf24', iconBg:'#d97706', icon:'fa-gift',          label:'Deal',         lbg:'#fef3c7', lc:'#92400e' },
+            urgent:      { bg:'linear-gradient(135deg,#fef2f2,#fee2e2)', border:'#f87171', iconBg:'#dc2626', icon:'fa-bell',          label:'Urgent',       lbg:'#fee2e2', lc:'#991b1b' },
+            general:     { bg:'linear-gradient(135deg,#f8fafc,#f1f5f9)', border:'#94a3b8', iconBg:'#475569', icon:'fa-bullhorn',      label:'Announcement', lbg:'#e2e8f0', lc:'#334155' }
         };
+
         wrap.innerHTML = items.map(function(a) {
-            var t = typeStyles[a.type] || typeStyles['General'];
-            var linkedOffer = a.offerId ? offersMap[a.offerId] : null;
-            var offerLogo = linkedOffer ? (linkedOffer.logo || linkedOffer.imageUrl || '') : '';
-            /* Left icon: offer logo if available, else type icon */
-            var leftIcon = offerLogo
-                ? '<img src="'+esc(offerLogo)+'" style="width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(0,0,0,.08)" onerror="this.style.display=\'none\'">'
-                : '<div style="width:44px;height:44px;border-radius:8px;background:'+t.border+';display:flex;align-items:center;justify-content:center;"><i class="fas '+t.icon+'" style="color:#fff;font-size:16px"></i></div>';
-            var offerTag = linkedOffer ? '<span style="font-size:10px;color:var(--tl);margin-top:2px;display:block">Offer: <b style="color:var(--td)">'+esc(linkedOffer.name||'')+'</b></span>' : '';
-            return '<div style="display:flex;align-items:flex-start;gap:12px;background:'+t.bg+';border:1.5px solid '+t.border+';border-radius:10px;padding:13px 16px;">' +
-                '<div style="flex-shrink:0">'+leftIcon+'</div>' +
+            var c = cfg[a.type] || cfg.general;
+            var linkedOffer = a.offerId ? (offersMap[a.offerId] || null) : null;
+            var offerLogo = a.offerLogo || (linkedOffer && (linkedOffer.logo || linkedOffer.imageUrl)) || '';
+            var offerName = a.offerName || (linkedOffer && linkedOffer.name) || '';
+
+            /* Left side: offer logo (large) OR type icon */
+            var leftBlock;
+            if (offerLogo) {
+                leftBlock = '<div style="flex-shrink:0;width:56px;height:56px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.8);box-shadow:0 2px 8px rgba(0,0,0,.12);">' +
+                    '<img src="'+esc(offerLogo)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.style.display=\'none\'">' +
+                    '</div>';
+            } else {
+                leftBlock = '<div style="flex-shrink:0;width:48px;height:48px;border-radius:12px;background:'+c.iconBg+';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);">' +
+                    '<i class="fas '+c.icon+'" style="color:#fff;font-size:18px"></i></div>';
+            }
+
+            /* Type-specific body content */
+            var body = '';
+            if (a.type === 'payout_bump' && a.payFrom && a.payTo) {
+                body = '<div style="display:flex;align-items:center;gap:10px;margin:6px 0 4px;">' +
+                    '<span style="font-size:18px;font-weight:800;color:#dc2626;text-decoration:line-through;opacity:.7">$'+(a.payFrom||0)+'</span>' +
+                    '<i class="fas fa-arrow-right" style="color:#16a34a;font-size:13px"></i>' +
+                    '<span style="font-size:22px;font-weight:900;color:#16a34a">$'+(a.payTo||0)+'</span>' +
+                    '<span style="font-size:10px;font-weight:700;background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:20px">PER CONVERSION</span>' +
+                    '</div>';
+            }
+            if (a.message) {
+                body += '<div style="font-size:12.5px;color:#475569;line-height:1.6;margin-top:3px">'+esc(a.message)+'</div>';
+            }
+            if (offerName) {
+                body += '<div style="margin-top:5px;display:flex;align-items:center;gap:5px;">' +
+                    '<i class="fas fa-tag" style="font-size:9px;color:'+c.iconBg+'"></i>' +
+                    '<span style="font-size:11px;font-weight:700;color:'+c.iconBg+'">'+esc(offerName)+'</span>' +
+                    '</div>';
+            }
+
+            return '<div style="display:flex;align-items:flex-start;gap:14px;background:'+c.bg+';border:1.5px solid '+c.border+';border-radius:12px;padding:15px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05);">' +
+                leftBlock +
                 '<div style="flex:1;min-width:0;">' +
-                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
-                '<span style="font-size:13px;font-weight:700;color:#1e293b">'+esc(a.title||'Announcement')+'</span>' +
-                '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+t.badge+';color:'+t.badgeC+'">'+esc(a.type||'General')+'</span>' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">' +
+                '<span style="font-size:14px;font-weight:800;color:#0f172a">'+esc(a.title||'Announcement')+'</span>' +
+                '<span style="font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;background:'+c.lbg+';color:'+c.lc+';text-transform:uppercase;letter-spacing:.5px">'+c.label+'</span>' +
                 '</div>' +
-                '<div style="font-size:12.5px;color:#475569;line-height:1.5">'+esc(a.message||'')+'</div>' +
-                offerTag +
+                body +
                 '</div>' +
-                '<button onclick="this.parentNode.remove()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:0;flex-shrink:0;line-height:1">&times;</button>' +
+                '<button onclick="this.closest(\'div[style*=border-radius]\').remove()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;padding:0 0 0 8px;flex-shrink:0;line-height:1;align-self:flex-start">&times;</button>' +
                 '</div>';
         }).join('');
     }).catch(function() {});
