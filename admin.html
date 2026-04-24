@@ -2432,6 +2432,8 @@ function goPage(page) {
     if (navItem) navItem.classList.add('active');
     document.getElementById('pageTitle').textContent = pageTitles[page] || page;
     document.getElementById('pageCrumb').textContent = pageCrumbs[page] || page;
+    /* If navigating to reporting with a panel already selected, hide hub immediately (no flash) */
+    if (page === 'reporting' && _currentRptPanel) switchRpt(_currentRptPanel);
     /* Always refresh global data first, then render page (prevents stale/partial data). */
     loadAllData(function() {
         if (page === 'dashboard') loadDashboard();
