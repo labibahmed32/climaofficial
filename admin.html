@@ -7155,7 +7155,17 @@ function saveTopOffers() {
     Object.keys(_topOffersData).forEach(function(k) {
         var o = _topOffersData[k];
         if (!o.offerId && !o.name) return;
-        clean[k] = { offerId:o.offerId||'', name:o.name||'', logo:o.logo||'', cpa:o.cpa||0, cr:o.cr||0, status:o.status||'hot', order:o.order||0 };
+        /* Always refresh name/logo/cpa from live allOffers if offerId is set */
+        var offer = o.offerId ? allOffers.find(function(a){ return a._id === o.offerId; }) : null;
+        clean[k] = {
+            offerId: o.offerId || '',
+            name:    (offer && offer.name) || o.name || '',
+            logo:    (offer && (offer.logo || offer.imageUrl)) || o.logo || '',
+            cpa:     (offer ? (parseFloat(offer.payout) || 0) : (o.cpa || 0)),
+            cr:      o.cr || 0,
+            status:  o.status || 'hot',
+            order:   o.order || 0
+        };
     });
     fbPut('network/topOffers', clean).then(function(){ toast('Top offers saved!'); }).catch(function(){ toast('Error saving','error'); });
 }

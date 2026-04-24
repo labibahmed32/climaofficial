@@ -1780,20 +1780,29 @@ function renderDashOffers() {
 }
 
 function renderTopOffers() {
-    /* Admin-managed top offers from network/topOffers */
-    fbGet('network/topOffers').then(function(data) {
-        var items = objToArr(data || {}).filter(function(o) { return o.active !== false; });
-        items.sort(function(a, b) { return (a.order || 0) - (b.order || 0) || b.convs - a.convs; });
+    /* Admin-managed top offers from network/topOffers — also fetch offers for name/payout fallback */
+    Promise.all([fbGet('network/topOffers'), fbGet('offers')]).then(function(res) {
+        var data = res[0] || {};
+        var offersMap = {};
+        objToArr(res[1] || {}).forEach(function(o) { offersMap[o._id] = o; });
+        var items = objToArr(data).filter(function(o) { return o.offerId || o.name; });
+        items.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
         var h = '';
         items.forEach(function(o) {
-            var crColor = parseFloat(o.cr) >= 5 ? 'var(--green)' : (parseFloat(o.cr) >= 1 ? 'var(--orange)' : 'var(--tl)');
-            var stBadge = o.status === 'hot' ? '<span class="badge" style="background:#fef2f2;color:#dc2626">🔥 Hot</span>' :
-                          o.status === 'new' ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8">✨ New</span>' :
-                          o.status === 'top' ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">⭐ Top</span>' :
-                          '<span class="badge badge-active">Active</span>';
-            h += '<tr><td style="font-weight:600">' + esc(o.name||'') + '</td>' +
-                 '<td style="font-weight:700;color:var(--accent)">$' + (parseFloat(o.cpa)||0).toFixed(0) + '</td>' +
-                 '<td style="font-weight:700;color:' + crColor + '">' + (o.cr||'0') + '%</td>' +
+            /* Use stored name/cpa, fallback to live offer data via offerId */
+            var offer = o.offerId ? offersMap[o.offerId] : null;
+            var name = o.name || (offer && offer.name) || '—';
+            var cpa  = parseFloat(o.cpa) || (offer && parseFloat(offer.payout)) || 0;
+            var cr   = o.cr || 0;
+            var crColor = parseFloat(cr) >= 5 ? 'var(--green)' : (parseFloat(cr) >= 1 ? 'var(--orange)' : 'var(--tl)');
+            var stBadge = o.status === 'hot'  ? '<span class="badge" style="background:#fef2f2;color:#dc2626">🔥 Hot</span>' :
+                          o.status === 'new'  ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8">✨ New</span>' :
+                          o.status === 'top'  ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">⭐ Top</span>' :
+                          o.status === 'best' ? '<span class="badge" style="background:#faf5ff;color:#7c3aed">🏆 Best</span>' :
+                          '<span class="badge" style="background:#f0fdf4;color:#16a34a">✅ Active</span>';
+            h += '<tr><td style="font-weight:600">' + esc(name) + '</td>' +
+                 '<td style="font-weight:700;color:var(--accent)">$' + cpa.toFixed(0) + '</td>' +
+                 '<td style="font-weight:700;color:' + crColor + '">' + cr + '%</td>' +
                  '<td>' + stBadge + '</td></tr>';
         });
         document.getElementById('topOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p style="margin:4px 0 0">No top offers set</p></td></tr>';
