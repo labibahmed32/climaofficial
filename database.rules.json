@@ -64,6 +64,10 @@
       ".read": true,
       ".write": true
     },
+    "network": {
+      ".read": true,
+      ".write": true
+    },
     "tracker": {
       "visitors": {
         ".read": "auth != null",
