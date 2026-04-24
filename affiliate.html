@@ -1510,45 +1510,47 @@ function loadAnnouncements() {
                 : '<div style="flex-shrink:0;width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center">' +
                   '<i class="fas '+c.icon+'" style="font-size:26px;color:'+c.accent+'"></i></div>';
 
+            var closeBtnHtml = '<button onclick="this.closest(\'.ann-card\').remove()" style="flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;align-self:flex-start;transition:background .15s;margin-top:2px" onmouseover="this.style.background=\'rgba(255,255,255,.25)\'" onmouseout="this.style.background=\'rgba(255,255,255,.1)\'">&times;</button>';
+
             /* ── Payout bump: two-column (info | big payout) ── */
             if (a.type === 'payout_bump') {
                 var paySection = '';
                 if (a.payFrom || a.payTo) {
-                    paySection = '<div style="flex-shrink:0;text-align:right;padding-left:20px;border-left:1px solid rgba(255,255,255,.1);margin-left:10px">' +
-                        '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">New Payout</div>' +
-                        (a.payFrom ? '<div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.35);text-decoration:line-through;margin-bottom:2px">$'+a.payFrom+'</div>' : '') +
-                        '<div style="font-size:36px;font-weight:900;color:'+c.accent+';line-height:1;letter-spacing:-1px">$'+(a.payTo||0)+'</div>' +
-                        '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-top:2px;text-transform:uppercase;letter-spacing:.5px">per conversion</div>' +
+                    paySection = '<div style="flex-shrink:0;text-align:center;padding:0 20px;border-left:1px solid rgba(255,255,255,.1)">' +
+                        '<div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">New Payout</div>' +
+                        (a.payFrom ? '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.3);text-decoration:line-through;margin-bottom:1px">$'+a.payFrom+'</div>' : '') +
+                        '<div style="font-size:38px;font-weight:900;color:'+c.accent+';line-height:1;letter-spacing:-1px">$'+(a.payTo||0)+'</div>' +
+                        '<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.6px">per conversion</div>' +
                         '</div>';
                 }
-                return '<div style="background:'+c.grad+';border-radius:12px;padding:16px;display:flex;align-items:stretch;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);position:relative;overflow:hidden">' +
-                    '<div style="position:absolute;right:200px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
+                return '<div class="ann-card" style="background:'+c.grad+';border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);overflow:hidden;position:relative">' +
+                    '<div style="position:absolute;left:50%;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.025);pointer-events:none;transform:translateX(-50%)"></div>' +
                     logoSection +
-                    '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">' +
-                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+                    '<div style="flex:1;min-width:0">' +
+                    '<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">' +
                     '<span style="font-size:9px;font-weight:800;padding:3px 10px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
                     (offerName ? '<span style="font-size:13px;font-weight:700;color:#fff">'+esc(offerName)+'</span>' : '') +
                     '</div>' +
-                    (a.message ? '<p style="font-size:12.5px;color:rgba(255,255,255,.6);margin:0;line-height:1.55">'+esc(a.message)+'</p>' : '') +
+                    (a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.55);margin:0;line-height:1.5">'+esc(a.message)+'</p>' : '') +
                     '</div>' +
                     paySection +
-                    '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.07);border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'">&times;</button>' +
+                    closeBtnHtml +
                     '</div>';
             }
 
             /* ── Other types (New Offer / Deal / Urgent / General) ── */
-            return '<div style="background:'+c.grad+';border-radius:12px;padding:16px;display:flex;align-items:stretch;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.18);position:relative;overflow:hidden">' +
-                '<div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
+            return '<div class="ann-card" style="background:'+c.grad+';border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.18);overflow:hidden;position:relative">' +
+                '<div style="position:absolute;right:-10px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
                 logoSection +
-                '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">' +
-                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+                '<div style="flex:1;min-width:0">' +
+                '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
                 '<span style="font-size:9px;font-weight:800;padding:3px 10px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.7px">'+c.label+'</span>' +
-                (offerName ? '<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8)"><i class="fas fa-tag" style="font-size:9px;margin-right:3px;color:'+c.accent+'"></i>'+esc(offerName)+'</span>' : '') +
+                (offerName ? '<span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.75)"><i class="fas fa-tag" style="font-size:8px;margin-right:3px"></i>'+esc(offerName)+'</span>' : '') +
                 '</div>' +
-                '<h4 style="font-size:15px;font-weight:800;color:#fff;margin:0 0 4px;line-height:1.3">'+esc(a.title||'Announcement')+'</h4>' +
-                (a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.6);margin:0;line-height:1.55">'+esc(a.message)+'</p>' : '') +
+                '<h4 style="font-size:14px;font-weight:800;color:#fff;margin:0 0 3px;line-height:1.3">'+esc(a.title||'Announcement')+'</h4>' +
+                (a.message ? '<p style="font-size:12px;color:rgba(255,255,255,.55);margin:0;line-height:1.5">'+esc(a.message)+'</p>' : '') +
                 '</div>' +
-                '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.07);border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:15px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'">&times;</button>' +
+                closeBtnHtml +
                 '</div>';
         }).join('');
     }).catch(function() {});
