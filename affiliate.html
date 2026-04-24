@@ -1817,7 +1817,10 @@ function renderDashOffers() {
 
     var h = '';
     rows.forEach(function(r) {
-        h += '<tr><td style="font-weight:600">' + esc(r.name) + '</td><td>' + r.clicks + '</td><td>' + r.convs + '</td><td style="font-weight:700;color:var(--green)">' + fmtM(r.earnings) + '</td></tr>';
+        h += '<tr>' +
+             '<td><span style="font-size:9px;font-weight:700;color:var(--tl);background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;margin-right:5px;font-family:monospace;letter-spacing:.3px">' + esc(r.oid) + '</span><span style="font-weight:600">' + esc(r.name) + '</span></td>' +
+             '<td>' + r.clicks + '</td><td>' + r.convs + '</td>' +
+             '<td style="font-weight:700;color:var(--green)">' + fmtM(r.earnings) + '</td></tr>';
     });
     document.getElementById('dashOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-mouse-pointer"></i><p style="margin:4px 0 0">No clicks today</p></td></tr>';
     renderTopOffers();
@@ -1844,7 +1847,8 @@ function renderTopOffers() {
                           o.status === 'top'  ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">⭐ Top</span>' :
                           o.status === 'best' ? '<span class="badge" style="background:#faf5ff;color:#7c3aed">🏆 Best</span>' :
                           '<span class="badge" style="background:#f0fdf4;color:#16a34a">✅ Active</span>';
-            h += '<tr><td style="font-weight:600">' + esc(name) + '</td>' +
+            var oidBadge = o.offerId ? '<span style="font-size:9px;font-weight:700;color:var(--tl);background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;margin-right:5px;font-family:monospace;letter-spacing:.3px">'+esc(o.offerId)+'</span>' : '';
+            h += '<tr><td><span style="font-weight:600">'+oidBadge+esc(name)+'</span></td>' +
                  '<td style="font-weight:700;color:var(--accent)">$' + cpa.toFixed(0) + '</td>' +
                  '<td style="font-weight:700;color:' + crColor + '">' + cr + '%</td>' +
                  '<td>' + stBadge + '</td></tr>';
