@@ -1490,11 +1490,11 @@ function loadAnnouncements() {
         if (!items.length) { wrap.innerHTML = ''; return; }
 
         var cfg = {
-            payout_bump: { bg:'linear-gradient(135deg,#f0fdf4,#dcfce7)', border:'#4ade80', iconBg:'#16a34a', icon:'fa-arrow-trend-up', label:'Payout Bump',  lbg:'#dcfce7', lc:'#14532d' },
-            new_offer:   { bg:'linear-gradient(135deg,#eff6ff,#dbeafe)', border:'#60a5fa', iconBg:'#2563eb', icon:'fa-tag',           label:'New Offer',    lbg:'#dbeafe', lc:'#1e40af' },
-            deal:        { bg:'linear-gradient(135deg,#fffbeb,#fef3c7)', border:'#fbbf24', iconBg:'#d97706', icon:'fa-gift',          label:'Deal',         lbg:'#fef3c7', lc:'#92400e' },
-            urgent:      { bg:'linear-gradient(135deg,#fef2f2,#fee2e2)', border:'#f87171', iconBg:'#dc2626', icon:'fa-bell',          label:'Urgent',       lbg:'#fee2e2', lc:'#991b1b' },
-            general:     { bg:'linear-gradient(135deg,#f8fafc,#f1f5f9)', border:'#94a3b8', iconBg:'#475569', icon:'fa-bullhorn',      label:'Announcement', lbg:'#e2e8f0', lc:'#334155' }
+            payout_bump: { grad:'linear-gradient(120deg,#052e16 0%,#14532d 100%)', accent:'#4ade80', light:'#dcfce7', lightC:'#14532d', icon:'fa-arrow-trend-up', label:'Payout Bump' },
+            new_offer:   { grad:'linear-gradient(120deg,#1e1b4b 0%,#1e40af 100%)', accent:'#60a5fa', light:'#dbeafe', lightC:'#1e3a8a', icon:'fa-tag',           label:'New Offer'   },
+            deal:        { grad:'linear-gradient(120deg,#451a03 0%,#92400e 100%)', accent:'#fbbf24', light:'#fef3c7', lightC:'#78350f', icon:'fa-gift',          label:'Deal'        },
+            urgent:      { grad:'linear-gradient(120deg,#450a0a 0%,#991b1b 100%)', accent:'#f87171', light:'#fee2e2', lightC:'#7f1d1d', icon:'fa-bell',          label:'Urgent'      },
+            general:     { grad:'linear-gradient(120deg,#0f172a 0%,#1e293b 100%)', accent:'#94a3b8', light:'#e2e8f0', lightC:'#334155', icon:'fa-bullhorn',      label:'Announcement'}
         };
 
         wrap.innerHTML = items.map(function(a) {
@@ -1503,47 +1503,36 @@ function loadAnnouncements() {
             var offerLogo = a.offerLogo || (linkedOffer && (linkedOffer.logo || linkedOffer.imageUrl)) || '';
             var offerName = a.offerName || (linkedOffer && linkedOffer.name) || '';
 
-            /* Left side: offer logo (large) OR type icon */
-            var leftBlock;
-            if (offerLogo) {
-                leftBlock = '<div style="flex-shrink:0;width:56px;height:56px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.8);box-shadow:0 2px 8px rgba(0,0,0,.12);">' +
-                    '<img src="'+esc(offerLogo)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.style.display=\'none\'">' +
-                    '</div>';
-            } else {
-                leftBlock = '<div style="flex-shrink:0;width:48px;height:48px;border-radius:12px;background:'+c.iconBg+';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);">' +
-                    '<i class="fas '+c.icon+'" style="color:#fff;font-size:18px"></i></div>';
-            }
+            /* Offer logo block */
+            var logoHtml = offerLogo
+                ? '<img src="'+esc(offerLogo)+'" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid rgba(255,255,255,.2);flex-shrink:0" onerror="this.style.display=\'none\'">'
+                : '<div style="width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas '+c.icon+'" style="font-size:24px;color:'+c.accent+'"></i></div>';
 
-            /* Type-specific body content */
-            var body = '';
-            if (a.type === 'payout_bump' && a.payFrom && a.payTo) {
-                body = '<div style="display:flex;align-items:center;gap:10px;margin:6px 0 4px;">' +
-                    '<span style="font-size:18px;font-weight:800;color:#dc2626;text-decoration:line-through;opacity:.7">$'+(a.payFrom||0)+'</span>' +
-                    '<i class="fas fa-arrow-right" style="color:#16a34a;font-size:13px"></i>' +
-                    '<span style="font-size:22px;font-weight:900;color:#16a34a">$'+(a.payTo||0)+'</span>' +
-                    '<span style="font-size:10px;font-weight:700;background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:20px">PER CONVERSION</span>' +
-                    '</div>';
-            }
-            if (a.message) {
-                body += '<div style="font-size:12.5px;color:#475569;line-height:1.6;margin-top:3px">'+esc(a.message)+'</div>';
-            }
-            if (offerName) {
-                body += '<div style="margin-top:5px;display:flex;align-items:center;gap:5px;">' +
-                    '<i class="fas fa-tag" style="font-size:9px;color:'+c.iconBg+'"></i>' +
-                    '<span style="font-size:11px;font-weight:700;color:'+c.iconBg+'">'+esc(offerName)+'</span>' +
+            /* Payout bump display */
+            var payoutRow = '';
+            if (a.type === 'payout_bump' && (a.payFrom || a.payTo)) {
+                payoutRow = '<div style="display:flex;align-items:center;gap:10px;margin:8px 0 6px;">' +
+                    (a.payFrom ? '<span style="font-size:20px;font-weight:800;color:rgba(255,255,255,.45);text-decoration:line-through">$'+a.payFrom+'</span><i class="fas fa-long-arrow-alt-right" style="color:'+c.accent+';font-size:14px"></i>' : '') +
+                    '<span style="font-size:28px;font-weight:900;color:'+c.accent+'">$'+( a.payTo||0)+'</span>' +
+                    '<span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);letter-spacing:.5px;text-transform:uppercase">per conv.</span>' +
                     '</div>';
             }
 
-            return '<div style="display:flex;align-items:flex-start;gap:14px;background:'+c.bg+';border:1.5px solid '+c.border+';border-radius:12px;padding:15px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05);">' +
-                leftBlock +
-                '<div style="flex:1;min-width:0;">' +
-                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">' +
-                '<span style="font-size:14px;font-weight:800;color:#0f172a">'+esc(a.title||'Announcement')+'</span>' +
-                '<span style="font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;background:'+c.lbg+';color:'+c.lc+';text-transform:uppercase;letter-spacing:.5px">'+c.label+'</span>' +
+            var msgHtml = a.message ? '<p style="font-size:12.5px;color:rgba(255,255,255,.7);margin:4px 0 0;line-height:1.6">'+esc(a.message)+'</p>' : '';
+            var offerTag = offerName ? '<div style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;"><i class="fas fa-tag" style="font-size:9px;color:'+c.accent+'"></i><span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9)">'+esc(offerName)+'</span></div>' : '';
+
+            return '<div style="background:'+c.grad+';border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 4px 20px rgba(0,0,0,.15);position:relative;overflow:hidden;">' +
+                /* decorative circle */ '<div style="position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>' +
+                '<div style="position:absolute;right:60px;bottom:-40px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none"></div>' +
+                /* logo */ logoHtml +
+                /* content */ '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;background:'+c.accent+';color:#fff;text-transform:uppercase;letter-spacing:.6px">'+c.label+'</span>' +
                 '</div>' +
-                body +
+                '<h4 style="font-size:15px;font-weight:800;color:#fff;margin:5px 0 0;line-height:1.3">'+esc(a.title||'Announcement')+'</h4>' +
+                payoutRow + msgHtml + offerTag +
                 '</div>' +
-                '<button onclick="this.closest(\'div[style*=border-radius]\').remove()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;padding:0 0 0 8px;flex-shrink:0;line-height:1;align-self:flex-start">&times;</button>' +
+                /* close */ '<button onclick="this.closest(\'div\').remove()" style="position:absolute;top:12px;right:14px;background:rgba(255,255,255,.1);border:none;cursor:pointer;color:rgba(255,255,255,.6);font-size:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,.2)\'" onmouseout="this.style.background=\'rgba(255,255,255,.1)\'">&times;</button>' +
                 '</div>';
         }).join('');
     }).catch(function() {});
