@@ -1605,7 +1605,7 @@ function loadDashboard() {
         '<span class="astat-t">Payout</span>' +
         '<div class="astat-hd"><span class="astat-sub">Available Balance</span><span class="astat-pct">' + pendingPayments.length + ' pending</span></div>' +
         '<div class="astat-val">' + fmtM(balance) + '</div>' +
-        '<div class="astat-bar"><div class="astat-bar-f" style="width:' + (totalEarned > 0 ? Math.round(totalPaid / totalEarned * 100) : 0) + '%"></div></div>' +
+        '<div class="astat-spark" style="visibility:hidden"></div>' +
         '<div class="astat-rows"><div class="astat-row"><span>Total Earned</span><span>' + fmtM(totalEarned) + '</span></div>' +
         '<div class="astat-row"><span>Total Paid</span><span>' + fmtM(totalPaid) + '</span></div>' +
         '<div class="astat-row"><span>Pending Payout</span><span>' + fmtM(pendingPayAmt) + '</span></div></div></div>';
