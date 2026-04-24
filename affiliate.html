@@ -1404,12 +1404,16 @@ function loadAllData(onDone, silent) {
     var myVer = ++_affFetchVer;
     _affRefreshing = true;
     if (!silent) { var l = document.getElementById('affDataLoader'); if (l) l.style.display = 'block'; }
-    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
+    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices')]).then(function(r) {
         if (myVer !== _affFetchVer) return; /* newer fetch superseded this one */
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
         myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
-        myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
+        /* Merge payment records + invoices so Total Paid reflects invoice payments too */
+        var recIds = {};
+        var recs = objToArr(r[3]).filter(function(p) { recIds[p._id]=1; return p.affiliateId === myUid; });
+        var invs = objToArr(r[4]).filter(function(p) { return p.affiliateId === myUid && !recIds[p._id]; });
+        myPayments = recs.concat(invs);
         _affRefreshing = false;
         var l2 = document.getElementById('affDataLoader'); if (l2) l2.style.display = 'none';
         if (typeof onDone === 'function') onDone();
@@ -2485,10 +2489,13 @@ function goCkPg(p) { ckPage = p; renderClicks(); }
 
 /* ── Analytics (Conversions + Earnings) ── */
 function loadAnalytics() {
-    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('payments/records')]).then(function(r) {
+    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('payments/records'), fbGet('payments/invoices')]).then(function(r) {
         allOffers = objToArr(r[1]);
         myConversions = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
-        myPayments = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid; });
+        var recIds2 = {};
+        var recs2 = objToArr(r[2]).filter(function(p) { recIds2[p._id]=1; return p.affiliateId === myUid; });
+        var invs2 = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid && !recIds2[p._id]; });
+        myPayments = recs2.concat(invs2);
         var curOff = document.getElementById('cvOfferF').value;
         var oh = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
@@ -2735,9 +2742,12 @@ function loadNotifications() {
     var dot = document.getElementById('notifDot');
     list.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
-    Promise.all([fbGet('conversions'), fbGet('payments/records')]).then(function(r) {
+    Promise.all([fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices')]).then(function(r) {
         var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
-        var pays = objToArr(r[1]).filter(function(p) { return p.affiliateId === myUid; });
+        var recIds3 = {};
+        var recs3 = objToArr(r[1]).filter(function(p) { recIds3[p._id]=1; return p.affiliateId === myUid; });
+        var invs3 = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid && !recIds3[p._id]; });
+        var pays = recs3.concat(invs3);
         var notifs = [];
 
         /* Recent conversions (last 7 days) */
