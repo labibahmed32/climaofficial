@@ -1870,16 +1870,15 @@ function renderTopOffers() {
             var name = o.name || (offer && offer.name) || '—';
             var cpa  = parseFloat(o.cpa) || (offer && parseFloat(offer.payout)) || 0;
             var cr   = o.cr || 0;
-            var crColor = parseFloat(cr) >= 5 ? 'var(--green)' : (parseFloat(cr) >= 1 ? 'var(--orange)' : 'var(--tl)');
-            var stBadge = o.status === 'hot'  ? '<span class="badge" style="background:#fef2f2;color:#dc2626">🔥 Hot</span>' :
-                          o.status === 'new'  ? '<span class="badge" style="background:#eff6ff;color:#1d4ed8">✨ New</span>' :
-                          o.status === 'top'  ? '<span class="badge" style="background:#f0fdf4;color:#16a34a">⭐ Top</span>' :
-                          o.status === 'best' ? '<span class="badge" style="background:#faf5ff;color:#7c3aed">🏆 Best</span>' :
-                          '<span class="badge" style="background:#f0fdf4;color:#16a34a">✅ Active</span>';
+            var stBadge = o.status === 'hot'  ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca"><i class="fas fa-fire" style="font-size:8px;margin-right:3px"></i>Hot</span>' :
+                          o.status === 'new'  ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe"><i class="fas fa-star" style="font-size:8px;margin-right:3px"></i>New</span>' :
+                          o.status === 'top'  ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:#fefce8;color:#ca8a04;border:1px solid #fde68a"><i class="fas fa-crown" style="font-size:8px;margin-right:3px"></i>Top</span>' :
+                          o.status === 'best' ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:#faf5ff;color:#7c3aed;border:1px solid #ddd6fe"><i class="fas fa-trophy" style="font-size:8px;margin-right:3px"></i>Best</span>' :
+                          '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">Active</span>';
             var oidBadge = o.offerId ? '<span style="font-size:9px;font-weight:700;color:var(--tl);background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;margin-right:5px;font-family:monospace;letter-spacing:.3px">'+esc(o.offerId)+'</span>' : '';
             h += '<tr><td><span style="font-weight:600">'+oidBadge+esc(name)+'</span></td>' +
                  '<td style="font-weight:700;color:var(--accent)">$' + cpa.toFixed(0) + '</td>' +
-                 '<td style="font-weight:700;color:' + crColor + '">' + cr + '%</td>' +
+                 '<td style="font-weight:700;color:var(--accent)">' + cr + '%</td>' +
                  '<td>' + stBadge + '</td></tr>';
         });
         document.getElementById('topOffersTb').innerHTML = h || '<tr><td colspan="4" class="no-data" style="padding:20px"><i class="fas fa-trophy"></i><p style="margin:4px 0 0">No top offers set</p></td></tr>';
