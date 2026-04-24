@@ -1500,7 +1500,7 @@ function loadAnnouncements() {
         wrap.innerHTML = items.map(function(a) {
             var c = cfg[a.type] || cfg.general;
             var linkedOffer = a.offerId ? (offersMap[a.offerId] || null) : null;
-            var offerLogo = a.offerLogo || (linkedOffer && (linkedOffer.logo || linkedOffer.imageUrl || linkedOffer.thumbnail)) || '';
+            var offerLogo = a.offerLogo || (linkedOffer && (linkedOffer.thumbnail || linkedOffer.logo || linkedOffer.imageUrl)) || '';
             var offerName = a.offerName || (linkedOffer && linkedOffer.name) || '';
 
             /* ── Payout bump layout ── */

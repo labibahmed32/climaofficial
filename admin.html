@@ -7150,7 +7150,7 @@ function toSelectOffer(id, offerId) {
     _topOffersData[id].offerId = offerId;
     if (offer) {
         _topOffersData[id].name = offer.name || '';
-        _topOffersData[id].logo = offer.logo || offer.imageUrl || '';
+        _topOffersData[id].logo = offer.thumbnail || offer.logo || offer.imageUrl || '';
         _topOffersData[id].cpa = parseFloat(offer.payout) || 0;
         /* update payout field in-place without full re-render */
         var payEl = document.getElementById('toPay_' + id);
@@ -7187,7 +7187,7 @@ function saveTopOffers() {
         clean[k] = {
             offerId: o.offerId || '',
             name:    (offer && offer.name) || o.name || '',
-            logo:    (offer && (offer.logo || offer.imageUrl)) || o.logo || '',
+            logo:    (offer && (offer.thumbnail || offer.logo || offer.imageUrl)) || o.logo || '',
             cpa:     (offer ? (parseFloat(offer.payout) || 0) : (o.cpa || 0)),
             cr:      o.cr || 0,
             status:  o.status || 'hot',
@@ -7325,7 +7325,7 @@ function saveAnnouncement() {
     var offer = data.offerId ? allOffers.find(function(o){ return o._id === data.offerId; }) : null;
     if (offer) {
         data.offerName = offer.name || '';
-        data.offerLogo = offer.logo || offer.imageUrl || '';
+        data.offerLogo = offer.thumbnail || offer.logo || offer.imageUrl || '';
     }
     fbPut('network/announcements/' + id, data).then(function() {
         _annData[id] = data; _annData[id]._id = id;
