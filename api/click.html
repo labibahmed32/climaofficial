@@ -234,34 +234,179 @@ function getGeoData() {
         });
 }
 
-/* ── IPQS Check (with race timeout) ── */
-function checkIPQS(ip, ipqsKey, strictness) {
-    if (!ip || ip === 'unknown' || !ipqsKey) return Promise.resolve(null);
-    var strict = strictness !== undefined ? strictness : '1';
-    var url = IPQS_PROXY + '?key=' + encodeURIComponent(ipqsKey) + '&ip=' + encodeURIComponent(ip) + '&strictness=' + strict;
-    var timeout = new Promise(function(res){ setTimeout(function(){ res(null); }, 4000); });
-    var req = fetch(url).then(function(r){ return r.json(); }).then(function(d){
+/* ── Fraud API helpers ── */
+function raceTimeout(promise, ms) {
+    var t = new Promise(function(res){ setTimeout(function(){ res(null); }, ms); });
+    return Promise.race([promise, t]);
+}
+function safeJson(url) {
+    return fetch(url).then(function(r){ return r.json(); }).catch(function(){ return null; });
+}
+
+function checkIPQS(ip, key, strictness) {
+    if (!ip || !key) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?key=' + encodeURIComponent(key) + '&ip=' + encodeURIComponent(ip) + '&strictness=' + (strictness || '1');
+    return raceTimeout(safeJson(url).then(function(d) {
+        if (!d || d.error || d.success === false) return null;
+        return {
+            fraudScore:    d.fraud_score    || 0,
+            vpn:           d.vpn            || false,
+            tor:           d.tor            || false,
+            proxy:         d.proxy          || false,
+            botStatus:     d.bot_status     || false,
+            isCrawler:     d.is_crawler     || false,
+            mobileDevice:  d.mobile         || false,
+            recentAbuse:   d.recent_abuse   || false,
+            abuseVelocity: d.abuse_velocity || '',
+            isp:           d.ISP            || '',
+            organization:  d.organization   || '',
+            connectionType:d.connection_type|| '',
+            country:       d.country_code   || '',
+            city:          d.city           || '',
+            timezone:      d.timezone       || ''
+        };
+    }), 4000);
+}
+
+function checkAbuseIPDB(ip, key) {
+    if (!ip || !key) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?abusekey=' + encodeURIComponent(key) + '&abuseip=' + encodeURIComponent(ip);
+    return raceTimeout(safeJson(url).then(function(d) {
+        if (!d || !d.data) return null;
+        return {
+            abuseScore:   d.data.abuseConfidenceScore || 0,
+            totalReports: d.data.totalReports         || 0,
+            usageType:    d.data.usageType            || '',
+            isTor:        d.data.isTor                || false,
+            domain:       d.data.domain               || ''
+        };
+    }), 4000);
+}
+
+function checkScamalytics(ip, key) {
+    if (!ip || !key) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?scamkey=' + encodeURIComponent(key) + '&scamip=' + encodeURIComponent(ip);
+    return raceTimeout(safeJson(url).then(function(d) {
         if (!d || d.error) return null;
         return {
-            fraudScore: d.fraud_score || 0,
-            vpn: d.vpn || false,
-            tor: d.tor || false,
-            proxy: d.proxy || false,
-            botStatus: d.bot_status || false,
-            isCrawler: d.is_crawler || false,
-            mobileDevice: d.mobile || false,
-            recentAbuse: d.recent_abuse || false,
-            abuseVelocity: d.abuse_velocity || '',
-            isp: d.ISP || '',
-            organization: d.organization || '',
-            connectionType: d.connection_type || '',
-            country: d.country_code || '',
-            city: d.city || '',
-            timezone: d.timezone || '',
-            level: d.fraud_score >= 85 ? 'fraud' : d.fraud_score >= 60 ? 'risky' : d.fraud_score >= 30 ? 'suspect' : 'clean'
+            score:    parseInt(d.score || '0', 10),
+            risk:     d.risk     || '',
+            vpn:      d.vpn      === '1' || d.vpn      === true,
+            tor:      d.tor      === '1' || d.tor      === true,
+            dchost:   d.datacenter === '1' || d.datacenter === true,
+            freeanon: d.freeanonymizer === '1' || d.freeanonymizer === true
         };
-    }).catch(function(){ return null; });
-    return Promise.race([req, timeout]);
+    }), 4000);
+}
+
+function checkProxyCheck(ip, key) {
+    if (!ip) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?pcip=' + encodeURIComponent(ip) + (key ? '&pckey=' + encodeURIComponent(key) : '');
+    return raceTimeout(safeJson(url).then(function(d) {
+        if (!d || d.status === 'error') return null;
+        var info = d[ip] || {};
+        return {
+            proxy:    info.proxy    || 'no',
+            type:     info.type     || '',
+            provider: info.provider || '',
+            risk:     info.risk     || 0,
+            asn:      info.asn      || '',
+            isp:      info.provider || ''
+        };
+    }), 4000);
+}
+
+function checkIpHub(ip, key) {
+    if (!ip || !key) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?iphubkey=' + encodeURIComponent(key) + '&iphubip=' + encodeURIComponent(ip);
+    return raceTimeout(safeJson(url).then(function(d) {
+        if (!d || d.error) return null;
+        return {
+            block: d.block !== undefined ? d.block : -1,  /* 0=clean 1=vpn/proxy 2=unknown */
+            isp:   d.isp  || '',
+            asn:   d.asn  || '',
+            city:  d.countryCode || ''
+        };
+    }), 4000);
+}
+
+function checkIpApiCom(ip) {
+    if (!ip) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?ipdata=' + encodeURIComponent(ip);
+    return raceTimeout(safeJson(url).then(function(d) {
+        if (!d || d.status === 'fail') return null;
+        return {
+            country:     d.country     || '',
+            countryCode: d.countryCode || '',
+            region:      d.regionName  || '',
+            city:        d.city        || '',
+            isp:         d.isp         || '',
+            org:         d.org         || '',
+            timezone:    d.timezone    || '',
+            lat:         d.lat         || 0,
+            lon:         d.lon         || 0,
+            proxy:       d.proxy       || false,
+            hosting:     d.hosting     || false
+        };
+    }), 4000);
+}
+
+/* Run all configured fraud services in parallel, combine results */
+function runAllFraudChecks(ip, fraudSettings) {
+    if (!ip || ip === 'unknown') return Promise.resolve(null);
+    var checks = [
+        checkIPQS(ip, fraudSettings.ipqsKey, fraudSettings.strictness),
+        checkAbuseIPDB(ip, fraudSettings.abuseKey),
+        checkScamalytics(ip, fraudSettings.scamKey),
+        checkProxyCheck(ip, fraudSettings.pcKey),
+        checkIpHub(ip, fraudSettings.iphubKey),
+        checkIpApiCom(ip)
+    ];
+    return Promise.all(checks).then(function(results) {
+        var ipqs      = results[0];
+        var abuse     = results[1];
+        var scam      = results[2];
+        var pc        = results[3];
+        var iphub     = results[4];
+        var ipapi     = results[5];
+
+        /* Combined fraud score (weighted average of available sources) */
+        var scores = [], weights = [];
+        if (ipqs)  { scores.push(ipqs.fraudScore);       weights.push(3); }
+        if (scam)  { scores.push(scam.score);            weights.push(2); }
+        if (abuse) { scores.push(abuse.abuseScore);      weights.push(2); }
+        if (pc)    { scores.push(pc.risk || 0);          weights.push(1); }
+        if (iphub) { scores.push(iphub.block === 1 ? 80 : iphub.block === 2 ? 40 : 0); weights.push(1); }
+
+        var combinedScore = 0;
+        if (scores.length) {
+            var wSum = 0, wTotal = 0;
+            for (var i = 0; i < scores.length; i++) { wSum += scores[i] * weights[i]; wTotal += weights[i]; }
+            combinedScore = Math.round(wSum / wTotal);
+        }
+
+        var isProxy = !!(
+            (ipqs  && (ipqs.proxy   || ipqs.vpn))   ||
+            (scam  && (scam.vpn     || scam.tor || scam.dchost)) ||
+            (pc    && pc.proxy !== 'no')             ||
+            (iphub && iphub.block === 1)             ||
+            (ipapi && (ipapi.proxy  || ipapi.hosting))
+        );
+
+        var result = {
+            combinedScore: combinedScore,
+            isProxy:       isProxy,
+            level: combinedScore >= 85 ? 'fraud' : combinedScore >= 60 ? 'risky' : combinedScore >= 30 ? 'suspect' : 'clean',
+            checkedAt: Date.now()
+        };
+        if (ipqs)  result.ipqs    = ipqs;
+        if (abuse) result.abuse   = abuse;
+        if (scam)  result.scam    = scam;
+        if (pc)    result.pc      = pc;
+        if (iphub) result.iphub   = iphub;
+        if (ipapi) result.ipapi   = ipapi;
+        return result;
+    });
 }
 
 /* ── URL Builders ── */
@@ -400,17 +545,13 @@ function processClick() {
             sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5
         };
 
-        /* Save click then run IPQS (race 3s) then redirect */
-        var ipqsKey = fraudSettings.ipqsKey || '';
-        var strictness = fraudSettings.strictness || '1';
-
+        /* Save click, run all fraud checks in parallel, then redirect */
         fbPut('clicks/' + clickId, clickData).then(function() {
             var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
 
-            /* IPQS check - race 4s, update Firebase then redirect */
-            checkIPQS(geo.ip, ipqsKey, strictness).then(function(ipqs) {
-                if (ipqs) {
-                    fbPatch('clicks/' + clickId, { ipqs: ipqs }).catch(function(){});
+            runAllFraudChecks(geo.ip, fraudSettings).then(function(fraud) {
+                if (fraud) {
+                    fbPatch('clicks/' + clickId, { fraud: fraud }).catch(function(){});
                 }
                 window.location.replace(redirectUrl);
             }).catch(function() {

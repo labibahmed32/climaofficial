@@ -4208,8 +4208,8 @@ function renderClicks() {
     var start = (clicksPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
     page.forEach(function(c) {
         var qualBadge = '';
-        var ipqsScore = c.ipqs ? (c.ipqs.fraudScore || 0) : 0;
-        var ipqsLevel = c.ipqs ? (c.ipqs.level || '') : '';
+        var ipqsScore = (c.fraud && c.fraud.combinedScore !== undefined) ? c.fraud.combinedScore : (c.ipqs ? (c.ipqs.fraudScore || 0) : 0);
+        var ipqsLevel = (c.fraud && c.fraud.level) ? c.fraud.level : (c.ipqs ? (c.ipqs.level || '') : '');
         if (ipqsLevel === 'fraud' || ipqsScore >= 85)        qualBadge = '<span class="badge" style="background:#fce4ec;color:#b71c1c;font-size:9px">Fraud '+ipqsScore+'</span>';
         else if (ipqsLevel === 'risky' || ipqsScore >= 60)   qualBadge = '<span class="badge" style="background:#fff3e0;color:#e65100;font-size:9px">Risky '+ipqsScore+'</span>';
         else if (ipqsLevel === 'suspect' || ipqsScore >= 30) qualBadge = '<span class="badge" style="background:#fffbeb;color:#b45309;font-size:9px">Suspect '+ipqsScore+'</span>';
@@ -4237,25 +4237,37 @@ function openClickDetail(clickId) {
         else timeDelta = Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
     }
 
-    /* IPQS score badge */
-    var ipqs = c.ipqs || {};
-    var score = ipqs.fraud_score != null ? parseInt(ipqs.fraud_score) : null;
+    /* Fraud data — supports both old `ipqs` field and new `fraud` object */
+    var fraud = c.fraud || {};
+    var ipqs  = fraud.ipqs  || c.ipqs  || {};
+    var abuse = fraud.abuse || {};
+    var scam  = fraud.scam  || {};
+    var pc    = fraud.pc    || {};
+    var iphub = fraud.iphub || {};
+    var ipapi = fraud.ipapi || {};
+
+    var combinedScore = fraud.combinedScore != null ? fraud.combinedScore
+                      : (ipqs.fraudScore != null ? ipqs.fraudScore : null);
+    var fraudLevel = fraud.level || (combinedScore != null ? (combinedScore >= 85 ? 'fraud' : combinedScore >= 60 ? 'risky' : combinedScore >= 30 ? 'suspect' : 'clean') : null);
+
     var scoreBadge = '-';
-    if (score !== null) {
-        var sc = score >= 85 ? ['#991b1b','#fef2f2','Fraud'] : score >= 60 ? ['#92400e','#fffbeb','Risky'] : score >= 40 ? ['#1e40af','#eff6ff','Suspect'] : ['#065f46','#ecfdf5','Clean'];
-        scoreBadge = '<span style="background:' + sc[1] + ';color:' + sc[0] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">' + sc[2] + ' (' + score + ')</span>';
+    if (combinedScore !== null && combinedScore !== undefined) {
+        var sc = combinedScore >= 85 ? ['#991b1b','#fef2f2','Fraud'] : combinedScore >= 60 ? ['#92400e','#fffbeb','Risky'] : combinedScore >= 30 ? ['#1e40af','#eff6ff','Suspect'] : ['#065f46','#ecfdf5','Clean'];
+        scoreBadge = '<span style="background:' + sc[1] + ';color:' + sc[0] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">' + sc[2] + ' (' + combinedScore + ')</span>';
     }
+
+    var isProxy = fraud.isProxy || ipqs.proxy || ipqs.vpn || false;
 
     /* Header flags */
     var flags = [];
     if (c.converted) flags.push('<span style="background:#ecfdf5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700"><i class="fas fa-check-circle"></i> Converted</span>');
     else flags.push('<span style="background:#f1f5f9;color:#94a3b8;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Not Converted</span>');
-    if (ipqs.vpn) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">VPN</span>');
-    if (ipqs.tor) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">TOR</span>');
-    if (ipqs.proxy) flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Proxy</span>');
-    if (ipqs.bot_status) flags.push('<span style="background:#fdf2ff;color:#7c3aed;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Bot</span>');
-    if (!c.referer) flags.push('<span style="background:#fffbeb;color:#92400e;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">No Referer</span>');
-    if (c.test) flags.push('<span style="background:#f0fdf4;color:#166534;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Test</span>');
+    if (ipqs.vpn  || scam.vpn)  flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">VPN</span>');
+    if (ipqs.tor  || scam.tor)  flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">TOR</span>');
+    if (isProxy)                flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Proxy</span>');
+    if (ipqs.botStatus)         flags.push('<span style="background:#fdf2ff;color:#7c3aed;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Bot</span>');
+    if (!c.referer)             flags.push('<span style="background:#fffbeb;color:#92400e;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">No Referer</span>');
+    if (c.test)                 flags.push('<span style="background:#f0fdf4;color:#166534;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Test</span>');
 
     /* Timezone match badge */
     var tzMatch = c.tzMatch;
@@ -4340,21 +4352,104 @@ function openClickDetail(clickId) {
     h += cdItem('Composite FP', c.fingerprint ? '<span style="font-family:monospace;font-size:10px">' + escHtml(c.fingerprint) + '</span>' : '-');
     h += '</div>';
 
-    /* IPQS */
-    h += sectionHd('shield-alt', 'IPQS Fraud Analysis', score !== null && score >= 60 ? '#991b1b' : '#065f46');
-    if (score === null && !ipqs.checked) {
-        h += '<div style="background:#f8fafc;border-radius:8px;padding:12px;color:#94a3b8;font-size:12px;text-align:center"><i class="fas fa-info-circle"></i> IPQS data not available for this click</div>';
+    /* Fraud Analysis — combined + per-service */
+    var hasFraudData = combinedScore !== null || ipqs.fraudScore !== undefined || abuse.abuseScore !== undefined || scam.score !== undefined || pc.proxy !== undefined || iphub.block !== undefined;
+    h += sectionHd('shield-alt', 'Fraud Analysis', combinedScore !== null && combinedScore >= 60 ? '#991b1b' : '#065f46');
+    if (!hasFraudData) {
+        h += '<div style="background:#f8fafc;border-radius:8px;padding:12px;color:#94a3b8;font-size:12px;text-align:center"><i class="fas fa-info-circle"></i> Fraud data not available — click was recorded before fraud services were configured</div>';
     } else {
-        h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px">';
-        h += cdItem('Fraud Score', scoreBadge);
-        h += cdItem('VPN', ipqs.vpn ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
-        h += cdItem('TOR', ipqs.tor ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
-        h += cdItem('Proxy', ipqs.proxy ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
-        h += cdItem('Bot Status', ipqs.bot_status ? '<span style="color:#7c3aed;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>');
-        h += cdItem('Mobile', ipqs.mobile ? 'Yes' : 'No');
-        h += cdItem('Connection Type', escHtml(ipqs.connection_type || '-'));
-        h += cdItem('ISP (IPQS)', escHtml(ipqs.ISP || ipqs.isp || '-'));
+        /* Combined score banner */
+        h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+        h += cdItem('Combined Score', scoreBadge);
+        h += cdItem('Proxy/VPN', isProxy ? '<span style="color:#dc2626;font-weight:700">Detected</span>' : '<span style="color:#059669">Clean</span>');
+        h += cdItem('Checked', fraud.checkedAt ? fmtDateTime(fraud.checkedAt) : '-');
         h += '</div>';
+
+        /* Per-service cards */
+        h += '<div style="display:flex;flex-direction:column;gap:8px">';
+
+        /* IPQS */
+        if (ipqs.fraudScore !== undefined) {
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:8px"><i class="fas fa-fingerprint"></i> IPQualityScore</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Score', ipqs.fraudScore !== undefined ? ('<b>' + ipqs.fraudScore + '</b>') : '-');
+            h += cdItem('VPN', ipqs.vpn ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Proxy', ipqs.proxy ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('TOR', ipqs.tor ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Bot', ipqs.botStatus ? '<span style="color:#7c3aed">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Mobile', ipqs.mobileDevice ? 'Yes' : 'No');
+            h += cdItem('Conn Type', escHtml(ipqs.connectionType || '-'));
+            h += cdItem('ISP', escHtml(ipqs.isp || '-'));
+            h += '</div></div>';
+        }
+
+        /* AbuseIPDB */
+        if (abuse.abuseScore !== undefined) {
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#7c3aed;margin-bottom:8px"><i class="fas fa-database"></i> AbuseIPDB</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Abuse Score', '<b>' + abuse.abuseScore + '%</b>');
+            h += cdItem('Total Reports', abuse.totalReports || 0);
+            h += cdItem('Usage Type', escHtml(abuse.usageType || '-'));
+            h += cdItem('TOR', abuse.isTor ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += '</div></div>';
+        }
+
+        /* Scamalytics */
+        if (scam.score !== undefined) {
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#ea580c;margin-bottom:8px"><i class="fas fa-user-secret"></i> Scamalytics</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Score', '<b>' + scam.score + '</b>');
+            h += cdItem('Risk', escHtml(scam.risk || '-'));
+            h += cdItem('VPN', scam.vpn ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Datacenter', scam.dchost ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += '</div></div>';
+        }
+
+        /* ProxyCheck.io */
+        if (pc.proxy !== undefined) {
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#0891b2;margin-bottom:8px"><i class="fas fa-network-wired"></i> ProxyCheck.io</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Proxy', pc.proxy !== 'no' ? '<span style="color:#dc2626">Yes (' + escHtml(pc.proxy) + ')</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Type', escHtml(pc.type || '-'));
+            h += cdItem('Risk', pc.risk ? pc.risk + '%' : '-');
+            h += cdItem('Provider', escHtml(pc.provider || '-'));
+            h += '</div></div>';
+        }
+
+        /* IPHub */
+        if (iphub.block !== undefined) {
+            var iphubLabel = iphub.block === 0 ? '<span style="color:#059669">Residential</span>' : iphub.block === 1 ? '<span style="color:#dc2626">VPN/Proxy</span>' : '<span style="color:#d97706">Unknown</span>';
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#be185d;margin-bottom:8px"><i class="fas fa-ban"></i> IPHub</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Status', iphubLabel);
+            h += cdItem('ISP', escHtml(iphub.isp || '-'));
+            h += cdItem('ASN', escHtml(iphub.asn || '-'));
+            h += cdItem('Country', escHtml(iphub.city || '-'));
+            h += '</div></div>';
+        }
+
+        /* ip-api.com */
+        if (ipapi.country !== undefined) {
+            h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
+            h += '<div style="font-size:11px;font-weight:700;color:#059669;margin-bottom:8px"><i class="fas fa-map-marker-alt"></i> ip-api.com</div>';
+            h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            h += cdItem('Country', escHtml((ipapi.countryCode || '') + (ipapi.country ? ' — ' + ipapi.country : '') || '-'));
+            h += cdItem('City', escHtml(ipapi.city || '-'));
+            h += cdItem('ISP', escHtml(ipapi.isp || '-'));
+            h += cdItem('Proxy Flag', ipapi.proxy ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('Hosting', ipapi.hosting ? '<span style="color:#d97706">Yes</span>' : 'No');
+            h += cdItem('Timezone', escHtml(ipapi.timezone || '-'));
+            h += cdItem('Lat/Lon', (ipapi.lat && ipapi.lon) ? ipapi.lat + ', ' + ipapi.lon : '-');
+            h += cdItem('Org', escHtml(ipapi.org || '-'));
+            h += '</div></div>';
+        }
+
+        h += '</div>'; /* end per-service cards */
     }
 
     /* Sub Parameters */
@@ -5329,6 +5424,17 @@ function analyzeFraud(clicks) {
             score += 10; flags.push({ code: 'noref', label: 'No Referer', points: 10 });
         }
 
+        /* Blend network-analysis score with any stored fraud service score */
+        var storedScore = (c.fraud && c.fraud.combinedScore !== undefined) ? c.fraud.combinedScore
+                        : (c.ipqs && c.ipqs.fraudScore !== undefined)       ? c.ipqs.fraudScore
+                        : null;
+        if (storedScore !== null) {
+            /* Weight: 60% stored API score, 40% network analysis */
+            score = Math.round(storedScore * 0.6 + score * 0.4);
+            if (c.fraud && (c.fraud.isProxy || (c.fraud.ipqs && (c.fraud.ipqs.vpn || c.fraud.ipqs.proxy)))) {
+                flags.push({ code: 'proxy_api', label: 'Proxy/VPN (API)', points: 0 });
+            }
+        }
         c._fraudScore = score;
         c._fraudFlags = flags;
         c._fraudLevel = score === 0 ? 'clean' : score <= 25 ? 'low' : score <= 50 ? 'medium' : 'high';
@@ -5550,35 +5656,89 @@ function openFraudDetail(clickId) {
     html += fraudDetailRow('WebGL Renderer', '<span style="font-size:11px;color:#475569">' + escHtml(click.webglRenderer || '-') + '</span>');
     html += '</div></div>';
 
-    /* ── IPQS ── */
-    var ipqs = click.ipqs || {};
-    if (ipqs.fraudScore !== undefined) {
-        var scoreColor = ipqs.level === 'fraud' ? '#c62828' : ipqs.level === 'risky' ? '#e65100' : ipqs.level === 'suspect' ? '#b45309' : '#16a34a';
-        var scoreBg    = ipqs.level === 'fraud' ? '#fce4ec' : ipqs.level === 'risky' ? '#fff3e0' : ipqs.level === 'suspect' ? '#fffbeb' : '#dcfce7';
+    /* ── Fraud Services ── */
+    var fraud2 = click.fraud || {};
+    var ipqs2  = fraud2.ipqs  || click.ipqs  || {};
+    var abuse2 = fraud2.abuse || {};
+    var scam2  = fraud2.scam  || {};
+    var pc2    = fraud2.pc    || {};
+    var iphub2 = fraud2.iphub || {};
+    var ipapi2 = fraud2.ipapi || {};
+    var cScore = fraud2.combinedScore !== undefined ? fraud2.combinedScore : ipqs2.fraudScore;
+    var hasFD2 = cScore !== undefined || ipqs2.fraudScore !== undefined || abuse2.abuseScore !== undefined || scam2.score !== undefined || pc2.proxy !== undefined || iphub2.block !== undefined;
+
+    if (hasFD2) {
+        var scoreColor = cScore >= 85 ? '#c62828' : cScore >= 60 ? '#e65100' : cScore >= 30 ? '#b45309' : '#16a34a';
+        var scoreBg    = cScore >= 85 ? '#fce4ec' : cScore >= 60 ? '#fff3e0' : cScore >= 30 ? '#fffbeb' : '#dcfce7';
         html += '<div class="fraud-detail-section">';
-        html += '<h5><i class="fas fa-shield-alt"></i> IPQS — IP Quality Score</h5>';
+        html += '<h5><i class="fas fa-shield-alt"></i> Fraud Analysis &mdash; Score: <span class="fraud-score fraud-score-' + (fraud2.level || 'clean') + '">' + (cScore !== undefined ? cScore : 0) + '</span></h5>';
+
+        /* Combined score + proxy flags */
         html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
-        html += '<div style="background:' + scoreBg + ';border-radius:12px;padding:12px 20px;text-align:center"><div style="font-size:28px;font-weight:800;color:' + scoreColor + ';line-height:1">' + ipqs.fraudScore + '</div><div style="font-size:10px;color:' + scoreColor + ';font-weight:700;text-transform:uppercase;letter-spacing:.5px">Fraud Score</div></div>';
+        if (cScore !== undefined) {
+            html += '<div style="background:' + scoreBg + ';border-radius:12px;padding:12px 20px;text-align:center"><div style="font-size:28px;font-weight:800;color:' + scoreColor + ';line-height:1">' + cScore + '</div><div style="font-size:10px;color:' + scoreColor + ';font-weight:700;text-transform:uppercase;letter-spacing:.5px">Combined Score</div></div>';
+        }
         html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-        var badges = [
-            ['VPN',    ipqs.vpn,         '#7c3aed', '#f3e8ff'],
-            ['TOR',    ipqs.tor,         '#c62828', '#fce4ec'],
-            ['Proxy',  ipqs.proxy,       '#b45309', '#fffbeb'],
-            ['Bot',    ipqs.botStatus,   '#c62828', '#fce4ec'],
-            ['Crawler',ipqs.isCrawler,   '#1565c0', '#e3f2fd'],
-            ['Mobile', ipqs.mobileDevice,'#0d6efd', '#e3f2fd'],
-            ['Recent Abuse', ipqs.recentAbuse, '#c62828', '#fce4ec']
-        ];
-        badges.forEach(function(b) {
-            if (b[1]) html += '<span style="background:' + b[3] + ';color:' + b[2] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">' + b[0] + '</span>';
-        });
+        if (ipqs2.vpn  || scam2.vpn)  html += '<span style="background:#f3e8ff;color:#7c3aed;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">VPN</span>';
+        if (ipqs2.tor  || scam2.tor)  html += '<span style="background:#fce4ec;color:#c62828;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">TOR</span>';
+        if (fraud2.isProxy || ipqs2.proxy || (pc2.proxy && pc2.proxy !== 'no') || (iphub2.block === 1)) html += '<span style="background:#fffbeb;color:#b45309;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Proxy</span>';
+        if (ipqs2.botStatus) html += '<span style="background:#fce4ec;color:#c62828;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Bot</span>';
+        if (ipapi2.hosting) html += '<span style="background:#e0f2fe;color:#0369a1;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">Datacenter</span>';
         html += '</div></div>';
-        html += '<div class="fraud-detail-grid">';
-        html += fraudDetailRow('Connection Type', escHtml(ipqs.connectionType || '-'));
-        html += fraudDetailRow('Abuse Velocity', escHtml(ipqs.abuseVelocity || '-'));
-        html += fraudDetailRow('ISP (IPQS)', escHtml(ipqs.isp || '-'));
-        html += fraudDetailRow('Organization', escHtml(ipqs.organization || '-'));
-        html += '</div></div>';
+
+        /* Per-service rows */
+        function fraudSvcRow(icon, color, name, items) {
+            var r = '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:6px">';
+            r += '<div style="font-size:11px;font-weight:700;color:' + color + ';margin-bottom:8px"><i class="fas fa-' + icon + '"></i> ' + name + '</div>';
+            r += '<div class="fraud-detail-grid">';
+            items.forEach(function(it) { r += fraudDetailRow(it[0], it[1]); });
+            r += '</div></div>';
+            return r;
+        }
+        function yesno(v) { return v ? '<span style="color:#dc2626;font-weight:700">Yes</span>' : '<span style="color:#059669">No</span>'; }
+
+        if (ipqs2.fraudScore !== undefined) {
+            html += fraudSvcRow('fingerprint','#dc2626','IPQualityScore',[
+                ['Score', '<b>' + ipqs2.fraudScore + '</b>'],
+                ['VPN', yesno(ipqs2.vpn)], ['Proxy', yesno(ipqs2.proxy)], ['TOR', yesno(ipqs2.tor)],
+                ['Bot', yesno(ipqs2.botStatus)], ['Connection', escHtml(ipqs2.connectionType || '-')],
+                ['ISP', escHtml(ipqs2.isp || '-')], ['Org', escHtml(ipqs2.organization || '-')]
+            ]);
+        }
+        if (abuse2.abuseScore !== undefined) {
+            html += fraudSvcRow('database','#7c3aed','AbuseIPDB',[
+                ['Abuse Score', '<b>' + abuse2.abuseScore + '%</b>'],
+                ['Reports', abuse2.totalReports || 0], ['Usage Type', escHtml(abuse2.usageType || '-')],
+                ['TOR', yesno(abuse2.isTor)]
+            ]);
+        }
+        if (scam2.score !== undefined) {
+            html += fraudSvcRow('user-secret','#ea580c','Scamalytics',[
+                ['Score', '<b>' + scam2.score + '</b>'], ['Risk', escHtml(scam2.risk || '-')],
+                ['VPN', yesno(scam2.vpn)], ['Datacenter', yesno(scam2.dchost)]
+            ]);
+        }
+        if (pc2.proxy !== undefined) {
+            html += fraudSvcRow('network-wired','#0891b2','ProxyCheck.io',[
+                ['Proxy', pc2.proxy !== 'no' ? '<span style="color:#dc2626">' + escHtml(pc2.proxy) + '</span>' : '<span style="color:#059669">No</span>'],
+                ['Type', escHtml(pc2.type || '-')], ['Risk', pc2.risk ? pc2.risk + '%' : '-'], ['Provider', escHtml(pc2.provider || '-')]
+            ]);
+        }
+        if (iphub2.block !== undefined) {
+            var iphLabel = iphub2.block === 0 ? '<span style="color:#059669">Residential</span>' : iphub2.block === 1 ? '<span style="color:#dc2626">VPN/Proxy</span>' : '<span style="color:#d97706">Unknown</span>';
+            html += fraudSvcRow('ban','#be185d','IPHub',[
+                ['Status', iphLabel], ['ISP', escHtml(iphub2.isp || '-')], ['ASN', escHtml(iphub2.asn || '-')]
+            ]);
+        }
+        if (ipapi2.country !== undefined) {
+            html += fraudSvcRow('map-marker-alt','#059669','ip-api.com',[
+                ['Country', escHtml((ipapi2.countryCode || '') + (ipapi2.country ? ' — ' + ipapi2.country : '') || '-')],
+                ['City', escHtml(ipapi2.city || '-')], ['ISP', escHtml(ipapi2.isp || '-')],
+                ['Proxy', yesno(ipapi2.proxy)], ['Hosting/DC', yesno(ipapi2.hosting)],
+                ['Timezone', escHtml(ipapi2.timezone || '-')], ['Org', escHtml(ipapi2.org || '-')]
+            ]);
+        }
+        html += '</div>';
     }
 
     /* ── Sub Params ── */
