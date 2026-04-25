@@ -287,17 +287,21 @@ function checkScamalytics(ip, key, user) {
     if (!ip || !key || !user) return Promise.resolve(null);
     var url = IPQS_PROXY + '?scamuser=' + encodeURIComponent(user) + '&scamkey=' + encodeURIComponent(key) + '&scamip=' + encodeURIComponent(ip);
     return raceTimeout(safeJson(url).then(function(d) {
-        if (!d || d.error) return null;
-        /* v3 API wraps result in d.scamalytics */
+        if (!d) return null;
+        /* v3: response wrapped in d.scamalytics object */
         var s = (d.scamalytics && d.scamalytics.scamalytics_score !== undefined) ? d.scamalytics : d;
-        if (s.scamalytics_score === undefined && s.score === undefined) return null;
+        if (s.status === 'error' || s.scamalytics_score === undefined) return null;
+        /* VPN/TOR/datacenter are "yes"/"no" strings in v3 */
+        function isYes(v) { return v === 'yes' || v === true || v === '1'; }
         return {
-            score:    parseInt(s.scamalytics_score !== undefined ? s.scamalytics_score : (s.score || '0'), 10),
-            risk:     s.scamalytics_risk || s.risk || '',
-            vpn:      s.vpn      === '1' || s.vpn      === true,
-            tor:      s.tor      === '1' || s.tor      === true,
-            dchost:   s.datacenter === '1' || s.datacenter === true,
-            freeanon: s.freeanonymizer === '1' || s.freeanonymizer === true
+            score:    parseInt(s.scamalytics_score, 10) || 0,
+            risk:     s.scamalytics_risk || '',          /* none/low/medium/high/very high */
+            vpn:      isYes(s.vpn),
+            tor:      isYes(s.tor),
+            dchost:   isYes(s.datacenter),
+            anonProxy:isYes(s.anonymous_proxy),
+            pubAP:    isYes(s.public_access_point),
+            searchBot:isYes(s.search_engine_bot)
         };
     }), 4000);
 }

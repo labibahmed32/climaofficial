@@ -4394,10 +4394,15 @@ function openClickDetail(clickId) {
             h += '<div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px">';
             h += '<div style="font-size:11px;font-weight:700;color:#ea580c;margin-bottom:8px"><i class="fas fa-user-secret"></i> Scamalytics</div>';
             h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+            function yn(v) { return v ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>'; }
             h += cdItem('Score', '<b>' + scam.score + '</b>');
             h += cdItem('Risk', escHtml(scam.risk || '-'));
-            h += cdItem('VPN', scam.vpn ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
-            h += cdItem('Datacenter', scam.dchost ? '<span style="color:#dc2626">Yes</span>' : '<span style="color:#059669">No</span>');
+            h += cdItem('VPN', yn(scam.vpn));
+            h += cdItem('TOR', yn(scam.tor));
+            h += cdItem('Datacenter', yn(scam.dchost));
+            h += cdItem('Anon Proxy', yn(scam.anonProxy));
+            h += cdItem('Public AP', yn(scam.pubAP));
+            h += cdItem('Search Bot', yn(scam.searchBot));
             h += '</div></div>';
         }
 
@@ -5707,8 +5712,14 @@ function openFraudDetail(clickId) {
         }
         if (scam2.score !== undefined) {
             html += fraudSvcRow('user-secret','#ea580c','Scamalytics',[
-                ['Score', '<b>' + scam2.score + '</b>'], ['Risk', escHtml(scam2.risk || '-')],
-                ['VPN', yesno(scam2.vpn)], ['Datacenter', yesno(scam2.dchost)]
+                ['Score', '<b>' + scam2.score + '</b>'],
+                ['Risk', escHtml(scam2.risk || '-')],
+                ['VPN', yesno(scam2.vpn)],
+                ['TOR', yesno(scam2.tor)],
+                ['Datacenter', yesno(scam2.dchost)],
+                ['Anon Proxy', yesno(scam2.anonProxy)],
+                ['Public AP', yesno(scam2.pubAP)],
+                ['Search Bot', yesno(scam2.searchBot)]
             ]);
         }
         if (pc2.proxy !== undefined) {
