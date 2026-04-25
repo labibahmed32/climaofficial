@@ -1500,7 +1500,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <!-- Scamalytics -->
                     <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
                         <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-user-secret" style="color:#ea580c"></i> Scamalytics <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Proxy/VPN/Tor fraud scoring</span></div>
-                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional — get free at scamalytics.com)</span></label><input type="text" id="fraudScamKey" placeholder="Scamalytics API key"></div>
+                        <div class="form-row" style="margin-bottom:8px">
+                            <div class="form-group"><label>User ID <span style="font-size:10px;color:var(--text-muted)">(shown as "user:" in dashboard)</span></label><input type="text" id="fraudScamUser" placeholder="e.g. 69ed03e70a446"></div>
+                            <div class="form-group"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(shown as "API key:" in dashboard)</span></label><input type="text" id="fraudScamKey" placeholder="Long hex key from scamalytics.com"></div>
+                        </div>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testScamKey()"><i class="fas fa-vial"></i> Test</button>
                             <span id="scamTestResult" style="font-size:12px;display:none"></span>
@@ -6007,6 +6010,7 @@ function loadFraudSettings() {
         document.getElementById('fraudIpqsKey').value    = data.ipqsKey    || '';
         document.getElementById('fraudAbuseKey').value   = data.abuseKey   || '';
         document.getElementById('fraudStrictness').value = data.strictness !== undefined ? data.strictness : '1';
+        document.getElementById('fraudScamUser').value   = data.scamUser   || '';
         document.getElementById('fraudScamKey').value    = data.scamKey    || '';
         document.getElementById('fraudPcKey').value      = data.pcKey      || '';
         document.getElementById('fraudIphubKey').value   = data.iphubKey   || '';
@@ -6017,6 +6021,7 @@ function saveFraudSettings() {
         ipqsKey:    document.getElementById('fraudIpqsKey').value.trim(),
         abuseKey:   document.getElementById('fraudAbuseKey').value.trim(),
         strictness: document.getElementById('fraudStrictness').value,
+        scamUser:   document.getElementById('fraudScamUser').value.trim(),
         scamKey:    document.getElementById('fraudScamKey').value.trim(),
         pcKey:      document.getElementById('fraudPcKey').value.trim(),
         iphubKey:   document.getElementById('fraudIphubKey').value.trim()
@@ -6070,21 +6075,22 @@ function testAbuseKey() {
         }).catch(function(e) { _fraudTestResult('abuseTestResult', 'err', '✗ Connection failed'); });
 }
 function testScamKey() {
-    var key = document.getElementById('fraudScamKey').value.trim();
-    if (!key) { toast('Enter Scamalytics API key first', 'error'); return; }
+    var user = document.getElementById('fraudScamUser').value.trim();
+    var key  = document.getElementById('fraudScamKey').value.trim();
+    if (!user || !key) { toast('Enter both Scamalytics User ID and API key', 'error'); return; }
     _fraudTestResult('scamTestResult', 'info', 'Testing…');
     document.getElementById('scamTestResult').style.color = '#94a3b8';
-    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?scamkey=' + encodeURIComponent(key) + '&scamip=8.8.8.8')
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?scamuser=' + encodeURIComponent(user) + '&scamkey=' + encodeURIComponent(key) + '&scamip=8.8.8.8')
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.score !== undefined) {
                 _fraudTestResult('scamTestResult', 'ok', '✓ Valid! 8.8.8.8 score: ' + d.score + ' (' + (d.risk || 'unknown') + ')');
             } else if (d.error) {
                 _fraudTestResult('scamTestResult', 'err', '✗ ' + d.error);
-            } else if (d.exec && d.exec.indexOf('invalid') !== -1) {
-                _fraudTestResult('scamTestResult', 'err', '✗ Invalid API key');
+            } else if (d.exec && typeof d.exec === 'string' && d.exec.toLowerCase().indexOf('invalid') !== -1) {
+                _fraudTestResult('scamTestResult', 'err', '✗ Invalid credentials: ' + d.exec);
             } else {
-                _fraudTestResult('scamTestResult', 'err', '✗ Unexpected response');
+                _fraudTestResult('scamTestResult', 'err', '✗ Unexpected response: ' + JSON.stringify(d).substr(0,100));
             }
         }).catch(function() { _fraudTestResult('scamTestResult', 'err', '✗ Connection failed'); });
 }

@@ -40,6 +40,7 @@ $email    = isset($_GET['email'])    ? $_GET['email']    : '';
 $phone    = isset($_GET['phone'])    ? $_GET['phone']    : '';
 $abuseKey = isset($_GET['abusekey']) ? $_GET['abusekey'] : '';
 $abuseIp  = isset($_GET['abuseip'])  ? $_GET['abuseip']  : '';
+$scamUser = isset($_GET['scamuser']) ? $_GET['scamuser'] : '';
 $scamKey  = isset($_GET['scamkey'])  ? $_GET['scamkey']  : '';
 $scamIp   = isset($_GET['scamip'])   ? $_GET['scamip']   : '';
 $pcKey    = isset($_GET['pckey'])    ? $_GET['pckey']    : '';
@@ -74,9 +75,14 @@ if (!empty($pcIp)) {
     exit;
 }
 
-/* ---- Scamalytics ---- */
+/* ---- Scamalytics (v3 API: needs user + key) ---- */
 if (!empty($scamKey) && !empty($scamIp)) {
-    $url = 'https://scamalytics.com/ip/api/?key=' . urlencode($scamKey) . '&ip=' . urlencode($scamIp);
+    if (empty($scamUser)) {
+        echo json_encode(['error' => 'Scamalytics requires scamuser parameter']);
+        exit;
+    }
+    /* URL format: https://api11.scamalytics.com/v3/{user}/?key={key}&ip={ip} */
+    $url = 'https://api11.scamalytics.com/v3/' . urlencode($scamUser) . '/?key=' . urlencode($scamKey) . '&ip=' . urlencode($scamIp);
     list($response, $httpCode, $err) = doGet($url);
     if ($response === false || $response === '') {
         echo json_encode(['error' => 'Scamalytics request failed', 'curl_error' => $err]);

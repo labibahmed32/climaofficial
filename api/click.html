@@ -283,9 +283,9 @@ function checkAbuseIPDB(ip, key) {
     }), 4000);
 }
 
-function checkScamalytics(ip, key) {
-    if (!ip || !key) return Promise.resolve(null);
-    var url = IPQS_PROXY + '?scamkey=' + encodeURIComponent(key) + '&scamip=' + encodeURIComponent(ip);
+function checkScamalytics(ip, key, user) {
+    if (!ip || !key || !user) return Promise.resolve(null);
+    var url = IPQS_PROXY + '?scamuser=' + encodeURIComponent(user) + '&scamkey=' + encodeURIComponent(key) + '&scamip=' + encodeURIComponent(ip);
     return raceTimeout(safeJson(url).then(function(d) {
         if (!d || d.error) return null;
         return {
@@ -357,7 +357,7 @@ function runAllFraudChecks(ip, fraudSettings) {
     var checks = [
         checkIPQS(ip, fraudSettings.ipqsKey, fraudSettings.strictness),
         checkAbuseIPDB(ip, fraudSettings.abuseKey),
-        checkScamalytics(ip, fraudSettings.scamKey),
+        checkScamalytics(ip, fraudSettings.scamKey, fraudSettings.scamUser),
         checkProxyCheck(ip, fraudSettings.pcKey),
         checkIpHub(ip, fraudSettings.iphubKey),
         checkIpApiCom(ip)
