@@ -1530,16 +1530,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         </div>
                     </div>
 
-                    <!-- IPHub -->
-                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:14px;">
-                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-ban" style="color:#be185d"></i> IPHub <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Block proxy/VPN/hosting IPs (iphub.info)</span></div>
-                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional — free tier at iphub.info)</span></label><input type="text" id="fraudIphubKey" placeholder="IPHub API key"></div>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testIphubKey()"><i class="fas fa-vial"></i> Test</button>
-                            <span id="iphubTestResult" style="font-size:12px;display:none"></span>
-                        </div>
-                    </div>
-
                     <div class="form-help" style="margin-bottom:12px">All enabled services check every click IP. Results stored per click: fraud score, VPN/proxy/bot flags visible in Click Reports.</div>
                     <button class="btn-primary-sm" onclick="saveFraudSettings()"><i class="fas fa-save"></i> Save All API Keys</button>
                 </div>
@@ -6013,7 +6003,6 @@ function loadFraudSettings() {
         document.getElementById('fraudScamUser').value   = data.scamUser   || '';
         document.getElementById('fraudScamKey').value    = data.scamKey    || '';
         document.getElementById('fraudPcKey').value      = data.pcKey      || '';
-        document.getElementById('fraudIphubKey').value   = data.iphubKey   || '';
     });
 }
 function saveFraudSettings() {
@@ -6023,8 +6012,7 @@ function saveFraudSettings() {
         strictness: document.getElementById('fraudStrictness').value,
         scamUser:   document.getElementById('fraudScamUser').value.trim(),
         scamKey:    document.getElementById('fraudScamKey').value.trim(),
-        pcKey:      document.getElementById('fraudPcKey').value.trim(),
-        iphubKey:   document.getElementById('fraudIphubKey').value.trim()
+        pcKey:      document.getElementById('fraudPcKey').value.trim()
     };
     fbPut('settings/fraud', data).then(function() {
         toast('Fraud API settings saved!');
@@ -6083,14 +6071,16 @@ function testScamKey() {
     fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?scamuser=' + encodeURIComponent(user) + '&scamkey=' + encodeURIComponent(key) + '&scamip=8.8.8.8')
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.score !== undefined) {
-                _fraudTestResult('scamTestResult', 'ok', '✓ Valid! 8.8.8.8 score: ' + d.score + ' (' + (d.risk || 'unknown') + ')');
+            /* v3 API wraps result in d.scamalytics */
+            var s = d.scamalytics || d;
+            if (s.scamalytics_score !== undefined) {
+                _fraudTestResult('scamTestResult', 'ok', '✓ Valid! 8.8.8.8 score: ' + s.scamalytics_score + ' (' + (s.scamalytics_risk || 'unknown') + ')');
+            } else if (s.status === 'error' || (s.exec && typeof s.exec === 'string')) {
+                _fraudTestResult('scamTestResult', 'err', '✗ ' + (s.exec || s.status || 'Invalid credentials'));
             } else if (d.error) {
                 _fraudTestResult('scamTestResult', 'err', '✗ ' + d.error);
-            } else if (d.exec && typeof d.exec === 'string' && d.exec.toLowerCase().indexOf('invalid') !== -1) {
-                _fraudTestResult('scamTestResult', 'err', '✗ Invalid credentials: ' + d.exec);
             } else {
-                _fraudTestResult('scamTestResult', 'err', '✗ Unexpected response: ' + JSON.stringify(d).substr(0,100));
+                _fraudTestResult('scamTestResult', 'err', '✗ Unexpected: ' + JSON.stringify(d).substr(0,120));
             }
         }).catch(function() { _fraudTestResult('scamTestResult', 'err', '✗ Connection failed'); });
 }
@@ -6130,24 +6120,6 @@ function testIpApiCom() {
                 _fraudTestResult('ipapiTestResult', 'err', '✗ Unexpected response');
             }
         }).catch(function() { _fraudTestResult('ipapiTestResult', 'err', '✗ Connection failed'); });
-}
-function testIphubKey() {
-    var key = document.getElementById('fraudIphubKey').value.trim();
-    if (!key) { toast('Enter IPHub API key first', 'error'); return; }
-    _fraudTestResult('iphubTestResult', 'info', 'Testing…');
-    document.getElementById('iphubTestResult').style.color = '#94a3b8';
-    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?iphubkey=' + encodeURIComponent(key) + '&iphubip=8.8.8.8')
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.block !== undefined) {
-                var label = d.block === 0 ? 'Residential' : d.block === 1 ? 'VPN/Proxy' : 'Unknown';
-                _fraudTestResult('iphubTestResult', 'ok', '✓ Valid! 8.8.8.8 → ' + label + ' · ASN: ' + (d.asn || 'N/A') + ' · ISP: ' + (d.isp || 'N/A'));
-            } else if (d.error) {
-                _fraudTestResult('iphubTestResult', 'err', '✗ ' + d.error);
-            } else {
-                _fraudTestResult('iphubTestResult', 'err', '✗ Unexpected response — check key');
-            }
-        }).catch(function() { _fraudTestResult('iphubTestResult', 'err', '✗ Connection failed'); });
 }
 
 /* ---------- TRACKING DOMAINS ---------- */

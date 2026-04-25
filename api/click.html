@@ -288,13 +288,16 @@ function checkScamalytics(ip, key, user) {
     var url = IPQS_PROXY + '?scamuser=' + encodeURIComponent(user) + '&scamkey=' + encodeURIComponent(key) + '&scamip=' + encodeURIComponent(ip);
     return raceTimeout(safeJson(url).then(function(d) {
         if (!d || d.error) return null;
+        /* v3 API wraps result in d.scamalytics */
+        var s = (d.scamalytics && d.scamalytics.scamalytics_score !== undefined) ? d.scamalytics : d;
+        if (s.scamalytics_score === undefined && s.score === undefined) return null;
         return {
-            score:    parseInt(d.score || '0', 10),
-            risk:     d.risk     || '',
-            vpn:      d.vpn      === '1' || d.vpn      === true,
-            tor:      d.tor      === '1' || d.tor      === true,
-            dchost:   d.datacenter === '1' || d.datacenter === true,
-            freeanon: d.freeanonymizer === '1' || d.freeanonymizer === true
+            score:    parseInt(s.scamalytics_score !== undefined ? s.scamalytics_score : (s.score || '0'), 10),
+            risk:     s.scamalytics_risk || s.risk || '',
+            vpn:      s.vpn      === '1' || s.vpn      === true,
+            tor:      s.tor      === '1' || s.tor      === true,
+            dchost:   s.datacenter === '1' || s.datacenter === true,
+            freeanon: s.freeanonymizer === '1' || s.freeanonymizer === true
         };
     }), 4000);
 }
