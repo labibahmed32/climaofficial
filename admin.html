@@ -1463,27 +1463,82 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="st-body">
                     <div class="st-header">
                         <div class="st-icon" style="background:linear-gradient(135deg,#dc2626,#ef4444)"><i class="fas fa-shield-virus"></i></div>
-                        <div><div class="st-title">Fraud Detection APIs</div><div class="st-sub">IP Quality Score &amp; AbuseIPDB — auto-checked on every click</div></div>
+                        <div><div class="st-title">Fraud Detection APIs</div><div class="st-sub">Multiple fraud services — auto-checked on every click, results stored per click</div></div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>IPQualityScore API Key</label><input type="text" id="fraudIpqsKey" placeholder="Your IPQS API key from ipqualityscore.com"></div>
-                        <div class="form-group"><label>AbuseIPDB API Key <span style="font-size:10px;color:var(--text-muted)">(optional)</span></label><input type="text" id="fraudAbuseKey" placeholder="Your AbuseIPDB API key"></div>
+
+                    <!-- IPQS -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-fingerprint" style="color:#dc2626"></i> IPQualityScore <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Fraud Score, VPN, Proxy, Bot Detection</span></div>
+                        <div class="form-row" style="margin-bottom:8px">
+                            <div class="form-group"><label>API Key</label><input type="text" id="fraudIpqsKey" placeholder="ipqualityscore.com API key"></div>
+                            <div class="form-group">
+                                <label>Strictness <span style="font-size:10px;color:var(--text-muted)">(0=lenient · 3=strict)</span></label>
+                                <select id="fraudStrictness" class="form-select-sm">
+                                    <option value="0">0 — Lenient</option>
+                                    <option value="1" selected>1 — Medium (recommended)</option>
+                                    <option value="2">2 — Strict</option>
+                                    <option value="3">3 — Very Strict</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testIpqsKey()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="ipqsTestResult" style="font-size:12px;display:none"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>IPQS Strictness <span style="font-size:10px;color:var(--text-muted)">(0=lenient, 3=strict)</span></label>
-                        <select id="fraudStrictness" class="form-select-sm" style="max-width:160px">
-                            <option value="0">0 — Lenient</option>
-                            <option value="1" selected>1 — Medium (recommended)</option>
-                            <option value="2">2 — Strict</option>
-                            <option value="3">3 — Very Strict</option>
-                        </select>
+
+                    <!-- AbuseIPDB -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-database" style="color:#7c3aed"></i> AbuseIPDB <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Community-reported abuse database</span></div>
+                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional)</span></label><input type="text" id="fraudAbuseKey" placeholder="abuseipdb.com API key"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testAbuseKey()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="abuseTestResult" style="font-size:12px;display:none"></span>
+                        </div>
                     </div>
-                    <div class="form-help" style="margin-bottom:12px">Every affiliate click will automatically check the IP through IPQS. Results (fraud score, VPN, proxy, bot) are stored per click and shown in Click Reports.</div>
-                    <div style="display:flex;gap:10px">
-                        <button class="btn-primary-sm" onclick="saveFraudSettings()"><i class="fas fa-save"></i> Save API Keys</button>
-                        <button class="btn-secondary" onclick="testIpqsKey()"><i class="fas fa-vial"></i> Test IPQS Key</button>
+
+                    <!-- Scamalytics -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-user-secret" style="color:#ea580c"></i> Scamalytics <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Proxy/VPN/Tor fraud scoring</span></div>
+                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional — get free at scamalytics.com)</span></label><input type="text" id="fraudScamKey" placeholder="Scamalytics API key"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testScamKey()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="scamTestResult" style="font-size:12px;display:none"></span>
+                        </div>
                     </div>
-                    <div id="ipqsTestResult" style="margin-top:10px;font-size:12px;display:none"></div>
+
+                    <!-- ProxyCheck.io -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-network-wired" style="color:#0891b2"></i> ProxyCheck.io <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Proxy/VPN/Datacenter detection</span></div>
+                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional — works free without key, key gives more queries)</span></label><input type="text" id="fraudPcKey" placeholder="proxycheck.io API key (optional)"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testProxycheckKey()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="pcTestResult" style="font-size:12px;display:none"></span>
+                        </div>
+                    </div>
+
+                    <!-- ip-api.com -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="fas fa-map-marker-alt" style="color:#059669"></i> ip-api.com <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Country, City, ISP, Timezone, Proxy flag</span></div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Free service — no API key needed. Auto-used on every click for geolocation enrichment.</div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testIpApiCom()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="ipapiTestResult" style="font-size:12px;display:none"></span>
+                        </div>
+                    </div>
+
+                    <!-- IPHub -->
+                    <div style="background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="fas fa-ban" style="color:#be185d"></i> IPHub <span style="font-weight:400;color:var(--text-muted);font-size:11px">— Block proxy/VPN/hosting IPs (iphub.info)</span></div>
+                        <div class="form-group" style="margin-bottom:8px"><label>API Key <span style="font-size:10px;color:var(--text-muted)">(optional — free tier at iphub.info)</span></label><input type="text" id="fraudIphubKey" placeholder="IPHub API key"></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="testIphubKey()"><i class="fas fa-vial"></i> Test</button>
+                            <span id="iphubTestResult" style="font-size:12px;display:none"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-help" style="margin-bottom:12px">All enabled services check every click IP. Results stored per click: fraud score, VPN/proxy/bot flags visible in Click Reports.</div>
+                    <button class="btn-primary-sm" onclick="saveFraudSettings()"><i class="fas fa-save"></i> Save All API Keys</button>
                 </div>
             </div>
 
@@ -5789,36 +5844,144 @@ function sendTestEmail() {
 function loadFraudSettings() {
     fbGet('settings/fraud').then(function(data) {
         if (!data) return;
-        document.getElementById('fraudIpqsKey').value = data.ipqsKey || '';
-        document.getElementById('fraudAbuseKey').value = data.abuseKey || '';
+        document.getElementById('fraudIpqsKey').value    = data.ipqsKey    || '';
+        document.getElementById('fraudAbuseKey').value   = data.abuseKey   || '';
         document.getElementById('fraudStrictness').value = data.strictness !== undefined ? data.strictness : '1';
+        document.getElementById('fraudScamKey').value    = data.scamKey    || '';
+        document.getElementById('fraudPcKey').value      = data.pcKey      || '';
+        document.getElementById('fraudIphubKey').value   = data.iphubKey   || '';
     });
 }
 function saveFraudSettings() {
     var data = {
-        ipqsKey: document.getElementById('fraudIpqsKey').value.trim(),
-        abuseKey: document.getElementById('fraudAbuseKey').value.trim(),
-        strictness: document.getElementById('fraudStrictness').value
+        ipqsKey:    document.getElementById('fraudIpqsKey').value.trim(),
+        abuseKey:   document.getElementById('fraudAbuseKey').value.trim(),
+        strictness: document.getElementById('fraudStrictness').value,
+        scamKey:    document.getElementById('fraudScamKey').value.trim(),
+        pcKey:      document.getElementById('fraudPcKey').value.trim(),
+        iphubKey:   document.getElementById('fraudIphubKey').value.trim()
     };
-    if (!data.ipqsKey) { toast('Please enter an IPQS API key', 'error'); return; }
     fbPut('settings/fraud', data).then(function() {
         toast('Fraud API settings saved!');
     }).catch(function() { toast('Error saving settings', 'error'); });
 }
+function _fraudTestResult(elId, state, msg) {
+    var res = document.getElementById(elId);
+    res.style.display = 'inline';
+    res.style.color = state === 'ok' ? '#16a34a' : state === 'warn' ? '#d97706' : '#dc2626';
+    res.textContent = msg;
+}
 function testIpqsKey() {
     var key = document.getElementById('fraudIpqsKey').value.trim();
-    if (!key) { toast('Enter an API key first', 'error'); return; }
-    var res = document.getElementById('ipqsTestResult');
-    res.style.display = 'block';
-    res.style.color = '#94a3b8';
-    res.textContent = 'Testing...';
+    if (!key) { toast('Enter IPQS API key first', 'error'); return; }
+    _fraudTestResult('ipqsTestResult', 'info', 'Testing…');
+    document.getElementById('ipqsTestResult').style.color = '#94a3b8';
     fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?key=' + encodeURIComponent(key) + '&ip=8.8.8.8')
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.error) { res.style.color = '#dc2626'; res.textContent = '✗ Error: ' + d.error; }
-            else if (d.fraud_score !== undefined) { res.style.color = '#16a34a'; res.textContent = '✓ Key valid! Test IP 8.8.8.8 fraud score: ' + d.fraud_score; }
-            else { res.style.color = '#dc2626'; res.textContent = '✗ Unexpected response'; }
-        }).catch(function() { res.style.color = '#dc2626'; res.textContent = '✗ Connection failed'; });
+            if (d.fraud_score !== undefined) {
+                _fraudTestResult('ipqsTestResult', 'ok', '✓ Valid! Score for 8.8.8.8: ' + d.fraud_score + (d.vpn ? ' · VPN' : '') + (d.proxy ? ' · Proxy' : ''));
+            } else if (d.success === false) {
+                _fraudTestResult('ipqsTestResult', 'err', '✗ IPQS error: ' + (d.message || 'Invalid API key'));
+            } else if (d.error) {
+                _fraudTestResult('ipqsTestResult', 'err', '✗ Proxy error: ' + d.error);
+            } else {
+                _fraudTestResult('ipqsTestResult', 'err', '✗ Unexpected response — check PHP proxy is deployed');
+            }
+        }).catch(function(e) { _fraudTestResult('ipqsTestResult', 'err', '✗ Connection failed: ' + e.message); });
+}
+function testAbuseKey() {
+    var key = document.getElementById('fraudAbuseKey').value.trim();
+    if (!key) { toast('Enter AbuseIPDB API key first', 'error'); return; }
+    _fraudTestResult('abuseTestResult', 'info', 'Testing…');
+    document.getElementById('abuseTestResult').style.color = '#94a3b8';
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?abusekey=' + encodeURIComponent(key) + '&abuseip=8.8.8.8')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.data && d.data.abuseConfidenceScore !== undefined) {
+                _fraudTestResult('abuseTestResult', 'ok', '✓ Valid! 8.8.8.8 abuse score: ' + d.data.abuseConfidenceScore + '%');
+            } else if (d.errors) {
+                _fraudTestResult('abuseTestResult', 'err', '✗ ' + (d.errors[0] && d.errors[0].detail ? d.errors[0].detail : 'Invalid key'));
+            } else if (d.error) {
+                _fraudTestResult('abuseTestResult', 'err', '✗ ' + d.error);
+            } else {
+                _fraudTestResult('abuseTestResult', 'err', '✗ Unexpected response');
+            }
+        }).catch(function(e) { _fraudTestResult('abuseTestResult', 'err', '✗ Connection failed'); });
+}
+function testScamKey() {
+    var key = document.getElementById('fraudScamKey').value.trim();
+    if (!key) { toast('Enter Scamalytics API key first', 'error'); return; }
+    _fraudTestResult('scamTestResult', 'info', 'Testing…');
+    document.getElementById('scamTestResult').style.color = '#94a3b8';
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?scamkey=' + encodeURIComponent(key) + '&scamip=8.8.8.8')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.score !== undefined) {
+                _fraudTestResult('scamTestResult', 'ok', '✓ Valid! 8.8.8.8 score: ' + d.score + ' (' + (d.risk || 'unknown') + ')');
+            } else if (d.error) {
+                _fraudTestResult('scamTestResult', 'err', '✗ ' + d.error);
+            } else if (d.exec && d.exec.indexOf('invalid') !== -1) {
+                _fraudTestResult('scamTestResult', 'err', '✗ Invalid API key');
+            } else {
+                _fraudTestResult('scamTestResult', 'err', '✗ Unexpected response');
+            }
+        }).catch(function() { _fraudTestResult('scamTestResult', 'err', '✗ Connection failed'); });
+}
+function testProxycheckKey() {
+    var key = document.getElementById('fraudPcKey').value.trim();
+    _fraudTestResult('pcTestResult', 'info', 'Testing…');
+    document.getElementById('pcTestResult').style.color = '#94a3b8';
+    var url = 'https://plan1.climaofficial.com/api/ipqs-proxy.php?pcip=8.8.8.8' + (key ? '&pckey=' + encodeURIComponent(key) : '');
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.status === 'ok') {
+                var info = d['8.8.8.8'] || {};
+                _fraudTestResult('pcTestResult', 'ok', '✓ Working! 8.8.8.8 proxy: ' + (info.proxy || 'no') + ' · type: ' + (info.type || 'N/A'));
+            } else if (d.status === 'error') {
+                _fraudTestResult('pcTestResult', 'err', '✗ ' + (d.message || 'Error'));
+            } else if (d.error) {
+                _fraudTestResult('pcTestResult', 'err', '✗ ' + d.error);
+            } else {
+                _fraudTestResult('pcTestResult', 'err', '✗ Unexpected response');
+            }
+        }).catch(function() { _fraudTestResult('pcTestResult', 'err', '✗ Connection failed'); });
+}
+function testIpApiCom() {
+    _fraudTestResult('ipapiTestResult', 'info', 'Testing…');
+    document.getElementById('ipapiTestResult').style.color = '#94a3b8';
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?ipdata=8.8.8.8')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.status === 'success') {
+                _fraudTestResult('ipapiTestResult', 'ok', '✓ Working! 8.8.8.8 → ' + d.city + ', ' + d.country + ' · ISP: ' + d.isp + (d.proxy ? ' · Proxy: yes' : ''));
+            } else if (d.status === 'fail') {
+                _fraudTestResult('ipapiTestResult', 'err', '✗ ' + (d.message || 'Failed'));
+            } else if (d.error) {
+                _fraudTestResult('ipapiTestResult', 'err', '✗ ' + d.error);
+            } else {
+                _fraudTestResult('ipapiTestResult', 'err', '✗ Unexpected response');
+            }
+        }).catch(function() { _fraudTestResult('ipapiTestResult', 'err', '✗ Connection failed'); });
+}
+function testIphubKey() {
+    var key = document.getElementById('fraudIphubKey').value.trim();
+    if (!key) { toast('Enter IPHub API key first', 'error'); return; }
+    _fraudTestResult('iphubTestResult', 'info', 'Testing…');
+    document.getElementById('iphubTestResult').style.color = '#94a3b8';
+    fetch('https://plan1.climaofficial.com/api/ipqs-proxy.php?iphubkey=' + encodeURIComponent(key) + '&iphubip=8.8.8.8')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.block !== undefined) {
+                var label = d.block === 0 ? 'Residential' : d.block === 1 ? 'VPN/Proxy' : 'Unknown';
+                _fraudTestResult('iphubTestResult', 'ok', '✓ Valid! 8.8.8.8 → ' + label + ' · ASN: ' + (d.asn || 'N/A') + ' · ISP: ' + (d.isp || 'N/A'));
+            } else if (d.error) {
+                _fraudTestResult('iphubTestResult', 'err', '✗ ' + d.error);
+            } else {
+                _fraudTestResult('iphubTestResult', 'err', '✗ Unexpected response — check key');
+            }
+        }).catch(function() { _fraudTestResult('iphubTestResult', 'err', '✗ Connection failed'); });
 }
 
 /* ---------- TRACKING DOMAINS ---------- */
