@@ -1216,7 +1216,8 @@ firebase.auth().onAuthStateChanged(function(user) {
                 document.getElementById('usrAv').textContent = ini;
                 loadMgrInfo(affData.managerId);
                 document.querySelector('.content').classList.add('ready');
-                goPage('dashboard');
+                /* For impersonation always fetch fresh data (different uid = different cache) */
+                loadAllData(function() { saveAffCache(); goPage('dashboard'); startAffAutoRefresh(); });
             });
         });
     } else {
@@ -1235,23 +1236,33 @@ function normalAuth(user) {
         document.getElementById('usrAv').textContent = ini;
         loadMgrInfo(data.managerId);
         loadNotifDot();
-        /* Restore page from URL hash or params */
         document.querySelector('.content').classList.add('ready');
         var urlParams = new URLSearchParams(window.location.search);
         var pendingOffer = urlParams.get('offer');
         var hash = window.location.hash.replace('#', '');
-        if (urlParams.get('page') === 'offers' && pendingOffer) {
-            pendingOfferView = pendingOffer;
-            goPage('offers');
-        } else if (hash && hash.indexOf('offers:') === 0) {
-            pendingOfferView = hash.split(':')[1];
-            goPage('offers');
-        } else if (hash && hash !== 'dashboard' && document.getElementById('pg-' + hash)) {
-            goPage(hash);
-        } else {
-            goPage('dashboard');
+        function goInitialPage() {
+            if (urlParams.get('page') === 'offers' && pendingOffer) {
+                pendingOfferView = pendingOffer; goPage('offers');
+            } else if (hash && hash.indexOf('offers:') === 0) {
+                pendingOfferView = hash.split(':')[1]; goPage('offers');
+            } else if (hash && hash !== 'dashboard' && document.getElementById('pg-' + hash)) {
+                goPage(hash);
+            } else {
+                goPage('dashboard');
+            }
         }
-        startAffAutoRefresh();
+        /* Serve from cache instantly, then refresh silently in background */
+        if (loadAffCache()) {
+            goInitialPage();
+            startAffAutoRefresh();
+            loadAllData(function() { saveAffCache(); }, true);
+        } else {
+            loadAllData(function() {
+                saveAffCache();
+                goInitialPage();
+                startAffAutoRefresh();
+            });
+        }
     });
 }
 
@@ -1513,7 +1524,7 @@ function goPage(pg) {
     var nav = document.querySelector('.nav-item[data-page="' + pg + '"]');
     if (nav) nav.classList.add('active');
     document.getElementById('pgTitle').innerHTML = '<i class="fas ' + (pgIcons[pg] || 'fa-th-large') + '"></i>' + (pgTitles[pg] || pg);
-    if (pg === 'dashboard') loadAllData();
+    if (pg === 'dashboard') loadDashboard();
     else if (pg === 'offers') { if (!pendingOfferView) backToOffers(); loadOffers(); }
     else if (pg === 'postbacks') loadPostbacks();
     else if (pg === 'reporting') initAffReporting();
@@ -1533,6 +1544,30 @@ function toggleSb() {
 var _affFetchVer = 0;
 var _affRefreshTimer = null;
 var _affRefreshing = false;
+var _AFF_CACHE_TTL = 90000; /* 90 seconds */
+
+function _affCacheKey() { return 'clima_aff_cache_' + (myUid || 'x'); }
+
+function saveAffCache() {
+    try {
+        localStorage.setItem(_affCacheKey(), JSON.stringify({
+            t: Date.now(),
+            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments
+        }));
+    } catch(e) {}
+}
+
+function loadAffCache() {
+    try {
+        var raw = localStorage.getItem(_affCacheKey());
+        if (!raw) return false;
+        var p = JSON.parse(raw);
+        if (!p || !p.t || (Date.now() - p.t) > _AFF_CACHE_TTL) return false;
+        allOffers = p.offers || []; myClicks = p.clicks || [];
+        myConversions = p.conversions || []; myPayments = p.payments || [];
+        return true;
+    } catch(e) { return false; }
+}
 
 function loadAllData(onDone, silent) {
     var myVer = ++_affFetchVer;
@@ -1563,6 +1598,7 @@ function startAffAutoRefresh() {
     _affRefreshTimer = setInterval(function() {
         if (document.hidden || _affRefreshing) return;
         loadAllData(function() {
+            saveAffCache();
             var pg = (window.location.hash || '').replace('#', '') || 'dashboard';
             if (pg === 'dashboard') loadDashboard && loadDashboard();
             else if (pg === 'offers') loadOffers && loadOffers();

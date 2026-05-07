@@ -2555,31 +2555,32 @@ function goPage(page) {
     document.getElementById('pageCrumb').textContent = pageCrumbs[page] || page;
     /* If navigating to reporting with a panel already selected, hide hub immediately (no flash) */
     if (page === 'reporting' && _currentRptPanel) switchRpt(_currentRptPanel);
-    /* Always refresh global data first, then render page (prevents stale/partial data). */
-    loadAllData(function() {
-        if (page === 'dashboard') loadDashboard();
-        else if (page === 'advertisers') loadAdvertisers();
-        else if (page === 'offers') loadOffers();
-        else if (page === 'assignments') loadAssignments();
-        else if (page === 'affiliates') loadAffiliates();
-        else if (page === 'managers') loadManagers();
-        else if (page === 'signups') loadSignups();
-        else if (page === 'postbacks') loadPostbacksPage();
-        else if (page === 'clicks') loadClicks();
-        else if (page === 'conversions') loadConversionsPage();
-        else if (page === 'overcap') loadOverCap();
-        else if (page === 'fraud') loadFraud();
-        else if (page === 'payments') loadPayments();
-        else if (page === 'linkgen') loadLinkGen();
-        else if (page === 'mailer') loadMailer();
-        else if (page === 'settings') loadSettings();
-        else if (page === 'reporting') initReporting();
-        else if (page === 'topoffers') initTopOffers();
-        else if (page === 'announcements') initAnnouncements();
-    });
+    /* Render immediately with data already in memory — no re-fetch on tab switch */
+    renderPage(page);
     /* Close mobile sidebar */
     document.getElementById('appSidebar').classList.remove('mob-open');
     document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function renderPage(page) {
+    if (page === 'dashboard') loadDashboard();
+    else if (page === 'advertisers') loadAdvertisers();
+    else if (page === 'offers') loadOffers();
+    else if (page === 'assignments') loadAssignments();
+    else if (page === 'affiliates') loadAffiliates();
+    else if (page === 'managers') loadManagers();
+    else if (page === 'signups') loadSignups();
+    else if (page === 'postbacks') loadPostbacksPage();
+    else if (page === 'clicks') loadClicks();
+    else if (page === 'conversions') loadConversionsPage();
+    else if (page === 'overcap') loadOverCap();
+    else if (page === 'fraud') loadFraud();
+    else if (page === 'payments') loadPayments();
+    else if (page === 'linkgen') loadLinkGen();
+    else if (page === 'mailer') loadMailer();
+    else if (page === 'settings') loadSettings();
+    else if (page === 'reporting') initReporting();
+    else if (page === 'topoffers') initTopOffers();
+    else if (page === 'announcements') initAnnouncements();
 }
 function toggleMobileSidebar() {
     document.getElementById('appSidebar').classList.toggle('mob-open');
@@ -2638,13 +2639,55 @@ function loadAllData(onDone, silent) {
     });
 }
 
+var _CACHE_KEY = 'clima_admin_cache';
+var _CACHE_TTL = 90000; /* 90 seconds — serve from cache then background-refresh */
+
+function saveDataCache() {
+    try {
+        var payload = {
+            t: Date.now(),
+            offers: allOffers, users: allUsers, clicks: allClicks, conversions: allConversions,
+            signups: allSignups, payments: allPayments, applications: allApplications,
+            assignments: allAssignments, advertisers: allAdvertisers
+        };
+        localStorage.setItem(_CACHE_KEY, JSON.stringify(payload));
+    } catch(e) {}
+}
+
+function loadDataCache() {
+    try {
+        var raw = localStorage.getItem(_CACHE_KEY);
+        if (!raw) return false;
+        var p = JSON.parse(raw);
+        if (!p || !p.t || (Date.now() - p.t) > _CACHE_TTL) return false;
+        allOffers = p.offers || []; allUsers = p.users || []; allClicks = p.clicks || [];
+        allConversions = (p.conversions || []).filter(function(c){ return !c.isTest; });
+        allSignups = p.signups || []; allPayments = p.payments || [];
+        allApplications = p.applications || []; allAssignments = p.assignments || [];
+        allAdvertisers = p.advertisers || [];
+        return true;
+    } catch(e) { return false; }
+}
+
 function loadAllDataInitial() {
-    loadAllData(function() {
-        var hashPage = (window.location.hash || '').replace('#', '');
-        goPage((hashPage && pageTitles[hashPage]) ? hashPage : 'dashboard');
+    var hashPage = (window.location.hash || '').replace('#', '');
+    var targetPage = (hashPage && pageTitles[hashPage]) ? hashPage : 'dashboard';
+
+    /* Serve from cache instantly if fresh, then refresh silently in background */
+    if (loadDataCache()) {
         initDefaultTemplates();
+        goPage(targetPage);
         startAutoRefresh();
-    });
+        /* Silent background refresh to freshen the cache */
+        loadAllData(function() { saveDataCache(); renderPage(currentPage); }, true);
+    } else {
+        loadAllData(function() {
+            saveDataCache();
+            goPage(targetPage);
+            initDefaultTemplates();
+            startAutoRefresh();
+        });
+    }
 }
 
 function startAutoRefresh() {
@@ -2653,12 +2696,8 @@ function startAutoRefresh() {
         if (document.hidden) return; /* Skip if tab not visible */
         if (_isRefreshing) return;   /* Skip if fetch already in flight */
         loadAllData(function() {
-            /* Re-render current page with fresh data */
-            if (currentPage && typeof window['loadCurrentPageRender'] === 'function') {
-                window['loadCurrentPageRender']();
-            } else {
-                rerenderCurrentPage();
-            }
+            saveDataCache();
+            rerenderCurrentPage();
         }, true); /* silent = true: no loader overlay */
     }, 20000); /* 20 seconds */
 }
