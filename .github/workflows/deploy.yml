@@ -20,7 +20,7 @@ jobs:
           protocol: ftps
           security: loose
           local-dir: ./
-          server-dir: /public_html/
+          server-dir: /domains/plan1.climaofficial.com/public_html/
           exclude: |
             **/.git*
             **/.git*/**

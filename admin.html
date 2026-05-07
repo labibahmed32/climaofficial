@@ -9,7 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://smtpjs.com/v3/smtp.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -2185,13 +2184,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
             <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:12px;">Line Items</div>
             <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="invDetailTable">
                     <thead><tr style="background:#f8fafc;">
                         <th style="padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Offer ID</th>
                         <th style="padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Item</th>
                         <th style="padding:8px 10px;text-align:center;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Qty</th>
                         <th style="padding:8px 10px;text-align:right;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Unit Price</th>
                         <th style="padding:8px 10px;text-align:right;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Amount</th>
+                        <th id="invDetailRemoveHdr" style="padding:8px 10px;text-align:center;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;display:none;">Remove</th>
                     </tr></thead>
                     <tbody id="invDetailItems"></tbody>
                     <tfoot id="invDetailItemsFoot"></tfoot>
@@ -2687,15 +2687,118 @@ function loadAllDataInitial() {
         goPage(targetPage);
         startAutoRefresh();
         /* Silent background refresh to freshen the cache */
-        loadAllData(function() { saveDataCache(); renderPage(currentPage); }, true);
+        loadAllData(function() { saveDataCache(); renderPage(currentPage); checkAutoWeeklyInvoices(); }, true);
     } else {
         loadAllData(function() {
             saveDataCache();
             goPage(targetPage);
             initDefaultTemplates();
             startAutoRefresh();
+            checkAutoWeeklyInvoices();
         });
     }
+}
+
+/* ===== AUTO WEEKLY INVOICE GENERATOR ===== */
+function checkAutoWeeklyInvoices() {
+    /* ET offset in ms (positive = ET behind UTC, e.g. 14400000 for EDT) */
+    var etOffset = (function() {
+        var n = new Date();
+        var u = n.toLocaleString('en-US', { timeZone: 'UTC', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        var e = n.toLocaleString('en-US', { timeZone: 'America/New_York', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        return new Date(u).getTime() - new Date(e).getTime();
+    })();
+
+    /* Current date+dow in ET */
+    var nowET = new Date(new Date().getTime() - etOffset);
+    var dow = nowET.getDay(); /* 0=Sun,1=Mon,...,6=Sat */
+
+    /* Last completed week: last Mon–Sun */
+    var daysBackToSun = dow === 0 ? 7 : dow;
+    var lastSunET = new Date(nowET); lastSunET.setDate(nowET.getDate() - daysBackToSun);
+    var lastMonET = new Date(lastSunET); lastMonET.setDate(lastSunET.getDate() - 6);
+
+    function fmtDateKey(d) { return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); }
+    var weekKey    = fmtDateKey(lastMonET);
+    var weekToStr  = fmtDateKey(lastSunET);
+
+    function etDateToTs(dateStr, endOfDay) {
+        var t = new Date(dateStr + 'T00:00:00Z').getTime() + etOffset;
+        return endOfDay ? t + 86399999 : t;
+    }
+    var fromTs = etDateToTs(weekKey, false);
+    var toTs   = etDateToTs(weekToStr, true);
+
+    fbGet('settings/autoInvoice').then(function(cfg) {
+        cfg = cfg || {};
+        if (cfg.lastWeek === weekKey) return; /* already done */
+
+        var affiliates = (typeof allUsers !== 'undefined' ? allUsers : []).filter(function(u) { return u.role === 'affiliate' && u.status === 'active'; });
+        if (!affiliates.length) return;
+
+        var done = 0; var created = 0;
+        function tick() {
+            done++;
+            if (done === affiliates.length) {
+                fbPatch('settings/autoInvoice', { lastWeek: weekKey, lastRunAt: Date.now() });
+                if (created > 0) toast('Auto-invoices: ' + created + ' generated for ' + weekKey + ' → ' + weekToStr);
+                loadPayments();
+            }
+        }
+
+        affiliates.forEach(function(aff) {
+            var convs = (typeof allConversions !== 'undefined' ? allConversions : []).filter(function(c) {
+                return c.status === 'approved' && c.affiliateId === aff._id && c.createdAt >= fromTs && c.createdAt <= toTs;
+            });
+            if (!convs.length) { tick(); return; }
+
+            var offerMap = {};
+            convs.forEach(function(c) {
+                var oid = c.offerId || 'unknown';
+                if (!offerMap[oid]) offerMap[oid] = { count:0, amount:0, ids:[] };
+                offerMap[oid].count++;
+                offerMap[oid].amount += parseFloat(c.payout) || 0;
+                offerMap[oid].ids.push(c._id);
+            });
+
+            var items = []; var totalBilled = 0;
+            Object.keys(offerMap).forEach(function(oid) {
+                var d = offerMap[oid];
+                var unit = d.count ? parseFloat((d.amount/d.count).toFixed(4)) : 0;
+                var amt = parseFloat(d.amount.toFixed(2));
+                items.push({ offerId: oid, offerName: getUserOfferName(oid), quantity: d.count, unitPrice: unit, amount: amt, conversionIds: d.ids });
+                totalBilled += d.amount;
+            });
+            totalBilled = parseFloat(totalBilled.toFixed(2));
+
+            var n2 = new Date();
+            var ym = '' + n2.getFullYear() + ('0'+(n2.getMonth()+1)).slice(-2);
+            fbGet('settings/invoiceCounter/' + ym).then(function(ctr) {
+                ctr = (ctr || 0) + 1;
+                var invNum = 'INV-' + ym + '-' + ('000'+ctr).slice(-3);
+                var invId = genId('inv_');
+                var nowTs = Date.now();
+                var inv = {
+                    invoiceNumber: invNum, affiliateId: aff._id,
+                    status: 'unpaid', startDate: fromTs, endDate: toTs,
+                    dateFrom: weekKey, dateTo: weekToStr,
+                    billedAmount: totalBilled, paidAmount: 0, currency: 'USD',
+                    notes: 'Auto-generated weekly invoice (' + weekKey + ' to ' + weekToStr + ')',
+                    createdAt: nowTs, updatedAt: nowTs,
+                    period: weekKey + ' to ' + weekToStr,
+                    amount: totalBilled, convCount: convs.length, items: items,
+                    autoGenerated: true,
+                    payment: { method: 'wire', status: 'pending', approvedAt: null, completedAt: null, transactionFees: 0, amountPaid: 0, notes: '' }
+                };
+                Promise.all([fbPut('payments/invoices/' + invId, inv), fbPut('settings/invoiceCounter/' + ym, ctr)]).then(function() {
+                    created++;
+                    inv._id = invId;
+                    sendInvoiceCreatedEmail(inv);
+                    tick();
+                }).catch(function() { tick(); });
+            }).catch(function() { tick(); });
+        });
+    });
 }
 
 function startAutoRefresh() {
@@ -3522,10 +3625,13 @@ function saveOffer() {
         /* New offer: get sequential ID */
         data.createdAt = Date.now();
         getNextOfferId().then(function(newId) {
+            data._id = newId;
             return fbPut('offers/' + newId, data).then(function() {
                 toast('Offer created! ID: ' + newId);
                 closeModal('offerModal');
                 loadOffers();
+                /* Notify active affiliates about new offer */
+                if (data.notifyAffiliates !== false) sendNewOfferEmails(data);
             });
         }).catch(function(err) { toast('Error creating offer: ' + (err.message || ''), 'error'); });
     }
@@ -5152,23 +5258,35 @@ function openInvoiceDetail(invId) {
     /* Line Items section */
     var items = inv.items;
     var itemsHtml = '';
+    var invEditable = (inv.status !== 'paid');
+    var remHdr = document.getElementById('invDetailRemoveHdr');
+    if (remHdr) remHdr.style.display = invEditable ? '' : 'none';
     if (items && items.length) {
         var iTotal = 0;
-        items.forEach(function(it) {
+        items.forEach(function(it, idx) {
             iTotal += parseFloat(it.amount || 0);
-            itemsHtml += '<tr style="border-bottom:1px solid #f0f0f0;">' +
+            var unitP = parseFloat(it.unitPrice || 0);
+            var qtyCell = invEditable
+                ? '<input type="number" min="0" value="' + (it.quantity || 0) + '" data-unit="' + unitP + '" data-idx="' + idx + '" class="inv-qty-input" onchange="recalcInvDetailRow(this)" style="width:60px;border:1px solid #e2e8f0;border-radius:4px;padding:3px 6px;text-align:center;font-size:12px;">'
+                : (it.quantity || 0);
+            var removeCell = invEditable
+                ? '<td style="padding:4px 8px;text-align:center;"><button onclick="removeInvDetailRow(this)" data-idx="' + idx + '" style="background:#fef2f2;border:1px solid #fecaca;color:#dc3545;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">&#10005;</button></td>'
+                : '';
+            itemsHtml += '<tr style="border-bottom:1px solid #f0f0f0;" data-idx="' + idx + '" id="invDetailRow_' + idx + '">' +
                 '<td style="padding:8px 10px;font-size:11px;color:#888;">' + escHtml(it.offerId || '-') + '</td>' +
                 '<td style="padding:8px 10px;">' + escHtml(it.offerName || it.offerId || '-') + '</td>' +
-                '<td style="padding:8px 10px;text-align:center;">' + (it.quantity || 0) + '</td>' +
-                '<td style="padding:8px 10px;text-align:right;">' + fmtMoney(it.unitPrice || 0) + '</td>' +
-                '<td style="padding:8px 10px;text-align:right;font-weight:700;">' + fmtMoney(it.amount || 0) + '</td>' +
+                '<td style="padding:6px 10px;text-align:center;">' + qtyCell + '</td>' +
+                '<td style="padding:8px 10px;text-align:right;">' + fmtMoney(unitP) + '</td>' +
+                '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="invDetailAmt_' + idx + '">' + fmtMoney(it.amount || 0) + '</td>' +
+                removeCell +
                 '</tr>';
         });
+        var colSpan = invEditable ? 5 : 4;
         document.getElementById('invDetailItemsFoot').innerHTML =
-            '<tr style="background:#f8fafc;font-weight:700;"><td colspan="4" style="padding:8px 10px;text-align:right;">Total Billed:</td><td style="padding:8px 10px;text-align:right;color:var(--primary);">' + fmtMoney(iTotal) + '</td></tr>';
+            '<tr style="background:#f8fafc;font-weight:700;"><td colspan="' + colSpan + '" style="padding:8px 10px;text-align:right;">Total Billed:</td><td style="padding:8px 10px;text-align:right;color:var(--primary);" id="invDetailTotalCell">' + fmtMoney(iTotal) + '</td>' + (invEditable ? '<td></td>' : '') + '</tr>';
     } else {
         /* Legacy: no items array */
-        itemsHtml = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#888;">Legacy invoice — ' + (inv.convCount || 0) + ' conversions — ' + fmtMoney(billed) + '</td></tr>';
+        itemsHtml = '<tr><td colspan="6" style="padding:16px;text-align:center;color:#888;">Legacy invoice — ' + (inv.convCount || 0) + ' conversions — ' + fmtMoney(billed) + '</td></tr>';
         document.getElementById('invDetailItemsFoot').innerHTML = '';
     }
     document.getElementById('invDetailItems').innerHTML = itemsHtml;
@@ -5209,6 +5327,41 @@ function openInvoiceDetail(invId) {
     openModal('invoiceDetailModal');
 }
 
+function recalcInvDetailRow(input) {
+    var idx = input.getAttribute('data-idx');
+    var unit = parseFloat(input.getAttribute('data-unit')) || 0;
+    var qty = parseInt(input.value) || 0;
+    var amt = unit * qty;
+    var amtCell = document.getElementById('invDetailAmt_' + idx);
+    if (amtCell) amtCell.textContent = fmtMoney(amt);
+    /* recalc total */
+    var total = 0;
+    document.querySelectorAll('#invDetailItems tr:not([style*="display:none"])').forEach(function(row) {
+        var amtEl = row.querySelector('td[id^="invDetailAmt_"]');
+        if (amtEl) total += parseMoney(amtEl.textContent);
+    });
+    var tc = document.getElementById('invDetailTotalCell');
+    if (tc) tc.textContent = fmtMoney(total);
+}
+
+function parseMoney(s) {
+    return parseFloat((s || '0').replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+function removeInvDetailRow(btn) {
+    var row = btn.closest('tr');
+    if (row) { row.style.display = 'none'; }
+    /* recalc total */
+    var total = 0;
+    document.querySelectorAll('#invDetailItems tr').forEach(function(r) {
+        if (r.style.display === 'none') return;
+        var amtEl = r.querySelector('td[id^="invDetailAmt_"]');
+        if (amtEl) total += parseMoney(amtEl.textContent);
+    });
+    var tc = document.getElementById('invDetailTotalCell');
+    if (tc) tc.textContent = fmtMoney(total);
+}
+
 function saveInvoiceDetailEdit() {
     var invId = _currentInvDetail;
     if (!invId) return;
@@ -5218,14 +5371,53 @@ function saveInvoiceDetailEdit() {
     var notes = document.getElementById('invDetailNotes').value.trim();
     var pmt = inv.payment || {};
     pmt.transactionFees = fees;
+
+    /* Collect updated line items from DOM */
+    var newItems = [];
+    var newTotal = 0;
+    document.querySelectorAll('#invDetailItems tr').forEach(function(row) {
+        if (row.style.display === 'none') return;
+        var idx = parseInt(row.getAttribute('data-idx'));
+        if (isNaN(idx) || !inv.items || !inv.items[idx]) return;
+        var orig = inv.items[idx];
+        var qtyInput = row.querySelector('.inv-qty-input');
+        var qty = qtyInput ? (parseInt(qtyInput.value) || 0) : (orig.quantity || 0);
+        var unit = parseFloat(orig.unitPrice || 0);
+        var amt = parseFloat((unit * qty).toFixed(2));
+        if (qty <= 0) return;
+        newItems.push({
+            offerId: orig.offerId,
+            offerName: orig.offerName || orig.offerId,
+            quantity: qty,
+            unitPrice: unit,
+            amount: amt,
+            conversionIds: orig.conversionIds || []
+        });
+        newTotal += amt;
+    });
+    newTotal = parseFloat(newTotal.toFixed(2));
+
     var patch = { notes: notes, payment: pmt, updatedAt: Date.now() };
+    if (newItems.length && inv.status !== 'paid') {
+        patch.items = newItems;
+        patch.billedAmount = newTotal;
+        patch.amount = newTotal;
+        patch.convCount = newItems.reduce(function(s, i) { return s + i.quantity; }, 0);
+    }
+
     fbPatch('payments/invoices/' + invId, patch).then(function() {
         toast('Invoice updated!');
         loadPayments();
-        /* Refresh detail view */
-        var idx = allInvoices.findIndex(function(i) { return i._id === invId; });
-        if (idx >= 0) { allInvoices[idx].notes = notes; allInvoices[idx].payment = pmt; allInvoices[idx].updatedAt = patch.updatedAt; }
+        var idx2 = allInvoices.findIndex(function(i) { return i._id === invId; });
+        if (idx2 >= 0) {
+            allInvoices[idx2].notes = notes;
+            allInvoices[idx2].payment = pmt;
+            allInvoices[idx2].updatedAt = patch.updatedAt;
+            if (patch.items) { allInvoices[idx2].items = patch.items; allInvoices[idx2].billedAmount = newTotal; allInvoices[idx2].amount = newTotal; }
+        }
         openInvoiceDetail(invId);
+        /* Send edit notification email */
+        sendInvoiceEditedEmail(inv, newItems, newTotal);
     }).catch(function() { toast('Error saving', 'error'); });
 }
 
@@ -5278,6 +5470,9 @@ function markInvoicePaid(invId) {
         if (idx >= 0) { allInvoices[idx].payment = pmt; allInvoices[idx].status = 'paid'; allInvoices[idx].paidAmount = pmt.amountPaid; allInvoices[idx].updatedAt = nowTs; }
         openInvoiceDetail(invId);
         renderInvoices(allInvoices);
+        /* Send payment confirmation email to affiliate */
+        payRecord.method = pmt.method || (inv.payment && inv.payment.method) || 'wire';
+        sendPaymentPaidEmail(payRecord);
     }).catch(function() { toast('Error', 'error'); });
 }
 
@@ -5453,162 +5648,135 @@ function downloadInvoicePDF(invId) {
 /* ---- Invoice Emails ---- */
 function sendInvoiceCreatedEmail(inv) {
     var affId = inv.affiliateId;
-    Promise.all([
-        fbGet('users/' + affId),
-        fbGet('users/' + affId + '/payment'),
-        fbGet('settings/smtp'),
-        fbGet('settings/network')
-    ]).then(function(res) {
-        var aff = res[0] || {};
-        var pay = res[1] || {};
-        var smtp = res[2];
-        var net = res[3] || {};
-        if (!smtp || !smtp.password || !aff.email) return;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
         var networkName = net.networkName || 'Clima Affiliate Network';
-        var doc = generateInvoicePDF(inv, aff, pay, net);
-        var pdfBase64 = doc.output('datauristring').split(',')[1];
-
-        var subject = 'Invoice ' + (inv.invoiceNumber || '') + ' - ' + networkName;
-        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
-            '<h2 style="color:#0A6C80;">New Invoice Created</h2>' +
-            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
-            '<p>A new invoice has been created for your account:</p>' +
-            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (inv.invoiceNumber || '-') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Period</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (inv.period || '-') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Conversions</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (inv.convCount || 0) + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;color:#0A6C80;">$' + parseFloat(inv.amount || 0).toFixed(2) + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;">Pending</td></tr>' +
-            '</table>' +
-            '<p>Please find the invoice PDF attached.</p>' +
-            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
-
-        Email.send({
-            SecureToken: smtp.password,
-            To: aff.email,
-            From: smtp.fromEmail || smtp.username,
-            Subject: subject,
-            Body: body,
-            Attachments: [{ name: (inv.invoiceNumber || 'invoice') + '.pdf', data: pdfBase64 }]
-        }).then(function(msg) { console.log('Invoice email sent:', msg); }).catch(function(err) { console.error('Invoice email error:', err); });
+        var itemRows = '';
+        if (inv.items && inv.items.length) {
+            inv.items.forEach(function(it) {
+                itemRows += '<tr><td style="padding:8px;border:1px solid #e2e8f0;">' + escHtml(it.offerName || it.offerId || '-') + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;">' + (it.quantity||0) + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:right;">$' + parseFloat(it.unitPrice||0).toFixed(2) + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-weight:bold;">$' + parseFloat(it.amount||0).toFixed(2) + '</td></tr>';
+            });
+        } else {
+            itemRows = '<tr><td colspan="4" style="padding:8px;border:1px solid #e2e8f0;text-align:center;">Invoice for ' + (inv.convCount||0) + ' conversions</td></tr>';
+        }
+        var subject = 'Invoice ' + (inv.invoiceNumber || '') + ' Generated — ' + networkName;
+        var body = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif">' +
+            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fa;padding:30px 0"><tr><td align="center">' +
+            '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">' +
+            '<tr><td style="background:#0A6C80;padding:28px;text-align:center"><div style="color:#fff;font-size:20px;font-weight:700">' + escHtml(networkName) + '</div></td></tr>' +
+            '<tr><td style="padding:32px"><h2 style="color:#1a202c;margin:0 0 12px">Hi ' + escHtml(aff.name||'Affiliate') + ',</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">A new invoice has been generated for your account:</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 20px"><thead><tr style="background:#f8fafc">' +
+            '<th style="padding:8px;border:1px solid #e2e8f0;text-align:left;font-size:12px">Offer</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:center;font-size:12px">Qty</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">CPA</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">Amount</th>' +
+            '</tr></thead><tbody>' + itemRows + '</tbody>' +
+            '<tfoot><tr style="background:#e8f4f7"><td colspan="3" style="padding:10px;border:1px solid #e2e8f0;font-weight:700;text-align:right">Total Billed:</td><td style="padding:10px;border:1px solid #e2e8f0;font-weight:700;color:#0A6C80;text-align:right">$' + parseFloat(inv.billedAmount||inv.amount||0).toFixed(2) + '</td></tr></tfoot></table>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 24px"><tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;width:130px">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(inv.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Period</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(inv.period||(inv.dateFrom+' to '+inv.dateTo)||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Currency</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(inv.currency||'USD') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#e67e22;font-weight:bold">Pending Payment</td></tr></table>' +
+            '<div style="text-align:center;margin:24px 0"><a href="https://plan1.climaofficial.com/affiliate.html#invoices" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 36px;border-radius:8px;font-size:15px;font-weight:600">View Invoice</a></div></td></tr>' +
+            '<tr><td style="background:#f8fafc;padding:18px;text-align:center;border-top:1px solid #e8ecf0"><p style="margin:0;color:#a0aec0;font-size:12px">&copy; ' + escHtml(networkName) + ' &nbsp;|&nbsp; You are receiving this as a registered affiliate.</p></td></tr>' +
+            '</table></td></tr></table></body></html>';
+        sendViaPHP(aff.email, subject, body);
     });
+}
+
+function sendInvoiceEditedEmail(inv, updatedItems, newTotal) {
+    var affId = inv.affiliateId;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
+        var networkName = net.networkName || 'Clima Affiliate Network';
+        var itemRows = '';
+        (updatedItems || inv.items || []).forEach(function(it) {
+            itemRows += '<tr><td style="padding:8px;border:1px solid #e2e8f0;">' + escHtml(it.offerName||it.offerId||'-') + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;">' + (it.quantity||0) + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:right;">$' + parseFloat(it.unitPrice||0).toFixed(2) + '</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-weight:bold;">$' + parseFloat(it.amount||0).toFixed(2) + '</td></tr>';
+        });
+        var total = newTotal !== undefined ? newTotal : parseFloat(inv.billedAmount||inv.amount||0);
+        var content = '<h2 style="color:#0A6C80;margin:0 0 12px">Invoice Updated</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">Hi ' + escHtml(aff.name||'Affiliate') + ', your invoice has been updated by the network admin:</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 20px"><thead><tr style="background:#f8fafc">' +
+            '<th style="padding:8px;border:1px solid #e2e8f0;text-align:left;font-size:12px">Offer</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:center;font-size:12px">Qty</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">CPA</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">Amount</th>' +
+            '</tr></thead><tbody>' + itemRows + '</tbody>' +
+            '<tfoot><tr style="background:#e8f4f7"><td colspan="3" style="padding:10px;border:1px solid #e2e8f0;font-weight:700;text-align:right">Total:</td><td style="padding:10px;border:1px solid #e2e8f0;font-weight:700;color:#0A6C80;text-align:right">$' + parseFloat(total).toFixed(2) + '</td></tr></tfoot></table>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 24px"><tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;width:130px">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(inv.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#e67e22;font-weight:bold">Pending Payment</td></tr></table>' +
+            '<div style="text-align:center;margin:24px 0"><a href="https://plan1.climaofficial.com/affiliate.html#invoices" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 36px;border-radius:8px;font-size:15px;font-weight:600">View Invoice</a></div>';
+        sendViaPHP(aff.email, 'Invoice Updated — ' + escHtml(inv.invoiceNumber||'') + ' — ' + networkName, buildEmailShell(networkName, content));
+    });
+}
+
+function buildEmailShell(networkName, contentHtml) {
+    return '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif">' +
+        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fa;padding:30px 0"><tr><td align="center">' +
+        '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">' +
+        '<tr><td style="background:#0A6C80;padding:28px;text-align:center"><div style="color:#fff;font-size:20px;font-weight:700">' + escHtml(networkName) + '</div></td></tr>' +
+        '<tr><td style="padding:32px">' + contentHtml + '</td></tr>' +
+        '<tr><td style="background:#f8fafc;padding:18px;text-align:center;border-top:1px solid #e8ecf0">' +
+        '<p style="margin:0;color:#a0aec0;font-size:12px">&copy; ' + escHtml(networkName) + ' &nbsp;|&nbsp; You are receiving this as a registered affiliate. &nbsp;|&nbsp; <a href="mailto:affiliates@climaofficial.com?subject=unsubscribe" style="color:#a0aec0">Unsubscribe</a></p>' +
+        '</td></tr></table></td></tr></table></body></html>';
 }
 
 function sendPaymentPaidEmail(payRec) {
     var affId = payRec.affiliateId;
-    Promise.all([
-        fbGet('users/' + affId),
-        fbGet('users/' + affId + '/payment'),
-        fbGet('settings/smtp'),
-        fbGet('settings/network')
-    ]).then(function(res) {
-        var aff = res[0] || {};
-        var pay = res[1] || {};
-        var smtp = res[2];
-        var net = res[3] || {};
-        if (!smtp || !smtp.password || !aff.email) return;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
         var networkName = net.networkName || 'Clima Affiliate Network';
-        var invData = { invoiceNumber: payRec.invoiceNumber || 'PAY-' + (payRec._id || ''), period: payRec.period || '', amount: payRec.amount || 0, convCount: 0, status: 'paid', createdAt: payRec.createdAt || Date.now() };
-        var doc = generateInvoicePDF(invData, aff, pay, net);
-        var pdfBase64 = doc.output('datauristring').split(',')[1];
-
-        var subject = 'Payment Processed - ' + (payRec.invoiceNumber || '') + ' - ' + networkName;
-        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
-            '<h2 style="color:#166534;">Payment Processed!</h2>' +
-            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
-            '<p>Your payment has been processed successfully:</p>' +
-            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.invoiceNumber || '-') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;color:#166534;">$' + parseFloat(payRec.amount || 0).toFixed(2) + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Method</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.method || '-').toUpperCase() + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#166534;font-weight:bold;">PAID</td></tr>' +
-            '</table>' +
-            '<p>Please find the payment receipt attached.</p>' +
-            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
-
-        Email.send({
-            SecureToken: smtp.password,
-            To: aff.email,
-            From: smtp.fromEmail || smtp.username,
-            Subject: subject,
-            Body: body,
-            Attachments: [{ name: (payRec.invoiceNumber || 'payment') + '.pdf', data: pdfBase64 }]
-        }).then(function(msg) { console.log('Payment email sent:', msg); }).catch(function(err) { console.error('Payment email error:', err); });
+        var itemRows = '';
+        if (payRec.items && payRec.items.length) {
+            payRec.items.forEach(function(it) {
+                itemRows += '<tr><td style="padding:7px 8px;border:1px solid #e2e8f0;">' + escHtml(it.offerName||it.offerId||'-') + '</td><td style="padding:7px 8px;border:1px solid #e2e8f0;text-align:center;">' + (it.quantity||0) + '</td><td style="padding:7px 8px;border:1px solid #e2e8f0;text-align:right;">$' + parseFloat(it.unitPrice||0).toFixed(2) + '</td><td style="padding:7px 8px;border:1px solid #e2e8f0;text-align:right;font-weight:bold;">$' + parseFloat(it.amount||0).toFixed(2) + '</td></tr>';
+            });
+        }
+        var content = '<h2 style="color:#166534;margin:0 0 12px">Payment Received!</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">Hi ' + escHtml(aff.name||'Affiliate') + ', your payment has been processed successfully.</p>' +
+            (itemRows ? '<table style="width:100%;border-collapse:collapse;margin:0 0 20px"><thead><tr style="background:#f0fdf4"><th style="padding:8px;border:1px solid #e2e8f0;text-align:left;font-size:12px">Offer</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:center;font-size:12px">Qty</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">CPA</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:right;font-size:12px">Amount</th></tr></thead><tbody>' + itemRows + '</tbody></table>' : '') +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 24px">' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;width:130px">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(payRec.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Period</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(payRec.period||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Amount Paid</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;color:#166534;font-size:16px">$' + parseFloat(payRec.amount||0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Method</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml((payRec.method||'').toUpperCase()||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#166534;font-weight:bold">&#10003; PAID</td></tr></table>' +
+            '<div style="text-align:center;margin:24px 0"><a href="https://plan1.climaofficial.com/affiliate.html#invoices" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 36px;border-radius:8px;font-size:15px;font-weight:600">View in Dashboard</a></div>';
+        sendViaPHP(aff.email, 'Payment Received — ' + escHtml(payRec.invoiceNumber||'') + ' — ' + networkName, buildEmailShell(networkName, content));
     });
 }
 
 function sendPaymentDelayedEmail(payRec) {
     var affId = payRec.affiliateId;
-    Promise.all([
-        fbGet('users/' + affId),
-        fbGet('settings/smtp'),
-        fbGet('settings/network')
-    ]).then(function(res) {
-        var aff = res[0] || {};
-        var smtp = res[1];
-        var net = res[2] || {};
-        if (!smtp || !smtp.password || !aff.email) return;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
         var networkName = net.networkName || 'Clima Affiliate Network';
         var expectedStr = payRec.expectedDate ? new Date(payRec.expectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'To be determined';
-
-        var subject = 'Payment Delayed - ' + (payRec.invoiceNumber || '') + ' - ' + networkName;
-        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
-            '<h2 style="color:#1565c0;">Payment Delayed</h2>' +
-            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
-            '<p>We wanted to let you know that your payment has been temporarily delayed:</p>' +
-            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.invoiceNumber || '-') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">$' + parseFloat(payRec.amount || 0).toFixed(2) + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Expected Payment Date</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold;">' + expectedStr + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold;">DELAYED</td></tr>' +
-            '</table>' +
-            '<p>We apologize for the inconvenience. Your payment will be processed as soon as possible.</p>' +
-            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
-
-        Email.send({
-            SecureToken: smtp.password,
-            To: aff.email,
-            From: smtp.fromEmail || smtp.username,
-            Subject: subject,
-            Body: body
-        }).then(function(msg) { console.log('Payment delayed email sent:', msg); }).catch(function(err) { console.error('Payment delayed email error:', err); });
+        var content = '<h2 style="color:#1565c0;margin:0 0 12px">Payment Delayed</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">Hi ' + escHtml(aff.name||'Affiliate') + ', your payment has been temporarily delayed. We apologize for the inconvenience.</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 24px">' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;width:160px">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(payRec.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">$' + parseFloat(payRec.amount||0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Expected Date</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold">' + expectedStr + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#1565c0;font-weight:bold">DELAYED</td></tr></table>' +
+            '<p style="color:#4a5568;font-size:14px">Your payment will be processed as soon as possible. Contact us if you have questions.</p>';
+        sendViaPHP(aff.email, 'Payment Delayed — ' + escHtml(payRec.invoiceNumber||'') + ' — ' + networkName, buildEmailShell(networkName, content));
     });
 }
 
 function sendPaymentHoldEmail(payRec) {
     var affId = payRec.affiliateId;
-    Promise.all([
-        fbGet('users/' + affId),
-        fbGet('settings/smtp'),
-        fbGet('settings/network')
-    ]).then(function(res) {
-        var aff = res[0] || {};
-        var smtp = res[1];
-        var net = res[2] || {};
-        if (!smtp || !smtp.password || !aff.email) return;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
         var networkName = net.networkName || 'Clima Affiliate Network';
-
-        var subject = 'Payment On Hold - ' + (payRec.invoiceNumber || '') + ' - ' + networkName;
-        var body = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">' +
-            '<h2 style="color:#c62828;">Payment On Hold</h2>' +
-            '<p>Hi ' + escHtml(aff.name || 'Affiliate') + ',</p>' +
-            '<p>Your payment has been placed on hold:</p>' +
-            '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0;">' + (payRec.invoiceNumber || '-') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">$' + parseFloat(payRec.amount || 0).toFixed(2) + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Reason</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828;">' + escHtml(payRec.holdReason || 'Under review') + '</td></tr>' +
-            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828;font-weight:bold;">ON HOLD</td></tr>' +
-            '</table>' +
-            '<p>If you have any questions, please contact us.</p>' +
-            '<p style="color:#888;font-size:12px;">— ' + networkName + '</p></div>';
-
-        Email.send({
-            SecureToken: smtp.password,
-            To: aff.email,
-            From: smtp.fromEmail || smtp.username,
-            Subject: subject,
-            Body: body
-        }).then(function(msg) { console.log('Payment hold email sent:', msg); }).catch(function(err) { console.error('Payment hold email error:', err); });
+        var content = '<h2 style="color:#c62828;margin:0 0 12px">Payment On Hold</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">Hi ' + escHtml(aff.name||'Affiliate') + ', your payment has been placed on hold and requires further review.</p>' +
+            '<table style="width:100%;border-collapse:collapse;margin:0 0 24px">' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold;width:130px">Invoice #</td><td style="padding:8px;border:1px solid #e2e8f0">' + escHtml(payRec.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Amount</td><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">$' + parseFloat(payRec.amount||0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Reason</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828">' + escHtml(payRec.holdReason||'Under review') + '</td></tr>' +
+            '<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:bold">Status</td><td style="padding:8px;border:1px solid #e2e8f0;color:#c62828;font-weight:bold">ON HOLD</td></tr></table>' +
+            '<p style="color:#4a5568;font-size:14px">If you believe this is an error, please reply to this email to contact our team.</p>';
+        sendViaPHP(aff.email, 'Payment On Hold — ' + escHtml(payRec.invoiceNumber||'') + ' — ' + networkName, buildEmailShell(networkName, content));
     });
 }
 
@@ -5652,6 +5820,78 @@ function updateLinkPreview() {
 }
 function copyLink() { navigator.clipboard.writeText(document.getElementById('linkText').textContent).then(function() { toast('Link copied!'); }); }
 function copyPostback() { navigator.clipboard.writeText(document.getElementById('postbackText').textContent).then(function() { toast('Postback URL copied!'); }); }
+
+/* ── Send New Offer Email to All Active Affiliates ── */
+function sendNewOfferEmails(offer) {
+    fbGet('settings/network').then(function(net) {
+        var networkName = (net && net.networkName) || 'Clima Affiliate Network';
+        var affiliates = allUsers.filter(function(u) { return u.role === 'affiliate' && u.status === 'active' && u.email; });
+        if (!affiliates.length) return;
+        var content = '<h2 style="color:#0A6C80;margin:0 0 12px">New Offer Available!</h2>' +
+            '<p style="color:#4a5568;font-size:15px;line-height:1.7;margin:0 0 20px">A new offer has been added to <strong>' + escHtml(networkName) + '</strong> — start promoting it today!</p>' +
+            '<div style="background:#e8f4f7;border-left:4px solid #0A6C80;border-radius:0 8px 8px 0;padding:20px;margin:0 0 24px">' +
+            (offer.thumbnail ? '<img src="' + escHtml(offer.thumbnail) + '" alt="" style="max-height:60px;margin-bottom:12px;border-radius:6px;display:block">' : '') +
+            '<div style="font-size:18px;font-weight:700;color:#0A6C80;margin-bottom:6px">' + escHtml(offer.name||'New Offer') + '</div>' +
+            '<div style="font-size:13px;color:#4a5568;margin-bottom:4px">Payout: <strong style="color:#22c55e;font-size:15px">$' + parseFloat(offer.payout||0).toFixed(2) + '</strong> per conversion</div>' +
+            '<div style="font-size:13px;color:#4a5568">Category: ' + escHtml(offer.category||'General') + '</div>' +
+            '</div>' +
+            '<div style="text-align:center;margin:24px 0"><a href="https://plan1.climaofficial.com/affiliate.html#offers" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:13px 36px;border-radius:8px;font-size:15px;font-weight:600">View Offer &amp; Get Link</a></div>' +
+            '<p style="color:#718096;font-size:13px;margin:0">Apply to this offer from your affiliate dashboard to get your tracking link.</p>';
+        affiliates.forEach(function(aff) {
+            sendViaPHP(aff.email, 'New Offer: ' + escHtml(offer.name||'') + ' — $' + parseFloat(offer.payout||0).toFixed(2) + ' CPA', buildEmailShell(networkName, content));
+        });
+        toast('New offer emails sent to ' + affiliates.length + ' affiliate(s)');
+    });
+}
+
+/* ── Send Top Offers Newsletter ── */
+function sendTopOffersNewsletter() {
+    var toInput = document.getElementById('topOfferEmailTo');
+    if (!toInput) return;
+    var toVal = toInput.value.trim();
+    var sendAll = toVal === '' || toVal === 'all';
+
+    fbGet('settings/network').then(function(net) {
+        var networkName = (net && net.networkName) || 'Clima Affiliate Network';
+        var topOffers = allOffers.filter(function(o) { return o.status === 'active'; }).sort(function(a,b) { return (b.payout||0)-(a.payout||0); }).slice(0, 6);
+        if (!topOffers.length) { toast('No active offers found', 'error'); return; }
+
+        var offerCards = topOffers.map(function(o) {
+            return '<td style="padding:8px;width:50%;vertical-align:top">' +
+                '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center">' +
+                (o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" alt="" style="max-height:48px;margin-bottom:8px;border-radius:4px">' : '') +
+                '<div style="font-size:14px;font-weight:700;color:#1a202c;margin-bottom:4px">' + escHtml(o.name) + '</div>' +
+                '<div style="font-size:20px;font-weight:700;color:#22c55e;margin-bottom:8px">$' + parseFloat(o.payout||0).toFixed(2) + '</div>' +
+                '<div style="font-size:11px;color:#718096;margin-bottom:10px">' + escHtml(o.category||'') + '</div>' +
+                '<a href="https://plan1.climaofficial.com/affiliate.html#offers" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600">Get Link</a>' +
+                '</div></td>';
+        });
+
+        var rows = [];
+        for (var i = 0; i < offerCards.length; i += 2) {
+            rows.push('<tr>' + offerCards[i] + (offerCards[i+1] || '<td></td>') + '</tr>');
+        }
+
+        var content = '<h2 style="color:#0A6C80;margin:0 0 6px">Top Performing Offers</h2>' +
+            '<p style="color:#718096;font-size:14px;margin:0 0 24px">This week\'s best opportunities for you to promote and earn.</p>' +
+            '<table style="width:100%;border-collapse:collapse">' + rows.join('') + '</table>' +
+            '<div style="margin-top:24px;padding:16px;background:#f8fafc;border-radius:8px;text-align:center">' +
+            '<p style="margin:0 0 10px;color:#4a5568;font-size:13px">View all available offers in your dashboard</p>' +
+            '<a href="https://plan1.climaofficial.com/affiliate.html#offers" style="display:inline-block;background:#0A6C80;color:#fff;text-decoration:none;padding:11px 30px;border-radius:8px;font-size:14px;font-weight:600">Open Dashboard</a></div>';
+
+        var affiliates = sendAll
+            ? allUsers.filter(function(u) { return u.role==='affiliate' && u.status==='active' && u.email; })
+            : [{ email: toVal, name: '' }];
+
+        if (!affiliates.length) { toast('No recipients found', 'error'); return; }
+
+        affiliates.forEach(function(aff) {
+            var personalContent = content.replace('<h2', '<p style="color:#4a5568;font-size:14px;margin:0 0 16px">Hi ' + escHtml(aff.name||'Affiliate') + ',</p><h2');
+            sendViaPHP(aff.email, 'Top Offers This Week — ' + networkName, buildEmailShell(networkName, personalContent));
+        });
+        toast('Top offers newsletter sent to ' + affiliates.length + ' affiliate(s)!');
+    });
+}
 
 /* ===== SETTINGS ===== */
 function loadSettings() {
@@ -6271,42 +6511,46 @@ var DEFAULT_TEMPLATES = {
 };
 
 /* ---------- CORE EMAIL FUNCTIONS ---------- */
+var MAILER_URL = 'https://plan1.climaofficial.com/api/mailer.php';
+
 function replaceVars(html, vars) {
     var result = html;
     Object.keys(vars).forEach(function(key) {
         var re = new RegExp('\\{\\{' + key + '\\}\\}', 'g');
-        result = result.replace(re, vars[key] || '');
+        result = result.replace(re, vars[key] !== undefined ? vars[key] : '');
     });
     return result;
+}
+
+/* Core sender — calls server-side PHP mailer */
+function sendViaPHP(toEmail, subject, body) {
+    if (!toEmail || !subject || !body) return Promise.resolve(false);
+    return fetch(MAILER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: toEmail, subject: subject, body: body })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){ if (!d.success) console.error('Mailer error:', d.message); return d.success; })
+      .catch(function(err){ console.error('Mailer fetch error:', err); return false; });
 }
 
 function sendTemplateEmail(templateKey, toEmail, vars) {
     if (!toEmail) return;
     Promise.all([fbGet('settings/smtp'), fbGet('settings/emailTemplates/' + templateKey), fbGet('settings/network')]).then(function(res) {
         var smtp = res[0]; var tpl = res[1]; var network = res[2] || {};
-        if (!smtp || !smtp.host || !smtp.username || !smtp.password) { console.log('SMTP not configured, skipping email: ' + templateKey); return; }
+        if (!smtp || !smtp.host || !smtp.username || !smtp.password) { console.log('SMTP not configured, skipping: ' + templateKey); return; }
         if (!tpl || tpl.enabled === false || tpl.enabled === 'false') { console.log('Template disabled: ' + templateKey); return; }
         var networkName = network.networkName || 'Clima Affiliate Network';
-        var loginUrl = window.location.origin;
-        var logo = smtp.logoUrl || '/images/logo.webp';
+        var loginUrl = 'https://plan1.climaofficial.com';
+        var logo = smtp.logoUrl || 'https://i.ibb.co/ZzqT56H0/image.png';
         var allVars = { networkName: networkName, loginUrl: loginUrl, logo: logo };
         Object.keys(vars || {}).forEach(function(k) { allVars[k] = vars[k]; });
         var subject = replaceVars(tpl.subject || '', allVars);
-        var body = replaceVars(tpl.body || '', allVars);
-        Email.send({
-            SecureToken: smtp.password,
-            To: toEmail,
-            From: smtp.fromEmail || smtp.username,
-            Subject: subject,
-            Body: body
-        }).then(function(msg) {
-            console.log('Email sent (' + templateKey + ' → ' + toEmail + '):', msg);
-        }).catch(function(err) {
-            console.error('Email error (' + templateKey + '):', err);
+        var body    = replaceVars(tpl.body    || '', allVars);
+        sendViaPHP(toEmail, subject, body).then(function(ok){
+            console.log('Email ' + (ok?'sent':'failed') + ': ' + templateKey + ' → ' + toEmail);
         });
-    }).catch(function(err) {
-        console.error('Could not send email:', err);
-    });
+    }).catch(function(err){ console.error('sendTemplateEmail error:', err); });
 }
 
 /* ---------- INIT DEFAULT TEMPLATES ---------- */
@@ -6349,36 +6593,22 @@ function saveSmtpSettings() {
 
 function sendTestEmail() {
     var resultDiv = document.getElementById('smtpTestResult');
-    resultDiv.style.display = 'block';
-    resultDiv.style.color = 'var(--orange)';
-    resultDiv.textContent = 'Sending test email...';
-    var smtp = {
-        host: document.getElementById('smtpHost').value.trim(),
-        password: document.getElementById('smtpPassword').value.trim(),
-        fromEmail: document.getElementById('smtpFromEmail').value.trim() || document.getElementById('smtpUsername').value.trim(),
-        fromName: document.getElementById('smtpFromName').value.trim() || 'Clima Network'
-    };
-    if (!smtp.host || !smtp.password) { resultDiv.style.color = 'var(--red)'; resultDiv.textContent = 'Please fill SMTP host and password first.'; return; }
-    var toEmail = prompt('Send test email to:', smtp.fromEmail);
-    if (!toEmail) { resultDiv.style.display = 'none'; return; }
-    Email.send({
-        SecureToken: smtp.password,
-        To: toEmail,
-        From: smtp.fromEmail,
-        Subject: 'Test Email - Clima Network',
-        Body: '<div style="font-family:sans-serif;padding:20px;"><h2 style="color:#0A6C80;">SMTP Test Successful!</h2><p>If you received this email, your SMTP settings are working correctly.</p><p style="color:#888;font-size:12px;">Sent from Clima Affiliate Network Admin Panel</p></div>'
-    }).then(function(msg) {
-        if (msg === 'OK' || msg.toLowerCase().indexOf('ok') !== -1) {
-            resultDiv.style.color = 'var(--green)';
-            resultDiv.textContent = 'Test email sent successfully to ' + toEmail;
-        } else {
-            resultDiv.style.color = 'var(--red)';
-            resultDiv.textContent = 'Response: ' + msg;
-        }
-    }).catch(function(err) {
-        resultDiv.style.color = 'var(--red)';
-        resultDiv.textContent = 'Error: ' + (err.message || err);
-    });
+    var host = document.getElementById('smtpHost').value.trim();
+    var pass = document.getElementById('smtpPassword').value.trim();
+    var fromEmail = document.getElementById('smtpFromEmail').value.trim() || document.getElementById('smtpUsername').value.trim();
+    if (!host || !pass) { resultDiv.style.display='block'; resultDiv.style.color='var(--red)'; resultDiv.textContent='Fill SMTP host and password first.'; return; }
+    var toEmail = prompt('Send test email to:', fromEmail);
+    if (!toEmail) return;
+    resultDiv.style.display = 'block'; resultDiv.style.color = 'var(--orange)'; resultDiv.textContent = 'Sending...';
+    /* Save current settings first, then test */
+    saveSmtpSettings();
+    setTimeout(function() {
+        sendViaPHP(toEmail, 'SMTP Test — Clima Network', '<div style="font-family:sans-serif;padding:32px;max-width:500px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;"><h2 style="color:#0A6C80;margin:0 0 12px">SMTP Working!</h2><p style="color:#4a5568;">If you received this, your SMTP settings are configured correctly.</p><p style="color:#a0aec0;font-size:12px;margin-top:24px;">Sent from Clima Affiliate Network</p></div>')
+        .then(function(ok) {
+            resultDiv.style.color = ok ? 'var(--green)' : 'var(--red)';
+            resultDiv.textContent = ok ? '✓ Test email sent to ' + toEmail : '✗ Send failed — check browser console for details';
+        });
+    }, 800);
 }
 
 /* ---------- FRAUD / IPQS SETTINGS ---------- */
