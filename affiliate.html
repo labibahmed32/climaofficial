@@ -884,29 +884,18 @@ body.impersonating .impersonate-banner{display:block;}
 
         <!-- INVOICES -->
         <div class="section" id="pg-invoices">
-            <div class="card" style="border-radius:10px;padding:24px;margin-bottom:20px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <!-- Summary Row -->
+            <div id="myInvSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;"></div>
+            <!-- Invoice Cards -->
+            <div class="card" style="border-radius:12px;overflow:hidden;border:1px solid var(--border);">
+                <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
                     <div>
-                        <h3 style="font-size:16px;font-weight:700;color:var(--td);margin-bottom:4px;">My Invoices</h3>
-                        <p style="font-size:12px;color:var(--tl);">View your invoice history and payment status</p>
+                        <div style="font-size:15px;font-weight:700;color:var(--td);">My Invoices</div>
+                        <div style="font-size:12px;color:var(--tl);margin-top:2px;">Invoice history and payment status</div>
                     </div>
+                    <div id="myInvFooter" style="font-size:12px;color:var(--tl);background:#f4f6f8;padding:4px 12px;border-radius:20px;font-weight:600;"></div>
                 </div>
-                <div style="overflow-x:auto;">
-                    <table class="data-table" style="width:100%;border-collapse:collapse;">
-                        <thead><tr>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Invoice ID</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Status</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Start Date</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">End Date</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Billed</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Paid</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Balance</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);">Created</th>
-                        </tr></thead>
-                        <tbody id="myInvoiceTbody"></tbody>
-                    </table>
-                </div>
-                <div id="myInvFooter" style="padding:8px 4px;font-size:12px;color:var(--tl);"></div>
+                <div id="myInvoiceCards" style="padding:0;"></div>
             </div>
         </div>
 
@@ -923,6 +912,8 @@ body.impersonating .impersonate-banner{display:block;}
                         <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;margin-bottom:10px;">General</div>
                         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;" id="affInvDetailGeneral"></div>
                     </div>
+                    <!-- Status Note Bar -->
+                    <div id="affInvStatusNoteBar" style="padding:12px 22px 0;display:none;"></div>
                     <!-- Line Items -->
                     <div style="padding:18px 22px;border-bottom:1px solid #e2e8f0;">
                         <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;margin-bottom:10px;">Line Items</div>
@@ -1292,33 +1283,78 @@ function affInvStatusDot(status) {
     return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + c.color + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + c.color + ';">' + c.label + '</span></span>';
 }
 
+function _invStatusBadge(status) {
+    var cfg = {
+        paid:    { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', icon:'fa-check-circle', label:'Paid' },
+        unpaid:  { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', icon:'fa-clock',        label:'Unpaid' },
+        pending: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', icon:'fa-clock',        label:'Unpaid' },
+        delayed: { bg:'#eff6ff', color:'#2563eb', border:'#93c5fd', icon:'fa-hourglass-half', label:'Delayed' },
+        hold:    { bg:'#fef2f2', color:'#c62828', border:'#fca5a5', icon:'fa-hand-paper',   label:'On Hold' }
+    };
+    var c = cfg[status] || cfg.unpaid;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:' + c.bg + ';color:' + c.color + ';border:1px solid ' + c.border + ';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;"><i class="fas ' + c.icon + '" style="font-size:9px;"></i>' + c.label + '</span>';
+}
+
 function loadInvoices() {
     var all = (myInvoices || []).slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+
+    /* Summary cards */
+    var sumBilled  = all.reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+    var sumPaid    = all.filter(function(i) { return i.status === 'paid'; }).reduce(function(s, i) { return s + parseFloat(i.paidAmount || i.billedAmount || i.amount || 0); }, 0);
+    var sumPending = all.filter(function(i) { return i.status !== 'paid'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+    function sumCard(icon, iconColor, label, val, valColor) {
+        return '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:14px;">' +
+            '<div style="width:40px;height:40px;border-radius:10px;background:' + iconColor.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas ' + icon + '" style="color:' + iconColor.fg + ';font-size:16px;"></i></div>' +
+            '<div><div style="font-size:11px;font-weight:600;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">' + label + '</div>' +
+            '<div style="font-size:20px;font-weight:700;color:' + valColor + ';">' + fmtM(val) + '</div></div></div>';
+    }
+    var sumEl = document.getElementById('myInvSummary');
+    if (sumEl) sumEl.innerHTML =
+        sumCard('fa-file-invoice-dollar', {bg:'#e8f4f7', fg:'#0A6C80'}, 'Total Invoiced', sumBilled, 'var(--td)') +
+        sumCard('fa-clock',               {bg:'#fff7ed', fg:'#ea580c'}, 'Payment Pending', sumPending, '#ea580c') +
+        sumCard('fa-check-circle',        {bg:'#f0fdf4', fg:'#16a34a'}, 'Total Paid',      sumPaid,    '#16a34a');
+
+    /* Invoice cards */
     var html = '';
-    all.forEach(function(inv) {
-        var billed = parseFloat(inv.billedAmount || inv.amount || 0);
-        var paid = parseFloat(inv.paidAmount || (inv.status === 'paid' ? billed : 0) || 0);
+    all.forEach(function(inv, idx) {
+        var billed  = parseFloat(inv.billedAmount || inv.amount || 0);
+        var paid    = parseFloat(inv.paidAmount || (inv.status === 'paid' ? billed : 0) || 0);
         var balance = billed - paid;
-        var startD = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
-        var endD = inv.endDate ? fmtDate(inv.endDate) : (inv.dateTo || '-');
-        var statusNote = (inv.statusNote && (inv.status === 'delayed' || inv.status === 'hold'))
-            ? '<div style="font-size:10px;color:#888;margin-top:2px;">' + esc(inv.statusNote) + '</div>' : '';
-        html += '<tr>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' +
-                '<button onclick="openAffInvoiceDetail(\'' + inv._id + '\')" style="background:none;border:none;color:#0A6C80;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-size:12.5px;">' + esc(inv.invoiceNumber || inv._id) + '</button>' +
-            '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' + affInvStatusDot(inv.status || 'unpaid') + statusNote + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(startD) + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(endD) + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:700;color:var(--td);">' + fmtM(billed) + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:#28a745;">' + fmtM(paid) + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:' + (balance > 0 ? '#dc3545' : '#28a745') + ';">' + fmtM(balance) + '</td>' +
-            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tl);">' + fmtDate(inv.createdAt) + '</td>' +
-            '</tr>';
+        var startD  = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
+        var endD    = inv.endDate   ? fmtDate(inv.endDate)   : (inv.dateTo   || '-');
+        var isLast  = idx === all.length - 1;
+        var noteHtml = (inv.statusNote && (inv.status === 'delayed' || inv.status === 'hold'))
+            ? '<div style="margin-top:10px;padding:8px 12px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;font-size:12px;color:#1e40af;"><i class="fas fa-info-circle" style="margin-right:5px;"></i>' + esc(inv.statusNote) + '</div>' : '';
+
+        html += '<div style="padding:16px 22px;border-bottom:' + (isLast ? 'none' : '1px solid var(--border)') + ';display:flex;align-items:center;gap:16px;transition:background .15s;cursor:pointer;" onclick="openAffInvoiceDetail(\'' + inv._id + '\')" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">' +
+            /* Left: icon */
+            '<div style="width:44px;height:44px;border-radius:10px;background:#e8f4f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-file-invoice-dollar" style="color:#0A6C80;font-size:18px;"></i></div>' +
+            /* Center: info */
+            '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">' +
+                    '<span style="font-size:13px;font-weight:700;color:#0A6C80;">' + esc(inv.invoiceNumber || inv._id) + '</span>' +
+                    _invStatusBadge(inv.status || 'unpaid') +
+                '</div>' +
+                '<div style="font-size:12px;color:var(--tl);">Period: ' + esc(startD) + ' — ' + esc(endD) + '</div>' +
+                noteHtml +
+            '</div>' +
+            /* Right: amounts */
+            '<div style="text-align:right;flex-shrink:0;">' +
+                '<div style="font-size:18px;font-weight:700;color:var(--td);">' + fmtM(billed) + '</div>' +
+                (balance > 0
+                    ? '<div style="font-size:11px;color:#dc2626;font-weight:600;">Balance: ' + fmtM(balance) + '</div>'
+                    : '<div style="font-size:11px;color:#16a34a;font-weight:600;"><i class="fas fa-check" style="margin-right:3px;"></i>Fully Paid</div>') +
+                '<div style="font-size:10px;color:var(--tl);margin-top:2px;">' + fmtDate(inv.createdAt) + '</div>' +
+            '</div>' +
+            /* Arrow */
+            '<div style="color:var(--tl);font-size:13px;flex-shrink:0;"><i class="fas fa-chevron-right"></i></div>' +
+        '</div>';
     });
-    document.getElementById('myInvoiceTbody').innerHTML = html || '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--tl);font-size:13px;"><i class="fas fa-file-invoice" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3;"></i>No invoices yet</td></tr>';
+
+    var cardsEl = document.getElementById('myInvoiceCards');
+    if (cardsEl) cardsEl.innerHTML = html || '<div style="padding:50px;text-align:center;color:var(--tl);"><i class="fas fa-file-invoice" style="font-size:36px;margin-bottom:12px;display:block;opacity:.2;"></i><div style="font-size:14px;font-weight:600;">No invoices yet</div><div style="font-size:12px;margin-top:4px;">Invoices will appear here once generated by admin</div></div>';
     var footer = document.getElementById('myInvFooter');
-    if (footer) footer.textContent = all.length + ' invoice' + (all.length !== 1 ? 's' : '') + ' total';
+    if (footer) footer.textContent = all.length + ' Invoice' + (all.length !== 1 ? 's' : '');
 }
 
 function openAffInvoiceDetail(invId) {
@@ -1339,7 +1375,7 @@ function openAffInvoiceDetail(invId) {
 
         document.getElementById('affInvDetailGeneral').innerHTML =
             detCell('Invoice ID', esc(inv.invoiceNumber || invId)) +
-            detCell('Status', affInvStatusDot(inv.status || 'unpaid')) +
+            detCell('Status', _invStatusBadge(inv.status || 'unpaid')) +
             detCell('Start Date', esc(startD)) +
             detCell('End Date', esc(endD)) +
             detCell('Billed', '<span style="color:#0A6C80;">' + fmtM(billed) + '</span>') +
@@ -1347,6 +1383,21 @@ function openAffInvoiceDetail(invId) {
             detCell('Balance', '<span style="color:' + (balance > 0 ? '#dc3545' : '#28a745') + ';">' + fmtM(balance) + '</span>') +
             detCell('Currency', esc(inv.currency || 'USD')) +
             detCell('Created', fmtDate(inv.createdAt));
+
+        /* Status note for delayed/hold */
+        var affInvNoteBar = document.getElementById('affInvStatusNoteBar');
+        if (affInvNoteBar) {
+            if (inv.statusNote && (inv.status === 'delayed' || inv.status === 'hold')) {
+                var barBg = inv.status === 'hold' ? '#fef2f2' : '#eff6ff';
+                var barBd = inv.status === 'hold' ? '#fca5a5' : '#93c5fd';
+                var barTx = inv.status === 'hold' ? '#c62828' : '#1d4ed8';
+                var barLb = inv.status === 'hold' ? 'On Hold' : 'Delayed';
+                affInvNoteBar.style.display = '';
+                affInvNoteBar.innerHTML = '<div style="background:' + barBg + ';border:1px solid ' + barBd + ';border-radius:6px;padding:10px 14px;font-size:13px;color:' + barTx + ';"><i class="fas fa-info-circle" style="margin-right:6px;"></i><strong>' + barLb + ':</strong> ' + esc(inv.statusNote) + '</div>';
+            } else {
+                affInvNoteBar.style.display = 'none';
+            }
+        }
 
         /* Line items */
         var items = inv.items;
