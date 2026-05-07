@@ -3013,36 +3013,53 @@ function renderDashChart() {
 }
 
 function renderDashPanels() {
-    var convs = allConversions.filter(function(c) { return c.status === 'approved'; });
+    /* Today's range in US Eastern Time */
+    var _etOff = (function() {
+        var n = new Date();
+        var u = n.toLocaleString('en-US', { timeZone:'UTC', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        var e = n.toLocaleString('en-US', { timeZone:'America/New_York', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        return new Date(u).getTime() - new Date(e).getTime();
+    })();
+    var todayStr  = new Intl.DateTimeFormat('en-CA', { timeZone:'America/New_York' }).format(new Date());
+    var todayStart = new Date(todayStr + 'T00:00:00Z').getTime() + _etOff;
+    var todayEnd   = todayStart + 86399999;
+    var todayLabel = new Date(todayStr + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone:'UTC', month:'short', day:'numeric' });
+
+    var convs      = allConversions.filter(function(c) { return c.status === 'approved' && c.createdAt >= todayStart && c.createdAt <= todayEnd; });
+    var todayClicks = allClicks.filter(function(c) { return (c.createdAt||0) >= todayStart && (c.createdAt||0) <= todayEnd; });
+
     /* Top Offers */
     var ofMap = {};
-    convs.forEach(function(c) { if (!ofMap[c.offerId]) ofMap[c.offerId] = { clk: 0, conv: 0, rev: 0 }; ofMap[c.offerId].conv++; ofMap[c.offerId].rev += parseFloat(c.revenue) || 0; });
-    allClicks.forEach(function(c) { if (ofMap[c.offerId]) ofMap[c.offerId].clk++; });
-    var topOff = Object.keys(ofMap).map(function(k) { return { id: k, clk: ofMap[k].clk, conv: ofMap[k].conv, rev: ofMap[k].rev }; }).sort(function(a, b) { return b.rev - a.rev; }).slice(0, 5);
+    convs.forEach(function(c) { if (!ofMap[c.offerId]) ofMap[c.offerId] = { clk:0, conv:0, rev:0 }; ofMap[c.offerId].conv++; ofMap[c.offerId].rev += parseFloat(c.revenue)||0; });
+    todayClicks.forEach(function(c) { if (ofMap[c.offerId]) ofMap[c.offerId].clk++; });
+    var topOff = Object.keys(ofMap).map(function(k) { return { id:k, clk:ofMap[k].clk, conv:ofMap[k].conv, rev:ofMap[k].rev }; }).sort(function(a,b) { return b.rev-a.rev; }).slice(0,5);
     /* Top Affiliates */
     var afMap = {};
-    convs.forEach(function(c) { if (!afMap[c.affiliateId]) afMap[c.affiliateId] = { clk: 0, conv: 0, pay: 0 }; afMap[c.affiliateId].conv++; afMap[c.affiliateId].pay += parseFloat(c.payout) || 0; });
-    allClicks.forEach(function(c) { if (afMap[c.affiliateId]) afMap[c.affiliateId].clk++; });
-    var topAff = Object.keys(afMap).map(function(k) { return { id: k, clk: afMap[k].clk, conv: afMap[k].conv, pay: afMap[k].pay }; }).sort(function(a, b) { return b.pay - a.pay; }).slice(0, 5);
-    /* Recent Conversions */
-    var recent = allConversions.slice().sort(function(a, b) { return (b.createdAt||0) - (a.createdAt||0); }).slice(0, 5);
+    convs.forEach(function(c) { if (!afMap[c.affiliateId]) afMap[c.affiliateId] = { clk:0, conv:0, pay:0 }; afMap[c.affiliateId].conv++; afMap[c.affiliateId].pay += parseFloat(c.payout)||0; });
+    todayClicks.forEach(function(c) { if (afMap[c.affiliateId]) afMap[c.affiliateId].clk++; });
+    var topAff = Object.keys(afMap).map(function(k) { return { id:k, clk:afMap[k].clk, conv:afMap[k].conv, pay:afMap[k].pay }; }).sort(function(a,b) { return b.pay-a.pay; }).slice(0,5);
+    /* Recent Conversions — today only */
+    var recent = allConversions.filter(function(c) { return (c.createdAt||0) >= todayStart && (c.createdAt||0) <= todayEnd; }).sort(function(a,b) { return (b.createdAt||0)-(a.createdAt||0); }).slice(0,5);
 
-    var html = '<div class="db-panel"><div class="db-head"><h5>Top Offers</h5><span class="db-add" onclick="goPage(\'offers\')"><i class="fas fa-plus"></i> View All</span></div>';
+    var tag = '<span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:6px;">' + todayLabel + ' · US/ET</span>';
+    var noData = '<tr><td colspan="4" class="no-data" style="padding:20px;font-size:12px;color:var(--text-muted);">No data for today yet</td></tr>';
+
+    var html = '<div class="db-panel"><div class="db-head"><h5>Top Offers' + tag + '</h5><span class="db-add" onclick="goPage(\'offers\')"><i class="fas fa-plus"></i> View All</span></div>';
     html += '<table class="db-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Conv</th><th>Revenue</th></tr></thead><tbody>';
     topOff.forEach(function(o) { html += '<tr><td class="db-link" onclick="goPage(\'offers\')">' + escHtml(getOfferName(o.id)) + '</td><td>' + o.clk + '</td><td>' + o.conv + '</td><td style="font-weight:600">' + fmtMoney(o.rev) + '</td></tr>'; });
-    if (!topOff.length) html += '<tr><td colspan="4" class="no-data" style="padding:20px">No data</td></tr>';
+    if (!topOff.length) html += noData;
     html += '</tbody></table></div>';
 
-    html += '<div class="db-panel"><div class="db-head"><h5>Top Affiliates</h5><span class="db-add" onclick="goPage(\'affiliates\')"><i class="fas fa-plus"></i> View All</span></div>';
+    html += '<div class="db-panel"><div class="db-head"><h5>Top Affiliates' + tag + '</h5><span class="db-add" onclick="goPage(\'affiliates\')"><i class="fas fa-plus"></i> View All</span></div>';
     html += '<table class="db-table"><thead><tr><th>Affiliate</th><th>Clicks</th><th>Conv</th><th>Earnings</th></tr></thead><tbody>';
     topAff.forEach(function(a) { html += '<tr><td class="db-link" onclick="goPage(\'affiliates\')">' + escHtml(getUserName(a.id)) + '</td><td>' + a.clk + '</td><td>' + a.conv + '</td><td style="font-weight:600;color:var(--green)">' + fmtMoney(a.pay) + '</td></tr>'; });
-    if (!topAff.length) html += '<tr><td colspan="4" class="no-data" style="padding:20px">No data</td></tr>';
+    if (!topAff.length) html += noData;
     html += '</tbody></table></div>';
 
-    html += '<div class="db-panel"><div class="db-head"><h5>Recent Conversions</h5><span class="db-add" onclick="goPage(\'conversions\')"><i class="fas fa-plus"></i> View All</span></div>';
+    html += '<div class="db-panel"><div class="db-head"><h5>Recent Conversions' + tag + '</h5><span class="db-add" onclick="goPage(\'conversions\')"><i class="fas fa-plus"></i> View All</span></div>';
     html += '<table class="db-table"><thead><tr><th>Offer</th><th>Affiliate</th><th>Status</th><th>Payout</th></tr></thead><tbody>';
     recent.forEach(function(c) { html += '<tr><td>' + escHtml(getOfferName(c.offerId)) + '</td><td>' + escHtml(getUserName(c.affiliateId)) + '</td><td>' + statusBadge(c.status) + '</td><td style="font-weight:600">' + fmtMoney(c.payout) + '</td></tr>'; });
-    if (!recent.length) html += '<tr><td colspan="4" class="no-data" style="padding:20px">No data</td></tr>';
+    if (!recent.length) html += noData;
     html += '</tbody></table></div>';
 
     document.getElementById('dashPanels').innerHTML = html;
