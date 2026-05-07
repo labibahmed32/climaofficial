@@ -1226,7 +1226,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="tab-content" id="payTab-invoices">
                 <div class="toolbar">
                     <div class="toolbar-left" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                        <select id="invStatusFilter" class="form-select-sm" onchange="renderInvoices(allInvoices)"><option value="">All Status</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select>
+                        <select id="invStatusFilter" class="form-select-sm" onchange="renderInvoices(allInvoices)"><option value="">All Status</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option><option value="delayed">Delayed</option><option value="hold">On Hold</option></select>
                         <select id="invAffFilter" class="form-select-sm" onchange="renderInvoices(allInvoices)"><option value="">All Affiliates</option></select>
                     </div>
                     <button class="btn-primary-sm" onclick="openInvoiceGenModal()"><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</button>
@@ -2324,6 +2324,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <!-- Admin action buttons -->
             <div id="invDetailActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;"></div>
         </div>
+        <!-- Status Note Bar (hold/delayed) -->
+        <div id="invStatusNoteBar" style="padding:0 24px 12px;display:none;"></div>
         <!-- Add Line Item section (unpaid only) -->
         <div style="padding:0 24px 12px;" id="invAddLineSection" style="display:none;">
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">
@@ -4963,11 +4965,12 @@ function loadPayments() {
     Promise.all([fbGet('payments/records'), fbGet('payments/invoices'), fbGet('users'), fbGet('conversions'), fbGet('offers')]).then(function(res) {
         allPayments = objToArr(res[0]); allInvoices = objToArr(res[1]); allUsers = objToArr(res[2]); allConversions = objToArr(res[3]); allOffers = objToArr(res[4]);
         renderPayments(); renderInvoices(allInvoices);
-        var totalPaid = allPayments.filter(function(p) { return p.status === 'paid'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-        var totalPending = allPayments.filter(function(p) { return p.status === 'pending'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-        var totalDelayed = allPayments.filter(function(p) { return p.status === 'delayed'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-        var totalHold = allPayments.filter(function(p) { return p.status === 'hold'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-        document.getElementById('payStats').innerHTML = statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', fmtMoney(totalPaid), 'Total Paid') + statCardSm('fa-clock', '#fff3e0', '#e65100', fmtMoney(totalPending), 'Pending') + statCardSm('fa-hourglass-half', '#e3f2fd', '#1565c0', fmtMoney(totalDelayed), 'Delayed') + statCardSm('fa-hand-paper', '#fde8e8', '#c62828', fmtMoney(totalHold), 'On Hold') + statCardSm('fa-file-invoice', '#f3e8fd', '#6a1b9a', allPayments.length, 'Records');
+        /* Stats from invoices */
+        var totalPaid    = allInvoices.filter(function(i) { return i.status === 'paid'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+        var totalPending = allInvoices.filter(function(i) { return !i.status || i.status === 'unpaid'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+        var totalDelayed = allInvoices.filter(function(i) { return i.status === 'delayed'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+        var totalHold    = allInvoices.filter(function(i) { return i.status === 'hold'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+        document.getElementById('payStats').innerHTML = statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', fmtMoney(totalPaid), 'Total Paid') + statCardSm('fa-clock', '#fff3e0', '#e65100', fmtMoney(totalPending), 'Pending') + statCardSm('fa-hourglass-half', '#e3f2fd', '#1565c0', fmtMoney(totalDelayed), 'Delayed') + statCardSm('fa-hand-paper', '#fde8e8', '#c62828', fmtMoney(totalHold), 'On Hold') + statCardSm('fa-file-invoice', '#f3e8fd', '#6a1b9a', allInvoices.length, 'Invoices');
     });
 }
 function switchPayTab(tab) { document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); }); document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); }); document.getElementById('payTab-' + tab).classList.add('active'); event.target.classList.add('active'); }
@@ -4989,10 +4992,15 @@ function renderPayments() {
 }
 
 function invStatusDot(status) {
-    var map = { paid: '#28a745', unpaid: '#dc3545', pending: '#dc3545' };
-    var label = (status === 'paid') ? 'Paid' : 'Unpaid';
-    var color = map[status] || '#e67e22';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + color + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + color + ';">' + label + '</span></span>';
+    var cfg = {
+        paid:    { color: '#16a34a', label: 'Paid' },
+        unpaid:  { color: '#dc2626', label: 'Unpaid' },
+        pending: { color: '#dc2626', label: 'Unpaid' },
+        delayed: { color: '#2563eb', label: 'Delayed' },
+        hold:    { color: '#c62828', label: 'On Hold' }
+    };
+    var c = cfg[status] || { color: '#e67e22', label: status || 'Unpaid' };
+    return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + c.color + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + c.color + ';">' + c.label + '</span></span>';
 }
 
 function renderInvoices(invoices) {
@@ -5020,7 +5028,8 @@ function renderInvoices(invoices) {
         var modified = inv.updatedAt ? fmtDate(inv.updatedAt) : '-';
         html += '<tr>';
         html += '<td><button onclick="openInvoiceDetail(\'' + inv._id + '\')" style="background:none;border:none;color:#0A6C80;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-size:12.5px;">' + escHtml(inv.invoiceNumber || inv._id) + '</button></td>';
-        html += '<td>' + invStatusDot(inv.status || 'unpaid') + '</td>';
+        var statusNote = inv.statusNote ? '<div style="font-size:10px;color:#666;margin-top:2px;max-width:120px;white-space:normal;">' + escHtml(inv.statusNote) + '</div>' : '';
+        html += '<td>' + invStatusDot(inv.status || 'unpaid') + statusNote + '</td>';
         html += '<td>' + escHtml(getUserName(inv.affiliateId)) + '</td>';
         html += '<td style="font-size:12px;">' + escHtml(startD) + '</td>';
         html += '<td style="font-size:12px;">' + escHtml(endD) + '</td>';
@@ -5500,15 +5509,39 @@ function openInvoiceDetail(invId) {
 
     /* Action buttons */
     var actHtml = '';
+    var invStatus = inv.status || 'unpaid';
     var payStatus = pmt.status || 'pending';
-    if (payStatus === 'pending') {
-        actHtml += '<button class="btn-primary-sm" onclick="approveInvoicePayment(\'' + invId + '\')" style="background:#0A6C80;"><i class="fas fa-check"></i> Approve Payment</button>';
-    }
-    if (payStatus === 'approved' || payStatus === 'pending') {
+    if (invStatus !== 'paid') {
+        if (payStatus === 'pending') {
+            actHtml += '<button class="btn-primary-sm" onclick="approveInvoicePayment(\'' + invId + '\')" style="background:#0A6C80;"><i class="fas fa-check"></i> Approve Payment</button>';
+        }
         actHtml += '<button class="btn-primary-sm" onclick="markInvoicePaid(\'' + invId + '\')" style="background:#28a745;"><i class="fas fa-check-double"></i> Mark as Paid</button>';
+        if (invStatus !== 'hold') {
+            actHtml += '<button class="btn-sm" onclick="promptInvoiceStatus(\'' + invId + '\',\'hold\')" style="background:#fde8e8;color:#c62828;border-color:#fca5a5;"><i class="fas fa-hand-paper"></i> On Hold</button>';
+        }
+        if (invStatus !== 'delayed') {
+            actHtml += '<button class="btn-sm" onclick="promptInvoiceStatus(\'' + invId + '\',\'delayed\')" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;"><i class="fas fa-hourglass-half"></i> Delay</button>';
+        }
+        if (invStatus === 'hold' || invStatus === 'delayed') {
+            actHtml += '<button class="btn-sm" onclick="promptInvoiceStatus(\'' + invId + '\',\'unpaid\')" style="background:#fff3e0;color:#c2410c;border-color:#fdba74;"><i class="fas fa-undo"></i> Revert to Unpaid</button>';
+        }
     }
     actHtml += '<button class="btn-sm" onclick="downloadInvoicePDF(\'' + invId + '\')"><i class="fas fa-file-pdf"></i> PDF</button>';
     document.getElementById('invDetailActions').innerHTML = actHtml;
+    /* Show status note if delayed/on hold */
+    var noteBar = document.getElementById('invStatusNoteBar');
+    if (noteBar) {
+        if ((invStatus === 'delayed' || invStatus === 'hold') && inv.statusNote) {
+            var barColor = invStatus === 'hold' ? '#fde8e8' : '#eff6ff';
+            var barBorder = invStatus === 'hold' ? '#fca5a5' : '#93c5fd';
+            var barText = invStatus === 'hold' ? '#c62828' : '#1d4ed8';
+            var barLabel = invStatus === 'hold' ? 'On Hold' : 'Delayed';
+            noteBar.style.display = '';
+            noteBar.innerHTML = '<div style="background:' + barColor + ';border:1px solid ' + barBorder + ';border-radius:6px;padding:10px 14px;font-size:13px;color:' + barText + ';"><strong>' + barLabel + ':</strong> ' + escHtml(inv.statusNote) + '</div>';
+        } else {
+            noteBar.style.display = 'none';
+        }
+    }
 
     /* Editable fields */
     document.getElementById('invDetailNotes').value = inv.notes || '';
@@ -5760,6 +5793,54 @@ function markInvoicePaid(invId) {
         payRecord.method = pmt.method || (inv.payment && inv.payment.method) || 'wire';
         sendPaymentPaidEmail(payRecord);
     }).catch(function() { toast('Error', 'error'); });
+}
+
+/* ---- Invoice Status: Hold / Delayed / Revert ---- */
+function promptInvoiceStatus(invId, newStatus) {
+    var inv = allInvoices.find(function(i) { return i._id === invId; });
+    if (!inv) return;
+    var note = '';
+    if (newStatus === 'hold') {
+        note = prompt('Reason for putting this invoice on hold:', inv.statusNote || '');
+        if (note === null) return;
+        if (!note.trim()) { toast('Please enter a reason for hold', 'error'); return; }
+    } else if (newStatus === 'delayed') {
+        note = prompt('Reason for delay (e.g. "Bank transfer pending, expected 3 days"):', inv.statusNote || '');
+        if (note === null) return;
+        if (!note.trim()) { toast('Please enter a delay reason', 'error'); return; }
+    }
+    var nowTs = Date.now();
+    var patch = { status: newStatus === 'unpaid' ? 'unpaid' : newStatus, statusNote: note, updatedAt: nowTs };
+    if (newStatus === 'unpaid') patch.statusNote = '';
+    fbPatch('payments/invoices/' + invId, patch).then(function() {
+        var idx = allInvoices.findIndex(function(i) { return i._id === invId; });
+        if (idx >= 0) { allInvoices[idx].status = patch.status; allInvoices[idx].statusNote = patch.statusNote; allInvoices[idx].updatedAt = nowTs; }
+        var label = newStatus === 'hold' ? 'On Hold' : newStatus === 'delayed' ? 'Delayed' : 'Unpaid';
+        toast('Invoice marked as ' + label);
+        openInvoiceDetail(invId);
+        renderInvoices(allInvoices);
+        loadPayments();
+        /* Send delay notification email */
+        if (newStatus === 'delayed') sendInvoiceDelayedEmail(inv, note);
+    }).catch(function() { toast('Error updating status', 'error'); });
+}
+
+function sendInvoiceDelayedEmail(inv, reason) {
+    var affId = inv.affiliateId;
+    Promise.all([fbGet('users/' + affId), fbGet('settings/network')]).then(function(res) {
+        var aff = res[0] || {}; var net = res[1] || {};
+        if (!aff.email) return;
+        var networkName = net.networkName || 'Clima Affiliate Network';
+        var content = '<h2 style="color:#1d4ed8;margin:0 0 6px">Invoice Payment Delayed</h2>' +
+            '<p style="color:#718096;font-size:14px;margin:0 0 20px">Hi <strong>' + escHtml(aff.name||'Affiliate') + '</strong>, we wanted to inform you that the payment for your invoice has been temporarily delayed.</p>' +
+            '<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:16px 20px;margin-bottom:20px;font-size:13px">' +
+            '<table style="width:100%;border-collapse:collapse"><tr><td style="padding:4px 0;color:#1e40af;width:130px">Invoice</td><td style="padding:4px 0;font-weight:700;color:#1a202c">' + escHtml(inv.invoiceNumber||'-') + '</td></tr>' +
+            '<tr><td style="padding:4px 0;color:#1e40af">Amount</td><td style="padding:4px 0;font-weight:700;color:#1a202c">$' + parseFloat(inv.billedAmount||inv.amount||0).toFixed(2) + '</td></tr>' +
+            '<tr><td style="padding:4px 0;color:#1e40af">Reason</td><td style="padding:4px 0;color:#1a202c">' + escHtml(reason) + '</td></tr></table></div>' +
+            '<p style="color:#4a5568;font-size:14px;margin:0">We will process your payment as soon as possible. If you have any questions, please contact our support team.</p>' +
+            '<div style="text-align:center;margin:28px 0"><a href="https://plan1.climaofficial.com/affiliate.html#invoices" style="display:inline-block;background:#1d4ed8;color:#fff;text-decoration:none;padding:13px 36px;border-radius:8px;font-size:15px;font-weight:600">View Invoice</a></div>';
+        sendViaPHP(aff.email, 'Payment Delayed — ' + (inv.invoiceNumber||'') + ' — ' + networkName, buildEmailShell(networkName, content), null, 'support@climaofficial.com');
+    });
 }
 
 /* ---- Payment auto-select from affiliate's payment method ---- */
