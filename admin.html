@@ -7427,7 +7427,7 @@ function _buildTopOffersEmailBody(networkName, logo, recipientName) {
 
     var offerCards = featured.map(function(o) {
         return '<td style="padding:8px;width:50%;vertical-align:top"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center">' +
-            (o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" alt="" style="max-height:48px;margin-bottom:10px;border-radius:4px">' : '<div style="width:48px;height:48px;background:#e8f4f7;border-radius:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px">&#127919;</div>') +
+            (o.thumbnail ? '<img src="' + escHtml(o.thumbnail) + '" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block">' : '<div style="width:80px;height:80px;background:#e8f4f7;border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px">&#127919;</div>') +
             '<div style="font-size:14px;font-weight:700;color:#1a202c;margin-bottom:4px">' + escHtml(o.name) + '</div>' +
             '<div style="font-size:22px;font-weight:700;color:#22c55e;margin-bottom:6px">$' + parseFloat(o.payout||0).toFixed(2) + '</div>' +
             '<div style="font-size:11px;color:#718096;margin-bottom:12px">' + escHtml(o.category||'Affiliate Offer') + '</div>' +
