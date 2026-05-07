@@ -6,7 +6,7 @@
 // ================================================================
 // DATABASE CREDENTIALS (Update these for your hosting)
 // ================================================================
-define('DB_HOST', 'localhost');
+define('DB_HOST', '127.0.0.1');
 define('DB_NAME', 'u284953560_shaver');
 define('DB_USER', 'u284953560_shaver');
 define('DB_PASS', 'Labib@5544');
