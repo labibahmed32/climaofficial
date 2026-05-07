@@ -1924,6 +1924,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <span class="macro-tag" onclick="insertMacro('{sub5}')">{sub5}</span>
                 </div>
             </div>
+            <!-- Tracking Domain -->
+            <div class="form-group">
+                <label>Tracking Domain</label>
+                <select id="ofTrackingDomain" onchange="updateOfferLinkPreview()">
+                    <option value="">Default (plan1.climaofficial.com)</option>
+                </select>
+                <div class="form-help">Domain used for this offer's tracking links and postback URLs. Affiliates see this domain when they copy their tracking link.</div>
+            </div>
             <!-- Generated Postback for Advertiser -->
             <div class="tracker-detect-panel visible" id="trackerPostbackPanel" style="display:none;">
                 <div class="tracker-section-label" style="margin-top:0;"><i class="fas fa-satellite-dish" style="color:var(--primary);margin-right:4px;"></i> Postback URL for Advertiser</div>
@@ -2146,7 +2154,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div class="form-row"><div class="form-group"><label>From</label><input type="date" id="invDateFrom"></div><div class="form-group"><label>To</label><input type="date" id="invDateTo"></div></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label>Offer Filter</label><select id="invOfferFilter"><option value="">All Offers</option></select></div>
+            <div class="form-group"><label>Advertiser Filter</label><select id="invAdvertiserFilter" onchange="previewInvoiceGen()"><option value="">All Advertisers</option></select></div>
             <div class="form-group"><label>Currency</label><select id="invCurrency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
         </div>
         <div class="form-group"><label>Notes</label><textarea id="invNotes" placeholder="Optional notes for this invoice" rows="2"></textarea></div>
@@ -3123,7 +3131,9 @@ function detectTracker(url) {
 function generateAdvPostback(trackerKey) {
     if (!trackerKey || !TRACKER_PROFILES[trackerKey]) return '';
     var profile = TRACKER_PROFILES[trackerKey];
-    var domain = window._cachedDefaultDomain || window.location.origin;
+    var domSel = document.getElementById('ofTrackingDomain');
+    var domain = (domSel && domSel.value) ? domSel.value : (window._cachedDefaultDomain || window.location.origin);
+    if (domain && domain.indexOf('://') === -1) domain = 'https://' + domain;
     var secret = window._cachedPostbackSecret || 'YOUR_SECRET';
     var pm = profile.postbackMacros;
     return domain + '/api/postback?click_id=' + pm.click_id + '&payout=' + pm.payout + '&txn_id=' + pm.txn_id + '&status=' + pm.status + '&secret=' + secret;
@@ -3188,10 +3198,13 @@ function updateOfferLinkPreview() {
     var finalUrl = document.getElementById('ofFinalUrl').value.trim();
     var el = document.getElementById('ofLinkPreview');
     if (finalUrl) {
-        var domain = window.location.origin;
+        var domSel = document.getElementById('ofTrackingDomain');
+        var domain = (domSel && domSel.value) ? domSel.value : (window._cachedDefaultDomain || window.location.origin);
+        /* Normalise — ensure it starts with https:// */
+        if (domain && domain.indexOf('://') === -1) domain = 'https://' + domain;
         var editId = document.getElementById('offerEditId').value;
         var offId = editId || '{offer_id}';
-        el.innerHTML = '<strong>Tracking Link:</strong> ' + escHtml(domain + '/go/' + offId + '/{affiliate_id}') + '<br><br><strong>Destination:</strong> ' + escHtml(finalUrl);
+        el.innerHTML = '<strong>Tracking Link:</strong> ' + escHtml(domain + '/go/' + offId + '/{affiliate_id}') + '<br><br><strong>Postback:</strong> ' + escHtml(domain + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}') + '<br><br><strong>Destination:</strong> ' + escHtml(finalUrl);
         el.style.color = 'var(--text-dark)';
         /* Auto-detect tracker from URL if dropdown not set */
         var sel = document.getElementById('ofTrackerType');
@@ -3368,6 +3381,25 @@ function openOfferModal(id) {
     selectedCountries = [];
     offerCreatives = [];
 
+    /* Load tracking domains and populate dropdown */
+    fbGet('settings/domains').then(function(domains) {
+        var domHtml = '<option value="">Default (plan1.climaofficial.com)</option>';
+        if (Array.isArray(domains)) {
+            domains.forEach(function(d) {
+                if (d && d.domain) domHtml += '<option value="' + escHtml(d.domain) + '"' + (d.isDefault ? ' selected' : '') + '>' + escHtml(d.domain) + (d.isDefault ? ' (default)' : '') + '</option>';
+            });
+            window._cachedDomains = domains;
+            var defD = domains.find(function(d) { return d && d.isDefault; });
+            window._cachedDefaultDomain = defD ? defD.domain : window.location.origin;
+        }
+        document.getElementById('ofTrackingDomain').innerHTML = domHtml;
+        /* If editing, set the offer's saved domain */
+        if (id) {
+            var o = allOffers.find(function(x) { return x._id === id; });
+            if (o && o.trackingDomain) document.getElementById('ofTrackingDomain').value = o.trackingDomain;
+        }
+    });
+
     /* Switch to first tab */
     switchOfferTab('general');
 
@@ -3468,6 +3500,7 @@ function saveOffer() {
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
         detectedTracker: document.getElementById('ofTrackerType').value || '',
+        trackingDomain: document.getElementById('ofTrackingDomain').value.trim() || '',
         visibility: document.getElementById('ofVisibility').value || 'approval',
         notifyAffiliates: document.getElementById('ofNotifyAffiliates').checked,
         notifyManagers: document.getElementById('ofNotifyManagers').checked,
@@ -4871,12 +4904,12 @@ function openInvoiceGenModal() {
     });
     document.getElementById('invAffiliate').innerHTML = afHtml;
 
-    /* Populate offer filter */
-    var ofHtml = '<option value="">All Offers</option>';
-    if (typeof allOffers !== 'undefined') {
-        allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; });
+    /* Populate advertiser filter */
+    var advHtml = '<option value="">All Advertisers</option>';
+    if (typeof allAdvertisers !== 'undefined') {
+        allAdvertisers.forEach(function(a) { advHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.companyName || a._id) + '</option>'; });
     }
-    document.getElementById('invOfferFilter').innerHTML = ofHtml;
+    document.getElementById('invAdvertiserFilter').innerHTML = advHtml;
 
     setInvDatePreset('thisMonth');
     openModal('invoiceGenModal');
@@ -4927,12 +4960,19 @@ function previewInvoiceGen() {
     var fromTs = new Date(fromStr).getTime();
     var toTs = new Date(toStr + 'T23:59:59').getTime();
     if (fromTs > toTs) { toast('From date must be before To date', 'error'); return; }
-    var offerF = document.getElementById('invOfferFilter').value;
+    var advF = document.getElementById('invAdvertiserFilter').value;
+
+    /* Build set of offer IDs for the selected advertiser */
+    var advOfferIds = null;
+    if (advF) {
+        advOfferIds = {};
+        allOffers.forEach(function(o) { if (o.advertiser === advF) advOfferIds[o._id] = true; });
+    }
 
     /* Group conversions by offer for this affiliate */
     var offerMap = {};
     allConversions.filter(function(c) {
-        return c.status === 'approved' && c.affiliateId === affId && c.createdAt >= fromTs && c.createdAt <= toTs && (!offerF || c.offerId === offerF);
+        return c.status === 'approved' && c.affiliateId === affId && c.createdAt >= fromTs && c.createdAt <= toTs && (!advOfferIds || advOfferIds[c.offerId]);
     }).forEach(function(c) {
         var oid = c.offerId || 'unknown';
         if (!offerMap[oid]) offerMap[oid] = { count: 0, amount: 0, payout: parseFloat(c.payout) || 0, ids: [] };
@@ -5214,7 +5254,25 @@ function markInvoicePaid(invId) {
     pmt.completedAt = Date.now();
     pmt.amountPaid = parseFloat((billed - fees).toFixed(2));
     var nowTs = Date.now();
-    fbPatch('payments/invoices/' + invId, { payment: pmt, status: 'paid', paidAmount: pmt.amountPaid, updatedAt: nowTs }).then(function() {
+    var payRecordId = genId('pay_');
+    var payRecord = {
+        affiliateId: inv.affiliateId,
+        invoiceId: invId,
+        invoiceNumber: inv.invoiceNumber || invId,
+        amount: pmt.amountPaid,
+        currency: inv.currency || 'USD',
+        method: pmt.method || inv.payment && inv.payment.method || 'wire',
+        status: 'paid',
+        paidAt: nowTs,
+        period: inv.period || ((inv.dateFrom || '') + ' to ' + (inv.dateTo || '')),
+        notes: 'Invoice payment: ' + (inv.invoiceNumber || invId),
+        items: inv.items || [],
+        createdAt: nowTs
+    };
+    Promise.all([
+        fbPatch('payments/invoices/' + invId, { payment: pmt, status: 'paid', paidAmount: pmt.amountPaid, updatedAt: nowTs }),
+        fbPut('payments/records/' + payRecordId, payRecord)
+    ]).then(function() {
         toast('Invoice marked as paid!');
         var idx = allInvoices.findIndex(function(i) { return i._id === invId; });
         if (idx >= 0) { allInvoices[idx].payment = pmt; allInvoices[idx].status = 'paid'; allInvoices[idx].paidAmount = pmt.amountPaid; allInvoices[idx].updatedAt = nowTs; }
@@ -5568,7 +5626,8 @@ function loadLinkGen() {
         var defDomain = window.location.origin;
         if (Array.isArray(domains)) { var def = domains.find(function(d) { return d && d.isDefault; }); if (def) defDomain = def.domain; }
         window._cachedDefaultDomain = defDomain;
-        document.getElementById('postbackText').textContent = defDomain + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&secret=YOUR_SECRET';
+        var defDomainUrl = (defDomain && defDomain.indexOf('://') === -1) ? 'https://' + defDomain : defDomain;
+        document.getElementById('postbackText').textContent = defDomainUrl + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&secret=YOUR_SECRET';
         updateLinkPreview();
     });
 }
@@ -5576,7 +5635,15 @@ function updateLinkPreview() {
     var offerId = document.getElementById('lgOffer').value; var affId = document.getElementById('lgAffiliate').value;
     var output = document.getElementById('linkOutput'); if (!offerId || !affId) { output.style.display = 'none'; return; }
     var aff = allUsers.find(function(u) { return u._id === affId; }); var useAffId = (aff && aff.affId) ? aff.affId : affId;
-    var domain = document.getElementById('lgDomain').value || window.location.origin;
+    /* Auto-select offer's tracking domain if the offer has one set */
+    var offer = allOffers.find(function(o) { return o._id === offerId; });
+    var domSel = document.getElementById('lgDomain');
+    if (offer && offer.trackingDomain) {
+        var opt = domSel.querySelector('option[value="' + offer.trackingDomain + '"]');
+        if (opt) domSel.value = offer.trackingDomain;
+    }
+    var domain = domSel.value || window._cachedDefaultDomain || window.location.origin;
+    if (domain && domain.indexOf('://') === -1) domain = 'https://' + domain;
     var url = domain + '/go/' + encodeURIComponent(offerId) + '/' + encodeURIComponent(useAffId);
     var subParams = [];
     ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) { var v = document.getElementById(id).value.trim(); if (v) subParams.push('sub' + (i + 1) + '=' + encodeURIComponent(v)); });

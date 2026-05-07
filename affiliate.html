@@ -2345,7 +2345,8 @@ function backToOffers() {
 }
 function updateOdLink() {
     if (!viewingOffer) return;
-    var url = window.location.origin + '/go/' + encodeURIComponent(viewingOffer._id) + '/' + encodeURIComponent(myAffId || myUid);
+    var domain = getOfferTrackingDomain(viewingOffer);
+    var url = domain + '/go/' + encodeURIComponent(viewingOffer._id) + '/' + encodeURIComponent(myAffId || myUid);
     var subParams = [];
     ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id, i) {
         var v = document.getElementById(id).value.trim();
@@ -2757,11 +2758,20 @@ function loadLinkGen() {
         updateLinkPreview();
     });
 }
+function getOfferTrackingDomain(offer) {
+    if (offer && offer.trackingDomain) {
+        var d = offer.trackingDomain;
+        return d.indexOf('://') === -1 ? 'https://' + d : d;
+    }
+    return window.location.origin;
+}
 function updateLinkPreview() {
     var oid = document.getElementById('lgOffer').value;
     var out = document.getElementById('lnkOut');
     if (!oid) { out.style.display = 'none'; return; }
-    var url = window.location.origin + '/go/' + encodeURIComponent(oid) + '/' + encodeURIComponent(myAffId || myUid);
+    var offer = allOffers.find(function(o) { return o._id === oid; });
+    var domain = getOfferTrackingDomain(offer);
+    var url = domain + '/go/' + encodeURIComponent(oid) + '/' + encodeURIComponent(myAffId || myUid);
     var subParams = [];
     ['lgSub1','lgSub2','lgSub3','lgSub4','lgSub5'].forEach(function(id, i) {
         var v = document.getElementById(id).value.trim();
