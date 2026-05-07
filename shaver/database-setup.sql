@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `domains` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `idx_domain_key` (`domain_key`),
   KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: shaving_sessions
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `shaving_sessions` (
   KEY `idx_active` (`active`),
   KEY `idx_domain_aff_active` (`domain_id`, `aff_id`, `active`),
   FOREIGN KEY (`domain_id`) REFERENCES `domains`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: shaving_history
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS `shaving_history` (
   KEY `idx_session_id` (`session_id`),
   KEY `idx_stop_time` (`stop_time`),
   FOREIGN KEY (`domain_id`) REFERENCES `domains`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: shaving_tracking
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `shaving_tracking` (
   KEY `idx_domain_id` (`domain_id`),
   KEY `idx_timestamp` (`timestamp`),
   FOREIGN KEY (`domain_id`) REFERENCES `domains`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: affiliate_traffic
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `affiliate_traffic` (
   KEY `idx_timestamp` (`timestamp`),
   KEY `idx_domain_shaved_time` (`domain_id`, `was_shaved`, `timestamp`),
   FOREIGN KEY (`domain_id`) REFERENCES `domains`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: user_behavior_events
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `user_behavior_events` (
   KEY `idx_timestamp` (`timestamp`),
   FOREIGN KEY (`traffic_id`) REFERENCES `affiliate_traffic`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`domain_id`) REFERENCES `domains`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Table: shave_snapshots
@@ -183,4 +183,4 @@ CREATE TABLE IF NOT EXISTS `shave_snapshots` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   KEY `idx_ip_domain_phase` (`ip_address`, `domain_id`, `phase`),
   KEY `idx_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
