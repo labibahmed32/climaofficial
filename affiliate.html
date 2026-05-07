@@ -1075,7 +1075,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var FB = firebaseConfig.databaseURL;
 var currentUser = null, myUid = '', myAffId = '';
-var allOffers = [], myClicks = [], myConversions = [], myPayments = [];
+var allOffers = [], myClicks = [], myConversions = [], myPayments = [], myInvoices = [];
 var dashChart = null, chartType = 'line';
 var PAGE_SIZE = 20;
 var allApplications = {};
@@ -1281,39 +1281,44 @@ function doLogout() {
 var _affCurrentInvId = null;
 
 function affInvStatusDot(status) {
-    var color = status === 'paid' ? '#28a745' : '#dc3545';
-    var label = status === 'paid' ? 'Paid' : 'Unpaid';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + color + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + color + ';">' + label + '</span></span>';
+    var cfg = {
+        paid:    { color: '#16a34a', label: 'Paid' },
+        unpaid:  { color: '#dc2626', label: 'Unpaid' },
+        pending: { color: '#dc2626', label: 'Unpaid' },
+        delayed: { color: '#2563eb', label: 'Delayed' },
+        hold:    { color: '#c62828', label: 'On Hold' }
+    };
+    var c = cfg[status] || { color: '#e67e22', label: status || 'Unpaid' };
+    return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + c.color + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + c.color + ';">' + c.label + '</span></span>';
 }
 
 function loadInvoices() {
-    fbGet('payments/invoices').then(function(data) {
-        var all = objToArr(data).filter(function(inv) { return inv.affiliateId === myUid; });
-        all.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
-        var html = '';
-        all.forEach(function(inv) {
-            var billed = parseFloat(inv.billedAmount || inv.amount || 0);
-            var paid = parseFloat(inv.paidAmount || (inv.status === 'paid' ? billed : 0) || 0);
-            var balance = billed - paid;
-            var startD = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
-            var endD = inv.endDate ? fmtDate(inv.endDate) : (inv.dateTo || '-');
-            html += '<tr>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' +
-                    '<button onclick="openAffInvoiceDetail(\'' + inv._id + '\')" style="background:none;border:none;color:#0A6C80;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-size:12.5px;">' + esc(inv.invoiceNumber || inv._id) + '</button>' +
-                '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' + affInvStatusDot(inv.status || 'unpaid') + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(startD) + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(endD) + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:700;color:var(--td);">' + fmtM(billed) + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:#28a745;">' + fmtM(paid) + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:' + (balance > 0 ? '#dc3545' : '#28a745') + ';">' + fmtM(balance) + '</td>' +
-                '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tl);">' + fmtDate(inv.createdAt) + '</td>' +
-                '</tr>';
-        });
-        document.getElementById('myInvoiceTbody').innerHTML = html || '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--tl);font-size:13px;"><i class="fas fa-file-invoice" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3;"></i>No invoices yet</td></tr>';
-        var footer = document.getElementById('myInvFooter');
-        if (footer) footer.textContent = all.length + ' invoice' + (all.length !== 1 ? 's' : '') + ' total';
+    var all = (myInvoices || []).slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var html = '';
+    all.forEach(function(inv) {
+        var billed = parseFloat(inv.billedAmount || inv.amount || 0);
+        var paid = parseFloat(inv.paidAmount || (inv.status === 'paid' ? billed : 0) || 0);
+        var balance = billed - paid;
+        var startD = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
+        var endD = inv.endDate ? fmtDate(inv.endDate) : (inv.dateTo || '-');
+        var statusNote = (inv.statusNote && (inv.status === 'delayed' || inv.status === 'hold'))
+            ? '<div style="font-size:10px;color:#888;margin-top:2px;">' + esc(inv.statusNote) + '</div>' : '';
+        html += '<tr>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' +
+                '<button onclick="openAffInvoiceDetail(\'' + inv._id + '\')" style="background:none;border:none;color:#0A6C80;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-size:12.5px;">' + esc(inv.invoiceNumber || inv._id) + '</button>' +
+            '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);">' + affInvStatusDot(inv.status || 'unpaid') + statusNote + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(startD) + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tm);">' + esc(endD) + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:700;color:var(--td);">' + fmtM(billed) + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:#28a745;">' + fmtM(paid) + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;color:' + (balance > 0 ? '#dc3545' : '#28a745') + ';">' + fmtM(balance) + '</td>' +
+            '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--tl);">' + fmtDate(inv.createdAt) + '</td>' +
+            '</tr>';
     });
+    document.getElementById('myInvoiceTbody').innerHTML = html || '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--tl);font-size:13px;"><i class="fas fa-file-invoice" style="font-size:24px;margin-bottom:8px;display:block;opacity:.3;"></i>No invoices yet</td></tr>';
+    var footer = document.getElementById('myInvFooter');
+    if (footer) footer.textContent = all.length + ' invoice' + (all.length !== 1 ? 's' : '') + ' total';
 }
 
 function openAffInvoiceDetail(invId) {
@@ -1552,7 +1557,7 @@ function saveAffCache() {
     try {
         localStorage.setItem(_affCacheKey(), JSON.stringify({
             t: Date.now(),
-            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments
+            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments, invoices: myInvoices
         }));
     } catch(e) {}
 }
@@ -1564,7 +1569,7 @@ function loadAffCache() {
         var p = JSON.parse(raw);
         if (!p || !p.t || (Date.now() - p.t) > _AFF_CACHE_TTL) return false;
         allOffers = p.offers || []; myClicks = p.clicks || [];
-        myConversions = p.conversions || []; myPayments = p.payments || [];
+        myConversions = p.conversions || []; myPayments = p.payments || []; myInvoices = p.invoices || [];
         return true;
     } catch(e) { return false; }
 }
@@ -1578,11 +1583,8 @@ function loadAllData(onDone, silent) {
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
         myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
-        /* Merge payment records + invoices so Total Paid reflects invoice payments too */
-        var recIds = {};
-        var recs = objToArr(r[3]).filter(function(p) { recIds[p._id]=1; return p.affiliateId === myUid; });
-        var invs = objToArr(r[4]).filter(function(p) { return p.affiliateId === myUid && !recIds[p._id]; });
-        myPayments = recs.concat(invs);
+        myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
+        myInvoices  = objToArr(r[4]).filter(function(p) { return p.affiliateId === myUid; });
         _affRefreshing = false;
         var l2 = document.getElementById('affDataLoader'); if (l2) l2.style.display = 'none';
         if (typeof onDone === 'function') onDone();
@@ -1765,20 +1767,38 @@ function loadDashboard() {
 
     /* Payout card data */
     var totalEarned = myConversions.filter(function(c) { return c.status === 'approved'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
-    var totalPending = myConversions.filter(function(c) { return c.status === 'pending'; }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
-    var totalPaid = myPayments.filter(function(p) { return p.status === 'paid'; }).reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-    var pendingPayments = myPayments.filter(function(p) { return p.status === 'pending'; });
-    var pendingPayAmt = pendingPayments.reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
-    var balance = totalEarned - totalPaid;
+
+    /* Collect all conversionIds that are already in an invoice */
+    var invoicedConvIds = {};
+    myInvoices.forEach(function(inv) {
+        (inv.items || []).forEach(function(it) {
+            (it.conversionIds || []).forEach(function(cid) { invoicedConvIds[cid] = true; });
+        });
+        /* Also mark conversions by affId+period if no conversionIds (legacy) */
+    });
+
+    /* Available Balance = approved conversions NOT yet in any invoice */
+    var availableBalance = myConversions.filter(function(c) {
+        return c.status === 'approved' && !invoicedConvIds[c._id];
+    }).reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+
+    /* Payment Pending = invoices that exist but aren't paid yet */
+    var unpaidInvoices = myInvoices.filter(function(inv) { return inv.status !== 'paid'; });
+    var paymentPendingAmt = unpaidInvoices.reduce(function(s, inv) { return s + parseFloat(inv.billedAmount || inv.amount || 0); }, 0);
+
+    /* Total Paid = paid invoices */
+    var totalPaid = myInvoices.filter(function(inv) { return inv.status === 'paid'; }).reduce(function(s, inv) { return s + parseFloat(inv.paidAmount || inv.billedAmount || inv.amount || 0); }, 0);
 
     var payoutCard = '<div class="astat astat-payout">' +
         '<span class="astat-t">Payout</span>' +
-        '<div class="astat-hd"><span class="astat-sub">Available Balance</span><span class="astat-pct">' + pendingPayments.length + ' pending</span></div>' +
-        '<div class="astat-val">' + fmtM(balance) + '</div>' +
+        '<div class="astat-hd"><span class="astat-sub">Available Balance</span><span class="astat-pct">' + unpaidInvoices.length + ' invoice' + (unpaidInvoices.length !== 1 ? 's' : '') + ' pending</span></div>' +
+        '<div class="astat-val">' + fmtM(availableBalance) + '</div>' +
         '<div class="astat-spark" style="visibility:hidden"></div>' +
-        '<div class="astat-rows"><div class="astat-row"><span>Total Earned</span><span>' + fmtM(totalEarned) + '</span></div>' +
-        '<div class="astat-row"><span>Total Paid</span><span>' + fmtM(totalPaid) + '</span></div>' +
-        '<div class="astat-row"><span>Pending Payout</span><span>' + fmtM(pendingPayAmt) + '</span></div></div></div>';
+        '<div class="astat-rows">' +
+        '<div class="astat-row"><span>Total Earned</span><span>' + fmtM(totalEarned) + '</span></div>' +
+        '<div class="astat-row"><span>Payment Pending</span><span style="color:#e67e22;font-weight:700;">' + fmtM(paymentPendingAmt) + '</span></div>' +
+        '<div class="astat-row"><span>Total Paid</span><span style="color:#22c55e;font-weight:700;">' + fmtM(totalPaid) + '</span></div>' +
+        '</div></div>';
 
     sparkKey = 0;
     document.getElementById('dashStats').innerHTML =
