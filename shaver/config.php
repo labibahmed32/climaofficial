@@ -47,7 +47,7 @@ function getDB() {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false
             ]);
-            // Set MySQL session timezone to PKT so CURRENT_TIMESTAMP and date filters align
+            $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
             $pdo->exec("SET time_zone = '+05:00'");
         } catch (PDOException $e) {
             http_response_code(500);
