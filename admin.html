@@ -1934,10 +1934,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="form-group"><label>Visibility</label><select id="ofVisibility"><option value="approval">Approval Required</option><option value="public">Public (All Affiliates)</option></select><div class="form-help">Public: affiliates get tracking link instantly. Approval: they must apply first.</div></div>
             </div>
             <div class="form-group">
-                <label>Offer Image / Logo URL</label>
-                <input type="text" id="ofThumbnail" oninput="previewOfferImage()">
-                <div class="form-help">Direct URL to offer logo/image</div>
-                <img id="ofImgPreview" class="img-preview" src="" alt="Preview">
+                <label>Offer Image / Logo</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="text" id="ofThumbnail" oninput="previewOfferImage()" placeholder="Paste direct image URL..." style="flex:1;min-width:200px;">
+                    <label style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f0f4f8;border:1px solid var(--card-border);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);white-space:nowrap;transition:background .15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f0f4f8'">
+                        <i class="fas fa-upload" style="font-size:11px;"></i> Upload Image
+                        <input type="file" accept="image/*" id="ofImgUpload" style="display:none;" onchange="uploadOfferImage(this)">
+                    </label>
+                </div>
+                <div class="form-help">Paste a direct image URL or upload from your device (auto-resized)</div>
+                <div id="ofImgUploadStatus" style="font-size:11px;color:var(--orange);margin-top:3px;display:none;">Uploading...</div>
+                <img id="ofImgPreview" src="" alt="Preview" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid var(--card-border);margin-top:8px;display:none;">
             </div>
             <div class="form-group"><label>Preview URL</label><input type="text" id="ofPreviewUrl"><div class="form-help">Landing page preview link for affiliates</div></div>
             <div style="margin-top:18px;padding-top:16px;border-top:2px solid #e2e8f0;">
@@ -3318,8 +3325,49 @@ function calcOfferProfit() {
 function previewOfferImage() {
     var url = document.getElementById('ofThumbnail').value.trim();
     var img = document.getElementById('ofImgPreview');
-    if (url) { img.src = url; img.classList.add('visible'); img.onerror = function() { img.classList.remove('visible'); }; }
-    else { img.classList.remove('visible'); }
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { img.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+}
+
+function uploadOfferImage(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var statusEl = document.getElementById('ofImgUploadStatus');
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--orange)';
+    statusEl.textContent = 'Processing image...';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var originalSrc = e.target.result;
+        var image = new Image();
+        image.onload = function() {
+            var MAX = 480;
+            var w = image.width, h = image.height;
+            if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(image, 0, 0, w, h);
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            document.getElementById('ofThumbnail').value = dataUrl;
+            var prev = document.getElementById('ofImgPreview');
+            prev.src = dataUrl;
+            prev.style.display = 'block';
+            statusEl.style.color = 'var(--green)';
+            statusEl.textContent = 'Image ready (' + w + 'x' + h + 'px)';
+            setTimeout(function() { statusEl.style.display = 'none'; }, 2500);
+        };
+        image.src = originalSrc;
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
 }
 
 /* ═══ RICH TEXT EDITOR ═══ */
@@ -3602,7 +3650,7 @@ function openOfferModal(id) {
     document.getElementById('ofStatus').value = 'active';
     document.getElementById('ofVisibility').value = 'approval';
     document.getElementById('ofThumbnail').value = '';
-    document.getElementById('ofImgPreview').classList.remove('visible');
+    document.getElementById('ofImgPreview').style.display = 'none';
     document.getElementById('ofPreviewUrl').value = '';
     document.getElementById('ofPayoutModel').value = 'cpa';
     document.getElementById('ofRevenue').value = '0';
