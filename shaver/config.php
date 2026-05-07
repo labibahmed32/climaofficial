@@ -7,9 +7,9 @@
 // DATABASE CREDENTIALS (Update these for your hosting)
 // ================================================================
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'jojofwjv_shaver_db_clima');
-define('DB_USER', 'jojofwjv_shaver_db_clima');
-define('DB_PASS', 'wT5Nw6CXmSf29pZ9FzPy');
+define('DB_NAME', 'u284953560_shaver');
+define('DB_USER', 'u284953560_shaver');
+define('DB_PASS', 'Labib@5544');
 
 // ================================================================
 // TIMEZONE
