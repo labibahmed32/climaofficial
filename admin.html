@@ -2205,6 +2205,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <!-- Admin action buttons -->
             <div id="invDetailActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;"></div>
         </div>
+        <!-- Add Line Item section (unpaid only) -->
+        <div style="padding:0 24px 12px;" id="invAddLineSection" style="display:none;">
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">
+                <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-plus-circle"></i> Add Line Item</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="flex:2;min-width:160px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Offer</label><select id="invAddOffer" onchange="onInvAddOfferChange()" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">-- Select Offer --</option></select></div>
+                    <div style="width:80px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Qty</label><input type="number" id="invAddQty" min="1" value="1" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;" onchange="onInvAddOfferChange()"></div>
+                    <div style="width:90px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Unit Price $</label><input type="number" id="invAddUnit" min="0" step="0.01" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;" placeholder="0.00"></div>
+                    <div style="width:90px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Amount</label><div id="invAddAmt" style="padding:7px 8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--primary);">$0.00</div></div>
+                    <button class="btn-primary-sm" onclick="addInvLineItem()" style="background:#166534;"><i class="fas fa-plus"></i> Add</button>
+                </div>
+            </div>
+        </div>
         <!-- Notes + Fees editable section -->
         <div style="padding:16px 24px;" id="invDetailEditSection">
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
@@ -5341,7 +5354,89 @@ function openInvoiceDetail(invId) {
     document.getElementById('invDetailNotes').value = inv.notes || '';
     document.getElementById('invDetailFees').value = pmt.transactionFees || 0;
 
+    /* Add Line Item section — show for unpaid only */
+    var addSec = document.getElementById('invAddLineSection');
+    if (addSec) {
+        addSec.style.display = invEditable ? '' : 'none';
+        if (invEditable) {
+            var ofSel = document.getElementById('invAddOffer');
+            ofSel.innerHTML = '<option value="">-- Select Offer --</option>';
+            (allOffers || []).forEach(function(o) {
+                ofSel.innerHTML += '<option value="' + o._id + '" data-payout="' + (o.payout||0) + '">' + escHtml(o.name||o._id) + '</option>';
+            });
+            document.getElementById('invAddQty').value = 1;
+            document.getElementById('invAddUnit').value = '';
+            document.getElementById('invAddAmt').textContent = '$0.00';
+        }
+    }
+
     openModal('invoiceDetailModal');
+}
+
+function onInvAddOfferChange() {
+    var ofSel = document.getElementById('invAddOffer');
+    var unitEl = document.getElementById('invAddUnit');
+    var qtyEl  = document.getElementById('invAddQty');
+    var amtEl  = document.getElementById('invAddAmt');
+    if (!ofSel.value) { amtEl.textContent = '$0.00'; return; }
+    var opt = ofSel.options[ofSel.selectedIndex];
+    var payout = parseFloat(opt.getAttribute('data-payout')) || 0;
+    if (!unitEl.value) unitEl.value = payout.toFixed(2);
+    var unit = parseFloat(unitEl.value) || 0;
+    var qty  = parseInt(qtyEl.value) || 1;
+    amtEl.textContent = '$' + (unit * qty).toFixed(2);
+}
+
+function addInvLineItem() {
+    var ofSel  = document.getElementById('invAddOffer');
+    var unitEl = document.getElementById('invAddUnit');
+    var qtyEl  = document.getElementById('invAddQty');
+    var offerId = ofSel.value;
+    if (!offerId) { toast('Select an offer', 'error'); return; }
+    var offerName = ofSel.options[ofSel.selectedIndex].text;
+    var qty  = parseInt(qtyEl.value) || 1;
+    var unit = parseFloat(unitEl.value) || 0;
+    var amt  = parseFloat((unit * qty).toFixed(2));
+
+    /* Get next index */
+    var rows = document.querySelectorAll('#invDetailItems tr');
+    var nextIdx = rows.length;
+
+    /* Build new row */
+    var tbody = document.getElementById('invDetailItems');
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-idx', 'new_' + nextIdx);
+    tr.setAttribute('id', 'invDetailRow_new_' + nextIdx);
+    tr.style.borderBottom = '1px solid #f0f0f0';
+    tr.innerHTML =
+        '<td style="padding:8px 10px;font-size:11px;color:#888;">' + escHtml(offerId) + '</td>' +
+        '<td style="padding:8px 10px;">' + escHtml(offerName) + ' <span style="font-size:10px;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;">NEW</span></td>' +
+        '<td style="padding:6px 10px;text-align:center;"><input type="number" min="1" value="' + qty + '" data-unit="' + unit + '" data-idx="new_' + nextIdx + '" class="inv-qty-input" onchange="recalcInvDetailRow(this)" style="width:60px;border:1px solid #e2e8f0;border-radius:4px;padding:3px 6px;text-align:center;font-size:12px;"></td>' +
+        '<td style="padding:8px 10px;text-align:right;">$' + unit.toFixed(2) + '</td>' +
+        '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="invDetailAmt_new_' + nextIdx + '">$' + amt.toFixed(2) + '</td>' +
+        '<td style="padding:4px 8px;text-align:center;"><button onclick="removeInvDetailRow(this)" data-idx="new_' + nextIdx + '" style="background:#fef2f2;border:1px solid #fecaca;color:#dc3545;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">&#10005;</button></td>';
+    /* Store new item data on row */
+    tr.setAttribute('data-new-offer', offerId);
+    tr.setAttribute('data-new-name', offerName);
+    tr.setAttribute('data-new-unit', unit);
+    tbody.appendChild(tr);
+
+    /* Recalc total */
+    var total = 0;
+    document.querySelectorAll('#invDetailItems tr').forEach(function(r) {
+        if (r.style.display === 'none') return;
+        var a = r.querySelector('td[id^="invDetailAmt_"]');
+        if (a) total += parseMoney(a.textContent);
+    });
+    var tc = document.getElementById('invDetailTotalCell');
+    if (tc) tc.textContent = fmtMoney(total);
+
+    /* Reset add form */
+    document.getElementById('invAddOffer').value = '';
+    document.getElementById('invAddQty').value = 1;
+    document.getElementById('invAddUnit').value = '';
+    document.getElementById('invAddAmt').textContent = '$0.00';
+    toast('Line item added — click Save Changes to confirm');
 }
 
 function recalcInvDetailRow(input) {
@@ -5394,14 +5489,27 @@ function saveInvoiceDetailEdit() {
     var newTotal = 0;
     document.querySelectorAll('#invDetailItems tr').forEach(function(row) {
         if (row.style.display === 'none') return;
-        var idx = parseInt(row.getAttribute('data-idx'));
+        var rawIdx = row.getAttribute('data-idx');
+        var qtyInput = row.querySelector('.inv-qty-input');
+        var qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
+        if (qty <= 0) return;
+
+        /* Newly added row */
+        if (rawIdx && rawIdx.indexOf('new_') === 0) {
+            var newOfferId = row.getAttribute('data-new-offer');
+            var newName    = row.getAttribute('data-new-name');
+            var newUnit    = parseFloat(row.getAttribute('data-new-unit')) || 0;
+            var newAmt     = parseFloat((newUnit * qty).toFixed(2));
+            newItems.push({ offerId: newOfferId, offerName: newName, quantity: qty, unitPrice: newUnit, amount: newAmt, conversionIds: [] });
+            return;
+        }
+
+        /* Existing row */
+        var idx = parseInt(rawIdx);
         if (isNaN(idx) || !inv.items || !inv.items[idx]) return;
         var orig = inv.items[idx];
-        var qtyInput = row.querySelector('.inv-qty-input');
-        var qty = qtyInput ? (parseInt(qtyInput.value) || 0) : (orig.quantity || 0);
         var unit = parseFloat(orig.unitPrice || 0);
         var amt = parseFloat((unit * qty).toFixed(2));
-        if (qty <= 0) return;
         newItems.push({
             offerId: orig.offerId,
             offerName: orig.offerName || orig.offerId,
