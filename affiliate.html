@@ -2950,7 +2950,12 @@ function loadClicks() {
 }
 /* ── Click Report Column Customization ── */
 var CK_COLS = [
-    { key:'date',     label:'Date',     def:true,  align:'left',   render:function(c){ return '<span style="color:var(--tm);white-space:nowrap;">'+fmtDT(c.timestamp)+'</span>'; } },
+    { key:'date',     label:'Date',     def:true,  align:'left',   render:function(c){
+        var d = new Date(c.timestamp || 0);
+        var dd = d.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit', year:'numeric' });
+        var tt = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+        return '<div style="font-weight:600;color:var(--td);font-size:12px;">'+dd+'</div><div style="font-size:11px;color:var(--tl);">'+tt+'</div>';
+    } },
     { key:'offer',    label:'Offer',    def:true,  align:'left',   render:function(c){ return '<span style="color:#0A6C80;font-weight:600;">'+esc(offerName(c.offerId))+'</span>'; } },
     { key:'conv',     label:'Conv',     def:true,  align:'center', render:function(c,cv){ return cv ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;font-weight:700;"><i class="fas fa-check-circle" style="font-size:11px;"></i>Yes</span>' : (c.converted ? '<span style="color:#16a34a;font-weight:600;">Yes</span>' : _dash()); } },
     { key:'payout',   label:'Payout',   def:true,  align:'right',  render:function(c,cv){ return cv ? '<span style="color:#16a34a;font-weight:700;">'+fmtM(cv.payout||0)+'</span>' : _dash(); } },
@@ -2972,7 +2977,7 @@ var CK_COLS = [
     { key:'referrer', label:'Referrer', def:false, align:'left',   render:function(c){ return c.referer ? '<span style="font-size:11px;color:var(--tm);max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+esc(c.referer)+'</span>' : _dash(); } }
 ];
 function _dash(){ return '<span style="color:#cbd5e1;">—</span>'; }
-function _subTd(v){ return v ? '<span style="font-family:monospace;font-size:11px;max-width:180px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+esc(v)+'</span>' : _dash(); }
+function _subTd(v){ return v ? '<span style="font-family:monospace;font-size:11.5px;color:#1e293b;">'+esc(v)+'</span>' : _dash(); }
 
 function _getEnabledClickCols() {
     var saved = null;
@@ -3017,9 +3022,9 @@ function renderClicks() {
         var cv = convByClick[c._id];
         h += '<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .12s;" onclick="openClickDetail(\''+c._id+'\')" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">';
         cols.forEach(function(col) {
-            h += '<td style="padding:11px 12px;text-align:'+col.align+';">' + col.render(c, cv) + '</td>';
+            h += '<td style="padding:11px 14px;text-align:'+col.align+';white-space:nowrap;">' + col.render(c, cv) + '</td>';
         });
-        h += '<td style="padding:11px 12px;text-align:center;color:#cbd5e1;"><i class="fas fa-ellipsis-v" style="font-size:13px;"></i></td></tr>';
+        h += '<td style="padding:11px 12px;text-align:center;color:#cbd5e1;white-space:nowrap;"><i class="fas fa-ellipsis-v" style="font-size:13px;"></i></td></tr>';
     });
     document.getElementById('ckTb').innerHTML = h || '<tr><td colspan="'+(cols.length+1)+'" style="padding:50px;text-align:center;color:var(--tl);"><i class="fas fa-mouse-pointer" style="font-size:36px;margin-bottom:12px;display:block;opacity:.2;"></i><div style="font-size:14px;font-weight:600;">No clicks for this period</div></td></tr>';
     renderPag('ckPag', 'ckPgInfo', fil.length, ckPage, PAGE_SIZE, 'goCkPg');
