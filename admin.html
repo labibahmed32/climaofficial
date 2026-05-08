@@ -1977,6 +1977,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <div class="profit-box"><div class="val" id="ofProfitVal">$0.00</div><div class="lbl">Profit per Conversion</div></div>
                 <div class="profit-box"><div class="val" id="ofMarginVal">0%</div><div class="lbl">Margin</div></div>
             </div>
+            <div class="form-group" style="margin-top:14px;padding:12px 14px;background:#fef9e7;border:1px solid #fcd34d;border-radius:8px;">
+                <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600;color:#92400e;margin:0;">
+                    <input type="checkbox" id="ofLockPayout" checked style="width:16px;height:16px;cursor:pointer;accent-color:#0A6C80;">
+                    <i class="fas fa-lock" style="font-size:12px;"></i>
+                    <span>Lock Payout — ignore postback payout, always pay affiliate the offer rate</span>
+                </label>
+                <div class="form-help" style="margin-top:6px;color:#78350f;">When ON: affiliate always gets the payout above, even if advertiser sends a different value via postback. Turn OFF only for dynamic-payout networks (BuyGoods/Digistore).</div>
+            </div>
 
             <!-- Upsell Pricing Section -->
             <div style="margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
@@ -3655,6 +3663,7 @@ function openOfferModal(id) {
     document.getElementById('ofImgPreview').style.display = 'none';
     document.getElementById('ofPreviewUrl').value = '';
     document.getElementById('ofPayoutModel').value = 'cpa';
+    document.getElementById('ofLockPayout').checked = true;
     document.getElementById('ofRevenue').value = '0';
     document.getElementById('ofPayout').value = '0';
     document.getElementById('ofCurrency').value = 'USD';
@@ -3718,6 +3727,7 @@ function openOfferModal(id) {
             document.getElementById('ofPayoutModel').value = o.payoutModel || 'cpa';
             document.getElementById('ofRevenue').value = o.revenue || '0';
             document.getElementById('ofPayout').value = o.payout || '0';
+            document.getElementById('ofLockPayout').checked = o.lockPayout !== false;
             document.getElementById('ofCurrency').value = o.currency || 'USD';
             document.getElementById('ofDailyCap').value = o.dailyCap || '0';
             document.getElementById('ofHourlyCap').value = o.hourlyCap || '0';
@@ -3786,6 +3796,7 @@ function saveOffer() {
         finalUrl: finalUrl,
         payoutModel: document.getElementById('ofPayoutModel').value,
         payout: parseFloat(document.getElementById('ofPayout').value) || 0,
+        lockPayout: document.getElementById('ofLockPayout').checked,
         revenue: parseFloat(document.getElementById('ofRevenue').value) || 0,
         currency: document.getElementById('ofCurrency').value,
         deviceTargeting: document.getElementById('ofDevice').value,
@@ -3888,6 +3899,7 @@ function wzCollectData() {
         finalUrl: document.getElementById('ofFinalUrl').value.trim(),
         payoutModel: document.getElementById('ofPayoutModel').value,
         payout: parseFloat(document.getElementById('ofPayout').value) || 0,
+        lockPayout: document.getElementById('ofLockPayout').checked,
         revenue: parseFloat(document.getElementById('ofRevenue').value) || 0,
         currency: document.getElementById('ofCurrency').value,
         deviceTargeting: document.getElementById('ofDevice').value,

@@ -133,13 +133,26 @@ $offer = $offerId ? fbGet('offers/' . $offerId) : null;
 // Get assignment for cap checking and payout override
 $assignment = ($offerId && $affiliateId) ? fbGet('offerAssignments/' . $offerId . '/' . $affiliateId) : null;
 
-// Determine payout/revenue
-$finalPayout = $customPayout ? floatval($customPayout) : 0;
-if (!$finalPayout && $assignment && !empty($assignment['payoutOverride'])) {
-    $finalPayout = floatval($assignment['payoutOverride']);
-}
-if (!$finalPayout && $offer) {
-    $finalPayout = floatval($offer['payout'] ?? 0);
+// Determine payout
+// Priority: lockPayout offer rate > assignment override > postback payout > offer default
+$lockPayout = $offer && !empty($offer['lockPayout']);
+$finalPayout = 0;
+if ($lockPayout) {
+    // Lock mode: ignore postback payout, use assignment override or offer default
+    if ($assignment && !empty($assignment['payoutOverride'])) {
+        $finalPayout = floatval($assignment['payoutOverride']);
+    } else if ($offer) {
+        $finalPayout = floatval($offer['payout'] ?? 0);
+    }
+} else {
+    // Dynamic mode: trust postback payout, fall back to override/offer
+    $finalPayout = $customPayout ? floatval($customPayout) : 0;
+    if (!$finalPayout && $assignment && !empty($assignment['payoutOverride'])) {
+        $finalPayout = floatval($assignment['payoutOverride']);
+    }
+    if (!$finalPayout && $offer) {
+        $finalPayout = floatval($offer['payout'] ?? 0);
+    }
 }
 
 $finalRevenue = $customRevenue ? floatval($customRevenue) : 0;
