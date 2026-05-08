@@ -13,6 +13,9 @@ $sub2    = $_GET['sub2'] ?? '';
 $sub3    = $_GET['sub3'] ?? '';
 $sub4    = $_GET['sub4'] ?? '';
 $sub5    = $_GET['sub5'] ?? '';
+$fbclid  = $_GET['fbclid'] ?? '';
+$gclid   = $_GET['gclid']  ?? '';
+$ttclid  = $_GET['ttclid'] ?? '';
 $isTest  = isset($_GET['test']) && $_GET['test'] == '1';
 
 if (!$offerId || !$affId) {
@@ -56,6 +59,9 @@ $destUrl = str_replace('{sub2}',     urlencode($sub2),     $destUrl);
 $destUrl = str_replace('{sub3}',     urlencode($sub3),     $destUrl);
 $destUrl = str_replace('{sub4}',     urlencode($sub4),     $destUrl);
 $destUrl = str_replace('{sub5}',     urlencode($sub5),     $destUrl);
+$destUrl = str_replace('{fbclid}',   urlencode($fbclid),   $destUrl);
+$destUrl = str_replace('{gclid}',    urlencode($gclid),    $destUrl);
+$destUrl = str_replace('{ttclid}',   urlencode($ttclid),   $destUrl);
 
 if (!$destUrl) { http_response_code(500); die('Offer has no destination URL.'); }
 
@@ -75,6 +81,9 @@ $clickData = [
     'sub3'        => $sub3,
     'sub4'        => $sub4,
     'sub5'        => $sub5,
+    'fbclid'      => $fbclid,
+    'gclid'       => $gclid,
+    'ttclid'      => $ttclid,
     'country'     => '',
     'city'        => '',
     'device'      => '',
