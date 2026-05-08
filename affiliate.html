@@ -825,11 +825,90 @@ body.impersonating .impersonate-banner{display:block;}
                     <button onclick="setAffPreset('all','ck');renderClicks()" class="f-preset-btn">All Time</button>
                     <span class="pg-info" id="ckSum"></span>
                 </div>
-                <div class="tbl-wrap">
-                    <div class="tbl-scroll">
-                        <table class="dtbl"><thead><tr><th>Click ID</th><th>Offer</th><th>IP</th><th>Country</th><th>Device</th><th>Browser</th><th>Sub1</th><th>Sub2</th><th>Time</th><th>Conv?</th></tr></thead><tbody id="ckTb"></tbody></table>
+                <!-- Detailed Report Table -->
+                <div id="ckListView">
+                    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+                        <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;font-weight:700;color:var(--td);">Detailed Report</span>
+                            <input type="text" id="ckSearch" oninput="renderClicks()" placeholder="🔍 Search..." style="border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:12px;outline:none;">
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:1900px;">
+                                <thead>
+                                    <tr style="background:#f8fafc;border-bottom:1px solid var(--border);">
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Date</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Offer</th>
+                                        <th style="padding:10px 12px;text-align:center;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Conv</th>
+                                        <th style="padding:10px 12px;text-align:right;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Payout</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Sub1</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Sub2</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Sub3</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Sub4</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Sub5</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">IP</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Click ID</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Browser</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">OS</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Device</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">City</th>
+                                        <th style="padding:10px 12px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Country</th>
+                                        <th style="padding:10px 12px;width:40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ckTb"></tbody>
+                            </table>
+                        </div>
+                        <div class="pag-bar"><span class="pg-info" id="ckPgInfo"></span><div class="pag-ctrls" id="ckPag"></div></div>
                     </div>
-                    <div class="pag-bar"><span class="pg-info" id="ckPgInfo"></span><div class="pag-ctrls" id="ckPag"></div></div>
+                </div>
+
+                <!-- Click Detail View -->
+                <div id="ckDetailView" style="display:none;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:#64748b;">
+                        <button onclick="closeClickDetail()" style="background:#fff;border:1px solid var(--border);border-radius:7px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--tl);display:flex;align-items:center;gap:6px;"><i class="fas fa-arrow-left"></i> Back</button>
+                        <span>Reporting</span>
+                        <i class="fas fa-chevron-right" style="font-size:9px;color:#cbd5e1;"></i>
+                        <span>Click</span>
+                        <i class="fas fa-chevron-right" style="font-size:9px;color:#cbd5e1;"></i>
+                        <span id="ckDetailBreadcrumb" style="color:#0A6C80;"></span>
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:18px;" id="ckDetailTitle"></div>
+
+                    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:14px;">
+                        <!-- General Card -->
+                        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+                            <div style="padding:11px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-chevron-down" style="font-size:11px;color:#64748b;"></i>
+                                <span style="font-size:13px;font-weight:700;color:#1e293b;">General</span>
+                            </div>
+                            <div id="ckDetailGeneral" style="padding:18px 22px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px 32px;"></div>
+                        </div>
+                        <!-- Transaction Details Card -->
+                        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+                            <div style="padding:11px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-chevron-down" style="font-size:11px;color:#64748b;"></i>
+                                <span style="font-size:13px;font-weight:700;color:#1e293b;">Transaction Details</span>
+                            </div>
+                            <div id="ckDetailTxn" style="padding:18px 22px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px 32px;"></div>
+                        </div>
+                    </div>
+                    <!-- Parameters Card -->
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+                        <div style="padding:11px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-chevron-down" style="font-size:11px;color:#64748b;"></i>
+                            <span style="font-size:13px;font-weight:700;color:#1e293b;">Parameters</span>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                                    <th style="padding:11px 18px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;width:200px;">Key</th>
+                                    <th style="padding:11px 18px;text-align:left;font-weight:700;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Value</th>
+                                </tr></thead>
+                                <tbody id="ckDetailParams"></tbody>
+                            </table>
+                            <div id="ckDetailParamsCount" style="padding:10px 18px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:right;font-weight:600;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2720,7 +2799,12 @@ function switchAffRpt(type) {
     if (panel) panel.classList.add('active');
     if (type === 'offer')  { setAffPreset('all','ofp'); renderAffOfferPerf(); }
     if (type === 'conv')   { setAffPreset('all','cv'); renderAffConv(); }
-    if (type === 'clicks') { setAffPreset('all','ck'); renderClicks(); }
+    if (type === 'clicks') {
+        setAffPreset('all','ck');
+        var lv = document.getElementById('ckListView'); if (lv) lv.style.display = '';
+        var dv = document.getElementById('ckDetailView'); if (dv) dv.style.display = 'none';
+        renderClicks();
+    }
 }
 
 function setAffPreset(preset, pfx) {
@@ -2844,9 +2928,10 @@ function goAffCvPg(p) { cvPage = p; renderAffConv(); }
 
 /* ══════════════════════════════════════════ */
 function loadClicks() {
-    Promise.all([fbGet('clicks'), fbGet('offers')]).then(function(r) {
+    Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('conversions')]).then(function(r) {
         allOffers = objToArr(r[1]);
         myClicks = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid; });
+        myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         var curOff = document.getElementById('ckOfferF').value;
         var oh = '<option value="">All Offers</option>';
         allOffers.forEach(function(o) { oh += '<option value="' + o._id + '"' + (curOff === o._id ? ' selected' : '') + '>' + esc(o.name) + '</option>'; });
@@ -2857,28 +2942,127 @@ function loadClicks() {
 }
 function renderClicks() {
     var fD = document.getElementById('ckFrom').value, tD = document.getElementById('ckTo').value, oF = document.getElementById('ckOfferF').value;
+    var srch = ((document.getElementById('ckSearch')||{}).value||'').toLowerCase().trim();
     var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
     var fil = myClicks.filter(function(c) {
         if (c.timestamp < fTs || c.timestamp > tTs) return false;
         if (oF && c.offerId !== oF) return false;
+        if (srch) {
+            var hay = ((c._id||'') + ' ' + (c.sub1||'') + ' ' + (c.sub2||'') + ' ' + (c.sub3||'') + ' ' + (c.sub4||'') + ' ' + (c.sub5||'') + ' ' + (c.ip||'') + ' ' + (c.city||'') + ' ' + (c.countryName||c.country||'')).toLowerCase();
+            if (hay.indexOf(srch) === -1) return false;
+        }
         return true;
     }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+
+    /* Build conversion lookup: clickId -> conversion */
+    var convByClick = {};
+    (myConversions || []).forEach(function(cv) { if (cv.clickId) convByClick[cv.clickId] = cv; });
+
     document.getElementById('ckSum').textContent = fil.length + ' clicks';
     var st = (ckPage - 1) * PAGE_SIZE, pg = fil.slice(st, st + PAGE_SIZE);
     var h = '';
+    var dash = '<span style="color:#cbd5e1;">—</span>';
     pg.forEach(function(c) {
-        h += '<tr><td style="font-family:monospace;font-size:10.5px">' + esc(c._id) + '</td>' +
-            '<td>' + esc(offerName(c.offerId)) + '</td>' +
-            '<td style="font-family:monospace;font-size:10.5px">' + esc(c.ip || '-') + '</td>' +
-            '<td>' + esc(c.countryName || c.country || '-') + '</td><td>' + esc(c.device || '-') + '</td><td>' + esc(c.browser || '-') + '</td>' +
-            '<td>' + esc(c.sub1 || '-') + '</td><td>' + esc(c.sub2 || '-') + '</td>' +
-            '<td>' + fmtDT(c.timestamp) + '</td>' +
-            '<td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td></tr>';
+        var cv = convByClick[c._id];
+        var convCell = cv
+            ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;font-weight:700;"><i class="fas fa-check-circle" style="font-size:11px;"></i>Yes</span>'
+            : (c.converted ? '<span style="color:#16a34a;font-weight:600;">Yes</span>' : dash);
+        var payCell = cv ? '<span style="color:#16a34a;font-weight:700;">' + fmtM(cv.payout||0) + '</span>' : dash;
+        var sub = function(v){ return v ? esc(v) : dash; };
+        h += '<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .12s;" onclick="openClickDetail(\'' + c._id + '\')" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">' +
+            '<td style="padding:11px 12px;color:var(--tm);white-space:nowrap;">' + fmtDT(c.timestamp) + '</td>' +
+            '<td style="padding:11px 12px;color:#0A6C80;font-weight:600;">' + esc(offerName(c.offerId)) + '</td>' +
+            '<td style="padding:11px 12px;text-align:center;">' + convCell + '</td>' +
+            '<td style="padding:11px 12px;text-align:right;">' + payCell + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sub(c.sub1) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sub(c.sub2) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sub(c.sub3) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sub(c.sub4) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + sub(c.sub5) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:11px;color:var(--tm);">' + sub(c.ip) + '</td>' +
+            '<td style="padding:11px 12px;font-family:monospace;font-size:10.5px;color:#0A6C80;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(c._id) + '</td>' +
+            '<td style="padding:11px 12px;color:var(--td);">' + sub(c.browser) + '</td>' +
+            '<td style="padding:11px 12px;color:var(--td);">' + sub(c.os ? c.os + (c.osVer ? ' ' + c.osVer : '') : '') + '</td>' +
+            '<td style="padding:11px 12px;color:var(--td);text-transform:capitalize;">' + sub(c.device) + '</td>' +
+            '<td style="padding:11px 12px;color:var(--td);">' + sub(c.city) + '</td>' +
+            '<td style="padding:11px 12px;color:var(--td);">' + sub(c.countryName || c.country) + '</td>' +
+            '<td style="padding:11px 12px;text-align:center;color:#cbd5e1;"><i class="fas fa-ellipsis-v" style="font-size:13px;"></i></td>' +
+            '</tr>';
     });
-    document.getElementById('ckTb').innerHTML = h || '<tr><td colspan="10" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks</td></tr>';
+    document.getElementById('ckTb').innerHTML = h || '<tr><td colspan="17" style="padding:50px;text-align:center;color:var(--tl);"><i class="fas fa-mouse-pointer" style="font-size:36px;margin-bottom:12px;display:block;opacity:.2;"></i><div style="font-size:14px;font-weight:600;">No clicks for this period</div></td></tr>';
     renderPag('ckPag', 'ckPgInfo', fil.length, ckPage, PAGE_SIZE, 'goCkPg');
 }
 function goCkPg(p) { ckPage = p; renderClicks(); }
+
+function openClickDetail(clickId) {
+    var c = (myClicks || []).filter(function(x) { return x._id === clickId; })[0];
+    if (!c) { toast('Click not found'); return; }
+    var cv = (myConversions || []).filter(function(x) { return x.clickId === clickId; })[0];
+
+    document.getElementById('ckListView').style.display = 'none';
+    document.getElementById('ckDetailView').style.display = '';
+    var shortId = clickId.length > 8 ? clickId.substr(0,4) + '...' + clickId.substr(-4) : clickId;
+    document.getElementById('ckDetailBreadcrumb').textContent = shortId;
+    document.getElementById('ckDetailTitle').textContent = 'Click Details (' + clickId + ')';
+
+    function detCell(label, val) {
+        return '<div>' +
+            '<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;">' + label + '</div>' +
+            '<div style="font-size:13px;font-weight:600;color:#1e293b;word-break:break-word;">' + (val || '-') + '</div>' +
+        '</div>';
+    }
+
+    /* General */
+    var convStatus = cv
+        ? '<span style="display:inline-flex;align-items:center;gap:5px;color:#16a34a;font-weight:700;"><i class="fas fa-check-circle" style="font-size:11px;"></i>Yes</span>'
+        : (c.converted ? '<span style="color:#16a34a;font-weight:600;">Yes</span>' : '<span style="color:var(--tl);">No</span>');
+    document.getElementById('ckDetailGeneral').innerHTML =
+        detCell('Offer', '<span style="color:#0A6C80;">' + esc(offerName(c.offerId)) + '</span>') +
+        detCell('Click ID', '<span style="font-family:monospace;font-size:11.5px;background:#f1f5f9;padding:2px 7px;border-radius:4px;">' + esc(c._id) + '</span>') +
+        detCell('Converted', convStatus) +
+        detCell('Payout', cv ? '<span style="color:#16a34a;font-weight:700;">' + fmtM(cv.payout||0) + '</span>' : '<span style="color:var(--tl);">-</span>') +
+        detCell('Transaction ID', cv && cv.txnId ? '<span style="font-family:monospace;font-size:11.5px;">' + esc(cv.txnId) + '</span>' : '-') +
+        detCell('Test Click', c.test ? 'Yes' : 'No');
+
+    /* Transaction Details */
+    document.getElementById('ckDetailTxn').innerHTML =
+        detCell('Click Timestamp', fmtDT(c.timestamp)) +
+        detCell('IP Address', '<span style="font-family:monospace;">' + esc(c.ip || '-') + '</span>') +
+        detCell('ISP', esc(c.isp || c.org || '-')) +
+        detCell('Browser', esc(c.browser ? c.browser + (c.browserVer ? ' ' + c.browserVer : '') : '-')) +
+        detCell('Device', esc((c.device || '') + (c.os ? ' (' + c.os + (c.osVer ? ' ' + c.osVer : '') + ')' : ''))) +
+        detCell('Location', esc((c.city || '-') + (c.region ? ', ' + c.region : '') + (c.countryName ? ', ' + c.countryName : ''))) +
+        detCell('Referrer', c.referer ? '<a href="' + esc(c.referer) + '" target="_blank" style="color:#0A6C80;text-decoration:none;word-break:break-all;">' + esc(c.referer) + '</a>' : '-') +
+        detCell('User Agent', '<span style="font-size:11px;color:var(--tm);word-break:break-all;">' + esc(c.userAgent || '-') + '</span>');
+
+    /* Parameters */
+    var params = [
+        ['fbclid', c.fbclid],
+        ['gclid',  c.gclid],
+        ['ttclid', c.ttclid],
+        ['sub1',   c.sub1],
+        ['sub2',   c.sub2],
+        ['sub3',   c.sub3],
+        ['sub4',   c.sub4],
+        ['sub5',   c.sub5]
+    ].filter(function(p) { return p[1]; });
+    var ph = '';
+    params.forEach(function(p) {
+        ph += '<tr style="border-bottom:1px solid #f1f5f9;">' +
+            '<td style="padding:11px 18px;font-family:monospace;font-size:12px;color:#0A6C80;font-weight:700;">' + esc(p[0]) + '</td>' +
+            '<td style="padding:11px 18px;font-family:monospace;font-size:12px;color:#1e293b;word-break:break-all;">' + esc(p[1]) + '</td>' +
+            '</tr>';
+    });
+    document.getElementById('ckDetailParams').innerHTML = ph || '<tr><td colspan="2" style="padding:30px;text-align:center;color:var(--tl);font-size:13px;">No parameters captured for this click</td></tr>';
+    document.getElementById('ckDetailParamsCount').textContent = params.length + ' Total';
+
+    window.scrollTo(0, 0);
+}
+
+function closeClickDetail() {
+    document.getElementById('ckDetailView').style.display = 'none';
+    document.getElementById('ckListView').style.display = '';
+}
 
 /* ── Analytics (Conversions + Earnings) ── */
 function loadAnalytics() {
