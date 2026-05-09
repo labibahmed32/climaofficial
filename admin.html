@@ -3168,7 +3168,7 @@ function renderDashPanels() {
     var todayLabel = new Date(todayStr + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone:'UTC', month:'short', day:'numeric' });
 
     var convs      = allConversions.filter(function(c) { return c.status === 'approved' && c.createdAt >= todayStart && c.createdAt <= todayEnd; });
-    var todayClicks = allClicks.filter(function(c) { return (c.createdAt||0) >= todayStart && (c.createdAt||0) <= todayEnd; });
+    var todayClicks = allClicks.filter(function(c) { var t = c.timestamp || c.createdAt || 0; return t >= todayStart && t <= todayEnd; });
 
     /* Top Offers */
     var ofMap = {};
