@@ -44,6 +44,17 @@ function showError(msg) {
     document.getElementById('msg').textContent = msg;
 }
 
+function showDuplicateBlock() {
+    document.getElementById('spinner').style.display = 'none';
+    var box = document.querySelector('.box');
+    box.innerHTML =
+        '<div style="font-size:54px;color:#f59e0b;margin-bottom:14px;">&#9888;</div>' +
+        '<div style="font-size:20px;font-weight:700;color:#111827;margin-bottom:8px;">Link Already Used</div>' +
+        '<div style="font-size:14px;color:#64748b;line-height:1.55;max-width:420px;margin:0 auto;">' +
+            'This offer has already been clicked from your network. Each user can only access this offer once.' +
+        '</div>';
+}
+
 function showGeoBlock(allowedList, visitorCountry) {
     document.getElementById('spinner').style.display = 'none';
     var box = document.querySelector('.box');
@@ -588,7 +599,35 @@ function processClick() {
             geoCheckPromise = Promise.resolve(true);
         }
 
-        geoCheckPromise.then(function(passed) { if (!passed) return; _processClick(); });
+        geoCheckPromise.then(function(passed) {
+            if (!passed) return;
+            /* ── DUPLICATE IP CHECK ──
+               Block same IP from clicking same offer+affiliate combo twice. */
+            var ipForCheck = geo.ip || '';
+            if (!ipForCheck || ipForCheck === 'unknown') { _processClick(); return; }
+            var ipKey = ipForCheck.replace(/[.:]/g, '_');
+            fbGet('clickDedup/' + offerId + '/' + affId + '/' + ipKey).then(function(existing) {
+                if (existing) {
+                    /* Duplicate — log a blocked click record so admin can see it */
+                    var dupId = genClickId();
+                    var dupData = {
+                        offerId: offerId, affiliateId: affId, affId: originalAffId,
+                        timestamp: Date.now(), converted: false, test: isTest || false,
+                        ip: geo.ip || '', country: geo.country || '', countryName: geo.countryName || '',
+                        city: geo.city || '', region: geo.region || '',
+                        userAgent: ua.userAgent, device: ua.device, browser: ua.browser, os: ua.os,
+                        referer: document.referrer || '', landingUrl: window.location.href,
+                        sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5,
+                        fbclid:fbclid, gclid:gclid, ttclid:ttclid,
+                        blocked: true, blockReason: 'duplicate_ip',
+                        originalClickId: (existing && existing.clickId) || ''
+                    };
+                    fbPut('clicks/' + dupId, dupData);
+                    showDuplicateBlock(); return;
+                }
+                _processClick();
+            }).catch(function() { _processClick(); /* on lookup error, allow */ });
+        });
         return;
 
         function _processClick() {
@@ -674,6 +713,11 @@ function processClick() {
                 fd.append('clickId', clickId);
                 fd.append('ip', geo.ip);
                 navigator.sendBeacon('https://plan1.climaofficial.com/api/fraud-trigger.php', fd);
+            }
+            /* Record dedup index — blocks future same-IP clicks on same offer+aff */
+            if (geo.ip && geo.ip !== 'unknown') {
+                var ipKeyDone = geo.ip.replace(/[.:]/g, '_');
+                fbPut('clickDedup/' + offerId + '/' + affId + '/' + ipKeyDone, { clickId: clickId, ts: Date.now() });
             }
             window.location.replace(redirectUrl);
         }

@@ -50,6 +50,42 @@ foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $k) {
     if (!empty($_SERVER[$k])) { $ip = trim(explode(',', $_SERVER[$k])[0]); break; }
 }
 
+/* ── DUPLICATE IP CHECK ──
+   Same IP + same offer + same affiliate = duplicate. Block, log, no redirect. */
+if ($ip) {
+    $ipKey = preg_replace('/[.:]/', '_', $ip);
+    $dedupUrl = $FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($affId) . '/' . urlencode($ipKey) . '.json';
+    $dedupRes = @file_get_contents($dedupUrl);
+    $existing = $dedupRes ? json_decode($dedupRes, true) : null;
+    if ($existing) {
+        /* Duplicate — record blocked click and show block page */
+        $dupClickId = 'c' . substr(bin2hex(random_bytes(8)), 0, 12);
+        $dupClickData = [
+            'offerId'        => $offerId,
+            'affiliateId'    => $affId,
+            'timestamp'      => (int)(microtime(true) * 1000),
+            'converted'      => false,
+            'test'           => $isTest,
+            'ip'             => $ip,
+            'userAgent'      => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'referer'        => $_SERVER['HTTP_REFERER']    ?? '',
+            'landingUrl'     => (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
+            'sub1'           => $sub1, 'sub2' => $sub2, 'sub3' => $sub3, 'sub4' => $sub4, 'sub5' => $sub5,
+            'fbclid'         => $fbclid, 'gclid' => $gclid, 'ttclid' => $ttclid,
+            'blocked'        => true,
+            'blockReason'    => 'duplicate_ip',
+            'originalClickId'=> is_array($existing) ? ($existing['clickId'] ?? '') : $existing,
+            'source'         => 'php'
+        ];
+        $ctx2 = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode($dupClickData), 'timeout' => 4]]);
+        @file_get_contents($FB . '/clicks/' . $dupClickId . '.json', false, $ctx2);
+        http_response_code(403);
+        header('Content-Type: text/html; charset=UTF-8');
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Already Clicked</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;color:#333;padding:24px;}.box{text-align:center;max-width:440px;padding:40px 30px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.06);}.warn{font-size:54px;color:#f59e0b;margin-bottom:14px;}h2{font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;}p{font-size:14px;color:#64748b;line-height:1.55;margin:0;}</style></head><body><div class="box"><div class="warn">&#9888;</div><h2>Link Already Used</h2><p>This offer has already been clicked from your network. Each user can only access this offer once.</p></div></body></html>';
+        exit;
+    }
+}
+
 /* ── GEO ENFORCEMENT (strict mode) ── */
 $visitorCC = '';
 $visitorCountryName = '';
@@ -185,6 +221,13 @@ $ctx = stream_context_create([
     ]
 ]);
 @file_get_contents($FB . '/clicks/' . $clickId . '.json', false, $ctx);
+
+/* ── Record dedup index so future same-IP clicks are blocked ── */
+if ($ip) {
+    $ipKeyDone = preg_replace('/[.:]/', '_', $ip);
+    $dedupCtx = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode(['clickId' => $clickId, 'ts' => (int)(microtime(true) * 1000)]), 'timeout' => 4]]);
+    @file_get_contents($FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($affId) . '/' . urlencode($ipKeyDone) . '.json', false, $dedupCtx);
+}
 
 /* ── HTTP 302 Redirect ── */
 header('Location: ' . $destUrl, true, 302);
