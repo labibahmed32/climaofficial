@@ -956,6 +956,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         <input type="date" id="clickDateTo" class="form-input-sm" onchange="renderClicks()">
                         <select id="clickOfferFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Offers</option></select>
                         <select id="clickAffFilter" class="form-select-sm" onchange="renderClicks()"><option value="">All Affiliates</option></select>
+                        <select id="clickBlockedFilter" class="form-select-sm" onchange="renderClicks()" title="Filter by status">
+                            <option value="">All Clicks</option>
+                            <option value="valid">Valid only</option>
+                            <option value="blocked">All Blocked</option>
+                            <option value="duplicate_ip">Duplicate IP</option>
+                            <option value="geo">Geo Blocked</option>
+                        </select>
                         <input type="text" id="clickSubIdFilter" class="form-input-sm" placeholder="Sub ID..." style="min-width:100px" onchange="renderClicks()">
                     </div>
                 </div>
@@ -1057,7 +1064,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div>
             <div class="rpt-section"><div class="rpt-section-hd open" onclick="toggleRptSection(this)"><i class="fas fa-chevron-right"></i><h3>Summary</h3></div><div class="rpt-section-body" id="rptOfferSummary"><div class="rpt-metrics"><div class="rpt-metric"><div class="rpt-metric-label">Total Clicks</div><div class="rpt-metric-value blue" id="rptOS_clicks">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">Conversions</div><div class="rpt-metric-value" id="rptOS_convs">0</div></div><div class="rpt-metric"><div class="rpt-metric-label">CVR</div><div class="rpt-metric-value orange" id="rptOS_cvr">0%</div></div><div class="rpt-metric"><div class="rpt-metric-label">Revenue</div><div class="rpt-metric-value green" id="rptOS_rev">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Payout</div><div class="rpt-metric-value green" id="rptOS_pay">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">Profit</div><div class="rpt-metric-value" id="rptOS_profit">$0.00</div></div><div class="rpt-metric"><div class="rpt-metric-label">RPC</div><div class="rpt-metric-value" id="rptOS_rpc">$0.00</div></div></div></div></div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Detailed Report</h3><div class="rpt-search-wrap"><input type="text" class="rpt-search" id="rptOfferSearch" placeholder="Search offer..." oninput="filterRptOfferTable()"><button class="rpt-dots-btn" title="Export CSV" onclick="exportRptOffer()">⋮</button></div></div>
-              <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="10" class="no-data">Run report to load data</td></tr></tbody></table></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>Offer</th><th>Clicks</th><th>Unique</th><th title="Duplicate IP clicks blocked">Duplicates</th><th title="Clicks blocked due to geo restriction">Geo Blocked</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th><th>Profit</th><th>RPC</th><th>EPC</th></tr></thead><tbody id="rptOfferTbody"><tr><td colspan="12" class="no-data">Run report to load data</td></tr></tbody></table></div>
             </div>
           </div>
 
@@ -3168,7 +3175,7 @@ function renderDashPanels() {
     var todayLabel = new Date(todayStr + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone:'UTC', month:'short', day:'numeric' });
 
     var convs      = allConversions.filter(function(c) { return c.status === 'approved' && c.createdAt >= todayStart && c.createdAt <= todayEnd; });
-    var todayClicks = allClicks.filter(function(c) { var t = c.timestamp || c.createdAt || 0; return t >= todayStart && t <= todayEnd; });
+    var todayClicks = allClicks.filter(function(c) { if (c.blocked) return false; var t = c.timestamp || c.createdAt || 0; return t >= todayStart && t <= todayEnd; });
 
     /* Top Offers */
     var ofMap = {};
@@ -4623,23 +4630,55 @@ function loadClicks() {
 function renderClicks() {
     var fromDate = document.getElementById('clickDateFrom').value; var toDate = document.getElementById('clickDateTo').value;
     var offerF = document.getElementById('clickOfferFilter').value; var affF = document.getElementById('clickAffFilter').value;
+    var subF = (document.getElementById('clickSubIdFilter')||{}).value || '';
+    var blkF = (document.getElementById('clickBlockedFilter')||{}).value || '';
     var fromTs = fromDate ? dayStart(new Date(fromDate)) : 0; var toTs = toDate ? dayEnd(new Date(toDate)) : Infinity;
-    var filtered = allClicks.filter(function(c) { if (c.timestamp < fromTs || c.timestamp > toTs) return false; if (offerF && c.offerId !== offerF) return false; if (affF && c.affiliateId !== affF) return false; return true; }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
-    document.getElementById('clickSummary').textContent = filtered.length + ' clicks';
+    subF = subF.toLowerCase().trim();
+    var filtered = allClicks.filter(function(c) {
+        if (c.timestamp < fromTs || c.timestamp > toTs) return false;
+        if (offerF && c.offerId !== offerF) return false;
+        if (affF && c.affiliateId !== affF) return false;
+        if (subF) {
+            var subHay = ((c.sub1||'')+' '+(c.sub2||'')+' '+(c.sub3||'')+' '+(c.sub4||'')+' '+(c.sub5||'')).toLowerCase();
+            if (subHay.indexOf(subF) === -1) return false;
+        }
+        if (blkF === 'valid'        && c.blocked) return false;
+        if (blkF === 'blocked'      && !c.blocked) return false;
+        if (blkF === 'duplicate_ip' && c.blockReason !== 'duplicate_ip') return false;
+        if (blkF === 'geo'          && (!c.blockReason || c.blockReason.indexOf('geo_') !== 0)) return false;
+        return true;
+    }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+    /* Summary breakdown */
+    var validCount = filtered.filter(function(c){ return !c.blocked; }).length;
+    var dupCount   = filtered.filter(function(c){ return c.blockReason === 'duplicate_ip'; }).length;
+    var geoCount   = filtered.filter(function(c){ return c.blockReason && c.blockReason.indexOf('geo_') === 0; }).length;
+    var summaryHtml = filtered.length + ' total';
+    if (validCount !== filtered.length) summaryHtml += ' · <span style="color:#16a34a;font-weight:700;">'+validCount+' valid</span>';
+    if (dupCount)   summaryHtml += ' · <span style="color:#dc2626;font-weight:700;">'+dupCount+' duplicate</span>';
+    if (geoCount)   summaryHtml += ' · <span style="color:#b45309;font-weight:700;">'+geoCount+' geo-blocked</span>';
+    document.getElementById('clickSummary').innerHTML = summaryHtml;
     var start = (clicksPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
     page.forEach(function(c) {
         var qualBadge = '';
-        var ipqsScore = (c.fraud && c.fraud.combinedScore !== undefined) ? c.fraud.combinedScore : (c.ipqs ? (c.ipqs.fraudScore || 0) : 0);
-        var ipqsLevel = (c.fraud && c.fraud.level) ? c.fraud.level : (c.ipqs ? (c.ipqs.level || '') : '');
-        if (ipqsLevel === 'fraud' || ipqsScore >= 85)        qualBadge = '<span class="badge" style="background:#fce4ec;color:#b71c1c;font-size:9px">Fraud '+ipqsScore+'</span>';
-        else if (ipqsLevel === 'risky' || ipqsScore >= 60)   qualBadge = '<span class="badge" style="background:#fff3e0;color:#e65100;font-size:9px">Risky '+ipqsScore+'</span>';
-        else if (ipqsLevel === 'suspect' || ipqsScore >= 30) qualBadge = '<span class="badge" style="background:#fffbeb;color:#b45309;font-size:9px">Suspect '+ipqsScore+'</span>';
-        else if (c.ipqs)                                     qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean '+ipqsScore+'</span>';
-        else if (c.isProxy || c.isHosting)                   qualBadge = '<span class="badge" style="background:#fef2f2;color:#991b1b;font-size:9px">Risky</span>';
-        else                                                 qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
-        html += '<tr><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-size:11px">' + escHtml(getOfferName(c.offerId)) + '</td><td style="font-size:11px">' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.ip || '-') + '</td><td>' + escHtml(c.country || '-') + '</td><td style="font-size:11px">' + escHtml(c.city || '-') + '</td><td>' + escHtml(c.device || '-') + '</td><td style="font-size:11px">' + escHtml(c.os || '-') + '</td><td style="font-size:11px">' + escHtml(c.browser || '-') + '</td><td style="font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.isp || '-') + '</td><td>' + qualBadge + '</td><td style="font-size:11px">' + fmtDateTime(c.timestamp) + '</td><td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>') + '</td><td><button class="btn-sm" onclick="openClickDetail(\'' + c._id + '\')" title="Details"><i class="fas fa-eye"></i></button></td></tr>';
+        if (c.blocked) {
+            if (c.blockReason === 'duplicate_ip')                qualBadge = '<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:9px"><i class="fas fa-clone" style="font-size:8px;margin-right:3px;"></i>Duplicate</span>';
+            else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) qualBadge = '<span class="badge" style="background:#fef3c7;color:#b45309;font-size:9px"><i class="fas fa-globe" style="font-size:8px;margin-right:3px;"></i>Geo Blocked</span>';
+            else                                                 qualBadge = '<span class="badge" style="background:#f1f5f9;color:#64748b;font-size:9px">Blocked</span>';
+        } else {
+            var ipqsScore = (c.fraud && c.fraud.combinedScore !== undefined) ? c.fraud.combinedScore : (c.ipqs ? (c.ipqs.fraudScore || 0) : 0);
+            var ipqsLevel = (c.fraud && c.fraud.level) ? c.fraud.level : (c.ipqs ? (c.ipqs.level || '') : '');
+            if (ipqsLevel === 'fraud' || ipqsScore >= 85)        qualBadge = '<span class="badge" style="background:#fce4ec;color:#b71c1c;font-size:9px">Fraud '+ipqsScore+'</span>';
+            else if (ipqsLevel === 'risky' || ipqsScore >= 60)   qualBadge = '<span class="badge" style="background:#fff3e0;color:#e65100;font-size:9px">Risky '+ipqsScore+'</span>';
+            else if (ipqsLevel === 'suspect' || ipqsScore >= 30) qualBadge = '<span class="badge" style="background:#fffbeb;color:#b45309;font-size:9px">Suspect '+ipqsScore+'</span>';
+            else if (c.ipqs)                                     qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean '+ipqsScore+'</span>';
+            else if (c.isProxy || c.isHosting)                   qualBadge = '<span class="badge" style="background:#fef2f2;color:#991b1b;font-size:9px">Risky</span>';
+            else                                                 qualBadge = '<span class="badge" style="background:#ecfdf5;color:#065f46;font-size:9px">Clean</span>';
+        }
+        var rowStyle = c.blocked ? ' style="background:#fafbfc;opacity:.78;"' : '';
+        var subVal = c.sub1 || c.sub2 || c.sub3 || c.sub4 || c.sub5 || '-';
+        html += '<tr'+rowStyle+'><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-size:11px">' + escHtml(getOfferName(c.offerId)) + '</td><td style="font-size:11px">' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(subVal) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.ip || '-') + '</td><td>' + escHtml(c.country || '-') + '</td><td style="font-size:11px">' + escHtml(c.city || '-') + '</td><td>' + escHtml(c.device || '-') + '</td><td style="font-size:11px">' + escHtml(c.os || '-') + '</td><td style="font-size:11px">' + escHtml(c.browser || '-') + '</td><td style="font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.isp || '-') + '</td><td>' + qualBadge + '</td><td style="font-size:11px">' + fmtDateTime(c.timestamp) + '</td><td>' + (c.converted ? '<span class="badge badge-yes">Yes</span>' : (c.blocked ? '<span style="color:#cbd5e1;">—</span>' : '<span class="badge badge-no">No</span>')) + '</td><td><button class="btn-sm" onclick="openClickDetail(\'' + c._id + '\')" title="Details"><i class="fas fa-eye"></i></button></td></tr>';
     });
-    document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="14" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
+    document.getElementById('clicksTbody').innerHTML = html || '<tr><td colspan="15" class="no-data"><i class="fas fa-mouse-pointer"></i>No clicks found</td></tr>';
     renderPagination('clicksPagination', 'clicksPageInfo', filtered.length, clicksPage, PAGE_SIZE, 'goClicksPage');
 }
 function goClicksPage(p) { clicksPage = p; renderClicks(); }
@@ -8897,16 +8936,24 @@ function initRptOffer() { var sel=document.getElementById('rptOfferAff'); if(!se
 function runOfferReport() {
     var range=getRptRange('rptOffer'); var affF=(document.getElementById('rptOfferAff')||{}).value||'';
     var offerMap={};
+    /* Single pass through clicks — split valid vs blocked-by-reason */
     allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!affF||c.affiliateId===affF);}).forEach(function(c){
-        var oid=c.offerId||'unknown'; if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{}};
+        var oid=c.offerId||'unknown';
+        if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{},dup:0,geo:0,otherBlk:0};
+        if (c.blocked) {
+            if (c.blockReason === 'duplicate_ip') offerMap[oid].dup++;
+            else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) offerMap[oid].geo++;
+            else offerMap[oid].otherBlk++;
+            return; /* blocked clicks don't count toward valid clicks/convs */
+        }
         offerMap[oid].clicks++; if(c.ip) offerMap[oid].ips[c.ip]=(offerMap[oid].ips[c.ip]||0)+1;
         if(c.converted) offerMap[oid].convs++;
     });
     allConversions.filter(function(c){return (c.createdAt||0)>=range.fromTs&&(c.createdAt||0)<=range.toTs&&(!affF||c.affiliateId===affF)&&c.status==='approved';}).forEach(function(c){
-        var oid=c.offerId||'unknown'; if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{}};
+        var oid=c.offerId||'unknown'; if(!offerMap[oid]) offerMap[oid]={clicks:0,convs:0,rev:0,pay:0,ips:{},dup:0,geo:0,otherBlk:0};
         offerMap[oid].rev+=(parseFloat(c.revenue)||0); offerMap[oid].pay+=(parseFloat(c.payout)||0);
     });
-    var rows=Object.keys(offerMap).map(function(oid){var d=offerMap[oid];var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';var rpc=d.clicks?(d.rev/d.clicks).toFixed(2):'0.00';var epc=d.clicks?(d.pay/d.clicks).toFixed(2):'0.00';var uq=Object.keys(d.ips).length;return{oid:oid,clicks:d.clicks,uq:uq,convs:d.convs,cvr:cvr,rev:d.rev,pay:d.pay,profit:d.rev-d.pay,rpc:rpc,epc:epc};});
+    var rows=Object.keys(offerMap).map(function(oid){var d=offerMap[oid];var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';var rpc=d.clicks?(d.rev/d.clicks).toFixed(2):'0.00';var epc=d.clicks?(d.pay/d.clicks).toFixed(2):'0.00';var uq=Object.keys(d.ips).length;return{oid:oid,clicks:d.clicks,uq:uq,dup:d.dup,geo:d.geo,convs:d.convs,cvr:cvr,rev:d.rev,pay:d.pay,profit:d.rev-d.pay,rpc:rpc,epc:epc};});
     var totClicks=rows.reduce(function(s,r){return s+r.clicks;},0);
     var totConvs=rows.reduce(function(s,r){return s+r.convs;},0);
     var totRev=rows.reduce(function(s,r){return s+r.rev;},0);
@@ -8922,13 +8969,49 @@ function runOfferReport() {
     document.getElementById('rptOS_rpc').textContent='$'+rpc;
     var html='';
     rows.sort(function(a,b){return b.clicks-a.clicks;}).forEach(function(r){
-        html+='<tr><td><strong>'+escHtml(getOfferName(r.oid))+'</strong></td><td>'+r.clicks+'</td><td>'+r.uq+'</td><td>'+r.convs+'</td><td>'+r.cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(r.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(r.pay)+'</td><td style="font-weight:700">'+fmtMoney(r.profit)+'</td><td>$'+r.rpc+'</td><td>$'+r.epc+'</td></tr>';
+        var oidEsc = encodeURIComponent(r.oid);
+        var clicksCell = r.clicks > 0
+            ? '<a href="#clicks" onclick="event.preventDefault();goClicksForOffer(\''+escHtml(r.oid).replace(/\x27/g,"\\\x27")+'\')" style="color:#0A6C80;font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer;">'+r.clicks+'</a>'
+            : '<span style="color:#cbd5e1;">0</span>';
+        var dupCell = r.dup > 0
+            ? '<a href="#clicks" onclick="event.preventDefault();goClicksForOffer(\''+escHtml(r.oid).replace(/\x27/g,"\\\x27")+'\',\'duplicate_ip\')" style="color:#dc2626;font-weight:700;background:#fee2e2;padding:2px 9px;border-radius:10px;font-size:11.5px;text-decoration:none;">'+r.dup+'</a>'
+            : '<span style="color:#cbd5e1;">0</span>';
+        var geoCell = r.geo > 0
+            ? '<a href="#clicks" onclick="event.preventDefault();goClicksForOffer(\''+escHtml(r.oid).replace(/\x27/g,"\\\x27")+'\',\'geo\')" style="color:#b45309;font-weight:700;background:#fef3c7;padding:2px 9px;border-radius:10px;font-size:11.5px;text-decoration:none;">'+r.geo+'</a>'
+            : '<span style="color:#cbd5e1;">0</span>';
+        html+='<tr><td><strong>'+escHtml(getOfferName(r.oid))+'</strong></td>'+
+            '<td>'+clicksCell+'</td>'+
+            '<td>'+r.uq+'</td>'+
+            '<td>'+dupCell+'</td>'+
+            '<td>'+geoCell+'</td>'+
+            '<td>'+r.convs+'</td>'+
+            '<td>'+r.cvr+'</td>'+
+            '<td style="color:var(--primary);font-weight:700">'+fmtMoney(r.rev)+'</td>'+
+            '<td style="color:var(--green);font-weight:700">'+fmtMoney(r.pay)+'</td>'+
+            '<td style="font-weight:700">'+fmtMoney(r.profit)+'</td>'+
+            '<td>$'+r.rpc+'</td>'+
+            '<td>$'+r.epc+'</td></tr>';
     });
-    document.getElementById('rptOfferTbody').innerHTML=html||'<tr><td colspan="10" class="no-data">No data for selected range</td></tr>';
+    document.getElementById('rptOfferTbody').innerHTML=html||'<tr><td colspan="12" class="no-data">No data for selected range</td></tr>';
     if(document.getElementById('rptOfferDatePicker')) document.getElementById('rptOfferDatePicker').style.display='none';
 }
 function filterRptOfferTable(){var q=(document.getElementById('rptOfferSearch').value||'').toLowerCase();document.querySelectorAll('#rptOfferTbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}
-function exportRptOffer(){var rows=[['Offer','Clicks','Unique Clicks','Conversions','CVR','Revenue','Payout','Profit','RPC','EPC']];document.querySelectorAll('#rptOfferTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return c.textContent.trim();}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='offer-report.csv';a.click();}
+
+/* Deep-link from offer report → click reports with this offer pre-filtered */
+function goClicksForOffer(offerId, blockedFilter) {
+    goPage('clicks');
+    /* loadClicks runs async and re-populates the offer filter dropdown — wait briefly */
+    setTimeout(function() {
+        var sel = document.getElementById('clickOfferFilter');
+        if (sel) { sel.value = offerId; }
+        if (blockedFilter) {
+            var bf = document.getElementById('clickBlockedFilter');
+            if (bf) bf.value = blockedFilter;
+        }
+        if (typeof renderClicks === 'function') renderClicks();
+    }, 350);
+}
+function exportRptOffer(){var rows=[['Offer','Clicks','Unique','Duplicates','Geo Blocked','Conversions','CVR','Revenue','Payout','Profit','RPC','EPC']];document.querySelectorAll('#rptOfferTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return '"'+c.textContent.trim().replace(/"/g,'""')+'"';}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='offer-report.csv';a.click();}
 
 /* --- Conversion Report --- */
 var rptConvPage=1, rptConvData=[];
@@ -8990,7 +9073,7 @@ function runSubidReport() {
     var offerF=(document.getElementById('rptSubidOffer')||{}).value||'';
     var affF=(document.getElementById('rptSubidAff')||{}).value||'';
     var subMap={};
-    allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
+    allClicks.filter(function(c){return !c.blocked&&c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
         var key=(c.sub1||'(none)')+'||'+(c.affiliateId||'')+'||'+(c.offerId||'');
         if(!subMap[key]) subMap[key]={sub:c.sub1||'(none)',aff:c.affiliateId,offer:c.offerId,clicks:0,convs:0,rev:0,pay:0};
         subMap[key].clicks++; if(c.converted) subMap[key].convs++;
@@ -9025,7 +9108,7 @@ function runDailyReport() {
     var affF=(document.getElementById('rptDailyAff')||{}).value||'';
     var dayMap={};
     var dayKey=function(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
-    allClicks.filter(function(c){return c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
+    allClicks.filter(function(c){return !c.blocked&&c.timestamp>=range.fromTs&&c.timestamp<=range.toTs&&(!offerF||c.offerId===offerF)&&(!affF||c.affiliateId===affF);}).forEach(function(c){
         var k=dayKey(c.timestamp); if(!dayMap[k]) dayMap[k]={clicks:0,uips:{},convs:0,rev:0,pay:0};
         dayMap[k].clicks++; if(c.ip) dayMap[k].uips[c.ip]=1; if(c.converted) dayMap[k].convs++;
     });
@@ -9050,7 +9133,7 @@ function runHourlyReport() {
     var offerF=(document.getElementById('rptHourlyOffer')||{}).value||'';
     var fromTs=dateVal?dayStart(new Date(dateVal)):dayStart(new Date()); var toTs=dateVal?dayEnd(new Date(dateVal)):dayEnd(new Date());
     var hourMap={};for(var i=0;i<24;i++) hourMap[i]={clicks:0,convs:0,rev:0,pay:0};
-    allClicks.filter(function(c){return c.timestamp>=fromTs&&c.timestamp<=toTs&&(!offerF||c.offerId===offerF);}).forEach(function(c){var h=new Date(c.timestamp).getHours();hourMap[h].clicks++;if(c.converted)hourMap[h].convs++;});
+    allClicks.filter(function(c){return !c.blocked&&c.timestamp>=fromTs&&c.timestamp<=toTs&&(!offerF||c.offerId===offerF);}).forEach(function(c){var h=new Date(c.timestamp).getHours();hourMap[h].clicks++;if(c.converted)hourMap[h].convs++;});
     allConversions.filter(function(c){return (c.createdAt||0)>=fromTs&&(c.createdAt||0)<=toTs&&(!offerF||c.offerId===offerF)&&c.status==='approved';}).forEach(function(c){var h=new Date(c.createdAt).getHours();hourMap[h].rev+=(parseFloat(c.revenue)||0);hourMap[h].pay+=(parseFloat(c.payout)||0);});
     var html='';
     for(var h=0;h<24;h++){var d=hourMap[h];var cvr=d.clicks?((d.convs/d.clicks)*100).toFixed(1)+'%':'0%';var label=String(h).padStart(2,'0')+':00 - '+String(h+1).padStart(2,'0')+':00';html+='<tr><td style="font-weight:600">'+label+'</td><td>'+d.clicks+'</td><td>'+d.convs+'</td><td>'+cvr+'</td><td style="color:var(--primary);font-weight:700">'+fmtMoney(d.rev)+'</td><td style="color:var(--green);font-weight:700">'+fmtMoney(d.pay)+'</td></tr>';}
