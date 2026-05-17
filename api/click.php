@@ -58,7 +58,44 @@ if ($ip) {
     $dedupRes = @file_get_contents($dedupUrl);
     $existing = $dedupRes ? json_decode($dedupRes, true) : null;
     if ($existing) {
-        /* Duplicate — record blocked click and show block page */
+        /* Duplicate — enrich with geo + UA parse, record blocked click, show block page */
+        $dupGeo = ['country' => '', 'countryName' => '', 'city' => '', 'region' => '', 'isp' => '', 'lat' => 0, 'lon' => 0, 'ipTimezone' => ''];
+        if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
+            $gCh = curl_init('http://ip-api.com/json/' . urlencode($ip) . '?fields=status,country,countryCode,region,regionName,city,timezone,isp,org,as,lat,lon');
+            curl_setopt_array($gCh, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3]);
+            $gR = curl_exec($gCh); curl_close($gCh);
+            if ($gR) {
+                $gD = json_decode($gR, true);
+                if ($gD && ($gD['status'] ?? '') === 'success') {
+                    $dupGeo['country']     = $gD['countryCode'] ?? '';
+                    $dupGeo['countryName'] = $gD['country'] ?? '';
+                    $dupGeo['city']        = $gD['city'] ?? '';
+                    $dupGeo['region']      = $gD['regionName'] ?? '';
+                    $dupGeo['isp']         = $gD['isp'] ?? '';
+                    $dupGeo['org']         = $gD['org'] ?? '';
+                    $dupGeo['asn']         = $gD['as'] ?? '';
+                    $dupGeo['lat']         = $gD['lat'] ?? 0;
+                    $dupGeo['lon']         = $gD['lon'] ?? 0;
+                    $dupGeo['ipTimezone']  = $gD['timezone'] ?? '';
+                }
+            }
+        }
+        /* Light UA parse */
+        $uaStr = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $devType = (preg_match('/Mobi|Android|iPhone|iPod/i', $uaStr)) ? 'mobile' : ((preg_match('/Tablet|iPad/i', $uaStr)) ? 'tablet' : 'desktop');
+        $browser = 'Other'; $browserVer = '';
+        if (preg_match('/Edg\/(\d+)/i', $uaStr, $m))                  { $browser='Edge';    $browserVer=$m[1]; }
+        elseif (preg_match('/OPR\/(\d+)/i', $uaStr, $m))              { $browser='Opera';   $browserVer=$m[1]; }
+        elseif (preg_match('/Firefox\/(\d+)/i', $uaStr, $m))          { $browser='Firefox'; $browserVer=$m[1]; }
+        elseif (preg_match('/Chrome\/(\d+)/i', $uaStr, $m))           { $browser='Chrome';  $browserVer=$m[1]; }
+        elseif (preg_match('/Version\/(\d+).*Safari/i', $uaStr, $m))  { $browser='Safari';  $browserVer=$m[1]; }
+        $os = 'Other'; $osVer = '';
+        if (preg_match('/Windows NT ([\d.]+)/i', $uaStr, $m))     { $os='Windows'; $wv=['10.0'=>'10','6.3'=>'8.1','6.2'=>'8','6.1'=>'7']; $osVer = $wv[$m[1]] ?? $m[1]; }
+        elseif (preg_match('/Android ([\d.]+)/i', $uaStr, $m))    { $os='Android'; $osVer=$m[1]; }
+        elseif (preg_match('/iPhone OS ([\d_]+)/i', $uaStr, $m))  { $os='iOS'; $osVer=str_replace('_','.',$m[1]); }
+        elseif (preg_match('/iPad.*OS ([\d_]+)/i', $uaStr, $m))   { $os='iPadOS'; $osVer=str_replace('_','.',$m[1]); }
+        elseif (preg_match('/Mac OS X ([\d_]+)/i', $uaStr, $m))   { $os='macOS'; $osVer=str_replace('_','.',$m[1]); }
+        elseif (preg_match('/Linux/i', $uaStr))                   { $os='Linux'; }
         $dupClickId = 'c' . substr(bin2hex(random_bytes(8)), 0, 12);
         $dupClickData = [
             'offerId'        => $offerId,
@@ -67,7 +104,22 @@ if ($ip) {
             'converted'      => false,
             'test'           => $isTest,
             'ip'             => $ip,
-            'userAgent'      => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'country'        => $dupGeo['country'],
+            'countryName'    => $dupGeo['countryName'],
+            'city'           => $dupGeo['city'],
+            'region'         => $dupGeo['region'],
+            'isp'            => $dupGeo['isp'],
+            'org'            => $dupGeo['org'] ?? '',
+            'asn'            => $dupGeo['asn'] ?? '',
+            'lat'            => $dupGeo['lat'],
+            'lon'            => $dupGeo['lon'],
+            'ipTimezone'     => $dupGeo['ipTimezone'],
+            'userAgent'      => $uaStr,
+            'device'         => $devType,
+            'browser'        => $browser,
+            'browserVer'     => $browserVer,
+            'os'             => $os,
+            'osVer'          => $osVer,
             'referer'        => $_SERVER['HTTP_REFERER']    ?? '',
             'landingUrl'     => (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
             'sub1'           => $sub1, 'sub2' => $sub2, 'sub3' => $sub3, 'sub4' => $sub4, 'sub5' => $sub5,
@@ -75,6 +127,7 @@ if ($ip) {
             'blocked'        => true,
             'blockReason'    => 'duplicate_ip',
             'originalClickId'=> is_array($existing) ? ($existing['clickId'] ?? '') : $existing,
+            'originalAffiliateId' => is_array($existing) ? ($existing['affiliateId'] ?? '') : '',
             'source'         => 'php'
         ];
         $ctx2 = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode($dupClickData), 'timeout' => 4]]);

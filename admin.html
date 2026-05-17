@@ -4720,7 +4720,12 @@ function openClickDetail(clickId) {
 
     /* Header flags */
     var flags = [];
-    if (c.converted) flags.push('<span style="background:#ecfdf5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700"><i class="fas fa-check-circle"></i> Converted</span>');
+    if (c.blocked) {
+        var blkLabel = 'Blocked', blkIcon = 'fa-ban', blkBg = '#fef2f2', blkColor = '#991b1b';
+        if (c.blockReason === 'duplicate_ip') { blkLabel = 'Duplicate IP — Blocked'; blkIcon = 'fa-clone'; }
+        else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) { blkLabel = 'Geo Blocked'; blkIcon = 'fa-globe'; blkBg = '#fef3c7'; blkColor = '#92400e'; }
+        flags.push('<span style="background:' + blkBg + ';color:' + blkColor + ';padding:4px 12px;border-radius:10px;font-size:11.5px;font-weight:700;border:1px solid ' + blkColor + '33;"><i class="fas ' + blkIcon + '"></i> ' + blkLabel + '</span>');
+    } else if (c.converted) flags.push('<span style="background:#ecfdf5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700"><i class="fas fa-check-circle"></i> Converted</span>');
     else flags.push('<span style="background:#f1f5f9;color:#94a3b8;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600">Not Converted</span>');
     if (ipqs.vpn  || scam.vpn)  flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">VPN</span>');
     if (ipqs.tor  || scam.tor)  flags.push('<span style="background:#fef2f2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700">TOR</span>');
@@ -4751,6 +4756,28 @@ function openClickDetail(clickId) {
     h += '<div style="font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px">' + escHtml(clickId) + '</div></div>';
     h += '<button onclick="closeModal(\'clickDetailModal\')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;padding:0 4px">&times;</button></div>';
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">' + flags.join('') + '</div>';
+
+    /* Blocked banner — explains why click didn't reach advertiser */
+    if (c.blocked) {
+        var bnBg = '#fef2f2', bnBd = '#fca5a5', bnTx = '#991b1b', bnIcon = 'fa-shield-alt';
+        var bnTitle = 'This click was blocked and did NOT reach the advertiser', bnDetail = '';
+        if (c.blockReason === 'duplicate_ip') {
+            bnTitle = 'Duplicate IP — Click blocked';
+            var origClickId = c.originalClickId ? '<span style="font-family:monospace;font-size:11px;">' + escHtml(c.originalClickId) + '</span>' : '(unknown)';
+            var origAff = c.originalAffiliateId ? escHtml(getUserName(c.originalAffiliateId)) : 'another affiliate';
+            bnDetail = 'This IP already clicked this offer via ' + origAff + ' — original click: ' + origClickId + '. No redirect happened.';
+        } else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) {
+            bnBg = '#fef3c7'; bnBd = '#fcd34d'; bnTx = '#92400e'; bnIcon = 'fa-globe';
+            bnTitle = 'Geo Blocked — Visitor country not allowed';
+            bnDetail = 'Reason: ' + (c.blockReason === 'no_geo_consensus' ? 'Geo providers did not agree on country' : (c.blockReason === 'no_geo_detected' ? 'Visitor country could not be determined' : 'Visitor country not in offer allow-list')) + '. No redirect happened.';
+        } else {
+            bnDetail = 'Reason: ' + escHtml(c.blockReason || 'unknown');
+        }
+        h += '<div style="background:' + bnBg + ';border:1px solid ' + bnBd + ';border-radius:9px;padding:13px 16px;margin-bottom:14px;display:flex;gap:11px;align-items:flex-start;">' +
+            '<i class="fas ' + bnIcon + '" style="color:' + bnTx + ';font-size:17px;margin-top:1px;"></i>' +
+            '<div style="flex:1;"><div style="font-weight:700;color:' + bnTx + ';font-size:13px;margin-bottom:3px;">' + bnTitle + '</div>' +
+            '<div style="font-size:12px;color:' + bnTx + ';opacity:.85;line-height:1.5;">' + bnDetail + '</div></div></div>';
+    }
 
     /* Click Info */
     h += sectionHd('mouse-pointer', 'Click Info', '#0A6C80');
