@@ -51,10 +51,10 @@ foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $k) {
 }
 
 /* ── DUPLICATE IP CHECK ──
-   Same IP + same offer + same affiliate = duplicate. Block, log, no redirect. */
+   Same IP + same offer = duplicate (regardless of which affiliate). Block, log, no redirect. */
 if ($ip) {
     $ipKey = preg_replace('/[.:]/', '_', $ip);
-    $dedupUrl = $FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($affId) . '/' . urlencode($ipKey) . '.json';
+    $dedupUrl = $FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($ipKey) . '.json';
     $dedupRes = @file_get_contents($dedupUrl);
     $existing = $dedupRes ? json_decode($dedupRes, true) : null;
     if ($existing) {
@@ -222,11 +222,12 @@ $ctx = stream_context_create([
 ]);
 @file_get_contents($FB . '/clicks/' . $clickId . '.json', false, $ctx);
 
-/* ── Record dedup index so future same-IP clicks are blocked ── */
+/* ── Record dedup index so future same-IP clicks on this offer are blocked (any affiliate) ── */
 if ($ip) {
     $ipKeyDone = preg_replace('/[.:]/', '_', $ip);
-    $dedupCtx = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode(['clickId' => $clickId, 'ts' => (int)(microtime(true) * 1000)]), 'timeout' => 4]]);
-    @file_get_contents($FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($affId) . '/' . urlencode($ipKeyDone) . '.json', false, $dedupCtx);
+    $dedupPayload = json_encode(['clickId' => $clickId, 'affiliateId' => $affId, 'ts' => (int)(microtime(true) * 1000)]);
+    $dedupCtx = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => $dedupPayload, 'timeout' => 4]]);
+    @file_get_contents($FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($ipKeyDone) . '.json', false, $dedupCtx);
 }
 
 /* ── HTTP 302 Redirect ── */

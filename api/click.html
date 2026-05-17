@@ -602,11 +602,11 @@ function processClick() {
         geoCheckPromise.then(function(passed) {
             if (!passed) return;
             /* ── DUPLICATE IP CHECK ──
-               Block same IP from clicking same offer+affiliate combo twice. */
+               Block same IP from clicking same offer twice — regardless of which affiliate's link. */
             var ipForCheck = geo.ip || '';
             if (!ipForCheck || ipForCheck === 'unknown') { _processClick(); return; }
             var ipKey = ipForCheck.replace(/[.:]/g, '_');
-            fbGet('clickDedup/' + offerId + '/' + affId + '/' + ipKey).then(function(existing) {
+            fbGet('clickDedup/' + offerId + '/' + ipKey).then(function(existing) {
                 if (existing) {
                     /* Duplicate — log a blocked click record so admin can see it */
                     var dupId = genClickId();
@@ -714,10 +714,10 @@ function processClick() {
                 fd.append('ip', geo.ip);
                 navigator.sendBeacon('https://plan1.climaofficial.com/api/fraud-trigger.php', fd);
             }
-            /* Record dedup index — blocks future same-IP clicks on same offer+aff */
+            /* Record dedup index — blocks future same-IP clicks on this offer (any affiliate) */
             if (geo.ip && geo.ip !== 'unknown') {
                 var ipKeyDone = geo.ip.replace(/[.:]/g, '_');
-                fbPut('clickDedup/' + offerId + '/' + affId + '/' + ipKeyDone, { clickId: clickId, ts: Date.now() });
+                fbPut('clickDedup/' + offerId + '/' + ipKeyDone, { clickId: clickId, affiliateId: affId, ts: Date.now() });
             }
             window.location.replace(redirectUrl);
         }
