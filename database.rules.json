@@ -21,6 +21,14 @@
       ".write": true,
       ".indexOn": ["timestamp", "affiliateId", "offerId"]
     },
+    "blockedClicks": {
+      ".read": true,
+      ".write": true
+    },
+    "clickDedup": {
+      ".read": true,
+      ".write": true
+    },
     "conversions": {
       ".read": true,
       ".write": true,

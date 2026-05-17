@@ -57,8 +57,11 @@ if ($ip) {
     $dedupUrl = $FB . '/clickDedup/' . urlencode($offerId) . '/' . urlencode($ipKey) . '.json';
     $dedupRes = @file_get_contents($dedupUrl);
     $existing = $dedupRes ? json_decode($dedupRes, true) : null;
-    if ($existing) {
-        /* Duplicate — enrich with geo + UA parse, record blocked click, show block page */
+    /* 24-hour TTL: only block if dedup entry is less than 24 hours old */
+    $dedupTsMs = is_array($existing) ? ($existing['ts'] ?? 0) : 0;
+    $isExpired = ($dedupTsMs === 0) || ((microtime(true) * 1000) - $dedupTsMs) > 86400000;
+    if ($existing && !$isExpired) {
+        /* Duplicate within 24h — enrich with geo + UA parse, record blocked click, show block page */
         $dupGeo = ['country' => '', 'countryName' => '', 'city' => '', 'region' => '', 'isp' => '', 'lat' => 0, 'lon' => 0, 'ipTimezone' => ''];
         if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
             $gCh = curl_init('http://ip-api.com/json/' . urlencode($ip) . '?fields=status,country,countryCode,region,regionName,city,timezone,isp,org,as,lat,lon');
@@ -189,28 +192,67 @@ if (($offer['countryMode'] ?? '') === 'specific' && !empty($offer['allowedCountr
     foreach ($votes as $cc => $v) { if ($v > $winningVotes) { $winningCC = $cc; $winningVotes = $v; } }
     $visitorCC = $winningCC ?: $visitorCC;
     /* Require at least 2 votes for strict mode */
+    /* Determine if visitor country is allowed.
+       If detected country IS in the allowed list, allow it even with 1 vote.
+       Only block if country is NOT in allowed list or no country detected. */
     $blockReason = '';
     if (!$visitorCC) {
         $blockReason = 'no_geo_detected';
-    } elseif ($winningVotes < 2) {
-        $blockReason = 'no_geo_consensus';
     } elseif (!in_array($visitorCC, $allowed, true)) {
         $blockReason = 'geo_not_allowed';
     }
     if ($blockReason) {
-        /* Log blocked attempt */
-        $bId = 'b' . substr(bin2hex(random_bytes(6)), 0, 10);
+        /* Enrich geo-blocked click with full data so it appears in admin click reports */
+        $geoB = ['city'=>'','region'=>'','isp'=>'','org'=>'','asn'=>'','lat'=>0,'lon'=>0,'ipTimezone'=>''];
+        if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
+            $gCh2 = curl_init('http://ip-api.com/json/' . urlencode($ip) . '?fields=status,country,countryCode,regionName,city,timezone,isp,org,as,lat,lon');
+            curl_setopt_array($gCh2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3]);
+            $gR2 = curl_exec($gCh2); curl_close($gCh2);
+            if ($gR2) { $gD2 = json_decode($gR2, true); if ($gD2 && ($gD2['status']??'') === 'success') {
+                $geoB['city']=$gD2['city']??''; $geoB['region']=$gD2['regionName']??'';
+                $geoB['isp']=$gD2['isp']??''; $geoB['org']=$gD2['org']??'';
+                $geoB['asn']=$gD2['as']??''; $geoB['lat']=$gD2['lat']??0;
+                $geoB['lon']=$gD2['lon']??0; $geoB['ipTimezone']=$gD2['timezone']??'';
+            }}
+        }
+        $uaStr2 = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $devType2 = (preg_match('/Mobi|Android|iPhone|iPod/i', $uaStr2)) ? 'mobile' : ((preg_match('/Tablet|iPad/i', $uaStr2)) ? 'tablet' : 'desktop');
+        $browser2 = 'Other'; $browserVer2 = '';
+        if (preg_match('/Edg\/(\d+)/i', $uaStr2, $m2))                  { $browser2='Edge';    $browserVer2=$m2[1]; }
+        elseif (preg_match('/OPR\/(\d+)/i', $uaStr2, $m2))              { $browser2='Opera';   $browserVer2=$m2[1]; }
+        elseif (preg_match('/Firefox\/(\d+)/i', $uaStr2, $m2))          { $browser2='Firefox'; $browserVer2=$m2[1]; }
+        elseif (preg_match('/Chrome\/(\d+)/i', $uaStr2, $m2))           { $browser2='Chrome';  $browserVer2=$m2[1]; }
+        elseif (preg_match('/Version\/(\d+).*Safari/i', $uaStr2, $m2))  { $browser2='Safari';  $browserVer2=$m2[1]; }
+        $os2 = 'Other'; $osVer2 = '';
+        if (preg_match('/Windows NT ([\d.]+)/i', $uaStr2, $m2))     { $os2='Windows'; $wv2=['10.0'=>'10','6.3'=>'8.1','6.2'=>'8','6.1'=>'7']; $osVer2=$wv2[$m2[1]]??$m2[1]; }
+        elseif (preg_match('/Android ([\d.]+)/i', $uaStr2, $m2))    { $os2='Android'; $osVer2=$m2[1]; }
+        elseif (preg_match('/iPhone OS ([\d_]+)/i', $uaStr2, $m2))  { $os2='iOS'; $osVer2=str_replace('_','.',$m2[1]); }
+        elseif (preg_match('/iPad.*OS ([\d_]+)/i', $uaStr2, $m2))   { $os2='iPadOS'; $osVer2=str_replace('_','.',$m2[1]); }
+        elseif (preg_match('/Mac OS X ([\d_]+)/i', $uaStr2, $m2))   { $os2='macOS'; $osVer2=str_replace('_','.',$m2[1]); }
+        elseif (preg_match('/Linux/i', $uaStr2))                    { $os2='Linux'; }
+        /* Save as blocked click to /clicks/ so admin can see all data */
+        $bId = 'c' . substr(bin2hex(random_bytes(8)), 0, 12);
         $blockData = [
-            'offerId' => $offerId, 'affiliateId' => $affId, 'timestamp' => (int)(microtime(true) * 1000),
-            'ip' => $ip, 'country' => $visitorCC, 'countryName' => $visitorCountryName,
-            'blocked' => true, 'blockReason' => $blockReason,
-            'votes' => $votes, 'winningVotes' => $winningVotes,
-            'allowedCountries' => implode(',', $allowed),
-            'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            'source' => 'php'
+            'offerId'=>$offerId, 'affiliateId'=>$affId, 'timestamp'=>(int)(microtime(true)*1000),
+            'converted'=>false, 'test'=>$isTest,
+            'ip'=>$ip, 'country'=>$visitorCC, 'countryName'=>$visitorCountryName,
+            'city'=>$geoB['city'], 'region'=>$geoB['region'],
+            'isp'=>$geoB['isp'], 'org'=>$geoB['org'], 'asn'=>$geoB['asn'],
+            'lat'=>$geoB['lat'], 'lon'=>$geoB['lon'], 'ipTimezone'=>$geoB['ipTimezone'],
+            'userAgent'=>$uaStr2, 'device'=>$devType2,
+            'browser'=>$browser2, 'browserVer'=>$browserVer2,
+            'os'=>$os2, 'osVer'=>$osVer2,
+            'referer'=>$_SERVER['HTTP_REFERER']??'',
+            'landingUrl'=>(isset($_SERVER['HTTPS'])?'https':'http').'://'.($_SERVER['HTTP_HOST']??'').($_SERVER['REQUEST_URI']??''),
+            'sub1'=>$sub1, 'sub2'=>$sub2, 'sub3'=>$sub3, 'sub4'=>$sub4, 'sub5'=>$sub5,
+            'fbclid'=>$fbclid, 'gclid'=>$gclid, 'ttclid'=>$ttclid,
+            'blocked'=>true, 'blockReason'=>$blockReason,
+            'geoVotes'=>$votes, 'geoWinningVotes'=>$winningVotes,
+            'allowedCountries'=>implode(',',$allowed),
+            'source'=>'php'
         ];
-        $bCtx = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode($blockData), 'timeout' => 4]]);
-        @file_get_contents($FB . '/blockedClicks/' . $bId . '.json', false, $bCtx);
+        $bCtx = stream_context_create(['http' => ['method'=>'PUT', 'header'=>"Content-Type: application/json\r\n", 'content'=>json_encode($blockData), 'timeout'=>4]]);
+        @file_get_contents($FB . '/clicks/' . $bId . '.json', false, $bCtx);
         /* Render block page (no redirect) */
         http_response_code(403);
         header('Content-Type: text/html; charset=UTF-8');

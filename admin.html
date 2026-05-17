@@ -4620,8 +4620,22 @@ function rejectSignup(id) {
 /* ===== CLICK REPORTS ===== */
 var clicksPage = 1;
 function loadClicks() {
-    Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users')]).then(function(res) {
-        allClicks = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
+    Promise.all([fbGet('clicks'), fbGet('offers'), fbGet('users'), fbGet('blockedClicks')]).then(function(res) {
+        allClicks = objToArr(res[0]);
+        /* Merge old blockedClicks (saved before fix) into allClicks for backwards compatibility */
+        var oldBlocked = objToArr(res[3]);
+        if (oldBlocked.length) {
+            var existingIds = {};
+            allClicks.forEach(function(c) { existingIds[c._id] = true; });
+            oldBlocked.forEach(function(b) {
+                if (!existingIds[b._id]) {
+                    b.blocked = true;
+                    if (!b.blockReason) b.blockReason = b.allowedCountries ? 'geo_not_allowed' : 'unknown';
+                    allClicks.push(b);
+                }
+            });
+        }
+        allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('clickOfferFilter').innerHTML = ofHtml;
         var afHtml = '<option value="">All Affiliates</option>'; allUsers.filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; }); document.getElementById('clickAffFilter').innerHTML = afHtml;
         clicksPage = 1; renderClicks();
@@ -4645,13 +4659,13 @@ function renderClicks() {
         if (blkF === 'valid'        && c.blocked) return false;
         if (blkF === 'blocked'      && !c.blocked) return false;
         if (blkF === 'duplicate_ip' && c.blockReason !== 'duplicate_ip') return false;
-        if (blkF === 'geo'          && (!c.blockReason || c.blockReason.indexOf('geo_') !== 0)) return false;
+        if (blkF === 'geo'          && (!c.blockReason || (c.blockReason.indexOf('geo_') !== 0 && c.blockReason !== 'no_geo_detected'))) return false;
         return true;
     }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
     /* Summary breakdown */
     var validCount = filtered.filter(function(c){ return !c.blocked; }).length;
     var dupCount   = filtered.filter(function(c){ return c.blockReason === 'duplicate_ip'; }).length;
-    var geoCount   = filtered.filter(function(c){ return c.blockReason && c.blockReason.indexOf('geo_') === 0; }).length;
+    var geoCount   = filtered.filter(function(c){ return c.blockReason && (c.blockReason.indexOf('geo_') === 0 || c.blockReason === 'no_geo_detected'); }).length;
     var summaryHtml = filtered.length + ' total';
     if (validCount !== filtered.length) summaryHtml += ' · <span style="color:#16a34a;font-weight:700;">'+validCount+' valid</span>';
     if (dupCount)   summaryHtml += ' · <span style="color:#dc2626;font-weight:700;">'+dupCount+' duplicate</span>';
@@ -4662,7 +4676,7 @@ function renderClicks() {
         var qualBadge = '';
         if (c.blocked) {
             if (c.blockReason === 'duplicate_ip')                qualBadge = '<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:9px"><i class="fas fa-clone" style="font-size:8px;margin-right:3px;"></i>Duplicate</span>';
-            else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) qualBadge = '<span class="badge" style="background:#fef3c7;color:#b45309;font-size:9px"><i class="fas fa-globe" style="font-size:8px;margin-right:3px;"></i>Geo Blocked</span>';
+            else if (c.blockReason && (c.blockReason.indexOf('geo_') === 0 || c.blockReason === 'no_geo_detected')) qualBadge = '<span class="badge" style="background:#fef3c7;color:#b45309;font-size:9px"><i class="fas fa-globe" style="font-size:8px;margin-right:3px;"></i>Geo Blocked</span>';
             else                                                 qualBadge = '<span class="badge" style="background:#f1f5f9;color:#64748b;font-size:9px">Blocked</span>';
         } else {
             var ipqsScore = (c.fraud && c.fraud.combinedScore !== undefined) ? c.fraud.combinedScore : (c.ipqs ? (c.ipqs.fraudScore || 0) : 0);
@@ -4766,7 +4780,7 @@ function openClickDetail(clickId) {
             var origClickId = c.originalClickId ? '<span style="font-family:monospace;font-size:11px;">' + escHtml(c.originalClickId) + '</span>' : '(unknown)';
             var origAff = c.originalAffiliateId ? escHtml(getUserName(c.originalAffiliateId)) : 'another affiliate';
             bnDetail = 'This IP already clicked this offer via ' + origAff + ' — original click: ' + origClickId + '. No redirect happened.';
-        } else if (c.blockReason && c.blockReason.indexOf('geo_') === 0) {
+        } else if (c.blockReason && (c.blockReason.indexOf('geo_') === 0 || c.blockReason === 'no_geo_detected')) {
             bnBg = '#fef3c7'; bnBd = '#fcd34d'; bnTx = '#92400e'; bnIcon = 'fa-globe';
             bnTitle = 'Geo Blocked — Visitor country not allowed';
             bnDetail = 'Reason: ' + (c.blockReason === 'no_geo_consensus' ? 'Geo providers did not agree on country' : (c.blockReason === 'no_geo_detected' ? 'Visitor country could not be determined' : 'Visitor country not in offer allow-list')) + '. No redirect happened.';
