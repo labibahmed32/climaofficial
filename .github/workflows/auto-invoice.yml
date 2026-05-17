@@ -1,0 +1,35 @@
+name: Auto Weekly Invoice Generator
+
+# Runs every Monday at 04:10 UTC (EDT = 12:10 AM Florida)
+# and 05:10 UTC (EST = 12:10 AM Florida) — covers both DST conditions.
+# PHP endpoint is idempotent (settings/autoInvoice/lastWeek check),
+# so the second fire is a no-op once the first run succeeded.
+on:
+  schedule:
+    - cron: '10 4 * * 1'   # 12:10 AM Florida during EDT (Mar–Nov)
+    - cron: '10 5 * * 1'   # 12:10 AM Florida during EST (Nov–Mar)
+  workflow_dispatch:       # allow manual trigger from Actions tab
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping auto-invoice endpoint
+        env:
+          INVOICE_SECRET: ${{ secrets.INVOICE_SECRET }}
+        run: |
+          if [ -z "$INVOICE_SECRET" ]; then
+            echo "ERROR: INVOICE_SECRET secret not set in repo settings"
+            exit 1
+          fi
+          echo "Triggering auto-invoice at $(date -u) (UTC)"
+          RESPONSE=$(curl -sS -w "\nHTTP:%{http_code}" --max-time 60 \
+            "https://plan1.climaofficial.com/api/auto-invoice.php?secret=$INVOICE_SECRET")
+          echo "Response:"
+          echo "$RESPONSE"
+          # Fail the job if HTTP status is not 200
+          STATUS=$(echo "$RESPONSE" | grep -oP 'HTTP:\K[0-9]+')
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: Endpoint returned HTTP $STATUS"
+            exit 1
+          fi
