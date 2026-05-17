@@ -50,6 +50,52 @@ foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $k) {
     if (!empty($_SERVER[$k])) { $ip = trim(explode(',', $_SERVER[$k])[0]); break; }
 }
 
+/* ── GEO ENFORCEMENT (strict mode) ── */
+$visitorCC = '';
+$visitorCountryName = '';
+if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
+    /* Cloudflare passes country code in this header — fastest path */
+    $visitorCC = strtoupper(trim($_SERVER['HTTP_CF_IPCOUNTRY']));
+}
+if (($offer['countryMode'] ?? '') === 'specific' && !empty($offer['allowedCountries'])) {
+    $allowed = array_filter(array_map('trim', array_map('strtoupper', explode(',', $offer['allowedCountries']))));
+    /* If we don't have Cloudflare CC header, lookup via ip-api (no key, free, fast) */
+    if (!$visitorCC && $ip && filter_var($ip, FILTER_VALIDATE_IP) && !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        $geoCh = curl_init('http://ip-api.com/json/' . urlencode($ip) . '?fields=status,countryCode,country');
+        curl_setopt_array($geoCh, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3]);
+        $geoResp = curl_exec($geoCh);
+        curl_close($geoCh);
+        if ($geoResp) {
+            $geoData = json_decode($geoResp, true);
+            if (!empty($geoData['countryCode'])) {
+                $visitorCC = strtoupper($geoData['countryCode']);
+                $visitorCountryName = $geoData['country'] ?? '';
+            }
+        }
+    }
+    if (!in_array($visitorCC, $allowed, true)) {
+        /* Log blocked attempt */
+        $bId = 'b' . substr(bin2hex(random_bytes(6)), 0, 10);
+        $blockData = [
+            'offerId' => $offerId, 'affiliateId' => $affId, 'timestamp' => (int)(microtime(true) * 1000),
+            'ip' => $ip, 'country' => $visitorCC, 'countryName' => $visitorCountryName,
+            'blocked' => true, 'blockReason' => $visitorCC ? 'geo_not_allowed' : 'no_geo_detected',
+            'allowedCountries' => implode(',', $allowed),
+            'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'source' => 'php'
+        ];
+        $bCtx = stream_context_create(['http' => ['method' => 'PUT', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode($blockData), 'timeout' => 4]]);
+        @file_get_contents($FB . '/blockedClicks/' . $bId . '.json', false, $bCtx);
+        /* Render block page (no redirect) */
+        http_response_code(403);
+        header('Content-Type: text/html; charset=UTF-8');
+        $allowedDisplay = htmlspecialchars(implode(', ', array_slice($allowed, 0, 8)), ENT_QUOTES);
+        $visitorDisplay = htmlspecialchars($visitorCountryName ?: $visitorCC, ENT_QUOTES);
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Not Available</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;color:#333;padding:24px;}.box{text-align:center;max-width:440px;padding:40px 30px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.06);}.warn{font-size:54px;color:#dc2626;margin-bottom:14px;}h2{font-size:20px;font-weight:700;color:#111827;margin:0 0 8px;}p{font-size:14px;color:#64748b;line-height:1.55;margin:0;}strong{color:#0A6C80;}</style></head><body><div class="box"><div class="warn">&#9888;</div><h2>Not Available in Your Region</h2><p>This offer is only available in: <strong>' . $allowedDisplay . '</strong>.' . ($visitorDisplay ? '<br>Detected location: <strong>' . $visitorDisplay . '</strong>' : '') . '</p></div></body></html>';
+        exit;
+    }
+}
+
 /* ── Build destination URL (replace macros) ── */
 $destUrl = $offer['finalUrl'] ?? '';
 $destUrl = str_replace('{click_id}', urlencode($clickId), $destUrl);
