@@ -59,27 +59,63 @@ if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
 }
 if (($offer['countryMode'] ?? '') === 'specific' && !empty($offer['allowedCountries'])) {
     $allowed = array_filter(array_map('trim', array_map('strtoupper', explode(',', $offer['allowedCountries']))));
-    /* If we don't have Cloudflare CC header, lookup via ip-api (no key, free, fast) */
-    if (!$visitorCC && $ip && filter_var($ip, FILTER_VALIDATE_IP) && !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-        $geoCh = curl_init('http://ip-api.com/json/' . urlencode($ip) . '?fields=status,countryCode,country');
-        curl_setopt_array($geoCh, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3]);
-        $geoResp = curl_exec($geoCh);
-        curl_close($geoCh);
-        if ($geoResp) {
-            $geoData = json_decode($geoResp, true);
-            if (!empty($geoData['countryCode'])) {
-                $visitorCC = strtoupper($geoData['countryCode']);
-                $visitorCountryName = $geoData['country'] ?? '';
-            }
+    /* ── Multi-provider consensus ─────────────────────────────────────
+       Query 3 providers in parallel via curl_multi. The country code
+       must get at least 2 votes (CF header counts as 1) to pass. */
+    $votes = [];
+    if ($visitorCC) { $votes[$visitorCC] = 1; }
+    if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
+        $endpoints = [
+            ['url' => 'http://ip-api.com/json/' . urlencode($ip) . '?fields=status,countryCode,country', 'cc' => 'countryCode', 'name' => 'country'],
+            ['url' => 'https://ipwho.is/' . urlencode($ip),                                              'cc' => 'country_code', 'name' => 'country'],
+            ['url' => 'https://ipapi.co/' . urlencode($ip) . '/json/',                                   'cc' => 'country_code', 'name' => 'country_name']
+        ];
+        $mh = curl_multi_init();
+        $handles = [];
+        foreach ($endpoints as $i => $e) {
+            $ch = curl_init($e['url']);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3, CURLOPT_SSL_VERIFYPEER => false, CURLOPT_USERAGENT => 'Mozilla/5.0']);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$i] = $ch;
         }
+        $running = null;
+        do { curl_multi_exec($mh, $running); curl_multi_select($mh, 0.2); } while ($running > 0);
+        foreach ($handles as $i => $ch) {
+            $r = curl_multi_getcontent($ch);
+            curl_multi_remove_handle($mh, $ch);
+            if ($r) {
+                $d = json_decode($r, true);
+                if (!empty($d[$endpoints[$i]['cc']])) {
+                    $cc = strtoupper($d[$endpoints[$i]['cc']]);
+                    $votes[$cc] = ($votes[$cc] ?? 0) + 1;
+                    if (!$visitorCountryName && !empty($d[$endpoints[$i]['name']])) $visitorCountryName = $d[$endpoints[$i]['name']];
+                }
+            }
+            curl_close($ch);
+        }
+        curl_multi_close($mh);
     }
-    if (!in_array($visitorCC, $allowed, true)) {
+    /* Pick winning country */
+    $winningCC = null; $winningVotes = 0;
+    foreach ($votes as $cc => $v) { if ($v > $winningVotes) { $winningCC = $cc; $winningVotes = $v; } }
+    $visitorCC = $winningCC ?: $visitorCC;
+    /* Require at least 2 votes for strict mode */
+    $blockReason = '';
+    if (!$visitorCC) {
+        $blockReason = 'no_geo_detected';
+    } elseif ($winningVotes < 2) {
+        $blockReason = 'no_geo_consensus';
+    } elseif (!in_array($visitorCC, $allowed, true)) {
+        $blockReason = 'geo_not_allowed';
+    }
+    if ($blockReason) {
         /* Log blocked attempt */
         $bId = 'b' . substr(bin2hex(random_bytes(6)), 0, 10);
         $blockData = [
             'offerId' => $offerId, 'affiliateId' => $affId, 'timestamp' => (int)(microtime(true) * 1000),
             'ip' => $ip, 'country' => $visitorCC, 'countryName' => $visitorCountryName,
-            'blocked' => true, 'blockReason' => $visitorCC ? 'geo_not_allowed' : 'no_geo_detected',
+            'blocked' => true, 'blockReason' => $blockReason,
+            'votes' => $votes, 'winningVotes' => $winningVotes,
             'allowedCountries' => implode(',', $allowed),
             'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'source' => 'php'

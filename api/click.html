@@ -263,6 +263,39 @@ function parseIpApiCom(d) {
         lon: d.lon || 0
     };
 }
+/* ── Strict multi-provider country verification ──
+   Returns { country, confidence, conflict } based on agreement between 3 providers.
+   confidence = number of providers that returned the winning country.
+   conflict = true if no single country got 2+ votes. */
+function verifyCountryStrict(seedGeo) {
+    function timed(p, ms) {
+        return new Promise(function(res) {
+            var done = false;
+            setTimeout(function(){ if (!done) { done = true; res(null); } }, ms);
+            p.then(function(v){ if (!done) { done = true; res(v); } }).catch(function(){ if (!done) { done = true; res(null); } });
+        });
+    }
+    function fetchCC(url, key) {
+        return fetch(url).then(function(r){ return r.json(); }).then(function(d) {
+            if (!d) return null;
+            var cc = d[key]; if (!cc && d.country_code) cc = d.country_code; if (!cc && d.countryCode) cc = d.countryCode;
+            return cc ? String(cc).toUpperCase() : null;
+        }).catch(function(){ return null; });
+    }
+    var seedCC = (seedGeo && seedGeo.country) ? String(seedGeo.country).toUpperCase() : null;
+    var p1 = timed(fetchCC('https://ipapi.co/json/', 'country_code'), 3500);
+    var p2 = timed(fetchCC('https://ipwho.is/', 'country_code'), 3500);
+    var p3 = timed(fetchCC('https://ipinfo.io/json', 'country'), 3500);
+    return Promise.all([p1, p2, p3]).then(function(results) {
+        var votes = {};
+        if (seedCC) votes[seedCC] = 1; /* seed counts as 1 vote */
+        results.forEach(function(cc) { if (cc) votes[cc] = (votes[cc] || 0) + 1; });
+        var best = null, bestCount = 0, total = 0;
+        Object.keys(votes).forEach(function(cc) { total += votes[cc]; if (votes[cc] > bestCount) { best = cc; bestCount = votes[cc]; } });
+        return { country: best, confidence: bestCount, conflict: total >= 2 && bestCount < 2, total: total };
+    });
+}
+
 function getGeoData() {
     /* Primary: ip-api.com via our proxy (fast, no rate limit issues) */
     var proxyUrl = IPQS_PROXY + '?ipdata=auto_detect';
@@ -533,20 +566,32 @@ function processClick() {
         if (user.role !== 'affiliate') { showError('Invalid affiliate.'); return; }
         if (user.status !== 'active')  { showError('Affiliate account is not active.'); return; }
 
-        /* ── GEO ENFORCEMENT ── */
+        /* ── GEO ENFORCEMENT (strict multi-provider consensus) ── */
+        var geoCheckPromise;
         if (offer.countryMode === 'specific' && offer.allowedCountries) {
             var allowed = String(offer.allowedCountries).toUpperCase().split(',').map(function(c){ return c.trim(); }).filter(Boolean);
-            var visitorCC = (geo.country || '').toUpperCase();
-            if (allowed.length && !visitorCC) {
-                logBlockedClick(offerId, affId, geo, 'no_geo_detected', allowed.join(','));
-                showGeoBlock(allowed); return;
-            }
-            if (allowed.length && allowed.indexOf(visitorCC) === -1) {
-                logBlockedClick(offerId, affId, geo, 'geo_not_allowed', allowed.join(','));
-                showGeoBlock(allowed, geo.countryName || visitorCC); return;
-            }
+            geoCheckPromise = verifyCountryStrict(geo).then(function(verdict) {
+                if (allowed.length && (!verdict.country || verdict.confidence < 2)) {
+                    logBlockedClick(offerId, affId, geo, verdict.conflict ? 'geo_provider_conflict' : 'no_geo_consensus', allowed.join(','));
+                    showGeoBlock(allowed, verdict.country ? (geo.countryName || verdict.country) + ' (low confidence)' : 'Unknown');
+                    return false;
+                }
+                if (allowed.length && allowed.indexOf(verdict.country) === -1) {
+                    logBlockedClick(offerId, affId, geo, 'geo_not_allowed', allowed.join(','));
+                    showGeoBlock(allowed, geo.countryName || verdict.country);
+                    return false;
+                }
+                geo.country = verdict.country;
+                return true;
+            });
+        } else {
+            geoCheckPromise = Promise.resolve(true);
         }
 
+        geoCheckPromise.then(function(passed) { if (!passed) return; _processClick(); });
+        return;
+
+        function _processClick() {
         /* Timezone match: compare browser tz vs IP tz */
         var tzMatch = 'unknown';
         if (client.timezone && geo.ipTimezone) {
@@ -634,6 +679,7 @@ function processClick() {
         }
 
         fbPut('clicks/' + clickId, clickData).then(fireAndRedirect).catch(fireAndRedirect);
+        } /* end _processClick */
 
     }).catch(function(err) {
         showError('Error: ' + (err && err.message ? err.message : 'Unknown error'));
