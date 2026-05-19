@@ -378,6 +378,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
 .rv2-table thead tr{background:#f8fafc;}
 .rv2-table th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+.rv2-table th.sortable{transition:background .12s;}
+.rv2-table th.sortable:hover{background:#eef2f6;color:#0f172a;}
 .rv2-table th.num,.rv2-table td.num{text-align:right;}
 .rv2-table td{padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#1e293b;white-space:nowrap;vertical-align:middle;}
 .rv2-table tr.clickable{cursor:pointer;transition:background .1s;}
@@ -9376,8 +9378,43 @@ var rv2State = {
     offer: '',
     affiliate: '',
     platform: '',
-    search: ''
+    search: '',
+    sortBy: 'clicks',
+    sortDir: 'desc'     /* asc | desc */
 };
+
+/* Sort helper: sort an array of objects by field with current direction.
+   Numeric fields auto-detected; strings sorted alphabetically. */
+function rv2SortRows(rows, field, dir) {
+    var sign = dir === 'asc' ? 1 : -1;
+    rows.sort(function(a, b) {
+        var av = a[field], bv = b[field];
+        /* Handle percent strings like "12.5%" */
+        if (typeof av === 'string' && /%$/.test(av)) av = parseFloat(av) || 0;
+        if (typeof bv === 'string' && /%$/.test(bv)) bv = parseFloat(bv) || 0;
+        /* Numeric strings like "0.00" (epc/rpc) */
+        if (typeof av === 'string' && /^\$?[-\d.]+$/.test(av)) av = parseFloat(av.replace('$','')) || 0;
+        if (typeof bv === 'string' && /^\$?[-\d.]+$/.test(bv)) bv = parseFloat(bv.replace('$','')) || 0;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sign;
+        return String(av || '').localeCompare(String(bv || '')) * sign;
+    });
+    return rows;
+}
+function rv2SortBy(field) {
+    if (rv2State.sortBy === field) {
+        rv2State.sortDir = rv2State.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        rv2State.sortBy = field;
+        /* Default: numeric fields desc, text fields asc */
+        rv2State.sortDir = (field === 'label' || field === 'key') ? 'asc' : 'desc';
+    }
+    rv2Render();
+}
+function rv2SortHeader(field, label, align) {
+    var active = rv2State.sortBy === field;
+    var arrow = active ? (rv2State.sortDir === 'asc' ? '<i class="fas fa-sort-up" style="margin-left:5px;color:#0a6c80;font-size:11px;"></i>' : '<i class="fas fa-sort-down" style="margin-left:5px;color:#0a6c80;font-size:11px;"></i>') : '<i class="fas fa-sort" style="margin-left:5px;color:#cbd5e1;font-size:10px;"></i>';
+    return '<th class="' + (align === 'num' ? 'num ' : '') + 'sortable" onclick="rv2SortBy(\'' + field + '\')" style="cursor:pointer;user-select:none;' + (active ? 'color:#0a6c80;' : '') + '">' + label + arrow + '</th>';
+}
 
 /* ── Platform detection from referer URL ── */
 function rv2PlatformOf(referer) {
@@ -9719,10 +9756,12 @@ function rv2RenderGrouped(opts) {
             rpc: d.clicks ? (d.rev/d.clicks).toFixed(2) : '0.00'
         };
     });
-    rows.sort(function(a,b){ return b.clicks - a.clicks; });
     /* Search filter */
     var q = (rv2State.search || '').toLowerCase().trim();
     if (q) rows = rows.filter(function(r){ return String(r.label).toLowerCase().indexOf(q) > -1 || String(r.key).toLowerCase().indexOf(q) > -1; });
+    /* Apply sort */
+    var sortField = rv2State.sortBy || 'clicks';
+    rv2SortRows(rows, sortField, rv2State.sortDir);
     var maxClicks = rows.reduce(function(m,r){ return Math.max(m, r.clicks); }, 0);
 
     var actions = '<input type="text" class="rv2-search" placeholder="Search..." value="' + escHtml(rv2State.search||'') + '" oninput="rv2State.search=this.value;rv2Render();" />' +
@@ -9746,15 +9785,15 @@ function rv2RenderGrouped(opts) {
     } else {
         html += '<div class="rv2-table-wrap"><table class="rv2-table">' +
             '<thead><tr>' +
-            '<th>' + opts.entityName + '</th>' +
-            '<th class="num">Clicks</th>' +
-            '<th class="num">Unique</th>' +
-            '<th class="num">Conv</th>' +
-            '<th class="num">CVR</th>' +
-            '<th class="num">Revenue</th>' +
-            '<th class="num">Payout</th>' +
-            '<th class="num">Profit</th>' +
-            '<th class="num">EPC</th>' +
+            rv2SortHeader('label', opts.entityName, 'left') +
+            rv2SortHeader('clicks', 'Clicks', 'num') +
+            rv2SortHeader('unique', 'Unique', 'num') +
+            rv2SortHeader('convs', 'Conv', 'num') +
+            rv2SortHeader('cvr', 'CVR', 'num') +
+            rv2SortHeader('rev', 'Revenue', 'num') +
+            rv2SortHeader('pay', 'Payout', 'num') +
+            rv2SortHeader('profit', 'Profit', 'num') +
+            rv2SortHeader('epc', 'EPC', 'num') +
             '<th style="width:60px;"></th>' +
             '</tr></thead><tbody>';
         rows.forEach(function(r) {
@@ -9877,21 +9916,37 @@ function rv2RenderDaily() {
     var map = {};
     clicks.forEach(function(c){ var k=dayKey(c.timestamp); if(!map[k]) map[k]={k:k,clicks:0,ips:{},convs:0,rev:0,pay:0}; map[k].clicks++; if(c.ip) map[k].ips[c.ip]=1; });
     convs.forEach(function(c){ var k=dayKey(c.createdAt); if(!map[k]) map[k]={k:k,clicks:0,ips:{},convs:0,rev:0,pay:0}; map[k].convs++; map[k].rev+=(parseFloat(c.revenue)||0); map[k].pay+=(parseFloat(c.payout)||0); });
-    var rows = Object.values(map).sort(function(a,b){ return b.k.localeCompare(a.k); });
+    var rows = Object.values(map).map(function(r){
+        return { k:r.k, clicks:r.clicks, unique:Object.keys(r.ips).length, convs:r.convs, cvr:r.clicks?(r.convs/r.clicks*100):0, rev:r.rev, pay:r.pay, profit:r.rev-r.pay, epc:r.clicks?(r.pay/r.clicks):0 };
+    });
+    var dSortField = rv2State.sortBy === 'label' ? 'k' : rv2State.sortBy;
+    /* Daily default = date desc if user hasn't picked a sort yet */
+    if (rv2State.sortBy === 'clicks' && rv2State.sortDir === 'desc' && !rv2State._dailyTouched) rv2SortRows(rows, 'k', 'desc');
+    else rv2SortRows(rows, dSortField, rv2State.sortDir);
     var maxC = rows.reduce(function(m,r){return Math.max(m,r.clicks);},0);
     var html = rv2HeaderHtml('Daily Report ' + rv2FilterChips(), 'Day-by-day breakdown');
     if (!rows.length) { html += rv2EmptyHtml('No daily data','Try a different date range','fa-calendar-day'); document.getElementById('rv2Content').innerHTML = html; return; }
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Date</th><th class="num">Clicks</th><th class="num">Unique</th><th class="num">Conv</th><th class="num">CVR</th><th class="num">Revenue</th><th class="num">Payout</th><th class="num">Profit</th><th class="num">EPC</th></tr></thead><tbody>';
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
+        rv2SortHeader('label','Date','left')+
+        rv2SortHeader('clicks','Clicks','num')+
+        rv2SortHeader('unique','Unique','num')+
+        rv2SortHeader('convs','Conv','num')+
+        rv2SortHeader('cvr','CVR','num')+
+        rv2SortHeader('rev','Revenue','num')+
+        rv2SortHeader('pay','Payout','num')+
+        rv2SortHeader('profit','Profit','num')+
+        rv2SortHeader('epc','EPC','num')+
+        '</tr></thead><tbody>';
     rows.forEach(function(r){
-        var cvr = r.clicks ? ((r.convs/r.clicks)*100).toFixed(1)+'%' : '0%';
-        var epc = r.clicks ? '$'+(r.pay/r.clicks).toFixed(2) : '$0.00';
+        var cvrTxt = r.clicks ? r.cvr.toFixed(1)+'%' : '0%';
+        var epcTxt = r.clicks ? '$'+r.epc.toFixed(2) : '$0.00';
         html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+r.k+'</span></div></td>'+
-            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num muted">'+Object.keys(r.ips).length+'</td>'+
-            '<td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvr+'</td>'+
+            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num muted">'+r.unique+'</td>'+
+            '<td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvrTxt+'</td>'+
             '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
             '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(r.pay)+'</td>'+
-            '<td class="num" style="font-weight:600;">'+fmtMoney(r.rev-r.pay)+'</td>'+
-            '<td class="num">'+epc+'</td></tr>';
+            '<td class="num" style="font-weight:600;">'+fmtMoney(r.profit)+'</td>'+
+            '<td class="num">'+epcTxt+'</td></tr>';
     });
     html += '</tbody></table></div>';
     document.getElementById('rv2Content').innerHTML = html;
@@ -9902,15 +9957,22 @@ function rv2RenderHourly() {
     var map = {}; for (var i=0;i<24;i++) map[i] = {h:i,clicks:0,convs:0,rev:0,pay:0};
     clicks.forEach(function(c){ var h=new Date(c.timestamp).getHours(); map[h].clicks++; });
     convs.forEach(function(c){ var h=new Date(c.createdAt).getHours(); map[h].convs++; map[h].rev+=(parseFloat(c.revenue)||0); map[h].pay+=(parseFloat(c.payout)||0); });
-    var rows = Object.values(map);
+    var rows = Object.values(map).map(function(r){ return {h:r.h, label:String(r.h).padStart(2,'0')+':00 - '+String(r.h+1).padStart(2,'0')+':00', clicks:r.clicks, convs:r.convs, cvr:r.clicks?(r.convs/r.clicks*100):0, rev:r.rev, pay:r.pay}; });
+    rv2SortRows(rows, rv2State.sortBy === 'label' ? 'h' : rv2State.sortBy, rv2State.sortDir);
     var maxC = rows.reduce(function(m,r){return Math.max(m,r.clicks);},0);
     var html = rv2HeaderHtml('Hourly Report ' + rv2FilterChips(), 'Hour-of-day breakdown');
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Hour</th><th class="num">Clicks</th><th class="num">Conv</th><th class="num">CVR</th><th class="num">Revenue</th><th class="num">Payout</th></tr></thead><tbody>';
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
+        rv2SortHeader('label','Hour','left')+
+        rv2SortHeader('clicks','Clicks','num')+
+        rv2SortHeader('convs','Conv','num')+
+        rv2SortHeader('cvr','CVR','num')+
+        rv2SortHeader('rev','Revenue','num')+
+        rv2SortHeader('pay','Payout','num')+
+        '</tr></thead><tbody>';
     rows.forEach(function(r){
-        var label = String(r.h).padStart(2,'0')+':00 - '+String(r.h+1).padStart(2,'0')+':00';
-        var cvr = r.clicks ? ((r.convs/r.clicks)*100).toFixed(1)+'%' : '0%';
-        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+label+'</span></div></td>'+
-            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvr+'</td>'+
+        var cvrTxt = r.clicks ? r.cvr.toFixed(1)+'%' : '0%';
+        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+r.label+'</span></div></td>'+
+            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvrTxt+'</td>'+
             '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
             '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(r.pay)+'</td></tr>';
     });
@@ -9920,18 +9982,39 @@ function rv2RenderHourly() {
 
 /* ── Click Logs / Conversion Logs (raw) ── */
 function rv2RenderClickLogs() {
-    var clicks = rv2FilterClicks().sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);}).slice(0, 200);
+    var clicks = rv2FilterClicks().map(function(c){
+        return {
+            _id:c._id, timestamp:c.timestamp||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
+            ip:c.ip||'', country:c.country||'', platform:rv2PlatformOf(c.referer), browser:c.browser||'',
+            device:c.device||'', sub1:c.sub1||'', converted:c.converted?1:0, referer:c.referer
+        };
+    });
+    var sortField = rv2State.sortBy === 'label' ? 'timestamp' : rv2State.sortBy;
+    /* If default sortBy is 'clicks' (carries from group reports), use timestamp as default for click logs */
+    if (rv2State.sortBy === 'clicks') sortField = 'timestamp';
+    rv2SortRows(clicks, sortField, rv2State.sortDir);
+    clicks = clicks.slice(0, 200);
     var actions = '<button class="rv2-export-btn" onclick="rv2ExportClicks()"><i class="fas fa-download"></i> Export</button>';
-    var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200');
-    html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200', actions);
+    var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200', actions);
     if (!clicks.length) { html += rv2EmptyHtml('No clicks','Adjust filters','fa-mouse-pointer'); document.getElementById('rv2Content').innerHTML = html; return; }
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Time</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>Platform</th><th>Browser</th><th>Device</th><th>Sub ID</th><th class="num">Conv?</th></tr></thead><tbody>';
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
+        rv2SortHeader('timestamp','Time','left')+
+        rv2SortHeader('offer','Offer','left')+
+        rv2SortHeader('affiliate','Affiliate','left')+
+        rv2SortHeader('ip','IP','left')+
+        rv2SortHeader('country','Country','left')+
+        rv2SortHeader('platform','Platform','left')+
+        rv2SortHeader('browser','Browser','left')+
+        rv2SortHeader('device','Device','left')+
+        rv2SortHeader('sub1','Sub ID','left')+
+        rv2SortHeader('converted','Conv?','num')+
+        '</tr></thead><tbody>';
     clicks.forEach(function(c){
-        var p = rv2PlatformOf(c.referer);
+        var p = c.platform;
         html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">'+
             '<td style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</td>'+
-            '<td>'+escHtml(getOfferName(c.offerId))+'</td>'+
-            '<td>'+escHtml(getUserName(c.affiliateId))+'</td>'+
+            '<td>'+escHtml(c.offer)+'</td>'+
+            '<td>'+escHtml(c.affiliate)+'</td>'+
             '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
             '<td>'+escHtml(c.country||'-')+'</td>'+
             '<td><span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span></td>'+
@@ -9945,15 +10028,28 @@ function rv2RenderClickLogs() {
     document.getElementById('rv2Content').innerHTML = html;
 }
 function rv2RenderConvLogs() {
-    var convs = rv2FilterConvs().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    var convs = rv2FilterConvs().map(function(c){
+        return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId), revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'', ip:c.ip||''};
+    });
+    var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
+    rv2SortRows(convs, cSortField, rv2State.sortDir);
     var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), 'All conversions in range — click row for full detail', '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>');
     if (!convs.length) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Date</th><th>Offer</th><th>Affiliate</th><th class="num">Revenue</th><th class="num">Payout</th><th>Status</th><th>Source</th><th>IP</th></tr></thead><tbody>';
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
+        rv2SortHeader('createdAt','Date','left')+
+        rv2SortHeader('offer','Offer','left')+
+        rv2SortHeader('affiliate','Affiliate','left')+
+        rv2SortHeader('revenue','Revenue','num')+
+        rv2SortHeader('payout','Payout','num')+
+        rv2SortHeader('status','Status','left')+
+        rv2SortHeader('source','Source','left')+
+        rv2SortHeader('ip','IP','left')+
+        '</tr></thead><tbody>';
     convs.forEach(function(c){
         html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">'+
             '<td style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</td>'+
-            '<td>'+escHtml(getOfferName(c.offerId))+'</td>'+
-            '<td>'+escHtml(getUserName(c.affiliateId))+'</td>'+
+            '<td>'+escHtml(c.offer)+'</td>'+
+            '<td>'+escHtml(c.affiliate)+'</td>'+
             '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</td>'+
             '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</td>'+
             '<td>'+(typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'))+'</td>'+
