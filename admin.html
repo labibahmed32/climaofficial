@@ -9668,35 +9668,66 @@ function rv2RenderOverview() {
         '<div class="rv2-metric"><div class="rv2-metric-lbl">Geo Blocked</div><div class="rv2-metric-val amber">' + geoCount + '</div></div>' +
         '</div>';
 
-    /* Top breakdown cards */
-    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">';
-    html += rv2OverviewMiniCard('Top Offers',     rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
-    html += rv2OverviewMiniCard('Top Affiliates', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
-    html += rv2OverviewMiniCard('Top Platforms',  rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return rv2PlatformIcon(k) + ' ' + rv2PlatformLabel(k);}), 'platform');
-    html += rv2OverviewMiniCard('Top Browsers',   rv2GroupClicks(clicks, function(c){return c.browser || 'Unknown';}, function(k){return escHtml(k);}), 'browser');
+    /* Top breakdown cards — 8 proper mini-tables */
+    var approvedConvs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;">';
+    html += rv2OverviewMiniCard('Top Offers',       'Offer',     'Clicks', rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    html += rv2OverviewMiniCard('Top Converting Offers', 'Offer', 'Conv',  rv2GroupConvs(approvedConvs, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    html += rv2OverviewMiniCard('Top Affiliates',   'Affiliate', 'Clicks', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    html += rv2OverviewMiniCard('Top Platforms',    'Platform',  'Clicks', rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
+    html += rv2OverviewMiniCard('Top Browsers',     'Browser',   'Clicks', rv2GroupClicks(clicks, function(c){return rv2BrowserKey(c);}, function(k){return escHtml(k);}), 'browser');
+    html += rv2OverviewMiniCard('Top Devices / OS', 'Device',    'Clicks', rv2GroupClicks(clicks, function(c){return (c.device||'Unknown')+' · '+(c.os||'Unknown')+(c.osVer?' '+c.osVer:'');}, function(k){return escHtml(k);}), 'device');
+    html += rv2OverviewMiniCard('Top ISPs',         'ISP',       'Clicks', rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
+    html += rv2OverviewMiniCard('Top Countries',    'Country',   'Clicks', rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
     html += '</div>';
     document.getElementById('rv2Content').innerHTML = html;
+}
+/* Browser key incl. in-app webview detection */
+function rv2BrowserKey(c) {
+    var ua = (c.userAgent || '').toLowerCase();
+    if (/fban|fbav/.test(ua)) return 'Facebook In-App';
+    if (/instagram/.test(ua)) return 'Instagram In-App';
+    if (/tiktok/.test(ua))    return 'TikTok In-App';
+    if (/snapchat/.test(ua))  return 'Snapchat In-App';
+    return c.browser || 'Unknown';
 }
 function rv2GroupClicks(clicks, keyFn, labelFn) {
     var m = {}; clicks.forEach(function(c){ var k = keyFn(c); if (!k) return; if (!m[k]) m[k] = {key:k, count:0}; m[k].count++; });
     var arr = Object.keys(m).map(function(k){ return {key:k, label:labelFn(k), count:m[k].count}; });
     arr.sort(function(a,b){ return b.count - a.count; });
-    return arr.slice(0, 5);
+    return arr.slice(0, 6);
 }
-function rv2OverviewMiniCard(title, rows, tabKey) {
-    var html = '<div style="background:#fff;border:1px solid #eef2f6;border-radius:10px;padding:14px 16px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<div style="font-size:13px;font-weight:700;color:#0f172a;">' + title + '</div>' +
+function rv2GroupConvs(convs, keyFn, labelFn) {
+    var m = {}; convs.forEach(function(c){ var k = keyFn(c); if (!k) return; if (!m[k]) m[k] = {key:k, count:0}; m[k].count++; });
+    var arr = Object.keys(m).map(function(k){ return {key:k, label:labelFn(k), count:m[k].count}; });
+    arr.sort(function(a,b){ return b.count - a.count; });
+    return arr.slice(0, 6);
+}
+function rv2OverviewMiniCard(title, colLabel, metricLabel, rows, tabKey) {
+    var total = rows.reduce(function(s,r){ return s + r.count; }, 0);
+    var html = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:11px;overflow:hidden;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px 11px;border-bottom:1px solid #f1f5f9;">' +
+        '<div style="font-size:13.5px;font-weight:700;color:#0f172a;">' + title + '</div>' +
         '<a style="font-size:11px;color:#0a6c80;cursor:pointer;font-weight:600;" onclick="rv2SwitchTab(\'' + tabKey + '\')">View all →</a>' +
         '</div>';
-    if (!rows.length) { html += '<div style="font-size:12px;color:#94a3b8;padding:10px 0;">No data</div>'; }
-    else {
+    if (!rows.length) {
+        html += '<div style="font-size:12px;color:#94a3b8;padding:24px 16px;text-align:center;">No data</div>';
+    } else {
+        html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;">' +
+            '<thead><tr style="background:#f8fafc;">' +
+            '<th style="text-align:left;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;">' + colLabel + '</th>' +
+            '<th style="text-align:right;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;">' + metricLabel + '</th>' +
+            '<th style="text-align:right;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;width:48px;">%</th>' +
+            '</tr></thead><tbody>';
         rows.forEach(function(r) {
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f1f5f9;font-size:12.5px;">' +
-                '<div style="color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + r.label + '</div>' +
-                '<div style="font-weight:700;color:#0f172a;margin-left:10px;">' + r.count + '</div>' +
-                '</div>';
+            var pct = total > 0 ? ((r.count/total)*100).toFixed(0) + '%' : '—';
+            html += '<tr style="cursor:pointer;" onclick="rv2DrillTo(\'' + tabKey + '\',' + JSON.stringify(r.key).replace(/"/g,'&quot;') + ')" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">' +
+                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;color:#1e293b;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</td>' +
+                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;text-align:right;font-weight:700;color:#0f172a;">' + r.count + '</td>' +
+                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;text-align:right;color:#94a3b8;font-size:11px;">' + pct + '</td>' +
+                '</tr>';
         });
+        html += '</tbody></table>';
     }
     html += '</div>';
     return html;
@@ -10126,12 +10157,12 @@ function rv2RenderDrill() {
 
     /* Sub-breakdowns */
     html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">';
-    if (kind !== 'platform') html += rv2OverviewMiniCard('By Platform',  rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return rv2PlatformIcon(k)+' '+rv2PlatformLabel(k);}), 'platform');
-    if (kind !== 'browser')  html += rv2OverviewMiniCard('By Browser',   rv2GroupClicks(clicks, function(c){return c.browser||'Unknown';}, function(k){return escHtml(k);}), 'browser');
-    if (kind !== 'isp')      html += rv2OverviewMiniCard('By ISP',       rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
-    if (kind !== 'country')  html += rv2OverviewMiniCard('By Country',   rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
-    if (kind !== 'offer')    html += rv2OverviewMiniCard('By Offer',     rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
-    if (kind !== 'affiliate')html += rv2OverviewMiniCard('By Affiliate', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    if (kind !== 'platform') html += rv2OverviewMiniCard('By Platform',  'Platform', 'Clicks', rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
+    if (kind !== 'browser')  html += rv2OverviewMiniCard('By Browser',   'Browser', 'Clicks', rv2GroupClicks(clicks, function(c){return rv2BrowserKey(c);}, function(k){return escHtml(k);}), 'browser');
+    if (kind !== 'isp')      html += rv2OverviewMiniCard('By ISP',       'ISP', 'Clicks', rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
+    if (kind !== 'country')  html += rv2OverviewMiniCard('By Country',   'Country', 'Clicks', rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
+    if (kind !== 'offer')    html += rv2OverviewMiniCard('By Offer',     'Offer', 'Clicks', rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    if (kind !== 'affiliate')html += rv2OverviewMiniCard('By Affiliate', 'Affiliate', 'Clicks', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
     html += '</div>';
 
     /* Recent clicks */
