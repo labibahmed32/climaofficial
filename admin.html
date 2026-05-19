@@ -9684,7 +9684,6 @@ function rv2GroupClicks(clicks, keyFn, labelFn) {
     return arr.slice(0, 5);
 }
 function rv2OverviewMiniCard(title, rows, tabKey) {
-    var max = rows.reduce(function(m,r){ return Math.max(m, r.count); }, 0);
     var html = '<div style="background:#fff;border:1px solid #eef2f6;border-radius:10px;padding:14px 16px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
         '<div style="font-size:13px;font-weight:700;color:#0f172a;">' + title + '</div>' +
@@ -9693,10 +9692,9 @@ function rv2OverviewMiniCard(title, rows, tabKey) {
     if (!rows.length) { html += '<div style="font-size:12px;color:#94a3b8;padding:10px 0;">No data</div>'; }
     else {
         rows.forEach(function(r) {
-            html += '<div style="display:grid;grid-template-columns:1fr 70px 50px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #f1f5f9;font-size:12.5px;">' +
-                '<div style="color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</div>' +
-                '<div>' + rv2BarPct(r.count, max) + '</div>' +
-                '<div style="text-align:right;font-weight:700;color:#0f172a;">' + r.count + '</div>' +
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f1f5f9;font-size:12.5px;">' +
+                '<div style="color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + r.label + '</div>' +
+                '<div style="font-weight:700;color:#0f172a;margin-left:10px;">' + r.count + '</div>' +
                 '</div>';
         });
     }
@@ -9798,7 +9796,7 @@ function rv2RenderGrouped(opts) {
             '</tr></thead><tbody>';
         rows.forEach(function(r) {
             html += '<tr class="clickable" onclick="rv2DrillTo(\'' + opts.drillKind + '\',' + JSON.stringify(r.key).replace(/"/g,'&quot;') + ')">' +
-                '<td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">' + rv2BarPct(r.clicks, maxClicks) + '</div><span style="font-weight:600;">' + r.label + '</span></div></td>' +
+                '<td><span style="font-weight:600;">' + r.label + '</span></td>' +
                 '<td class="num"><strong>' + r.clicks + '</strong></td>' +
                 '<td class="num muted">' + r.unique + '</td>' +
                 '<td class="num"><strong style="color:#15803d;">' + r.convs + '</strong>' + (r.pending ? ' <span style="font-size:10.5px;color:#a16207;">+' + r.pending + 'p</span>' : '') + '</td>' +
@@ -9940,7 +9938,7 @@ function rv2RenderDaily() {
     rows.forEach(function(r){
         var cvrTxt = r.clicks ? r.cvr.toFixed(1)+'%' : '0%';
         var epcTxt = r.clicks ? '$'+r.epc.toFixed(2) : '$0.00';
-        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+r.k+'</span></div></td>'+
+        html += '<tr><td><span style="font-weight:600;">'+r.k+'</span></td>'+
             '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num muted">'+r.unique+'</td>'+
             '<td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvrTxt+'</td>'+
             '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
@@ -9971,7 +9969,7 @@ function rv2RenderHourly() {
         '</tr></thead><tbody>';
     rows.forEach(function(r){
         var cvrTxt = r.clicks ? r.cvr.toFixed(1)+'%' : '0%';
-        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+r.label+'</span></div></td>'+
+        html += '<tr><td><span style="font-weight:600;">'+r.label+'</span></td>'+
             '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvrTxt+'</td>'+
             '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
             '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(r.pay)+'</td></tr>';
