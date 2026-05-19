@@ -336,6 +336,76 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rpt-back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--card-border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;color:var(--text-muted);white-space:nowrap;transition:all .15s;}
 .rpt-back-btn:hover{border-color:var(--primary);color:var(--primary);}
 .rpt-panel-topbar .rpt-title-area{flex:1;}
+
+/* ═══ REPORTS V2 — Unified shell ═══ */
+.rv2-shell{display:flex;flex-direction:column;height:calc(100vh - 120px);min-height:600px;}
+.rv2-topbar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.rv2-topbar-lbl{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;}
+.rv2-topbar select,.rv2-topbar input[type=text]{padding:7px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:12.5px;color:#0f172a;background:#fff;outline:none;min-width:140px;transition:border-color .15s;}
+.rv2-topbar select:focus,.rv2-topbar input:focus{border-color:#0a6c80;}
+.rv2-topbar input[type=text]{min-width:180px;}
+.rv2-preset{display:flex;gap:4px;background:#f8fafc;border-radius:8px;padding:3px;border:1px solid #e5e7eb;}
+.rv2-preset-btn{padding:5px 11px;font-size:11.5px;font-weight:600;color:#6b7280;background:transparent;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .12s;}
+.rv2-preset-btn:hover{color:#0f172a;}
+.rv2-preset-btn.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.rv2-clear-btn{padding:7px 12px;background:transparent;border:1px solid #e5e7eb;border-radius:7px;font-size:12px;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.rv2-clear-btn:hover{border-color:#dc2626;color:#dc2626;}
+.rv2-body{display:grid;grid-template-columns:220px 1fr;gap:14px;flex:1;min-height:0;}
+.rv2-side{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 8px;overflow-y:auto;}
+.rv2-side-cat{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px;padding:10px 12px 6px;}
+.rv2-side-cat:first-child{padding-top:4px;}
+.rv2-side-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:500;color:#475569;transition:all .12s;border-left:2.5px solid transparent;margin:1px 0;}
+.rv2-side-item:hover{background:#f8fafc;color:#0f172a;}
+.rv2-side-item.active{background:#f0f9fb;color:#0a6c80;font-weight:700;border-left-color:#0a6c80;}
+.rv2-side-item i{width:16px;text-align:center;font-size:12px;opacity:.7;}
+.rv2-side-item.active i{opacity:1;}
+.rv2-side-count{margin-left:auto;font-size:10.5px;color:#9ca3af;background:#f3f4f6;border-radius:10px;padding:1px 7px;font-weight:600;}
+.rv2-side-item.active .rv2-side-count{background:#0a6c80;color:#fff;}
+.rv2-content{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow-y:auto;padding:0;}
+.rv2-content-hd{padding:18px 22px 12px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.rv2-content-title{font-size:17px;font-weight:700;color:#0f172a;letter-spacing:-.2px;}
+.rv2-content-sub{font-size:12.5px;color:#6b7280;margin-top:2px;}
+.rv2-content-actions{display:flex;gap:8px;align-items:center;}
+.rv2-search{padding:7px 11px 7px 32px;border:1px solid #e5e7eb;border-radius:7px;font-size:12.5px;outline:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") 10px center/14px no-repeat #fff;min-width:200px;}
+.rv2-export-btn{padding:7px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:7px;font-size:12px;color:#475569;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;}
+.rv2-export-btn:hover{background:#0a6c80;color:#fff;border-color:#0a6c80;}
+.rv2-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:16px 22px;border-bottom:1px solid #f1f5f9;}
+.rv2-metric{background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;padding:11px 14px;}
+.rv2-metric-lbl{font-size:10.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.rv2-metric-val{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-.3px;}
+.rv2-metric-val.blue{color:#1e40af;} .rv2-metric-val.green{color:#15803d;} .rv2-metric-val.red{color:#b91c1c;} .rv2-metric-val.amber{color:#a16207;}
+.rv2-table-wrap{overflow-x:auto;padding:0 6px 16px;}
+.rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
+.rv2-table thead tr{background:#f8fafc;}
+.rv2-table th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+.rv2-table th.num,.rv2-table td.num{text-align:right;}
+.rv2-table td{padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#1e293b;white-space:nowrap;vertical-align:middle;}
+.rv2-table tr.clickable{cursor:pointer;transition:background .1s;}
+.rv2-table tr.clickable:hover{background:#f8fafc;}
+.rv2-table td.muted{color:#94a3b8;}
+.rv2-empty{padding:60px 20px;text-align:center;color:#94a3b8;}
+.rv2-empty i{font-size:34px;display:block;margin-bottom:10px;opacity:.4;}
+.rv2-empty-title{font-size:14px;font-weight:600;color:#475569;margin-bottom:4px;}
+.rv2-empty-sub{font-size:12px;color:#94a3b8;}
+.rv2-breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7280;padding:0 22px 12px;}
+.rv2-breadcrumb a{color:#0a6c80;cursor:pointer;font-weight:500;}
+.rv2-breadcrumb a:hover{text-decoration:underline;}
+.rv2-breadcrumb .crumb-sep{color:#cbd5e1;font-size:9px;}
+.rv2-back-btn{padding:6px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:7px;font-size:12px;color:#475569;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:600;margin:12px 22px 0;}
+.rv2-back-btn:hover{background:#fff;border-color:#0a6c80;color:#0a6c80;}
+.rv2-pill{display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:10px;font-size:11.5px;font-weight:600;}
+.rv2-pill-fb{background:#dbeafe;color:#1e40af;}
+.rv2-pill-ig{background:#fce7f3;color:#9d174d;}
+.rv2-pill-google{background:#fef3c7;color:#92400e;}
+.rv2-pill-tt{background:#cffafe;color:#155e75;}
+.rv2-pill-yt{background:#fee2e2;color:#991b1b;}
+.rv2-pill-twitter{background:#cffafe;color:#0e7490;}
+.rv2-pill-direct{background:#e5e7eb;color:#374151;}
+.rv2-bar{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;position:relative;min-width:60px;}
+.rv2-bar-fill{height:100%;background:linear-gradient(90deg,#0a6c80,#14b8a6);border-radius:3px;}
+.rv2-icon-tile{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:#f1f5f9;color:#475569;}
+@media(max-width:1100px){.rv2-body{grid-template-columns:1fr;}.rv2-side{position:static;}}
+
 /* Top Offers Admin */
 .top-offer-row{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid var(--card-border);border-radius:9px;padding:10px 14px;margin-bottom:8px;}
 .top-offer-row input,.top-offer-row select{padding:6px 10px;border:1.5px solid var(--card-border);border-radius:6px;font-size:12px;background:#fff;outline:none;}
@@ -782,22 +852,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div class="rpt-fly-cat">Performance</div>
         <div class="rpt-fly-grid">
-            <div class="rpt-fly-item" onclick="_currentRptPanel='offer';closeRptFlyout();goPage('reporting');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='offer';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-tag"></i></div>
                 <div class="rpt-fly-info"><strong>Offer Report</strong><span>Breakdown by offer · CVR · EPC · profit</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
             </div>
-            <div class="rpt-fly-item" onclick="_currentRptPanel='subid';closeRptFlyout();goPage('reporting');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='subid';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-code-branch"></i></div>
                 <div class="rpt-fly-info"><strong>Sub ID Report</strong><span>Traffic source &amp; campaign performance</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
             </div>
-            <div class="rpt-fly-item" onclick="_currentRptPanel='daily';closeRptFlyout();goPage('reporting');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='daily';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-calendar-day"></i></div>
                 <div class="rpt-fly-info"><strong>Daily Report</strong><span>Day-by-day performance trends</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
             </div>
-            <div class="rpt-fly-item" onclick="_currentRptPanel='hourly';closeRptFlyout();goPage('reporting');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='hourly';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-clock"></i></div>
                 <div class="rpt-fly-info"><strong>Hourly Report</strong><span>Hour-level peak analysis</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
@@ -806,12 +876,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div class="rpt-fly-cat">Activity</div>
         <div class="rpt-fly-grid">
-            <div class="rpt-fly-item" onclick="closeRptFlyout();goPage('clicks');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='clicks';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-mouse-pointer"></i></div>
                 <div class="rpt-fly-info"><strong>Click Reports</strong><span>Detailed click stream with filters</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
             </div>
-            <div class="rpt-fly-item" onclick="_currentRptPanel='conv';closeRptFlyout();goPage('reporting');">
+            <div class="rpt-fly-item" onclick="rv2State.tab='conversions';closeRptFlyout();goPage('reporting');">
                 <div class="rpt-fly-ic"><i class="fas fa-exchange-alt"></i></div>
                 <div class="rpt-fly-info"><strong>Conversion Report</strong><span>Conversion details with delta times</span></div>
                 <i class="fas fa-chevron-right rpt-fly-arrow"></i>
@@ -1039,9 +1109,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
         </div>
 
-        <!-- ===== REPORTING HUB ===== -->
-        <div class="page-section" id="page-reporting">
-          <!-- Hub: report type selector -->
+        <!-- ===== LEGACY REPORTING (kept hidden — DOM still used by render fns) ===== -->
+        <div class="page-section" id="page-reporting-legacy" style="display:none !important;">
           <div id="rptHub">
             <div style="margin-bottom:20px;">
               <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0 0 4px">Reports</h2>
@@ -1176,6 +1245,77 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             </div>
             <div class="rpt-section"><div class="rpt-detail-hd"><h3>Hourly Breakdown</h3><div class="rpt-search-wrap"><button class="rpt-dots-btn" onclick="exportRptHourly()">⋮</button></div></div>
               <div class="table-scroll"><table class="data-table"><thead><tr><th>Hour</th><th>Clicks</th><th>Conversions</th><th>CVR</th><th>Revenue</th><th>Payout</th></tr></thead><tbody id="rptHourlyTbody"><tr><td colspan="6" class="no-data">Run report to load data</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== REPORTING V2 (NEW unified interface) ===== -->
+        <div class="page-section" id="page-reporting">
+          <div class="rv2-shell">
+            <!-- Persistent top filter bar -->
+            <div class="rv2-topbar">
+                <div class="rv2-preset" id="rv2Preset">
+                    <button class="rv2-preset-btn active" data-preset="today" onclick="rv2SetPreset('today')">Today</button>
+                    <button class="rv2-preset-btn" data-preset="yesterday" onclick="rv2SetPreset('yesterday')">Yesterday</button>
+                    <button class="rv2-preset-btn" data-preset="7d" onclick="rv2SetPreset('7d')">7 Days</button>
+                    <button class="rv2-preset-btn" data-preset="30d" onclick="rv2SetPreset('30d')">30 Days</button>
+                    <button class="rv2-preset-btn" data-preset="mtd" onclick="rv2SetPreset('mtd')">This Month</button>
+                    <button class="rv2-preset-btn" data-preset="lastmonth" onclick="rv2SetPreset('lastmonth')">Last Month</button>
+                    <button class="rv2-preset-btn" data-preset="all" onclick="rv2SetPreset('all')">All Time</button>
+                </div>
+                <input type="date" id="rv2DateFrom" onchange="rv2OnDateChange()" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:12.5px;">
+                <span style="color:#cbd5e1;">→</span>
+                <input type="date" id="rv2DateTo" onchange="rv2OnDateChange()" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:12.5px;">
+                <span style="width:1px;height:20px;background:#e5e7eb;margin:0 4px;"></span>
+                <select id="rv2OfferF" onchange="rv2Rerender()"><option value="">All Offers</option></select>
+                <select id="rv2AffF" onchange="rv2Rerender()"><option value="">All Affiliates</option></select>
+                <select id="rv2PlatformF" onchange="rv2Rerender()">
+                    <option value="">All Platforms</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="google">Google</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="twitter">Twitter / X</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="snapchat">Snapchat</option>
+                    <option value="reddit">Reddit</option>
+                    <option value="direct">Direct / Unknown</option>
+                    <option value="other">Other</option>
+                </select>
+                <button class="rv2-clear-btn" onclick="rv2ClearFilters()" title="Reset all filters"><i class="fas fa-times"></i> Clear</button>
+            </div>
+
+            <!-- Body: sidebar + content -->
+            <div class="rv2-body">
+                <!-- Sidebar tabs -->
+                <div class="rv2-side">
+                    <div class="rv2-side-cat">Overview</div>
+                    <div class="rv2-side-item active" data-tab="overview" onclick="rv2SwitchTab('overview')"><i class="fas fa-th-large"></i> Summary</div>
+
+                    <div class="rv2-side-cat">Performance</div>
+                    <div class="rv2-side-item" data-tab="offer"   onclick="rv2SwitchTab('offer')"><i class="fas fa-tag"></i> Offers <span class="rv2-side-count" id="rv2Cnt_offer"></span></div>
+                    <div class="rv2-side-item" data-tab="affiliate" onclick="rv2SwitchTab('affiliate')"><i class="fas fa-user-friends"></i> Affiliates <span class="rv2-side-count" id="rv2Cnt_affiliate"></span></div>
+                    <div class="rv2-side-item" data-tab="subid"   onclick="rv2SwitchTab('subid')"><i class="fas fa-code-branch"></i> Sub IDs <span class="rv2-side-count" id="rv2Cnt_subid"></span></div>
+                    <div class="rv2-side-item" data-tab="daily"   onclick="rv2SwitchTab('daily')"><i class="fas fa-calendar-day"></i> Daily</div>
+                    <div class="rv2-side-item" data-tab="hourly"  onclick="rv2SwitchTab('hourly')"><i class="fas fa-clock"></i> Hourly</div>
+
+                    <div class="rv2-side-cat">Traffic Source</div>
+                    <div class="rv2-side-item" data-tab="platform" onclick="rv2SwitchTab('platform')"><i class="fas fa-share-alt"></i> Platforms <span class="rv2-side-count" id="rv2Cnt_platform"></span></div>
+                    <div class="rv2-side-item" data-tab="referrer" onclick="rv2SwitchTab('referrer')"><i class="fas fa-external-link-alt"></i> Referrers <span class="rv2-side-count" id="rv2Cnt_referrer"></span></div>
+                    <div class="rv2-side-item" data-tab="browser"  onclick="rv2SwitchTab('browser')"><i class="fas fa-globe"></i> Browsers <span class="rv2-side-count" id="rv2Cnt_browser"></span></div>
+                    <div class="rv2-side-item" data-tab="device"   onclick="rv2SwitchTab('device')"><i class="fas fa-mobile-alt"></i> Devices / OS</div>
+                    <div class="rv2-side-item" data-tab="isp"      onclick="rv2SwitchTab('isp')"><i class="fas fa-server"></i> ISPs <span class="rv2-side-count" id="rv2Cnt_isp"></span></div>
+                    <div class="rv2-side-item" data-tab="country"  onclick="rv2SwitchTab('country')"><i class="fas fa-map-marker-alt"></i> Countries</div>
+
+                    <div class="rv2-side-cat">Raw Data</div>
+                    <div class="rv2-side-item" data-tab="clicks"      onclick="rv2SwitchTab('clicks')"><i class="fas fa-mouse-pointer"></i> Click Logs</div>
+                    <div class="rv2-side-item" data-tab="conversions" onclick="rv2SwitchTab('conversions')"><i class="fas fa-exchange-alt"></i> Conversion Logs</div>
+                </div>
+
+                <!-- Content area -->
+                <div class="rv2-content" id="rv2Content">
+                    <!-- Filled by JS -->
+                </div>
             </div>
           </div>
         </div>
@@ -2767,7 +2907,7 @@ function renderPage(page) {
     else if (page === 'linkgen') loadLinkGen();
     else if (page === 'mailer') loadMailer();
     else if (page === 'settings') loadSettings();
-    else if (page === 'reporting') initReporting();
+    else if (page === 'reporting') rv2Init();
     else if (page === 'topoffers') initTopOffers();
     else if (page === 'announcements') initAnnouncements();
 }
@@ -9222,6 +9362,838 @@ function runHourlyReport() {
 function exportRptHourly(){var rows=[['Hour','Clicks','Conversions','CVR','Revenue','Payout']];document.querySelectorAll('#rptHourlyTbody tr').forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>1)rows.push(Array.from(cells).map(function(c){return c.textContent.trim();}));});var csv=rows.map(function(r){return r.join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='hourly-report.csv';a.click();}
 
 function toggleRptSection(hd) { hd.classList.toggle('open'); var body=hd.nextElementSibling; if(body) body.classList.toggle('hidden'); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   REPORTS V2 — unified shell + report renderers
+   ═══════════════════════════════════════════════════════════════════════ */
+var rv2State = {
+    tab: 'overview',
+    drillKey: null,     /* null = main report view; set = drill-down detail view */
+    drillData: null,    /* arbitrary data for the drill-down view */
+    preset: 'today',
+    fromTs: 0,
+    toTs: Infinity,
+    offer: '',
+    affiliate: '',
+    platform: '',
+    search: ''
+};
+
+/* ── Platform detection from referer URL ── */
+function rv2PlatformOf(referer) {
+    if (!referer) return 'direct';
+    var r = String(referer).toLowerCase();
+    if (/facebook\.com|fb\.com|\bfbcdn\b|l\.facebook|m\.facebook/.test(r)) return 'facebook';
+    if (/instagram\.com|l\.instagram/.test(r)) return 'instagram';
+    if (/google\.|googleadservices|googlesyndication|doubleclick/.test(r)) return 'google';
+    if (/tiktok\.com|bytedance/.test(r)) return 'tiktok';
+    if (/twitter\.com|t\.co|x\.com/.test(r)) return 'twitter';
+    if (/youtube\.com|youtu\.be/.test(r)) return 'youtube';
+    if (/snapchat\.com|snap\.com/.test(r)) return 'snapchat';
+    if (/reddit\.com/.test(r)) return 'reddit';
+    if (/pinterest\.com/.test(r)) return 'pinterest';
+    if (/linkedin\.com/.test(r)) return 'linkedin';
+    return 'other';
+}
+function rv2PlatformLabel(p) {
+    return ({ facebook:'Facebook', instagram:'Instagram', google:'Google', tiktok:'TikTok', twitter:'Twitter / X', youtube:'YouTube', snapchat:'Snapchat', reddit:'Reddit', pinterest:'Pinterest', linkedin:'LinkedIn', direct:'Direct / Unknown', other:'Other' })[p] || p;
+}
+function rv2PlatformIcon(p) {
+    var map = { facebook:'fa-facebook-f', instagram:'fa-instagram', google:'fa-google', tiktok:'fa-tiktok', twitter:'fa-x-twitter', youtube:'fa-youtube', snapchat:'fa-snapchat', reddit:'fa-reddit-alien', pinterest:'fa-pinterest-p', linkedin:'fa-linkedin-in' };
+    return map[p] ? '<i class="fab ' + map[p] + '"></i>' : '<i class="fas fa-globe"></i>';
+}
+function rv2PlatformPillClass(p) {
+    return { facebook:'rv2-pill-fb', instagram:'rv2-pill-ig', google:'rv2-pill-google', tiktok:'rv2-pill-tt', twitter:'rv2-pill-twitter', youtube:'rv2-pill-yt', direct:'rv2-pill-direct' }[p] || '';
+}
+
+/* ── Referer host extraction (for Referrer Report) ── */
+function rv2HostOf(url) {
+    if (!url) return '(direct)';
+    try { var u = new URL(url); return u.hostname.replace(/^www\./, ''); }
+    catch(e) { var m = String(url).match(/^https?:\/\/([^\/]+)/i); return m ? m[1].replace(/^www\./, '') : String(url).slice(0, 40); }
+}
+
+/* ── Filter dataset against current rv2State ── */
+function rv2FilterClicks() {
+    return (allClicks || []).filter(function(c) {
+        if (c.blocked) return false; /* exclude blocked from valid stats */
+        var t = c.timestamp || 0;
+        if (t < rv2State.fromTs || t > rv2State.toTs) return false;
+        if (rv2State.offer && c.offerId !== rv2State.offer) return false;
+        if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
+        if (rv2State.platform) {
+            var p = rv2PlatformOf(c.referer);
+            if (rv2State.platform === 'direct' ? p !== 'direct' : p !== rv2State.platform) return false;
+        }
+        return true;
+    });
+}
+function rv2FilterConvs() {
+    return (allConversions || []).filter(function(c) {
+        var t = c.createdAt || 0;
+        if (t < rv2State.fromTs || t > rv2State.toTs) return false;
+        if (rv2State.offer && c.offerId !== rv2State.offer) return false;
+        if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
+        if (rv2State.platform) {
+            /* match via originating click */
+            var click = c.clickId ? (allClicks || []).filter(function(x){return x._id===c.clickId;})[0] : null;
+            var ref = click ? click.referer : c.referer;
+            var p = rv2PlatformOf(ref);
+            if (rv2State.platform === 'direct' ? p !== 'direct' : p !== rv2State.platform) return false;
+        }
+        return true;
+    });
+}
+
+/* ── Init: called when entering the reports page ── */
+function rv2Init() {
+    /* Populate offer/affiliate dropdowns */
+    var ofSel = document.getElementById('rv2OfferF');
+    var afSel = document.getElementById('rv2AffF');
+    if (ofSel && (!ofSel.dataset.filled || ofSel.options.length <= 1)) {
+        var oh = '<option value="">All Offers</option>';
+        (allOffers || []).forEach(function(o) { oh += '<option value="' + o._id + '">' + escHtml(o.name || o._id) + '</option>'; });
+        ofSel.innerHTML = oh; ofSel.dataset.filled = '1';
+    }
+    if (afSel && (!afSel.dataset.filled || afSel.options.length <= 1)) {
+        var ah = '<option value="">All Affiliates</option>';
+        (allUsers || []).filter(function(u) { return u.role === 'affiliate'; }).forEach(function(a) {
+            ah += '<option value="' + a._id + '">' + escHtml(a.name || a.email || a._id) + '</option>';
+        });
+        afSel.innerHTML = ah; afSel.dataset.filled = '1';
+    }
+    rv2SetPreset(rv2State.preset, true);
+    /* Sync sidebar active state with current tab */
+    document.querySelectorAll('.rv2-side-item').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === rv2State.tab);
+    });
+    rv2Render();
+}
+
+/* ── Date preset handler ── */
+function rv2SetPreset(preset, silent) {
+    rv2State.preset = preset;
+    var now = new Date();
+    var from, to;
+    function setEnd(d) { d.setHours(23,59,59,999); return d; }
+    function setStart(d) { d.setHours(0,0,0,0); return d; }
+    if (preset === 'today')           { from = setStart(new Date(now)); to = setEnd(new Date(now)); }
+    else if (preset === 'yesterday')  { from = new Date(now); from.setDate(now.getDate()-1); setStart(from); to = new Date(from); setEnd(to); }
+    else if (preset === '7d')         { from = new Date(now); from.setDate(now.getDate()-6); setStart(from); to = setEnd(new Date(now)); }
+    else if (preset === '30d')        { from = new Date(now); from.setDate(now.getDate()-29); setStart(from); to = setEnd(new Date(now)); }
+    else if (preset === 'mtd')        { from = setStart(new Date(now.getFullYear(), now.getMonth(), 1)); to = setEnd(new Date(now)); }
+    else if (preset === 'lastmonth')  { from = setStart(new Date(now.getFullYear(), now.getMonth()-1, 1)); to = setEnd(new Date(now.getFullYear(), now.getMonth(), 0)); }
+    else                              { from = null; to = null; } /* all */
+    rv2State.fromTs = from ? from.getTime() : 0;
+    rv2State.toTs   = to   ? to.getTime()   : Infinity;
+    var fromEl = document.getElementById('rv2DateFrom');
+    var toEl   = document.getElementById('rv2DateTo');
+    if (fromEl) fromEl.value = from ? from.toISOString().slice(0,10) : '';
+    if (toEl)   toEl.value   = to   ? to.toISOString().slice(0,10)   : '';
+    /* Update preset button active state */
+    document.querySelectorAll('#rv2Preset .rv2-preset-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.preset === preset);
+    });
+    if (!silent) rv2Rerender();
+}
+function rv2OnDateChange() {
+    var fromVal = document.getElementById('rv2DateFrom').value;
+    var toVal   = document.getElementById('rv2DateTo').value;
+    rv2State.preset = 'custom';
+    document.querySelectorAll('#rv2Preset .rv2-preset-btn').forEach(function(b) { b.classList.remove('active'); });
+    rv2State.fromTs = fromVal ? new Date(fromVal + 'T00:00:00').getTime() : 0;
+    rv2State.toTs   = toVal   ? new Date(toVal   + 'T23:59:59.999').getTime() : Infinity;
+    rv2Rerender();
+}
+function rv2ClearFilters() {
+    document.getElementById('rv2OfferF').value = '';
+    document.getElementById('rv2AffF').value = '';
+    document.getElementById('rv2PlatformF').value = '';
+    rv2State.offer = ''; rv2State.affiliate = ''; rv2State.platform = ''; rv2State.search = '';
+    rv2SetPreset('today');
+}
+function rv2Rerender() {
+    rv2State.offer     = document.getElementById('rv2OfferF').value;
+    rv2State.affiliate = document.getElementById('rv2AffF').value;
+    rv2State.platform  = document.getElementById('rv2PlatformF').value;
+    rv2State.drillKey  = null; /* exit drill-down on filter change */
+    rv2Render();
+}
+
+function rv2SwitchTab(tab) {
+    rv2State.tab = tab;
+    rv2State.drillKey = null;
+    document.querySelectorAll('.rv2-side-item').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tab);
+    });
+    rv2Render();
+}
+
+/* ── Main render dispatcher ── */
+function rv2Render() {
+    if (!document.getElementById('rv2Content')) return;
+    if (rv2State.drillKey) { rv2RenderDrill(); rv2UpdateSidebarCounts(); return; }
+    var fn = ({
+        overview:    rv2RenderOverview,
+        offer:       rv2RenderOffers,
+        affiliate:   rv2RenderAffiliates,
+        subid:       rv2RenderSubids,
+        daily:       rv2RenderDaily,
+        hourly:      rv2RenderHourly,
+        platform:    rv2RenderPlatforms,
+        referrer:    rv2RenderReferrers,
+        browser:     rv2RenderBrowsers,
+        device:      rv2RenderDevices,
+        isp:         rv2RenderIsps,
+        country:     rv2RenderCountries,
+        clicks:      rv2RenderClickLogs,
+        conversions: rv2RenderConvLogs
+    })[rv2State.tab] || rv2RenderOverview;
+    fn();
+    rv2UpdateSidebarCounts();
+}
+function rv2UpdateSidebarCounts() {
+    var clicks = rv2FilterClicks();
+    var convs  = rv2FilterConvs();
+    function uniq(arr, k) { var s = {}; arr.forEach(function(o){ if (o[k]) s[o[k]] = 1; }); return Object.keys(s).length; }
+    function uniqBy(arr, fn) { var s = {}; arr.forEach(function(o){ var k = fn(o); if (k) s[k] = 1; }); return Object.keys(s).length; }
+    function setN(id, n) { var el = document.getElementById(id); if (el) el.textContent = n; }
+    setN('rv2Cnt_offer',     uniq(clicks, 'offerId'));
+    setN('rv2Cnt_affiliate', uniq(clicks, 'affiliateId'));
+    setN('rv2Cnt_subid',     uniqBy(clicks, function(c){ return c.sub1; }));
+    setN('rv2Cnt_platform',  uniqBy(clicks, function(c){ return rv2PlatformOf(c.referer); }));
+    setN('rv2Cnt_referrer',  uniqBy(clicks, function(c){ return rv2HostOf(c.referer); }));
+    setN('rv2Cnt_browser',   uniqBy(clicks, function(c){ return c.browser; }));
+    setN('rv2Cnt_isp',       uniqBy(clicks, function(c){ return c.isp || c.org; }));
+}
+
+/* ── Header helpers ── */
+function rv2HeaderHtml(title, sub, actions) {
+    return '<div class="rv2-content-hd">' +
+        '<div><div class="rv2-content-title">' + title + '</div>' +
+        (sub ? '<div class="rv2-content-sub">' + sub + '</div>' : '') +
+        '</div>' +
+        '<div class="rv2-content-actions">' + (actions || '') + '</div>' +
+        '</div>';
+}
+function rv2EmptyHtml(title, sub, icon) {
+    return '<div class="rv2-empty"><i class="fas ' + (icon || 'fa-folder-open') + '"></i>' +
+        '<div class="rv2-empty-title">' + title + '</div>' +
+        (sub ? '<div class="rv2-empty-sub">' + sub + '</div>' : '') +
+        '</div>';
+}
+function rv2BarPct(value, max) { var pct = max > 0 ? Math.min(100, (value/max)*100) : 0; return '<div class="rv2-bar"><div class="rv2-bar-fill" style="width:' + pct + '%;"></div></div>'; }
+function rv2Pct(n, total) { return total > 0 ? ((n/total)*100).toFixed(1) + '%' : '—'; }
+function rv2FilterChips() {
+    var chips = [];
+    if (rv2State.offer)     chips.push('Offer: <b>' + escHtml(getOfferName(rv2State.offer)) + '</b>');
+    if (rv2State.affiliate) chips.push('Affiliate: <b>' + escHtml(getUserName(rv2State.affiliate)) + '</b>');
+    if (rv2State.platform)  chips.push('Platform: <b>' + rv2PlatformLabel(rv2State.platform) + '</b>');
+    return chips.length ? '<span style="color:#94a3b8;font-size:11.5px;">(' + chips.join(' · ') + ')</span>' : '';
+}
+
+/* ───────────────────────────────────────────────────────────
+   OVERVIEW
+   ─────────────────────────────────────────────────────────── */
+function rv2RenderOverview() {
+    var clicks = rv2FilterClicks();
+    var convs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var pendConvs = rv2FilterConvs().filter(function(c){ return c.status === 'pending'; });
+    var rev = convs.reduce(function(s,c){ return s + (parseFloat(c.revenue)||0); }, 0);
+    var pay = convs.reduce(function(s,c){ return s + (parseFloat(c.payout)||0); }, 0);
+    var ips = {}; clicks.forEach(function(c){ if (c.ip) ips[c.ip] = 1; });
+    var cvr = clicks.length ? ((convs.length/clicks.length)*100).toFixed(2) + '%' : '0%';
+    var epc = clicks.length ? (pay/clicks.length).toFixed(2) : '0.00';
+    var rpc = clicks.length ? (rev/clicks.length).toFixed(2) : '0.00';
+    /* Blocked breakdown */
+    var allClicksInRange = (allClicks||[]).filter(function(c){
+        var t=c.timestamp||0; if (t<rv2State.fromTs||t>rv2State.toTs) return false;
+        if (rv2State.offer && c.offerId !== rv2State.offer) return false;
+        if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
+        return true;
+    });
+    var dupCount = allClicksInRange.filter(function(c){return c.blockReason==='duplicate_ip';}).length;
+    var geoCount = allClicksInRange.filter(function(c){return c.blockReason && c.blockReason.indexOf('geo_')===0;}).length;
+
+    var html = rv2HeaderHtml('Summary ' + rv2FilterChips(), 'High-level performance across all selected traffic');
+    html += '<div class="rv2-metrics">' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Total Clicks</div><div class="rv2-metric-val blue">' + clicks.length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Unique IPs</div><div class="rv2-metric-val">' + Object.keys(ips).length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Conversions</div><div class="rv2-metric-val green">' + convs.length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Pending</div><div class="rv2-metric-val amber">' + pendConvs.length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">CVR</div><div class="rv2-metric-val">' + cvr + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Revenue</div><div class="rv2-metric-val green">' + fmtMoney(rev) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Payout</div><div class="rv2-metric-val">' + fmtMoney(pay) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Profit</div><div class="rv2-metric-val green">' + fmtMoney(rev-pay) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">EPC</div><div class="rv2-metric-val">$' + epc + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">RPC</div><div class="rv2-metric-val">$' + rpc + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Duplicates</div><div class="rv2-metric-val red">' + dupCount + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Geo Blocked</div><div class="rv2-metric-val amber">' + geoCount + '</div></div>' +
+        '</div>';
+
+    /* Top breakdown cards */
+    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">';
+    html += rv2OverviewMiniCard('Top Offers',     rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    html += rv2OverviewMiniCard('Top Affiliates', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    html += rv2OverviewMiniCard('Top Platforms',  rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return rv2PlatformIcon(k) + ' ' + rv2PlatformLabel(k);}), 'platform');
+    html += rv2OverviewMiniCard('Top Browsers',   rv2GroupClicks(clicks, function(c){return c.browser || 'Unknown';}, function(k){return escHtml(k);}), 'browser');
+    html += '</div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+function rv2GroupClicks(clicks, keyFn, labelFn) {
+    var m = {}; clicks.forEach(function(c){ var k = keyFn(c); if (!k) return; if (!m[k]) m[k] = {key:k, count:0}; m[k].count++; });
+    var arr = Object.keys(m).map(function(k){ return {key:k, label:labelFn(k), count:m[k].count}; });
+    arr.sort(function(a,b){ return b.count - a.count; });
+    return arr.slice(0, 5);
+}
+function rv2OverviewMiniCard(title, rows, tabKey) {
+    var max = rows.reduce(function(m,r){ return Math.max(m, r.count); }, 0);
+    var html = '<div style="background:#fff;border:1px solid #eef2f6;border-radius:10px;padding:14px 16px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<div style="font-size:13px;font-weight:700;color:#0f172a;">' + title + '</div>' +
+        '<a style="font-size:11px;color:#0a6c80;cursor:pointer;font-weight:600;" onclick="rv2SwitchTab(\'' + tabKey + '\')">View all →</a>' +
+        '</div>';
+    if (!rows.length) { html += '<div style="font-size:12px;color:#94a3b8;padding:10px 0;">No data</div>'; }
+    else {
+        rows.forEach(function(r) {
+            html += '<div style="display:grid;grid-template-columns:1fr 70px 50px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #f1f5f9;font-size:12.5px;">' +
+                '<div style="color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</div>' +
+                '<div>' + rv2BarPct(r.count, max) + '</div>' +
+                '<div style="text-align:right;font-weight:700;color:#0f172a;">' + r.count + '</div>' +
+                '</div>';
+        });
+    }
+    html += '</div>';
+    return html;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Generic group-by report renderer (used by offers, affs, etc)
+   ─────────────────────────────────────────────────────────── */
+function rv2RenderGrouped(opts) {
+    /* opts: { title, sub, icon, keyFn, labelFn, drillKind, columns:['clicks','convs','cvr','rev','pay','epc','profit'], onClickKey }
+       Outputs: header, table of groups */
+    var clicks = rv2FilterClicks();
+    var convs  = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var pendConvs = rv2FilterConvs().filter(function(c){ return c.status === 'pending'; });
+    var map = {};
+    clicks.forEach(function(c) {
+        var k = opts.keyFn(c); if (!k) return;
+        if (!map[k]) map[k] = { key:k, clicks:0, ips:{}, convs:0, pendConvs:0, rev:0, pay:0 };
+        map[k].clicks++; if (c.ip) map[k].ips[c.ip] = 1;
+    });
+    convs.forEach(function(c) {
+        var k = opts.convKeyFn ? opts.convKeyFn(c) : null;
+        if (!k && opts.convKeyFromClick) {
+            var click = (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0];
+            if (click) k = opts.keyFn(click);
+        }
+        if (!k) return;
+        if (!map[k]) map[k] = { key:k, clicks:0, ips:{}, convs:0, pendConvs:0, rev:0, pay:0 };
+        map[k].convs++; map[k].rev += parseFloat(c.revenue)||0; map[k].pay += parseFloat(c.payout)||0;
+    });
+    pendConvs.forEach(function(c) {
+        var k = opts.convKeyFn ? opts.convKeyFn(c) : null;
+        if (!k && opts.convKeyFromClick) {
+            var click = (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0];
+            if (click) k = opts.keyFn(click);
+        }
+        if (!k) return;
+        if (!map[k]) map[k] = { key:k, clicks:0, ips:{}, convs:0, pendConvs:0, rev:0, pay:0 };
+        map[k].pendConvs++;
+    });
+    var rows = Object.keys(map).map(function(k) {
+        var d = map[k];
+        return {
+            key: d.key,
+            label: opts.labelFn(d.key, d),
+            clicks: d.clicks,
+            unique: Object.keys(d.ips).length,
+            convs: d.convs,
+            pending: d.pendConvs,
+            cvr: d.clicks ? ((d.convs/d.clicks)*100).toFixed(1)+'%' : '0%',
+            rev: d.rev,
+            pay: d.pay,
+            profit: d.rev - d.pay,
+            epc: d.clicks ? (d.pay/d.clicks).toFixed(2) : '0.00',
+            rpc: d.clicks ? (d.rev/d.clicks).toFixed(2) : '0.00'
+        };
+    });
+    rows.sort(function(a,b){ return b.clicks - a.clicks; });
+    /* Search filter */
+    var q = (rv2State.search || '').toLowerCase().trim();
+    if (q) rows = rows.filter(function(r){ return String(r.label).toLowerCase().indexOf(q) > -1 || String(r.key).toLowerCase().indexOf(q) > -1; });
+    var maxClicks = rows.reduce(function(m,r){ return Math.max(m, r.clicks); }, 0);
+
+    var actions = '<input type="text" class="rv2-search" placeholder="Search..." value="' + escHtml(rv2State.search||'') + '" oninput="rv2State.search=this.value;rv2Render();" />' +
+        '<button class="rv2-export-btn" onclick="rv2ExportCurrent()"><i class="fas fa-download"></i> Export</button>';
+    var html = rv2HeaderHtml(opts.title + ' ' + rv2FilterChips(), opts.sub, actions);
+
+    /* Summary metrics */
+    var tot = rows.reduce(function(t,r){ t.clicks+=r.clicks; t.unique+=r.unique; t.convs+=r.convs; t.rev+=r.rev; t.pay+=r.pay; return t; }, {clicks:0,unique:0,convs:0,rev:0,pay:0});
+    html += '<div class="rv2-metrics">' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">' + opts.entityName + 's</div><div class="rv2-metric-val">' + rows.length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Clicks</div><div class="rv2-metric-val blue">' + tot.clicks + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Conversions</div><div class="rv2-metric-val green">' + tot.convs + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">CVR</div><div class="rv2-metric-val">' + (tot.clicks ? ((tot.convs/tot.clicks)*100).toFixed(1)+'%' : '0%') + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Revenue</div><div class="rv2-metric-val green">' + fmtMoney(tot.rev) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Payout</div><div class="rv2-metric-val">' + fmtMoney(tot.pay) + '</div></div>' +
+        '</div>';
+
+    /* Table */
+    if (!rows.length) {
+        html += rv2EmptyHtml('No ' + opts.entityName.toLowerCase() + ' data', 'Adjust your filters or date range', opts.emptyIcon || 'fa-chart-bar');
+    } else {
+        html += '<div class="rv2-table-wrap"><table class="rv2-table">' +
+            '<thead><tr>' +
+            '<th>' + opts.entityName + '</th>' +
+            '<th class="num">Clicks</th>' +
+            '<th class="num">Unique</th>' +
+            '<th class="num">Conv</th>' +
+            '<th class="num">CVR</th>' +
+            '<th class="num">Revenue</th>' +
+            '<th class="num">Payout</th>' +
+            '<th class="num">Profit</th>' +
+            '<th class="num">EPC</th>' +
+            '<th style="width:60px;"></th>' +
+            '</tr></thead><tbody>';
+        rows.forEach(function(r) {
+            html += '<tr class="clickable" onclick="rv2DrillTo(\'' + opts.drillKind + '\',' + JSON.stringify(r.key).replace(/"/g,'&quot;') + ')">' +
+                '<td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">' + rv2BarPct(r.clicks, maxClicks) + '</div><span style="font-weight:600;">' + r.label + '</span></div></td>' +
+                '<td class="num"><strong>' + r.clicks + '</strong></td>' +
+                '<td class="num muted">' + r.unique + '</td>' +
+                '<td class="num"><strong style="color:#15803d;">' + r.convs + '</strong>' + (r.pending ? ' <span style="font-size:10.5px;color:#a16207;">+' + r.pending + 'p</span>' : '') + '</td>' +
+                '<td class="num">' + r.cvr + '</td>' +
+                '<td class="num" style="color:#1e40af;font-weight:700;">' + fmtMoney(r.rev) + '</td>' +
+                '<td class="num" style="color:#15803d;font-weight:700;">' + fmtMoney(r.pay) + '</td>' +
+                '<td class="num" style="font-weight:600;">' + fmtMoney(r.profit) + '</td>' +
+                '<td class="num">$' + r.epc + '</td>' +
+                '<td class="muted"><i class="fas fa-chevron-right" style="font-size:10px;"></i></td>' +
+                '</tr>';
+        });
+        html += '</tbody></table></div>';
+    }
+    document.getElementById('rv2Content').innerHTML = html;
+    /* Stash for export */
+    rv2State._exportRows = rows; rv2State._exportTitle = opts.title; rv2State._exportEntity = opts.entityName;
+}
+
+/* ── Individual report dispatchers (use rv2RenderGrouped) ── */
+function rv2RenderOffers() {
+    rv2RenderGrouped({
+        title: 'Offer Report', sub: 'Performance breakdown by offer',
+        entityName: 'Offer', drillKind: 'offer', emptyIcon: 'fa-tag',
+        keyFn: function(c){ return c.offerId; },
+        convKeyFn: function(c){ return c.offerId; },
+        labelFn: function(k){ return '<span style="color:#0a6c80;">' + escHtml(getOfferName(k)) + '</span>'; }
+    });
+}
+function rv2RenderAffiliates() {
+    rv2RenderGrouped({
+        title: 'Affiliate Report', sub: 'Traffic and revenue per affiliate',
+        entityName: 'Affiliate', drillKind: 'affiliate', emptyIcon: 'fa-user-friends',
+        keyFn: function(c){ return c.affiliateId; },
+        convKeyFn: function(c){ return c.affiliateId; },
+        labelFn: function(k){ return escHtml(getUserName(k)); }
+    });
+}
+function rv2RenderSubids() {
+    rv2RenderGrouped({
+        title: 'Sub ID Report', sub: 'Campaign and traffic source performance',
+        entityName: 'Sub ID', drillKind: 'subid', emptyIcon: 'fa-code-branch',
+        keyFn: function(c){ return c.sub1 || '(none)'; },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<span style="font-family:monospace;font-size:12px;">' + escHtml(k) + '</span>'; }
+    });
+}
+function rv2RenderPlatforms() {
+    rv2RenderGrouped({
+        title: 'Platform Report', sub: 'Traffic source platform — Facebook, Instagram, Google, TikTok, etc.',
+        entityName: 'Platform', drillKind: 'platform', emptyIcon: 'fa-share-alt',
+        keyFn: function(c){ return rv2PlatformOf(c.referer); },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<span class="rv2-pill ' + rv2PlatformPillClass(k) + '">' + rv2PlatformIcon(k) + ' ' + rv2PlatformLabel(k) + '</span>'; }
+    });
+}
+function rv2RenderReferrers() {
+    rv2RenderGrouped({
+        title: 'Referrer Report', sub: 'Specific referer URLs hitting your offers',
+        entityName: 'Referrer', drillKind: 'referrer', emptyIcon: 'fa-external-link-alt',
+        keyFn: function(c){ return rv2HostOf(c.referer); },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<span style="font-family:monospace;font-size:11.5px;">' + escHtml(k) + '</span>'; }
+    });
+}
+function rv2RenderBrowsers() {
+    rv2RenderGrouped({
+        title: 'Browser Report', sub: 'Visitor browser breakdown — Chrome, Safari, FB in-app, etc.',
+        entityName: 'Browser', drillKind: 'browser', emptyIcon: 'fa-globe',
+        keyFn: function(c){
+            /* Detect in-app browsers from UA */
+            var ua = (c.userAgent || '').toLowerCase();
+            if (/fban|fbav/.test(ua)) return 'Facebook In-App';
+            if (/instagram/.test(ua)) return 'Instagram In-App';
+            if (/tiktok/.test(ua))    return 'TikTok In-App';
+            if (/snapchat/.test(ua))  return 'Snapchat In-App';
+            return c.browser || 'Unknown';
+        },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<i class="fas fa-globe" style="color:#0a6c80;margin-right:6px;font-size:11px;"></i>' + escHtml(k); }
+    });
+}
+function rv2RenderDevices() {
+    rv2RenderGrouped({
+        title: 'Device / OS Report', sub: 'Mobile vs desktop, OS version breakdown',
+        entityName: 'Device', drillKind: 'device', emptyIcon: 'fa-mobile-alt',
+        keyFn: function(c){ return (c.device || 'Unknown') + ' · ' + (c.os || 'Unknown') + (c.osVer ? ' ' + c.osVer : ''); },
+        convKeyFromClick: true,
+        labelFn: function(k){ return escHtml(k); }
+    });
+}
+function rv2RenderIsps() {
+    rv2RenderGrouped({
+        title: 'ISP Report', sub: 'Internet service provider breakdown — useful for fraud spotting',
+        entityName: 'ISP', drillKind: 'isp', emptyIcon: 'fa-server',
+        keyFn: function(c){ return c.isp || c.org || 'Unknown'; },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<i class="fas fa-server" style="color:#0a6c80;margin-right:6px;font-size:11px;"></i>' + escHtml(k); }
+    });
+}
+function rv2RenderCountries() {
+    rv2RenderGrouped({
+        title: 'Country Report', sub: 'Geographic breakdown of traffic',
+        entityName: 'Country', drillKind: 'country', emptyIcon: 'fa-map-marker-alt',
+        keyFn: function(c){ return c.countryName || c.country || 'Unknown'; },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<i class="fas fa-map-marker-alt" style="color:#0a6c80;margin-right:6px;font-size:11px;"></i>' + escHtml(k); }
+    });
+}
+
+/* ── Daily / Hourly ── */
+function rv2RenderDaily() {
+    var clicks = rv2FilterClicks();
+    var convs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var dayKey = function(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    var map = {};
+    clicks.forEach(function(c){ var k=dayKey(c.timestamp); if(!map[k]) map[k]={k:k,clicks:0,ips:{},convs:0,rev:0,pay:0}; map[k].clicks++; if(c.ip) map[k].ips[c.ip]=1; });
+    convs.forEach(function(c){ var k=dayKey(c.createdAt); if(!map[k]) map[k]={k:k,clicks:0,ips:{},convs:0,rev:0,pay:0}; map[k].convs++; map[k].rev+=(parseFloat(c.revenue)||0); map[k].pay+=(parseFloat(c.payout)||0); });
+    var rows = Object.values(map).sort(function(a,b){ return b.k.localeCompare(a.k); });
+    var maxC = rows.reduce(function(m,r){return Math.max(m,r.clicks);},0);
+    var html = rv2HeaderHtml('Daily Report ' + rv2FilterChips(), 'Day-by-day breakdown');
+    if (!rows.length) { html += rv2EmptyHtml('No daily data','Try a different date range','fa-calendar-day'); document.getElementById('rv2Content').innerHTML = html; return; }
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Date</th><th class="num">Clicks</th><th class="num">Unique</th><th class="num">Conv</th><th class="num">CVR</th><th class="num">Revenue</th><th class="num">Payout</th><th class="num">Profit</th><th class="num">EPC</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+        var cvr = r.clicks ? ((r.convs/r.clicks)*100).toFixed(1)+'%' : '0%';
+        var epc = r.clicks ? '$'+(r.pay/r.clicks).toFixed(2) : '$0.00';
+        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+r.k+'</span></div></td>'+
+            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num muted">'+Object.keys(r.ips).length+'</td>'+
+            '<td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvr+'</td>'+
+            '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
+            '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(r.pay)+'</td>'+
+            '<td class="num" style="font-weight:600;">'+fmtMoney(r.rev-r.pay)+'</td>'+
+            '<td class="num">'+epc+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+function rv2RenderHourly() {
+    var clicks = rv2FilterClicks();
+    var convs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var map = {}; for (var i=0;i<24;i++) map[i] = {h:i,clicks:0,convs:0,rev:0,pay:0};
+    clicks.forEach(function(c){ var h=new Date(c.timestamp).getHours(); map[h].clicks++; });
+    convs.forEach(function(c){ var h=new Date(c.createdAt).getHours(); map[h].convs++; map[h].rev+=(parseFloat(c.revenue)||0); map[h].pay+=(parseFloat(c.payout)||0); });
+    var rows = Object.values(map);
+    var maxC = rows.reduce(function(m,r){return Math.max(m,r.clicks);},0);
+    var html = rv2HeaderHtml('Hourly Report ' + rv2FilterChips(), 'Hour-of-day breakdown');
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Hour</th><th class="num">Clicks</th><th class="num">Conv</th><th class="num">CVR</th><th class="num">Revenue</th><th class="num">Payout</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+        var label = String(r.h).padStart(2,'0')+':00 - '+String(r.h+1).padStart(2,'0')+':00';
+        var cvr = r.clicks ? ((r.convs/r.clicks)*100).toFixed(1)+'%' : '0%';
+        html += '<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:90px;">'+rv2BarPct(r.clicks,maxC)+'</div><span style="font-weight:600;">'+label+'</span></div></td>'+
+            '<td class="num"><strong>'+r.clicks+'</strong></td><td class="num"><strong style="color:#15803d;">'+r.convs+'</strong></td><td class="num">'+cvr+'</td>'+
+            '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(r.rev)+'</td>'+
+            '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(r.pay)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+
+/* ── Click Logs / Conversion Logs (raw) ── */
+function rv2RenderClickLogs() {
+    var clicks = rv2FilterClicks().sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);}).slice(0, 200);
+    var actions = '<button class="rv2-export-btn" onclick="rv2ExportClicks()"><i class="fas fa-download"></i> Export</button>';
+    var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200');
+    html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200', actions);
+    if (!clicks.length) { html += rv2EmptyHtml('No clicks','Adjust filters','fa-mouse-pointer'); document.getElementById('rv2Content').innerHTML = html; return; }
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Time</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>Platform</th><th>Browser</th><th>Device</th><th>Sub ID</th><th class="num">Conv?</th></tr></thead><tbody>';
+    clicks.forEach(function(c){
+        var p = rv2PlatformOf(c.referer);
+        html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">'+
+            '<td style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</td>'+
+            '<td>'+escHtml(getOfferName(c.offerId))+'</td>'+
+            '<td>'+escHtml(getUserName(c.affiliateId))+'</td>'+
+            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
+            '<td>'+escHtml(c.country||'-')+'</td>'+
+            '<td><span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span></td>'+
+            '<td>'+escHtml(c.browser||'-')+'</td>'+
+            '<td>'+escHtml(c.device||'-')+'</td>'+
+            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</td>'+
+            '<td class="num">'+(c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>')+'</td>'+
+            '</tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+function rv2RenderConvLogs() {
+    var convs = rv2FilterConvs().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), 'All conversions in range — click row for full detail', '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>');
+    if (!convs.length) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Date</th><th>Offer</th><th>Affiliate</th><th class="num">Revenue</th><th class="num">Payout</th><th>Status</th><th>Source</th><th>IP</th></tr></thead><tbody>';
+    convs.forEach(function(c){
+        html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">'+
+            '<td style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</td>'+
+            '<td>'+escHtml(getOfferName(c.offerId))+'</td>'+
+            '<td>'+escHtml(getUserName(c.affiliateId))+'</td>'+
+            '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</td>'+
+            '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</td>'+
+            '<td>'+(typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'))+'</td>'+
+            '<td style="font-size:11px;">'+escHtml(c.source||'-')+'</td>'+
+            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
+            '</tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+
+/* ───────────────────────────────────────────────────────────
+   DRILL-DOWN (page-based, no popup)
+   ─────────────────────────────────────────────────────────── */
+function rv2DrillTo(kind, key) {
+    rv2State.drillKey = kind;
+    rv2State.drillData = key;
+    rv2Render();
+    document.getElementById('rv2Content').scrollTop = 0;
+}
+function rv2DrillBack() {
+    rv2State.drillKey = null;
+    rv2State.drillData = null;
+    rv2Render();
+}
+function rv2RenderDrill() {
+    var kind = rv2State.drillKey;
+    var key  = rv2State.drillData;
+    /* Apply drill-level filter on top of current filters */
+    var clicks = rv2FilterClicks();
+    var convs  = rv2FilterConvs();
+    var matchFn = ({
+        offer:     function(c){ return c.offerId === key; },
+        affiliate: function(c){ return c.affiliateId === key; },
+        subid:     function(c){ return (c.sub1 || '(none)') === key; },
+        platform:  function(c){ return rv2PlatformOf(c.referer) === key; },
+        referrer:  function(c){ return rv2HostOf(c.referer) === key; },
+        browser:   function(c){ var ua=(c.userAgent||'').toLowerCase(); var b = /fban|fbav/.test(ua)?'Facebook In-App':(/instagram/.test(ua)?'Instagram In-App':(/tiktok/.test(ua)?'TikTok In-App':(/snapchat/.test(ua)?'Snapchat In-App':(c.browser||'Unknown')))); return b === key; },
+        device:    function(c){ return ((c.device||'Unknown')+' · '+(c.os||'Unknown')+(c.osVer?' '+c.osVer:'')) === key; },
+        isp:       function(c){ return (c.isp || c.org || 'Unknown') === key; },
+        country:   function(c){ return (c.countryName || c.country || 'Unknown') === key; }
+    })[kind];
+    if (matchFn) {
+        clicks = clicks.filter(matchFn);
+        convs = convs.filter(function(c){ var click=(allClicks||[]).filter(function(x){return x._id===c.clickId;})[0]; if (kind==='offer') return c.offerId===key; if (kind==='affiliate') return c.affiliateId===key; if (kind==='subid') { var s=click?(click.sub1||'(none)'):(c.sub1||'(none)'); return s===key; } if (click) return matchFn(click); return false; });
+    }
+    /* Detail views for single records */
+    if (kind === 'click') return rv2RenderClickDetail(key);
+    if (kind === 'conversion') return rv2RenderConvDetail(key);
+
+    var entityLabel = ({offer:'Offer',affiliate:'Affiliate',subid:'Sub ID',platform:'Platform',referrer:'Referrer',browser:'Browser',device:'Device',isp:'ISP',country:'Country'})[kind] || 'Detail';
+    var displayKey = (kind === 'offer') ? getOfferName(key) : (kind === 'affiliate' ? getUserName(key) : (kind === 'platform' ? rv2PlatformLabel(key) : key));
+
+    var rev = convs.filter(function(c){return c.status==='approved';}).reduce(function(s,c){return s+(parseFloat(c.revenue)||0);},0);
+    var pay = convs.filter(function(c){return c.status==='approved';}).reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
+    var approved = convs.filter(function(c){return c.status==='approved';}).length;
+    var pending = convs.filter(function(c){return c.status==='pending';}).length;
+    var ips = {}; clicks.forEach(function(c){ if(c.ip) ips[c.ip]=1; });
+
+    var html = '<div class="rv2-breadcrumb" style="padding-top:18px;">' +
+        '<a onclick="rv2DrillBack()"><i class="fas fa-arrow-left" style="margin-right:5px;"></i>Back to ' + entityLabel + 's</a>' +
+        '<span class="crumb-sep">›</span><span>' + escHtml(String(displayKey)) + '</span>' +
+        '</div>';
+    html += rv2HeaderHtml(escHtml(String(displayKey)), entityLabel + ' detail · ' + clicks.length + ' clicks · ' + approved + ' conversions');
+
+    html += '<div class="rv2-metrics">' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Clicks</div><div class="rv2-metric-val blue">' + clicks.length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Unique IPs</div><div class="rv2-metric-val">' + Object.keys(ips).length + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Conversions</div><div class="rv2-metric-val green">' + approved + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Pending</div><div class="rv2-metric-val amber">' + pending + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">CVR</div><div class="rv2-metric-val">' + (clicks.length ? ((approved/clicks.length)*100).toFixed(1)+'%' : '0%') + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Revenue</div><div class="rv2-metric-val green">' + fmtMoney(rev) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Payout</div><div class="rv2-metric-val">' + fmtMoney(pay) + '</div></div>' +
+        '<div class="rv2-metric"><div class="rv2-metric-lbl">Profit</div><div class="rv2-metric-val green">' + fmtMoney(rev-pay) + '</div></div>' +
+        '</div>';
+
+    /* Sub-breakdowns */
+    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">';
+    if (kind !== 'platform') html += rv2OverviewMiniCard('By Platform',  rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return rv2PlatformIcon(k)+' '+rv2PlatformLabel(k);}), 'platform');
+    if (kind !== 'browser')  html += rv2OverviewMiniCard('By Browser',   rv2GroupClicks(clicks, function(c){return c.browser||'Unknown';}, function(k){return escHtml(k);}), 'browser');
+    if (kind !== 'isp')      html += rv2OverviewMiniCard('By ISP',       rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
+    if (kind !== 'country')  html += rv2OverviewMiniCard('By Country',   rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
+    if (kind !== 'offer')    html += rv2OverviewMiniCard('By Offer',     rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    if (kind !== 'affiliate')html += rv2OverviewMiniCard('By Affiliate', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    html += '</div>';
+
+    /* Recent clicks */
+    html += '<div class="rv2-content-hd" style="border-top:1px solid #f1f5f9;margin-top:8px;"><div class="rv2-content-title" style="font-size:14px;">Recent Clicks</div></div>';
+    var recent = clicks.slice().sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);}).slice(0,30);
+    if (!recent.length) {
+        html += rv2EmptyHtml('No clicks','','fa-mouse-pointer');
+    } else {
+        html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr><th>Time</th><th>Offer</th><th>Affiliate</th><th>IP</th><th>Country</th><th>Platform</th><th>Browser</th><th class="num">Conv?</th></tr></thead><tbody>';
+        recent.forEach(function(c){
+            var p = rv2PlatformOf(c.referer);
+            html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">'+
+                '<td style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</td>'+
+                '<td>'+escHtml(getOfferName(c.offerId))+'</td>'+
+                '<td>'+escHtml(getUserName(c.affiliateId))+'</td>'+
+                '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
+                '<td>'+escHtml(c.country||'-')+'</td>'+
+                '<td><span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span></td>'+
+                '<td>'+escHtml(c.browser||'-')+'</td>'+
+                '<td class="num">'+(c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>')+'</td>'+
+                '</tr>';
+        });
+        html += '</tbody></table></div>';
+    }
+    document.getElementById('rv2Content').innerHTML = html;
+}
+
+function rv2RenderClickDetail(clickId) {
+    var c = (allClicks||[]).filter(function(x){return x._id===clickId;})[0];
+    if (!c) { document.getElementById('rv2Content').innerHTML = '<div class="rv2-breadcrumb" style="padding-top:18px;"><a onclick="rv2DrillBack()"><i class="fas fa-arrow-left" style="margin-right:5px;"></i>Back</a></div>' + rv2EmptyHtml('Click not found','','fa-times-circle'); return; }
+    var conv = (allConversions||[]).filter(function(x){return x.clickId===clickId;})[0];
+    var p = rv2PlatformOf(c.referer);
+    var html = '<div class="rv2-breadcrumb" style="padding-top:18px;">' +
+        '<a onclick="rv2DrillBack()"><i class="fas fa-arrow-left" style="margin-right:5px;"></i>Back to Click Logs</a>' +
+        '<span class="crumb-sep">›</span><span style="font-family:monospace;font-size:11px;">' + escHtml(clickId) + '</span>' +
+        '</div>';
+    html += rv2HeaderHtml('Click Detail', fmtDateTime(c.timestamp) + ' · ' + escHtml(c.ip || '-'));
+    function row(label, val) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#64748b;font-weight:500;">'+label+'</span><span style="color:#0f172a;font-weight:600;text-align:right;word-break:break-all;max-width:60%;">'+(val||'<span style="color:#cbd5e1;">—</span>')+'</span></div>'; }
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 18px;">';
+    html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Click Info</div>'+
+        row('Click ID', '<span style="font-family:monospace;font-size:11px;">'+escHtml(c._id)+'</span>')+
+        row('Offer', escHtml(getOfferName(c.offerId)))+
+        row('Affiliate', escHtml(getUserName(c.affiliateId)))+
+        row('Time', fmtDateTime(c.timestamp))+
+        row('Converted', c.converted?'<span style="color:#15803d;">Yes</span>':'<span style="color:#94a3b8;">No</span>')+
+        '</div>';
+    html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Network</div>'+
+        row('IP', '<span style="font-family:monospace;">'+escHtml(c.ip||'-')+'</span>')+
+        row('Country', escHtml((c.country||'')+(c.countryName?' · '+c.countryName:'')))+
+        row('City', escHtml(c.city||'-'))+
+        row('ISP', escHtml(c.isp||c.org||'-'))+
+        row('ASN', escHtml(c.asn||'-'))+
+        '</div>';
+    html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Device &amp; Browser</div>'+
+        row('Platform', '<span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span>')+
+        row('Device', escHtml(c.device||'-'))+
+        row('OS', escHtml((c.os||'')+(c.osVer?' '+c.osVer:'')))+
+        row('Browser', escHtml((c.browser||'')+(c.browserVer?' '+c.browserVer:'')))+
+        row('Screen', escHtml(c.screenRes||'-'))+
+        row('Language', escHtml(c.language||'-'))+
+        '</div>';
+    html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Traffic Source</div>'+
+        row('Referrer', c.referer ? '<span style="font-size:11px;">'+escHtml(c.referer)+'</span>' : '(direct)')+
+        row('Sub1', escHtml(c.sub1||'-'))+
+        row('Sub2', escHtml(c.sub2||'-'))+
+        row('Sub3', escHtml(c.sub3||'-'))+
+        row('Sub4', escHtml(c.sub4||'-'))+
+        row('Sub5', escHtml(c.sub5||'-'))+
+        '</div>';
+    if (conv) {
+        html += '<div style="grid-column:span 2;background:#dcfce7;border:1px solid #86efac;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #86efac;font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-check-circle"></i> Conversion linked</div>'+
+            row('Status', typeof statusBadge==='function'?statusBadge(conv.status):escHtml(conv.status||'-'))+
+            row('Revenue', '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(conv.revenue)+'</span>')+
+            row('Payout', '<span style="color:#15803d;font-weight:700;">'+fmtMoney(conv.payout)+'</span>')+
+            row('Time', fmtDateTime(conv.createdAt))+
+            '</div>';
+    }
+    html += '</div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+
+function rv2RenderConvDetail(convId) {
+    var c = (allConversions||[]).filter(function(x){return x._id===convId;})[0];
+    if (!c) { document.getElementById('rv2Content').innerHTML = '<div class="rv2-breadcrumb" style="padding-top:18px;"><a onclick="rv2DrillBack()"><i class="fas fa-arrow-left" style="margin-right:5px;"></i>Back</a></div>' + rv2EmptyHtml('Conversion not found','','fa-times-circle'); return; }
+    var click = c.clickId ? (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0] : null;
+    var p = rv2PlatformOf(click ? click.referer : c.referer);
+    var html = '<div class="rv2-breadcrumb" style="padding-top:18px;">' +
+        '<a onclick="rv2DrillBack()"><i class="fas fa-arrow-left" style="margin-right:5px;"></i>Back to Conversion Logs</a>' +
+        '<span class="crumb-sep">›</span><span style="font-family:monospace;font-size:11px;">' + escHtml(convId) + '</span>' +
+        '</div>';
+    html += rv2HeaderHtml('Conversion Detail', fmtDateTime(c.createdAt) + ' · ' + (typeof statusBadge==='function'?statusBadge(c.status):c.status||'-'));
+    function row(label, val) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#64748b;font-weight:500;">'+label+'</span><span style="color:#0f172a;font-weight:600;text-align:right;word-break:break-all;max-width:60%;">'+(val||'<span style="color:#cbd5e1;">—</span>')+'</span></div>'; }
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 18px;">';
+    html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Conversion</div>'+
+        row('Conversion ID', '<span style="font-family:monospace;font-size:11px;">'+escHtml(c._id)+'</span>')+
+        row('Transaction ID', '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.txnId||'-')+'</span>')+
+        row('Offer', escHtml(getOfferName(c.offerId)))+
+        row('Affiliate', escHtml(getUserName(c.affiliateId)))+
+        row('Revenue', '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</span>')+
+        row('Payout', '<span style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</span>')+
+        row('Status', typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'))+
+        row('Source', escHtml(c.source||'-'))+
+        '</div>';
+    if (click) {
+        html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Origin Click</div>'+
+            row('Click ID', '<a onclick="rv2DrillTo(\'click\',\''+click._id+'\')" style="color:#0a6c80;cursor:pointer;font-family:monospace;font-size:11px;">'+escHtml(click._id)+'</a>')+
+            row('Time', fmtDateTime(click.timestamp))+
+            row('Delta', calcDelta(click.timestamp, c.createdAt))+
+            row('IP', '<span style="font-family:monospace;">'+escHtml(click.ip||'-')+'</span>')+
+            row('Platform', '<span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span>')+
+            row('Browser', escHtml(click.browser||'-'))+
+            row('Country', escHtml(click.countryName||click.country||'-'))+
+            row('ISP', escHtml(click.isp||click.org||'-'))+
+            '</div>';
+    }
+    html += '</div>';
+    document.getElementById('rv2Content').innerHTML = html;
+}
+
+/* ── Exports ── */
+function rv2DownloadCsv(filename, rows) {
+    var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c==null?'':c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+    var a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = filename;
+    a.click();
+}
+function rv2ExportCurrent() {
+    if (!rv2State._exportRows || !rv2State._exportRows.length) return;
+    var rows = [[rv2State._exportEntity, 'Clicks', 'Unique', 'Conversions', 'CVR', 'Revenue', 'Payout', 'Profit', 'EPC']];
+    rv2State._exportRows.forEach(function(r) {
+        rows.push([
+            String(r.key),
+            r.clicks, r.unique, r.convs, r.cvr,
+            r.rev.toFixed(2), r.pay.toFixed(2), r.profit.toFixed(2), '$'+r.epc
+        ]);
+    });
+    rv2DownloadCsv((rv2State._exportTitle||'report').toLowerCase().replace(/[^a-z]+/g,'-')+'.csv', rows);
+}
+function rv2ExportClicks() {
+    var clicks = rv2FilterClicks();
+    var rows = [['Time','Offer','Affiliate','IP','Country','Platform','Browser','OS','Device','ISP','Sub1','Sub2','Referrer','Converted']];
+    clicks.forEach(function(c){
+        rows.push([fmtDateTime(c.timestamp), getOfferName(c.offerId), getUserName(c.affiliateId), c.ip||'', c.country||'', rv2PlatformLabel(rv2PlatformOf(c.referer)), c.browser||'', c.os||'', c.device||'', c.isp||c.org||'', c.sub1||'', c.sub2||'', c.referer||'', c.converted?'Yes':'No']);
+    });
+    rv2DownloadCsv('click-logs.csv', rows);
+}
+function rv2ExportConvs() {
+    var convs = rv2FilterConvs();
+    var rows = [['Date','Offer','Affiliate','Revenue','Payout','Status','IP','Source','TxnId']];
+    convs.forEach(function(c){
+        rows.push([fmtDateTime(c.createdAt), getOfferName(c.offerId), getUserName(c.affiliateId), (c.revenue||0).toFixed(2), (c.payout||0).toFixed(2), c.status||'', c.ip||'', c.source||'', c.txnId||'']);
+    });
+    rv2DownloadCsv('conversion-logs.csv', rows);
+}
+
 </script>
 </body>
 </html>
