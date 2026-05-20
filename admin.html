@@ -394,6 +394,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-chart-legend{display:flex;gap:14px;font-size:11px;color:#64748b;font-weight:500;}
 .rv2-chart-legend span{display:inline-flex;align-items:center;gap:5px;}
 .rv2-chart-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.rv2-donut-legend{display:flex;flex-direction:column;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;}
+.rv2-dl-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.rv2-dl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.rv2-dl-name{color:#475569;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rv2-dl-pct{color:#0f172a;font-weight:700;font-size:12.5px;}
+.rv2-dl-cnt{color:#94a3b8;font-size:11px;min-width:36px;text-align:right;}
+.rv2-metric-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.rv2-metric-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #e5e7eb;border-radius:20px;background:#fff;font-size:11.5px;font-weight:600;color:#94a3b8;cursor:pointer;transition:all .12s;}
+.rv2-metric-chip i{width:9px;height:9px;border-radius:50%;border:1.5px solid;display:inline-block;transition:all .12s;}
+.rv2-metric-chip:hover{border-color:#cbd5e1;color:#475569;}
+.rv2-metric-chip.on{color:#0f172a;border-color:var(--chip);background:#fff;}
 @media(max-width:1000px){.rv2-chart-card{}.rv2-content [style*="grid-template-columns:2fr 1fr"]{grid-template-columns:1fr !important;}}
 .rv2-table-wrap{overflow-x:auto;padding:0 6px 16px;}
 .rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -9402,8 +9413,22 @@ var rv2State = {
     platform: '',
     search: '',
     sortBy: 'clicks',
-    sortDir: 'desc'     /* asc | desc */
+    sortDir: 'desc',    /* asc | desc */
+    trendMetrics: ['clicks','conversions']  /* which series show on the trend chart */
 };
+var RV2_TREND_METRICS = {
+    clicks:      { label:'Clicks',       color:'#0a6c80', axis:'y',  fill:true  },
+    conversions: { label:'Conversions',  color:'#16a34a', axis:'y1', fill:false },
+    uniqueips:   { label:'Unique IPs',   color:'#7c3aed', axis:'y',  fill:false },
+    duplicates:  { label:'Duplicates',   color:'#dc2626', axis:'y',  fill:false },
+    geoblocked:  { label:'Geo Blocked',  color:'#d97706', axis:'y',  fill:false }
+};
+function rv2ToggleTrendMetric(m) {
+    var i = rv2State.trendMetrics.indexOf(m);
+    if (i > -1) { if (rv2State.trendMetrics.length > 1) rv2State.trendMetrics.splice(i,1); }
+    else rv2State.trendMetrics.push(m);
+    rv2Render();
+}
 
 /* Sort helper: sort an array of objects by field with current direction.
    Numeric fields auto-detected; strings sorted alphabetically. */
@@ -9717,16 +9742,19 @@ function rv2RenderOverview() {
         kpi('Geo Blocked', 'fa-globe', geoCount, geoCount>0?'amber':'', 'blocked clicks', geoCount>0?A.amber:A.slate) +
         '</div>';
 
-    /* ── Charts row: trend (2/3) + platform donut (1/3) ── */
-    html += '<div style="padding:8px 22px 4px;display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:stretch;">' +
-        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Clicks &amp; Conversions</span><span class="rv2-chart-legend"><span><i style="background:#0a6c80;"></i>Clicks</span><span><i style="background:#16a34a;"></i>Conversions</span></span></div><div style="height:240px;position:relative;"><canvas id="rv2TrendChart"></canvas></div></div>' +
-        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Platform</span></div><div style="height:240px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2PlatformChart"></canvas></div></div>' +
+    /* ── Trend chart with metric toggles ── */
+    var metricChips = Object.keys(RV2_TREND_METRICS).map(function(m){
+        var def = RV2_TREND_METRICS[m]; var on = rv2State.trendMetrics.indexOf(m) > -1;
+        return '<button class="rv2-metric-chip' + (on?' on':'') + '" onclick="rv2ToggleTrendMetric(\''+m+'\')" style="--chip:'+def.color+';"><i style="background:'+(on?def.color:'transparent')+';border-color:'+def.color+';"></i>'+def.label+'</button>';
+    }).join('');
+    html += '<div style="padding:8px 22px 4px;">' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Performance Trend</span><div class="rv2-metric-chips">' + metricChips + '</div></div><div style="height:240px;position:relative;"><canvas id="rv2TrendChart"></canvas></div></div>' +
         '</div>';
 
-    /* ── Charts row 2: revenue trend + device donut ── */
-    html += '<div style="padding:8px 22px 4px;display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:stretch;">' +
-        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Revenue &amp; Payout</span><span class="rv2-chart-legend"><span><i style="background:#1e40af;"></i>Revenue</span><span><i style="background:#f59e0b;"></i>Payout</span></span></div><div style="height:200px;position:relative;"><canvas id="rv2RevChart"></canvas></div></div>' +
-        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Device</span></div><div style="height:200px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2DeviceChart"></canvas></div></div>' +
+    /* ── Donuts row: platform + device ── */
+    html += '<div style="padding:8px 22px 4px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Platform</span></div><div style="height:200px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2PlatformChart"></canvas></div><div class="rv2-donut-legend" id="rv2PlatformLegend"></div></div>' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Device</span></div><div style="height:200px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2DeviceChart"></canvas></div><div class="rv2-donut-legend" id="rv2DeviceLegend"></div></div>' +
         '</div>';
 
     /* ── Breakdown cards ── */
@@ -9769,54 +9797,51 @@ function rv2BuildOverviewCharts(clicks, convs) {
         keyOf = function(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
     }
     var idx = {}; buckets.forEach(function(b,i){ idx[b]=i; });
-    var clickSeries = buckets.map(function(){return 0;});
-    var convSeries  = buckets.map(function(){return 0;});
-    var revSeries   = buckets.map(function(){return 0;});
-    var paySeries   = buckets.map(function(){return 0;});
-    clicks.forEach(function(c){ var i = idx[keyOf(c.timestamp)]; if (i!=null) clickSeries[i]++; });
-    convs.forEach(function(c){ var i = idx[keyOf(c.createdAt)]; if (i!=null){ convSeries[i]++; revSeries[i]+=parseFloat(c.revenue)||0; paySeries[i]+=parseFloat(c.payout)||0; } });
+    var series = {
+        clicks:      buckets.map(function(){return 0;}),
+        conversions: buckets.map(function(){return 0;}),
+        uniqueips:   buckets.map(function(){return 0;}),
+        duplicates:  buckets.map(function(){return 0;}),
+        geoblocked:  buckets.map(function(){return 0;})
+    };
+    var ipSeen = buckets.map(function(){return {};});
+    clicks.forEach(function(c){ var i = idx[keyOf(c.timestamp)]; if (i!=null){ series.clicks[i]++; if (c.ip && !ipSeen[i][c.ip]){ ipSeen[i][c.ip]=1; series.uniqueips[i]++; } } });
+    convs.forEach(function(c){ var i = idx[keyOf(c.createdAt)]; if (i!=null) series.conversions[i]++; });
+    /* Blocked clicks (excluded from `clicks`) — pull from allClicks in current range/filters */
+    (allClicks||[]).forEach(function(c){
+        if (!c.blocked) return;
+        var t=c.timestamp||0; if (t<rv2State.fromTs||t>rv2State.toTs) return;
+        if (rv2State.offer && c.offerId !== rv2State.offer) return;
+        if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return;
+        var i = idx[keyOf(t)]; if (i==null) return;
+        if (c.blockReason === 'duplicate_ip') series.duplicates[i]++;
+        else if (c.blockReason && c.blockReason.indexOf('geo_')===0) series.geoblocked[i]++;
+    });
 
     var gridColor = '#f1f5f9', tickColor = '#94a3b8';
-    var baseOpts = {
-        responsive:true, maintainAspectRatio:false,
-        interaction:{mode:'index',intersect:false},
-        plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:12}} },
-        scales:{
-            x:{grid:{display:false},ticks:{color:tickColor,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:12}},
-            y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},precision:0},beginAtZero:true}
-        }
-    };
 
-    /* Trend chart — clicks (area) + conversions (line, 2nd axis) */
     var tc = document.getElementById('rv2TrendChart');
     if (tc) {
         var ctx = tc.getContext('2d');
-        var grad = ctx.createLinearGradient(0,0,0,240);
-        grad.addColorStop(0,'rgba(10,108,128,.22)'); grad.addColorStop(1,'rgba(10,108,128,.01)');
+        var datasets = [];
+        var useRightAxis = rv2State.trendMetrics.indexOf('conversions') > -1;
+        rv2State.trendMetrics.forEach(function(m){
+            var def = RV2_TREND_METRICS[m]; if (!def) return;
+            var bg = def.color;
+            if (def.fill) { var g = ctx.createLinearGradient(0,0,0,240); g.addColorStop(0, rv2Hex2rgba(def.color,.20)); g.addColorStop(1, rv2Hex2rgba(def.color,.01)); bg = g; }
+            datasets.push({ label:def.label, data:series[m], borderColor:def.color, backgroundColor:bg, fill:!!def.fill, tension:.35, borderWidth:2, pointRadius:0, pointHoverRadius:4, yAxisID:def.axis });
+        });
+        var scales = {
+            x:{grid:{display:false},ticks:{color:tickColor,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:12}},
+            y:{position:'left',grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},precision:0},beginAtZero:true}
+        };
+        if (useRightAxis) scales.y1 = {position:'right',grid:{display:false},ticks:{color:'#16a34a',font:{size:10},precision:0},beginAtZero:true};
         rv2Charts.trend = new Chart(ctx, {
             type:'line',
-            data:{ labels:labels, datasets:[
-                {label:'Clicks',data:clickSeries,borderColor:'#0a6c80',backgroundColor:grad,fill:true,tension:.35,borderWidth:2,pointRadius:0,pointHoverRadius:4,yAxisID:'y'},
-                {label:'Conversions',data:convSeries,borderColor:'#16a34a',backgroundColor:'#16a34a',fill:false,tension:.35,borderWidth:2,pointRadius:0,pointHoverRadius:4,yAxisID:'y1'}
-            ]},
-            options:Object.assign({},baseOpts,{scales:{
-                x:baseOpts.scales.x,
-                y:{position:'left',grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},precision:0},beginAtZero:true},
-                y1:{position:'right',grid:{display:false},ticks:{color:'#16a34a',font:{size:10},precision:0},beginAtZero:true}
-            }})
-        });
-    }
-
-    /* Revenue + payout bars */
-    var rc = document.getElementById('rv2RevChart');
-    if (rc) {
-        rv2Charts.rev = new Chart(rc.getContext('2d'), {
-            type:'bar',
-            data:{ labels:labels, datasets:[
-                {label:'Revenue',data:revSeries,backgroundColor:'#1e40af',borderRadius:3,barPercentage:.7,categoryPercentage:.7},
-                {label:'Payout',data:paySeries,backgroundColor:'#f59e0b',borderRadius:3,barPercentage:.7,categoryPercentage:.7}
-            ]},
-            options:Object.assign({},baseOpts,{scales:{x:baseOpts.scales.x,y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},callback:function(v){return '$'+v;}},beginAtZero:true}}})
+            data:{ labels:labels, datasets:datasets },
+            options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+                plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8} },
+                scales:scales }
         });
     }
 
@@ -9828,15 +9853,17 @@ function rv2BuildOverviewCharts(clicks, convs) {
     var pc = document.getElementById('rv2PlatformChart');
     if (pc) {
         var platTotal = platArr.reduce(function(s,p){return s+p.v;},0);
+        var platCols = platArr.map(function(p){return platColors[p.k]||'#cbd5e1';});
         rv2Charts.platform = new Chart(pc.getContext('2d'), {
             type:'doughnut',
-            data:{ labels:platArr.map(function(p){return rv2PlatformLabel(p.k);}), datasets:[{data:platArr.map(function(p){return p.v;}),backgroundColor:platArr.map(function(p){return platColors[p.k]||'#cbd5e1';}),borderWidth:2,borderColor:'#fff'}]},
+            data:{ labels:platArr.map(function(p){return rv2PlatformLabel(p.k);}), datasets:[{data:platArr.map(function(p){return p.v;}),backgroundColor:platCols,borderWidth:2,borderColor:'#fff'}]},
             options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{
-                legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:10,font:{size:11},color:'#475569',usePointStyle:true,generateLabels:function(ch){var d=ch.data;return d.labels.map(function(l,i){var v=d.datasets[0].data[i];var pct=platTotal?Math.round(v/platTotal*100):0;return{text:l+' '+pct+'%',fillStyle:d.datasets[0].backgroundColor[i],strokeStyle:d.datasets[0].backgroundColor[i],pointStyle:'circle',index:i};});}}},
+                legend:{display:false},
                 tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,callbacks:{label:function(ctx){var pct=platTotal?(ctx.parsed/platTotal*100).toFixed(1):0;return ' '+ctx.label+': '+ctx.parsed+' ('+pct+'%)';}}}
             },
             plugins:[rv2DonutCenter(platTotal,'Clicks')]}
         });
+        rv2BuildDonutLegend('rv2PlatformLegend', platArr.map(function(p){return rv2PlatformLabel(p.k);}), platArr.map(function(p){return p.v;}), platCols, platTotal);
     }
 
     /* Device donut */
@@ -9847,16 +9874,39 @@ function rv2BuildOverviewCharts(clicks, convs) {
     var dc = document.getElementById('rv2DeviceChart');
     if (dc) {
         var devTotal = devArr.reduce(function(s,d){return s+d.v;},0);
+        var devCols = devArr.map(function(d,i){return devColors[i%devColors.length];});
         rv2Charts.device = new Chart(dc.getContext('2d'), {
             type:'doughnut',
-            data:{ labels:devArr.map(function(d){return d.k;}), datasets:[{data:devArr.map(function(d){return d.v;}),backgroundColor:devArr.map(function(d,i){return devColors[i%devColors.length];}),borderWidth:2,borderColor:'#fff'}]},
+            data:{ labels:devArr.map(function(d){return d.k;}), datasets:[{data:devArr.map(function(d){return d.v;}),backgroundColor:devCols,borderWidth:2,borderColor:'#fff'}]},
             options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{
-                legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:10,font:{size:11},color:'#475569',usePointStyle:true,generateLabels:function(ch){var d=ch.data;return d.labels.map(function(l,i){var v=d.datasets[0].data[i];var pct=devTotal?Math.round(v/devTotal*100):0;return{text:l+' '+pct+'%',fillStyle:d.datasets[0].backgroundColor[i],strokeStyle:d.datasets[0].backgroundColor[i],pointStyle:'circle',index:i};});}}},
+                legend:{display:false},
                 tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,callbacks:{label:function(ctx){var pct=devTotal?(ctx.parsed/devTotal*100).toFixed(1):0;return ' '+ctx.label+': '+ctx.parsed+' ('+pct+'%)';}}}
             },
             plugins:[rv2DonutCenter(devTotal,'Clicks')]}
         });
+        rv2BuildDonutLegend('rv2DeviceLegend', devArr.map(function(d){return d.k;}), devArr.map(function(d){return d.v;}), devCols, devTotal);
     }
+}
+/* Custom HTML donut legend with name + % + count */
+function rv2BuildDonutLegend(elId, labels, values, colors, total) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var rows = labels.map(function(l,i){ return {label:l, value:values[i], color:colors[i]}; });
+    rows.sort(function(a,b){ return b.value - a.value; });
+    el.innerHTML = rows.map(function(r){
+        var pct = total ? (r.value/total*100).toFixed(1) : 0;
+        return '<div class="rv2-dl-row">' +
+            '<span class="rv2-dl-dot" style="background:'+r.color+';"></span>' +
+            '<span class="rv2-dl-name">'+r.label+'</span>' +
+            '<span class="rv2-dl-pct">'+pct+'%</span>' +
+            '<span class="rv2-dl-cnt">'+r.value+'</span>' +
+            '</div>';
+    }).join('');
+}
+function rv2Hex2rgba(hex, a) {
+    var h = hex.replace('#',''); if (h.length===3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    var r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+    return 'rgba('+r+','+g+','+b+','+a+')';
 }
 /* Center text plugin for donuts */
 function rv2DonutCenter(total, label) {
