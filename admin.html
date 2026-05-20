@@ -10344,10 +10344,14 @@ function rv2RenderClickLogs() {
         rv2SortHeader('browser','Browser','left')+
         rv2SortHeader('device','Device','left')+
         rv2SortHeader('sub1','Sub ID','left')+
+        rv2SortHeader('referer','Referrer','left')+
         rv2SortHeader('converted','Conv?','num')+
         '</tr></thead><tbody>';
     clicks.forEach(function(c){
         var p = c.platform;
+        var refCell = c.referer
+            ? '<a href="'+escHtml(c.referer)+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="'+escHtml(c.referer)+'" style="font-size:11px;color:#0a6c80;text-decoration:none;display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+escHtml(c.referer)+'</a>'
+            : '<span class="muted">(direct)</span>';
         html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">'+
             '<td style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</td>'+
             '<td>'+escHtml(c.offer)+'</td>'+
@@ -10358,6 +10362,7 @@ function rv2RenderClickLogs() {
             '<td>'+escHtml(c.browser||'-')+'</td>'+
             '<td>'+escHtml(c.device||'-')+'</td>'+
             '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</td>'+
+            '<td>'+refCell+'</td>'+
             '<td class="num">'+(c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>')+'</td>'+
             '</tr>';
     });
