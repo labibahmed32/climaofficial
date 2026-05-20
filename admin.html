@@ -10460,77 +10460,91 @@ function rv2RenderClickLogs() {
     html += '</tbody></table></div>';
     document.getElementById('rv2Content').innerHTML = html;
 }
-/* Column customization modal for Click Logs */
-var _rv2CkDraft = null;
-function rv2OpenCkColModal() {
-    var enabled = rv2EnabledCkCols().map(function(c){ return c.key; });
-    _rv2CkDraft = {}; RV2_CK_COLS.forEach(function(c){ _rv2CkDraft[c.key] = enabled.indexOf(c.key) > -1; });
-    var m = document.getElementById('rv2CkColModal');
+/* ── Generic column-customization modal (Click Logs + Conversion Logs) ── */
+var _rv2ColDraft = null, _rv2ColRegistry = null, _rv2ColStoreKey = '';
+function rv2OpenCkColModal(){ rv2OpenColModal(RV2_CK_COLS, 'rv2CkCols'); }
+function rv2OpenCvColModal(){ rv2OpenColModal(RV2_CV_COLS, 'rv2CvCols'); }
+function rv2OpenColModal(registry, storeKey) {
+    _rv2ColRegistry = registry; _rv2ColStoreKey = storeKey;
+    var saved = null; try { saved = JSON.parse(localStorage.getItem(storeKey)); } catch(e){}
+    var enabled = (Array.isArray(saved) && saved.length) ? saved : registry.filter(function(c){return c.def;}).map(function(c){return c.key;});
+    _rv2ColDraft = {}; registry.forEach(function(c){ _rv2ColDraft[c.key] = enabled.indexOf(c.key) > -1; });
+    var m = document.getElementById('rv2ColModal');
     if (!m) {
-        m = document.createElement('div');
-        m.id = 'rv2CkColModal';
+        m = document.createElement('div'); m.id = 'rv2ColModal';
         m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        m.onclick = function(e){ if (e.target===m) rv2CloseCkColModal(); };
+        m.onclick = function(e){ if (e.target===m) rv2CloseColModal(); };
         document.body.appendChild(m);
     }
     m.style.display = 'flex';
-    rv2RenderCkColModal();
+    rv2RenderColModal();
 }
-function rv2RenderCkColModal() {
-    var m = document.getElementById('rv2CkColModal'); if (!m) return;
-    var rows = RV2_CK_COLS.map(function(col){
-        var on = !!_rv2CkDraft[col.key];
+function rv2RenderColModal() {
+    var m = document.getElementById('rv2ColModal'); if (!m || !_rv2ColRegistry) return;
+    var rows = _rv2ColRegistry.map(function(col){
+        var on = !!_rv2ColDraft[col.key];
         return '<label style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin:5px 0;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:13px;color:#1e293b;font-weight:500;">' +
             '<span><i class="fas fa-grip-vertical" style="color:#cbd5e1;font-size:11px;margin-right:8px;"></i>'+escHtml(col.label)+'</span>' +
             '<span style="position:relative;display:inline-block;width:36px;height:20px;">' +
-                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2CkDraft[\''+col.key+'\']=this.checked;rv2RenderCkColModal();" style="opacity:0;width:0;height:0;">' +
+                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2ColDraft[\''+col.key+'\']=this.checked;rv2RenderColModal();" style="opacity:0;width:0;height:0;">' +
                 '<span style="position:absolute;inset:0;background:'+(on?'#0a6c80':'#cbd5e1')+';border-radius:20px;transition:.2s;"></span>' +
                 '<span style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;"></span>' +
             '</span></label>';
     }).join('');
     m.innerHTML = '<div style="background:#fff;border-radius:12px;width:380px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
-        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</span><span onclick="rv2ResetCkCols()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset to default</span></div>' +
+        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</span><span onclick="rv2ResetColModal()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset to default</span></div>' +
         '<div style="overflow-y:auto;padding:10px 16px;flex:1;">'+rows+'</div>' +
-        '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseCkColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyCkCols()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
+        '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyColModal()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
         '</div>';
 }
-function rv2CloseCkColModal(){ var m=document.getElementById('rv2CkColModal'); if(m) m.style.display='none'; }
-function rv2ApplyCkCols(){
-    var keys = RV2_CK_COLS.filter(function(c){ return _rv2CkDraft[c.key]; }).map(function(c){ return c.key; });
+function rv2CloseColModal(){ var m=document.getElementById('rv2ColModal'); if(m) m.style.display='none'; }
+function rv2ApplyColModal(){
+    var keys = _rv2ColRegistry.filter(function(c){ return _rv2ColDraft[c.key]; }).map(function(c){ return c.key; });
     if (!keys.length) { toast('Select at least one column'); return; }
-    try { localStorage.setItem('rv2CkCols', JSON.stringify(keys)); } catch(e){}
-    rv2CloseCkColModal(); rv2Render();
+    try { localStorage.setItem(_rv2ColStoreKey, JSON.stringify(keys)); } catch(e){}
+    rv2CloseColModal(); rv2Render();
 }
-function rv2ResetCkCols(){ try{ localStorage.removeItem('rv2CkCols'); }catch(e){} _rv2CkDraft={}; RV2_CK_COLS.forEach(function(c){ _rv2CkDraft[c.key]=c.def; }); rv2RenderCkColModal(); }
+function rv2ResetColModal(){ try{ localStorage.removeItem(_rv2ColStoreKey); }catch(e){} _rv2ColDraft={}; _rv2ColRegistry.forEach(function(c){ _rv2ColDraft[c.key]=c.def; }); rv2RenderColModal(); }
+function rv2EnabledCols(registry, storeKey) {
+    var saved = null; try { saved = JSON.parse(localStorage.getItem(storeKey)); } catch(e){}
+    if (Array.isArray(saved) && saved.length) return registry.filter(function(c){ return saved.indexOf(c.key) > -1; });
+    return registry.filter(function(c){ return c.def; });
+}
+
+/* Conversion Logs column registry */
+var RV2_CV_COLS = [
+    { key:'createdAt', label:'Date',      def:true,  align:'left', sort:'createdAt', render:function(c){ return '<span style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</span>'; } },
+    { key:'offer',     label:'Offer',     def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
+    { key:'affiliate', label:'Affiliate', def:true,  align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
+    { key:'revenue',   label:'Revenue',   def:true,  align:'num',  sort:'revenue',   render:function(c){ return '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</span>'; } },
+    { key:'payout',    label:'Payout',    def:true,  align:'num',  sort:'payout',    render:function(c){ return '<span style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</span>'; } },
+    { key:'status',    label:'Status',    def:true,  align:'left', sort:'status',    render:function(c){ return typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'); } },
+    { key:'source',    label:'Source',    def:true,  align:'left', sort:'source',    render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.source||'-')+'</span>'; } },
+    { key:'txnId',     label:'Txn ID',    def:false, align:'left', sort:'txnId',     render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;">'+escHtml(c.txnId||'-')+'</span>'; } },
+    { key:'ip',        label:'IP',        def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
+    { key:'sub1',      label:'Sub ID',    def:false, align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } }
+];
 function rv2RenderConvLogs() {
     var convs = rv2FilterConvs().map(function(c){
-        return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId), revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'', ip:c.ip||''};
+        var click = c.clickId ? (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0] : null;
+        return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
+            revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'',
+            txnId:c.txnId||'', ip:c.ip||(click?click.ip:'')||'', sub1:c.sub1||(click?click.sub1:'')||''};
     });
     var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
     rv2SortRows(convs, cSortField, rv2State.sortDir);
-    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), 'All conversions in range — click row for full detail', '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>');
+    var actions = '<button class="rv2-export-btn" onclick="rv2OpenCvColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
+        '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>';
+    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), 'All conversions in range — click row for full detail', actions);
     if (!convs.length) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
-        rv2SortHeader('createdAt','Date','left')+
-        rv2SortHeader('offer','Offer','left')+
-        rv2SortHeader('affiliate','Affiliate','left')+
-        rv2SortHeader('revenue','Revenue','num')+
-        rv2SortHeader('payout','Payout','num')+
-        rv2SortHeader('status','Status','left')+
-        rv2SortHeader('source','Source','left')+
-        rv2SortHeader('ip','IP','left')+
-        '</tr></thead><tbody>';
+    var cols = rv2EnabledCols(RV2_CV_COLS, 'rv2CvCols');
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>';
+    cols.forEach(function(col){ html += rv2SortHeader(col.sort, col.label, col.align); });
+    html += '</tr></thead><tbody>';
     convs.forEach(function(c){
-        html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">'+
-            '<td style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</td>'+
-            '<td>'+escHtml(c.offer)+'</td>'+
-            '<td>'+escHtml(c.affiliate)+'</td>'+
-            '<td class="num" style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</td>'+
-            '<td class="num" style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</td>'+
-            '<td>'+(typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'))+'</td>'+
-            '<td style="font-size:11px;">'+escHtml(c.source||'-')+'</td>'+
-            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
-            '</tr>';
+        html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">';
+        cols.forEach(function(col){ html += '<td' + (col.align==='num'?' class="num"':'') + '>' + col.render(c) + '</td>'; });
+        html += '</tr>';
     });
     html += '</tbody></table></div>';
     document.getElementById('rv2Content').innerHTML = html;
