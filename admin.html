@@ -374,18 +374,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-metric-lbl{font-size:10.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
 .rv2-metric-val{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-.3px;}
 .rv2-metric-val.blue{color:#1e40af;} .rv2-metric-val.green{color:#15803d;} .rv2-metric-val.red{color:#b91c1c;} .rv2-metric-val.amber{color:#a16207;}
-/* Modern KPI cards — individual floating cards with accent icon tiles */
-.rv2-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 22px;}
-.rv2-kpi{background:#fff;border:1px solid #e8edf2;border-radius:13px;padding:16px 18px;position:relative;transition:all .16s ease;overflow:hidden;}
-.rv2-kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--kpi-accent,#cbd5e1);opacity:0;transition:opacity .16s;}
-.rv2-kpi:hover{border-color:#d6dee7;box-shadow:0 6px 18px rgba(15,23,42,.07);transform:translateY(-1px);}
-.rv2-kpi:hover::after{opacity:1;}
-.rv2-kpi-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.rv2-kpi-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--kpi-bg,#f1f5f9);color:var(--kpi-fg,#64748b);}
-.rv2-kpi-lbl{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;}
-.rv2-kpi-val{font-size:25px;font-weight:800;color:#0f172a;letter-spacing:-.6px;line-height:1;}
+/* Premium KPI cards — minimal, big numbers, gradient accent corner */
+.rv2-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 22px;}
+.rv2-kpi{background:#fff;border:1px solid #edf0f4;border-radius:16px;padding:18px 20px;position:relative;transition:all .18s cubic-bezier(.32,.72,0,1);overflow:hidden;}
+.rv2-kpi::before{content:'';position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:var(--kpi-glow,rgba(37,99,235,.06));pointer-events:none;transition:transform .25s;}
+.rv2-kpi:hover{border-color:#e2e8f0;box-shadow:0 10px 30px rgba(15,23,42,.06);transform:translateY(-2px);}
+.rv2-kpi:hover::before{transform:scale(1.3);}
+.rv2-kpi-lbl{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:7px;margin-bottom:14px;position:relative;z-index:1;}
+.rv2-kpi-lbl i{font-size:11px;color:var(--kpi-fg,#64748b);}
+.rv2-kpi-val{font-size:30px;font-weight:800;color:#0f172a;letter-spacing:-1px;line-height:1;position:relative;z-index:1;font-variant-numeric:tabular-nums;}
 .rv2-kpi-val.blue{color:#2563eb;} .rv2-kpi-val.green{color:#16a34a;} .rv2-kpi-val.red{color:#dc2626;} .rv2-kpi-val.amber{color:#d97706;}
-.rv2-kpi-sub{font-size:11px;color:#94a3b8;margin-top:5px;font-weight:500;}
+.rv2-kpi-sub{font-size:11.5px;color:#94a3b8;margin-top:8px;font-weight:500;position:relative;z-index:1;}
 @media(max-width:1100px){.rv2-kpi-strip{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:600px){.rv2-kpi-strip{grid-template-columns:1fr;}}
 .rv2-chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;}
@@ -1301,6 +1300,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <span style="color:#cbd5e1;">→</span>
                 <input type="date" id="rv2DateTo" onchange="rv2OnDateChange()" style="padding:7px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:12.5px;">
                 <span style="width:1px;height:20px;background:#e5e7eb;margin:0 4px;"></span>
+                <select id="rv2AdvF" onchange="rv2Rerender()"><option value="">All Advertisers</option></select>
                 <select id="rv2OfferF" onchange="rv2Rerender()"><option value="">All Offers</option></select>
                 <select id="rv2AffF" onchange="rv2Rerender()"><option value="">All Affiliates</option></select>
                 <select id="rv2PlatformF" onchange="rv2Rerender()">
@@ -9410,6 +9410,7 @@ var rv2State = {
     toTs: Infinity,
     offer: '',
     affiliate: '',
+    advertiser: '',
     platform: '',
     search: '',
     sortBy: 'clicks',
@@ -9497,12 +9498,23 @@ function rv2HostOf(url) {
     catch(e) { var m = String(url).match(/^https?:\/\/([^\/]+)/i); return m ? m[1].replace(/^www\./, '') : String(url).slice(0, 40); }
 }
 
+/* Offer → advertiser lookup (cached per render-cycle) */
+function rv2OfferAdvertiser(offerId) {
+    if (!rv2_offAdvMap) {
+        rv2_offAdvMap = {};
+        (allOffers || []).forEach(function(o){ rv2_offAdvMap[o._id] = o.advertiser || ''; });
+    }
+    return rv2_offAdvMap[offerId] || '';
+}
+var rv2_offAdvMap = null;
+
 /* ── Filter dataset against current rv2State ── */
 function rv2FilterClicks() {
     return (allClicks || []).filter(function(c) {
         if (c.blocked) return false; /* exclude blocked from valid stats */
         var t = c.timestamp || 0;
         if (t < rv2State.fromTs || t > rv2State.toTs) return false;
+        if (rv2State.advertiser && rv2OfferAdvertiser(c.offerId) !== rv2State.advertiser) return false;
         if (rv2State.offer && c.offerId !== rv2State.offer) return false;
         if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
         if (rv2State.platform) {
@@ -9516,6 +9528,7 @@ function rv2FilterConvs() {
     return (allConversions || []).filter(function(c) {
         var t = c.createdAt || 0;
         if (t < rv2State.fromTs || t > rv2State.toTs) return false;
+        if (rv2State.advertiser && rv2OfferAdvertiser(c.offerId) !== rv2State.advertiser) return false;
         if (rv2State.offer && c.offerId !== rv2State.offer) return false;
         if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
         if (rv2State.platform) {
@@ -9545,6 +9558,14 @@ function rv2Init() {
             ah += '<option value="' + a._id + '">' + escHtml(a.name || a.email || a._id) + '</option>';
         });
         afSel.innerHTML = ah; afSel.dataset.filled = '1';
+    }
+    var advSel = document.getElementById('rv2AdvF');
+    if (advSel && (!advSel.dataset.filled || advSel.options.length <= 1)) {
+        var advh = '<option value="">All Advertisers</option>';
+        (allAdvertisers || []).forEach(function(a) {
+            advh += '<option value="' + a._id + '">' + escHtml(a.name || a.companyName || a._id) + '</option>';
+        });
+        advSel.innerHTML = advh; advSel.dataset.filled = '1';
     }
     rv2SetPreset(rv2State.preset, true);
     /* Sync sidebar active state with current tab */
@@ -9590,13 +9611,16 @@ function rv2OnDateChange() {
     rv2Rerender();
 }
 function rv2ClearFilters() {
+    var a = document.getElementById('rv2AdvF'); if (a) a.value = '';
     document.getElementById('rv2OfferF').value = '';
     document.getElementById('rv2AffF').value = '';
     document.getElementById('rv2PlatformF').value = '';
-    rv2State.offer = ''; rv2State.affiliate = ''; rv2State.platform = ''; rv2State.search = '';
+    rv2State.advertiser = ''; rv2State.offer = ''; rv2State.affiliate = ''; rv2State.platform = ''; rv2State.search = '';
     rv2SetPreset('today');
 }
 function rv2Rerender() {
+    rv2_offAdvMap = null; /* rebuild offer→advertiser map in case offers changed */
+    rv2State.advertiser = (document.getElementById('rv2AdvF')||{}).value || '';
     rv2State.offer     = document.getElementById('rv2OfferF').value;
     rv2State.affiliate = document.getElementById('rv2AffF').value;
     rv2State.platform  = document.getElementById('rv2PlatformF').value;
@@ -9670,8 +9694,13 @@ function rv2EmptyHtml(title, sub, icon) {
 }
 function rv2BarPct(value, max) { var pct = max > 0 ? Math.min(100, (value/max)*100) : 0; return '<div class="rv2-bar"><div class="rv2-bar-fill" style="width:' + pct + '%;"></div></div>'; }
 function rv2Pct(n, total) { return total > 0 ? ((n/total)*100).toFixed(1) + '%' : '—'; }
+function rv2AdvName(id) {
+    var a = (allAdvertisers||[]).filter(function(x){return x._id===id;})[0];
+    return a ? (a.name || a.companyName || id) : id;
+}
 function rv2FilterChips() {
     var chips = [];
+    if (rv2State.advertiser) chips.push('Advertiser: <b>' + escHtml(rv2AdvName(rv2State.advertiser)) + '</b>');
     if (rv2State.offer)     chips.push('Offer: <b>' + escHtml(getOfferName(rv2State.offer)) + '</b>');
     if (rv2State.affiliate) chips.push('Affiliate: <b>' + escHtml(getUserName(rv2State.affiliate)) + '</b>');
     if (rv2State.platform)  chips.push('Platform: <b>' + rv2PlatformLabel(rv2State.platform) + '</b>');
@@ -9716,20 +9745,19 @@ function rv2RenderOverview() {
 
     /* ── KPI cards ── */
     function kpi(lbl, icon, val, cls, sub, accent) {
-        var bg = accent ? accent.bg : '#f1f5f9', fg = accent ? accent.fg : '#64748b', ac = accent ? accent.fg : '#cbd5e1';
-        return '<div class="rv2-kpi" style="--kpi-bg:' + bg + ';--kpi-fg:' + fg + ';--kpi-accent:' + ac + ';">' +
-            '<div class="rv2-kpi-top"><div class="rv2-kpi-ic"><i class="fas ' + icon + '"></i></div>' +
-            '<div class="rv2-kpi-lbl">' + lbl + '</div></div>' +
+        var fg = accent ? accent.fg : '#64748b', glow = accent ? accent.glow : 'rgba(148,163,184,.06)';
+        return '<div class="rv2-kpi" style="--kpi-fg:' + fg + ';--kpi-glow:' + glow + ';">' +
+            '<div class="rv2-kpi-lbl"><i class="fas ' + icon + '"></i>' + lbl + '</div>' +
             '<div class="rv2-kpi-val ' + (cls||'') + '">' + val + '</div>' +
             (sub ? '<div class="rv2-kpi-sub">' + sub + '</div>' : '') + '</div>';
     }
     var A = {
-        blue:  {bg:'#eff6ff', fg:'#2563eb'},
-        green: {bg:'#f0fdf4', fg:'#16a34a'},
-        teal:  {bg:'#f0fafb', fg:'#0a6c80'},
-        amber: {bg:'#fffbeb', fg:'#d97706'},
-        red:   {bg:'#fef2f2', fg:'#dc2626'},
-        slate: {bg:'#f8fafc', fg:'#64748b'}
+        blue:  {fg:'#2563eb', glow:'rgba(37,99,235,.07)'},
+        green: {fg:'#16a34a', glow:'rgba(22,163,74,.07)'},
+        teal:  {fg:'#0a6c80', glow:'rgba(10,108,128,.07)'},
+        amber: {fg:'#d97706', glow:'rgba(217,119,6,.08)'},
+        red:   {fg:'#dc2626', glow:'rgba(220,38,38,.08)'},
+        slate: {fg:'#94a3b8', glow:'rgba(148,163,184,.06)'}
     };
     html += '<div class="rv2-kpi-strip">' +
         kpi('Total Clicks', 'fa-mouse-pointer', clicks.length, 'blue', Object.keys(ips).length + ' unique IPs', A.blue) +
