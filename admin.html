@@ -9935,6 +9935,7 @@ function rv2BuildDonutLegend(elId, labels, values, colors, total) {
     if (!el) return;
     var rows = labels.map(function(l,i){ return {label:l, value:values[i], color:colors[i]}; });
     rows.sort(function(a,b){ return b.value - a.value; });
+    rows = rows.slice(0, 3); /* show only top 3 */
     el.innerHTML = rows.map(function(r){
         var pct = total ? (r.value/total*100).toFixed(1) : 0;
         return '<div class="rv2-dl-row">' +
