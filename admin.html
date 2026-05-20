@@ -9698,7 +9698,6 @@ function rv2RenderOverview() {
     html += rv2OverviewMiniCard('Top Devices',    'Device',    rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2DeviceKey(c);}, convClickAttr(function(c){return rv2DeviceKey(c);}), function(k){return escHtml(k);}), 'device');
     html += rv2OverviewMiniCard('Top OS',         'OS',        rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2OsKey(c);}, convClickAttr(function(c){return rv2OsKey(c);}), function(k){return escHtml(k);}), 'os');
     html += rv2OverviewMiniCard('Top ISPs',       'ISP',       rv2GroupWithSales(clicks, approvedConvs, function(c){return c.isp||c.org||'Unknown';}, convClickAttr(function(c){return c.isp||c.org||'Unknown';}), function(k){return escHtml(k);}), 'isp');
-    html += rv2OverviewMiniCard('Top Countries',  'Country',   rv2GroupWithSales(clicks, approvedConvs, function(c){return c.countryName||c.country||'Unknown';}, convClickAttr(function(c){return c.countryName||c.country||'Unknown';}), function(k){return escHtml(k);}), 'country');
     html += '</div>';
     document.getElementById('rv2Content').innerHTML = html;
 }
