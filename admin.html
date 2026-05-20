@@ -10632,6 +10632,9 @@ function rv2RenderClickDetail(clickId) {
         row('Sub3', escHtml(c.sub3||'-'))+
         row('Sub4', escHtml(c.sub4||'-'))+
         row('Sub5', escHtml(c.sub5||'-'))+
+        (c.fbclid ? row('FB Click ID', '<span style="font-family:monospace;font-size:10.5px;word-break:break-all;">'+escHtml(c.fbclid)+'</span>') : '')+
+        (c.gclid  ? row('Google Click ID', '<span style="font-family:monospace;font-size:10.5px;word-break:break-all;">'+escHtml(c.gclid)+'</span>') : '')+
+        (c.ttclid ? row('TikTok Click ID', '<span style="font-family:monospace;font-size:10.5px;word-break:break-all;">'+escHtml(c.ttclid)+'</span>') : '')+
         '</div>';
     if (conv) {
         html += '<div style="grid-column:span 2;background:#dcfce7;border:1px solid #86efac;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #86efac;font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-check-circle"></i> Conversion linked</div>'+
