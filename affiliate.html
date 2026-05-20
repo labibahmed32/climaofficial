@@ -3185,7 +3185,7 @@ function renderClickColList() {
                 '<i class="fas fa-grip-vertical" style="color:#cbd5e1;font-size:11px;"></i>'+esc(col.label)+
             '</div>' +
             '<label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;">' +
-                '<input type="checkbox" '+(on?'checked':'')+' onchange="_ckColDraft[\''+col.key+'\']=this.checked" style="opacity:0;width:0;height:0;">' +
+                '<input type="checkbox" '+(on?'checked':'')+' onchange="_ckColDraft[\''+col.key+'\']=this.checked;renderClickColList();" style="opacity:0;width:0;height:0;">' +
                 '<span style="position:absolute;inset:0;background:'+(on?'#16a34a':'#cbd5e1')+';border-radius:20px;transition:.2s;"></span>' +
                 '<span style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;"></span>' +
             '</label>' +
