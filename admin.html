@@ -384,6 +384,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-kpi-val.blue{color:#1e40af;} .rv2-kpi-val.green{color:#15803d;} .rv2-kpi-val.red{color:#dc2626;} .rv2-kpi-val.amber{color:#d97706;}
 .rv2-kpi-sub{font-size:10.5px;color:#9ca3af;margin-top:3px;font-weight:500;}
 @media(max-width:900px){.rv2-kpi-strip{grid-template-columns:repeat(2,1fr);}}
+.rv2-chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;}
+.rv2-chart-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.rv2-chart-title{font-size:13.5px;font-weight:700;color:#0f172a;letter-spacing:-.2px;}
+.rv2-chart-legend{display:flex;gap:14px;font-size:11px;color:#64748b;font-weight:500;}
+.rv2-chart-legend span{display:inline-flex;align-items:center;gap:5px;}
+.rv2-chart-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+@media(max-width:1000px){.rv2-chart-card{}.rv2-content [style*="grid-template-columns:2fr 1fr"]{grid-template-columns:1fr !important;}}
 .rv2-table-wrap{overflow-x:auto;padding:0 6px 16px;}
 .rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
 .rv2-table thead tr{background:#f8fafc;}
@@ -9580,6 +9587,7 @@ function rv2SwitchTab(tab) {
 /* ── Main render dispatcher ── */
 function rv2Render() {
     if (!document.getElementById('rv2Content')) return;
+    if (typeof rv2DestroyCharts === 'function' && rv2State.tab !== 'overview') rv2DestroyCharts();
     if (rv2State.drillKey) { rv2RenderDrill(); rv2UpdateSidebarCounts(); return; }
     var fn = ({
         overview:    rv2RenderOverview,
@@ -9642,19 +9650,23 @@ function rv2FilterChips() {
 }
 
 /* ───────────────────────────────────────────────────────────
-   OVERVIEW
+   OVERVIEW (charts + KPIs + breakdowns)
    ─────────────────────────────────────────────────────────── */
+var rv2Charts = {};
+function rv2DestroyCharts() {
+    Object.keys(rv2Charts).forEach(function(k){ try { rv2Charts[k].destroy(); } catch(e){} delete rv2Charts[k]; });
+}
 function rv2RenderOverview() {
+    rv2DestroyCharts();
     var clicks = rv2FilterClicks();
-    var convs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var approvedConvs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
     var pendConvs = rv2FilterConvs().filter(function(c){ return c.status === 'pending'; });
-    var rev = convs.reduce(function(s,c){ return s + (parseFloat(c.revenue)||0); }, 0);
-    var pay = convs.reduce(function(s,c){ return s + (parseFloat(c.payout)||0); }, 0);
+    var rev = approvedConvs.reduce(function(s,c){ return s + (parseFloat(c.revenue)||0); }, 0);
+    var pay = approvedConvs.reduce(function(s,c){ return s + (parseFloat(c.payout)||0); }, 0);
     var ips = {}; clicks.forEach(function(c){ if (c.ip) ips[c.ip] = 1; });
-    var cvr = clicks.length ? ((convs.length/clicks.length)*100).toFixed(2) + '%' : '0%';
+    var cvr = clicks.length ? ((approvedConvs.length/clicks.length)*100).toFixed(2) + '%' : '0%';
     var epc = clicks.length ? (pay/clicks.length).toFixed(2) : '0.00';
     var rpc = clicks.length ? (rev/clicks.length).toFixed(2) : '0.00';
-    /* Blocked breakdown */
     var allClicksInRange = (allClicks||[]).filter(function(c){
         var t=c.timestamp||0; if (t<rv2State.fromTs||t>rv2State.toTs) return false;
         if (rv2State.offer && c.offerId !== rv2State.offer) return false;
@@ -9664,7 +9676,16 @@ function rv2RenderOverview() {
     var dupCount = allClicksInRange.filter(function(c){return c.blockReason==='duplicate_ip';}).length;
     var geoCount = allClicksInRange.filter(function(c){return c.blockReason && c.blockReason.indexOf('geo_')===0;}).length;
 
-    var html = rv2HeaderHtml('Summary ' + rv2FilterChips(), 'High-level performance across all selected traffic');
+    var convClickAttr = function(attrFn) {
+        return function(conv) {
+            if (conv._origClick === undefined) conv._origClick = (allClicks||[]).filter(function(x){return x._id===conv.clickId;})[0] || null;
+            return conv._origClick ? attrFn(conv._origClick) : null;
+        };
+    };
+
+    var html = rv2HeaderHtml('Overview ' + rv2FilterChips(), 'Performance at a glance');
+
+    /* ── KPI strip ── */
     function kpi(lbl, icon, val, cls, sub) {
         return '<div class="rv2-kpi"><div class="rv2-kpi-lbl"><i class="fas ' + icon + '"></i>' + lbl + '</div>' +
             '<div class="rv2-kpi-val ' + (cls||'') + '">' + val + '</div>' +
@@ -9672,7 +9693,7 @@ function rv2RenderOverview() {
     }
     html += '<div class="rv2-kpi-strip">' +
         kpi('Total Clicks', 'fa-mouse-pointer', clicks.length, 'blue', Object.keys(ips).length + ' unique IPs') +
-        kpi('Conversions', 'fa-check-circle', convs.length, 'green', pendConvs.length + ' pending') +
+        kpi('Conversions', 'fa-check-circle', approvedConvs.length, 'green', pendConvs.length + ' pending') +
         kpi('CVR', 'fa-percent', cvr, '', 'conversion rate') +
         kpi('Revenue', 'fa-dollar-sign', fmtMoney(rev), 'green', '$' + rpc + ' RPC') +
         kpi('Payout', 'fa-hand-holding-usd', fmtMoney(pay), '', '$' + epc + ' EPC') +
@@ -9681,15 +9702,20 @@ function rv2RenderOverview() {
         kpi('Geo Blocked', 'fa-globe', geoCount, geoCount>0?'amber':'', 'blocked') +
         '</div>';
 
-    /* Top breakdown cards — clicks + sales columns, no % */
-    var approvedConvs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
-    var convClickAttr = function(attrFn) {
-        return function(conv) {
-            if (conv._origClick === undefined) conv._origClick = (allClicks||[]).filter(function(x){return x._id===conv.clickId;})[0] || null;
-            return conv._origClick ? attrFn(conv._origClick) : null;
-        };
-    };
-    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;">';
+    /* ── Charts row: trend (2/3) + platform donut (1/3) ── */
+    html += '<div style="padding:8px 22px 4px;display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:stretch;">' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Clicks &amp; Conversions</span><span class="rv2-chart-legend"><span><i style="background:#0a6c80;"></i>Clicks</span><span><i style="background:#16a34a;"></i>Conversions</span></span></div><div style="height:240px;position:relative;"><canvas id="rv2TrendChart"></canvas></div></div>' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Platform</span></div><div style="height:240px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2PlatformChart"></canvas></div></div>' +
+        '</div>';
+
+    /* ── Charts row 2: revenue trend + device donut ── */
+    html += '<div style="padding:8px 22px 4px;display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:stretch;">' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Revenue &amp; Payout</span><span class="rv2-chart-legend"><span><i style="background:#1e40af;"></i>Revenue</span><span><i style="background:#f59e0b;"></i>Payout</span></span></div><div style="height:200px;position:relative;"><canvas id="rv2RevChart"></canvas></div></div>' +
+        '<div class="rv2-chart-card"><div class="rv2-chart-hd"><span class="rv2-chart-title">Traffic by Device</span></div><div style="height:200px;position:relative;display:flex;align-items:center;justify-content:center;"><canvas id="rv2DeviceChart"></canvas></div></div>' +
+        '</div>';
+
+    /* ── Breakdown cards ── */
+    html += '<div style="padding:14px 22px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start;">';
     html += rv2OverviewMiniCard('Top Affiliates', 'Affiliate', rv2GroupWithSales(clicks, approvedConvs, function(c){return c.affiliateId;}, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
     html += rv2OverviewMiniCard('Top Offers',     'Offer',     rv2GroupWithSales(clicks, approvedConvs, function(c){return c.offerId;}, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
     html += rv2OverviewMiniCard('Top Browsers',   'Browser',   rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2BrowserKey(c);}, convClickAttr(function(c){return rv2BrowserKey(c);}), function(k){return escHtml(k);}), 'browser');
@@ -9699,7 +9725,113 @@ function rv2RenderOverview() {
     html += rv2OverviewMiniCard('Top Referrers',  'Referrer',  rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2HostOf(c.referer);}, convClickAttr(function(c){return rv2HostOf(c.referer);}), function(k){return '<span style="font-family:monospace;font-size:11.5px;">'+escHtml(k)+'</span>';}), 'referrer');
     html += rv2OverviewMiniCard('Top Platforms',  'Platform',  rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2PlatformOf(c.referer);}, convClickAttr(function(c){return rv2PlatformOf(c.referer);}), function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
     html += '</div>';
+
     document.getElementById('rv2Content').innerHTML = html;
+
+    /* ── Build chart data + instantiate ── */
+    rv2BuildOverviewCharts(clicks, approvedConvs);
+}
+
+function rv2BuildOverviewCharts(clicks, convs) {
+    if (typeof Chart === 'undefined') return;
+    /* Decide bucket: single-day range → hourly, else daily */
+    var spanMs = rv2State.toTs - rv2State.fromTs;
+    var hourly = spanMs <= 86400000 * 1.5;
+    var buckets = [], labels = [];
+    var keyOf, labelOf;
+    if (hourly) {
+        for (var h=0; h<24; h++) { buckets.push(h); labels.push(String(h).padStart(2,'0')); }
+        keyOf = function(ts){ return new Date(ts).getHours(); };
+    } else {
+        var days = Math.min(60, Math.ceil(spanMs/86400000) + 1);
+        var start = new Date(rv2State.fromTs); start.setHours(0,0,0,0);
+        if (!isFinite(rv2State.fromTs)) { start = new Date(); start.setDate(start.getDate()-29); }
+        for (var i=0; i<days; i++) {
+            var d = new Date(start); d.setDate(start.getDate()+i);
+            var k = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+            buckets.push(k); labels.push((d.getMonth()+1)+'/'+d.getDate());
+        }
+        keyOf = function(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    }
+    var idx = {}; buckets.forEach(function(b,i){ idx[b]=i; });
+    var clickSeries = buckets.map(function(){return 0;});
+    var convSeries  = buckets.map(function(){return 0;});
+    var revSeries   = buckets.map(function(){return 0;});
+    var paySeries   = buckets.map(function(){return 0;});
+    clicks.forEach(function(c){ var i = idx[keyOf(c.timestamp)]; if (i!=null) clickSeries[i]++; });
+    convs.forEach(function(c){ var i = idx[keyOf(c.createdAt)]; if (i!=null){ convSeries[i]++; revSeries[i]+=parseFloat(c.revenue)||0; paySeries[i]+=parseFloat(c.payout)||0; } });
+
+    var gridColor = '#f1f5f9', tickColor = '#94a3b8';
+    var baseOpts = {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:12}} },
+        scales:{
+            x:{grid:{display:false},ticks:{color:tickColor,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:12}},
+            y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},precision:0},beginAtZero:true}
+        }
+    };
+
+    /* Trend chart — clicks (area) + conversions (line, 2nd axis) */
+    var tc = document.getElementById('rv2TrendChart');
+    if (tc) {
+        var ctx = tc.getContext('2d');
+        var grad = ctx.createLinearGradient(0,0,0,240);
+        grad.addColorStop(0,'rgba(10,108,128,.22)'); grad.addColorStop(1,'rgba(10,108,128,.01)');
+        rv2Charts.trend = new Chart(ctx, {
+            type:'line',
+            data:{ labels:labels, datasets:[
+                {label:'Clicks',data:clickSeries,borderColor:'#0a6c80',backgroundColor:grad,fill:true,tension:.35,borderWidth:2,pointRadius:0,pointHoverRadius:4,yAxisID:'y'},
+                {label:'Conversions',data:convSeries,borderColor:'#16a34a',backgroundColor:'#16a34a',fill:false,tension:.35,borderWidth:2,pointRadius:0,pointHoverRadius:4,yAxisID:'y1'}
+            ]},
+            options:Object.assign({},baseOpts,{scales:{
+                x:baseOpts.scales.x,
+                y:{position:'left',grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},precision:0},beginAtZero:true},
+                y1:{position:'right',grid:{display:false},ticks:{color:'#16a34a',font:{size:10},precision:0},beginAtZero:true}
+            }})
+        });
+    }
+
+    /* Revenue + payout bars */
+    var rc = document.getElementById('rv2RevChart');
+    if (rc) {
+        rv2Charts.rev = new Chart(rc.getContext('2d'), {
+            type:'bar',
+            data:{ labels:labels, datasets:[
+                {label:'Revenue',data:revSeries,backgroundColor:'#1e40af',borderRadius:3,barPercentage:.7,categoryPercentage:.7},
+                {label:'Payout',data:paySeries,backgroundColor:'#f59e0b',borderRadius:3,barPercentage:.7,categoryPercentage:.7}
+            ]},
+            options:Object.assign({},baseOpts,{scales:{x:baseOpts.scales.x,y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10},callback:function(v){return '$'+v;}},beginAtZero:true}}})
+        });
+    }
+
+    /* Platform donut */
+    var platMap = {};
+    clicks.forEach(function(c){ var p=rv2PlatformOf(c.referer); platMap[p]=(platMap[p]||0)+1; });
+    var platArr = Object.keys(platMap).map(function(k){return {k:k,v:platMap[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,7);
+    var platColors = {facebook:'#1877f2',instagram:'#e1306c',google:'#ea4335',tiktok:'#000000',twitter:'#1da1f2',youtube:'#ff0000',snapchat:'#fffc00',reddit:'#ff4500',direct:'#94a3b8',other:'#cbd5e1'};
+    var pc = document.getElementById('rv2PlatformChart');
+    if (pc) {
+        rv2Charts.platform = new Chart(pc.getContext('2d'), {
+            type:'doughnut',
+            data:{ labels:platArr.map(function(p){return rv2PlatformLabel(p.k);}), datasets:[{data:platArr.map(function(p){return p.v;}),backgroundColor:platArr.map(function(p){return platColors[p.k]||'#cbd5e1';}),borderWidth:2,borderColor:'#fff'}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:10,font:{size:11},color:'#475569',usePointStyle:true}},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8}}}
+        });
+    }
+
+    /* Device donut */
+    var devMap = {};
+    clicks.forEach(function(c){ var d=rv2DeviceKey(c); devMap[d]=(devMap[d]||0)+1; });
+    var devArr = Object.keys(devMap).map(function(k){return {k:k,v:devMap[k]};}).sort(function(a,b){return b.v-a.v;});
+    var devColors = ['#0a6c80','#14b8a6','#f59e0b','#94a3b8','#cbd5e1'];
+    var dc = document.getElementById('rv2DeviceChart');
+    if (dc) {
+        rv2Charts.device = new Chart(dc.getContext('2d'), {
+            type:'doughnut',
+            data:{ labels:devArr.map(function(d){return d.k;}), datasets:[{data:devArr.map(function(d){return d.v;}),backgroundColor:devArr.map(function(d,i){return devColors[i%devColors.length];}),borderWidth:2,borderColor:'#fff'}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,padding:10,font:{size:11},color:'#475569',usePointStyle:true}},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8}}}
+        });
+    }
 }
 /* Browser key incl. in-app webview detection */
 function rv2BrowserKey(c) {
