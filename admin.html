@@ -10402,58 +10402,106 @@ function rv2RenderHourly() {
     document.getElementById('rv2Content').innerHTML = html;
 }
 
-/* ── Click Logs / Conversion Logs (raw) ── */
+/* ── Click Logs (column-customizable) ── */
+var RV2_CK_COLS = [
+    { key:'timestamp', label:'Time',    def:true,  align:'left', sort:'timestamp', render:function(c){ return '<span style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</span>'; } },
+    { key:'offer',     label:'Offer',   def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
+    { key:'affiliate', label:'Affiliate',def:true, align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
+    { key:'ip',        label:'IP',      def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
+    { key:'country',   label:'Country', def:true,  align:'left', sort:'country',   render:function(c){ return escHtml(c.countryName||c.country||'-'); } },
+    { key:'city',      label:'City',    def:false, align:'left', sort:'city',      render:function(c){ return escHtml(c.city||'-'); } },
+    { key:'region',    label:'Region',  def:false, align:'left', sort:'region',    render:function(c){ return escHtml(c.region||'-'); } },
+    { key:'platform',  label:'Platform',def:true,  align:'left', sort:'platform',  render:function(c){ var p=c.platform; return '<span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span>'; } },
+    { key:'browser',   label:'Browser', def:true,  align:'left', sort:'browser',   render:function(c){ return escHtml(c.browser||'-'); } },
+    { key:'os',        label:'OS',      def:false, align:'left', sort:'os',        render:function(c){ return escHtml((c.os||'')+(c.osVer?' '+c.osVer:'')||'-'); } },
+    { key:'device',    label:'Device',  def:true,  align:'left', sort:'device',    render:function(c){ return escHtml(c.device||'-'); } },
+    { key:'isp',       label:'ISP',     def:false, align:'left', sort:'isp',       render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.isp||c.org||'-')+'</span>'; } },
+    { key:'sub1',      label:'Sub ID',  def:true,  align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
+    { key:'sub2',      label:'Sub2',    def:false, align:'left', sort:'sub2',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub2||'-')+'</span>'; } },
+    { key:'sub3',      label:'Sub3',    def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } },
+    { key:'fbclid',    label:'FB Click ID', def:false, align:'left', sort:'fbclid', render:function(c){ return c.fbclid ? '<span style="font-family:monospace;font-size:10.5px;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.fbclid)+'">'+escHtml(c.fbclid)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'referer',   label:'Referrer',def:true,  align:'left', sort:'referer',   render:function(c){ return c.referer ? '<a href="'+escHtml(c.referer)+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="'+escHtml(c.referer)+'" style="font-size:11px;color:#0a6c80;text-decoration:none;display:inline-block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+escHtml(c.referer)+'</a>' : '<span class="muted">(direct)</span>'; } },
+    { key:'converted', label:'Conv?',   def:true,  align:'num',  sort:'converted', render:function(c){ return c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>'; } }
+];
+function rv2EnabledCkCols() {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('rv2CkCols')); } catch(e){}
+    if (Array.isArray(saved) && saved.length) return RV2_CK_COLS.filter(function(c){ return saved.indexOf(c.key) > -1; });
+    return RV2_CK_COLS.filter(function(c){ return c.def; });
+}
 function rv2RenderClickLogs() {
-    var clicks = rv2FilterClicks().map(function(c){
+    var raw = rv2FilterClicks();
+    var clicks = raw.map(function(c){
         return {
             _id:c._id, timestamp:c.timestamp||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
-            ip:c.ip||'', country:c.country||'', platform:rv2PlatformOf(c.referer), browser:c.browser||'',
-            device:c.device||'', sub1:c.sub1||'', converted:c.converted?1:0, referer:c.referer
+            ip:c.ip||'', country:c.country||'', countryName:c.countryName||'', city:c.city||'', region:c.region||'',
+            platform:rv2PlatformOf(c.referer), browser:c.browser||'', os:c.os||'', osVer:c.osVer||'', device:c.device||'',
+            isp:c.isp||'', org:c.org||'', sub1:c.sub1||'', sub2:c.sub2||'', sub3:c.sub3||'', fbclid:c.fbclid||'',
+            converted:c.converted?1:0, referer:c.referer
         };
     });
     var sortField = rv2State.sortBy === 'label' ? 'timestamp' : rv2State.sortBy;
-    /* If default sortBy is 'clicks' (carries from group reports), use timestamp as default for click logs */
     if (rv2State.sortBy === 'clicks') sortField = 'timestamp';
     rv2SortRows(clicks, sortField, rv2State.sortDir);
     clicks = clicks.slice(0, 200);
-    var actions = '<button class="rv2-export-btn" onclick="rv2ExportClicks()"><i class="fas fa-download"></i> Export</button>';
+    var actions = '<button class="rv2-export-btn" onclick="rv2OpenCkColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
+        '<button class="rv2-export-btn" onclick="rv2ExportClicks()"><i class="fas fa-download"></i> Export</button>';
     var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200', actions);
     if (!clicks.length) { html += rv2EmptyHtml('No clicks','Adjust filters','fa-mouse-pointer'); document.getElementById('rv2Content').innerHTML = html; return; }
-    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>'+
-        rv2SortHeader('timestamp','Time','left')+
-        rv2SortHeader('offer','Offer','left')+
-        rv2SortHeader('affiliate','Affiliate','left')+
-        rv2SortHeader('ip','IP','left')+
-        rv2SortHeader('country','Country','left')+
-        rv2SortHeader('platform','Platform','left')+
-        rv2SortHeader('browser','Browser','left')+
-        rv2SortHeader('device','Device','left')+
-        rv2SortHeader('sub1','Sub ID','left')+
-        rv2SortHeader('referer','Referrer','left')+
-        rv2SortHeader('converted','Conv?','num')+
-        '</tr></thead><tbody>';
+    var cols = rv2EnabledCkCols();
+    html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>';
+    cols.forEach(function(col){ html += rv2SortHeader(col.sort, col.label, col.align); });
+    html += '</tr></thead><tbody>';
     clicks.forEach(function(c){
-        var p = c.platform;
-        var refCell = c.referer
-            ? '<a href="'+escHtml(c.referer)+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="'+escHtml(c.referer)+'" style="font-size:11px;color:#0a6c80;text-decoration:none;display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+escHtml(c.referer)+'</a>'
-            : '<span class="muted">(direct)</span>';
-        html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">'+
-            '<td style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</td>'+
-            '<td>'+escHtml(c.offer)+'</td>'+
-            '<td>'+escHtml(c.affiliate)+'</td>'+
-            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</td>'+
-            '<td>'+escHtml(c.country||'-')+'</td>'+
-            '<td><span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span></td>'+
-            '<td>'+escHtml(c.browser||'-')+'</td>'+
-            '<td>'+escHtml(c.device||'-')+'</td>'+
-            '<td style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</td>'+
-            '<td>'+refCell+'</td>'+
-            '<td class="num">'+(c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>')+'</td>'+
-            '</tr>';
+        html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">';
+        cols.forEach(function(col){ html += '<td' + (col.align==='num'?' class="num"':'') + '>' + col.render(c) + '</td>'; });
+        html += '</tr>';
     });
     html += '</tbody></table></div>';
     document.getElementById('rv2Content').innerHTML = html;
 }
+/* Column customization modal for Click Logs */
+var _rv2CkDraft = null;
+function rv2OpenCkColModal() {
+    var enabled = rv2EnabledCkCols().map(function(c){ return c.key; });
+    _rv2CkDraft = {}; RV2_CK_COLS.forEach(function(c){ _rv2CkDraft[c.key] = enabled.indexOf(c.key) > -1; });
+    var m = document.getElementById('rv2CkColModal');
+    if (!m) {
+        m = document.createElement('div');
+        m.id = 'rv2CkColModal';
+        m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        m.onclick = function(e){ if (e.target===m) rv2CloseCkColModal(); };
+        document.body.appendChild(m);
+    }
+    m.style.display = 'flex';
+    rv2RenderCkColModal();
+}
+function rv2RenderCkColModal() {
+    var m = document.getElementById('rv2CkColModal'); if (!m) return;
+    var rows = RV2_CK_COLS.map(function(col){
+        var on = !!_rv2CkDraft[col.key];
+        return '<label style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin:5px 0;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:13px;color:#1e293b;font-weight:500;">' +
+            '<span><i class="fas fa-grip-vertical" style="color:#cbd5e1;font-size:11px;margin-right:8px;"></i>'+escHtml(col.label)+'</span>' +
+            '<span style="position:relative;display:inline-block;width:36px;height:20px;">' +
+                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2CkDraft[\''+col.key+'\']=this.checked;rv2RenderCkColModal();" style="opacity:0;width:0;height:0;">' +
+                '<span style="position:absolute;inset:0;background:'+(on?'#0a6c80':'#cbd5e1')+';border-radius:20px;transition:.2s;"></span>' +
+                '<span style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;"></span>' +
+            '</span></label>';
+    }).join('');
+    m.innerHTML = '<div style="background:#fff;border-radius:12px;width:380px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
+        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</span><span onclick="rv2ResetCkCols()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset to default</span></div>' +
+        '<div style="overflow-y:auto;padding:10px 16px;flex:1;">'+rows+'</div>' +
+        '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseCkColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyCkCols()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
+        '</div>';
+}
+function rv2CloseCkColModal(){ var m=document.getElementById('rv2CkColModal'); if(m) m.style.display='none'; }
+function rv2ApplyCkCols(){
+    var keys = RV2_CK_COLS.filter(function(c){ return _rv2CkDraft[c.key]; }).map(function(c){ return c.key; });
+    if (!keys.length) { toast('Select at least one column'); return; }
+    try { localStorage.setItem('rv2CkCols', JSON.stringify(keys)); } catch(e){}
+    rv2CloseCkColModal(); rv2Render();
+}
+function rv2ResetCkCols(){ try{ localStorage.removeItem('rv2CkCols'); }catch(e){} _rv2CkDraft={}; RV2_CK_COLS.forEach(function(c){ _rv2CkDraft[c.key]=c.def; }); rv2RenderCkColModal(); }
 function rv2RenderConvLogs() {
     var convs = rv2FilterConvs().map(function(c){
         return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId), revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'', ip:c.ip||''};
