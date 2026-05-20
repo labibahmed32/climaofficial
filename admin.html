@@ -374,6 +374,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-metric-lbl{font-size:10.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
 .rv2-metric-val{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-.3px;}
 .rv2-metric-val.blue{color:#1e40af;} .rv2-metric-val.green{color:#15803d;} .rv2-metric-val.red{color:#b91c1c;} .rv2-metric-val.amber{color:#a16207;}
+/* Sleek KPI strip — even grid, no orphan line */
+.rv2-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#eef2f6;border:1px solid #eef2f6;border-radius:12px;overflow:hidden;margin:16px 22px;}
+.rv2-kpi{background:#fff;padding:14px 16px;position:relative;transition:background .12s;}
+.rv2-kpi:hover{background:#fafbfc;}
+.rv2-kpi-lbl{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.rv2-kpi-lbl i{font-size:10px;opacity:.6;}
+.rv2-kpi-val{font-size:21px;font-weight:800;color:#0f172a;letter-spacing:-.4px;line-height:1;}
+.rv2-kpi-val.blue{color:#1e40af;} .rv2-kpi-val.green{color:#15803d;} .rv2-kpi-val.red{color:#dc2626;} .rv2-kpi-val.amber{color:#d97706;}
+.rv2-kpi-sub{font-size:10.5px;color:#9ca3af;margin-top:3px;font-weight:500;}
+@media(max-width:900px){.rv2-kpi-strip{grid-template-columns:repeat(2,1fr);}}
 .rv2-table-wrap{overflow-x:auto;padding:0 6px 16px;}
 .rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
 .rv2-table thead tr{background:#f8fafc;}
@@ -1305,7 +1315,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                     <div class="rv2-side-item" data-tab="platform" onclick="rv2SwitchTab('platform')"><i class="fas fa-share-alt"></i> Platforms <span class="rv2-side-count" id="rv2Cnt_platform"></span></div>
                     <div class="rv2-side-item" data-tab="referrer" onclick="rv2SwitchTab('referrer')"><i class="fas fa-external-link-alt"></i> Referrers <span class="rv2-side-count" id="rv2Cnt_referrer"></span></div>
                     <div class="rv2-side-item" data-tab="browser"  onclick="rv2SwitchTab('browser')"><i class="fas fa-globe"></i> Browsers <span class="rv2-side-count" id="rv2Cnt_browser"></span></div>
-                    <div class="rv2-side-item" data-tab="device"   onclick="rv2SwitchTab('device')"><i class="fas fa-mobile-alt"></i> Devices / OS</div>
+                    <div class="rv2-side-item" data-tab="device"   onclick="rv2SwitchTab('device')"><i class="fas fa-mobile-alt"></i> Devices</div>
+                    <div class="rv2-side-item" data-tab="os"       onclick="rv2SwitchTab('os')"><i class="fas fa-desktop"></i> OS</div>
                     <div class="rv2-side-item" data-tab="isp"      onclick="rv2SwitchTab('isp')"><i class="fas fa-server"></i> ISPs <span class="rv2-side-count" id="rv2Cnt_isp"></span></div>
                     <div class="rv2-side-item" data-tab="country"  onclick="rv2SwitchTab('country')"><i class="fas fa-map-marker-alt"></i> Countries</div>
 
@@ -9581,6 +9592,7 @@ function rv2Render() {
         referrer:    rv2RenderReferrers,
         browser:     rv2RenderBrowsers,
         device:      rv2RenderDevices,
+        os:          rv2RenderOs,
         isp:         rv2RenderIsps,
         country:     rv2RenderCountries,
         clicks:      rv2RenderClickLogs,
@@ -9653,32 +9665,40 @@ function rv2RenderOverview() {
     var geoCount = allClicksInRange.filter(function(c){return c.blockReason && c.blockReason.indexOf('geo_')===0;}).length;
 
     var html = rv2HeaderHtml('Summary ' + rv2FilterChips(), 'High-level performance across all selected traffic');
-    html += '<div class="rv2-metrics">' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Total Clicks</div><div class="rv2-metric-val blue">' + clicks.length + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Unique IPs</div><div class="rv2-metric-val">' + Object.keys(ips).length + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Conversions</div><div class="rv2-metric-val green">' + convs.length + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Pending</div><div class="rv2-metric-val amber">' + pendConvs.length + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">CVR</div><div class="rv2-metric-val">' + cvr + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Revenue</div><div class="rv2-metric-val green">' + fmtMoney(rev) + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Payout</div><div class="rv2-metric-val">' + fmtMoney(pay) + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Profit</div><div class="rv2-metric-val green">' + fmtMoney(rev-pay) + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">EPC</div><div class="rv2-metric-val">$' + epc + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">RPC</div><div class="rv2-metric-val">$' + rpc + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Duplicates</div><div class="rv2-metric-val red">' + dupCount + '</div></div>' +
-        '<div class="rv2-metric"><div class="rv2-metric-lbl">Geo Blocked</div><div class="rv2-metric-val amber">' + geoCount + '</div></div>' +
+    function kpi(lbl, icon, val, cls, sub) {
+        return '<div class="rv2-kpi"><div class="rv2-kpi-lbl"><i class="fas ' + icon + '"></i>' + lbl + '</div>' +
+            '<div class="rv2-kpi-val ' + (cls||'') + '">' + val + '</div>' +
+            (sub ? '<div class="rv2-kpi-sub">' + sub + '</div>' : '') + '</div>';
+    }
+    html += '<div class="rv2-kpi-strip">' +
+        kpi('Total Clicks', 'fa-mouse-pointer', clicks.length, 'blue', Object.keys(ips).length + ' unique IPs') +
+        kpi('Conversions', 'fa-check-circle', convs.length, 'green', pendConvs.length + ' pending') +
+        kpi('CVR', 'fa-percent', cvr, '', 'conversion rate') +
+        kpi('Revenue', 'fa-dollar-sign', fmtMoney(rev), 'green', '$' + rpc + ' RPC') +
+        kpi('Payout', 'fa-hand-holding-usd', fmtMoney(pay), '', '$' + epc + ' EPC') +
+        kpi('Profit', 'fa-chart-line', fmtMoney(rev-pay), 'green', 'margin') +
+        kpi('Duplicates', 'fa-clone', dupCount, dupCount>0?'red':'', 'blocked') +
+        kpi('Geo Blocked', 'fa-globe', geoCount, geoCount>0?'amber':'', 'blocked') +
         '</div>';
 
-    /* Top breakdown cards — 8 proper mini-tables */
+    /* Top breakdown cards — clicks + sales columns, no % */
     var approvedConvs = rv2FilterConvs().filter(function(c){ return c.status === 'approved'; });
+    var convClickAttr = function(attrFn) {
+        return function(conv) {
+            if (conv._origClick === undefined) conv._origClick = (allClicks||[]).filter(function(x){return x._id===conv.clickId;})[0] || null;
+            return conv._origClick ? attrFn(conv._origClick) : null;
+        };
+    };
     html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;">';
-    html += rv2OverviewMiniCard('Top Offers',       'Offer',     'Clicks', rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
-    html += rv2OverviewMiniCard('Top Converting Offers', 'Offer', 'Conv',  rv2GroupConvs(approvedConvs, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
-    html += rv2OverviewMiniCard('Top Affiliates',   'Affiliate', 'Clicks', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
-    html += rv2OverviewMiniCard('Top Platforms',    'Platform',  'Clicks', rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
-    html += rv2OverviewMiniCard('Top Browsers',     'Browser',   'Clicks', rv2GroupClicks(clicks, function(c){return rv2BrowserKey(c);}, function(k){return escHtml(k);}), 'browser');
-    html += rv2OverviewMiniCard('Top Devices / OS', 'Device',    'Clicks', rv2GroupClicks(clicks, function(c){return (c.device||'Unknown')+' · '+(c.os||'Unknown')+(c.osVer?' '+c.osVer:'');}, function(k){return escHtml(k);}), 'device');
-    html += rv2OverviewMiniCard('Top ISPs',         'ISP',       'Clicks', rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
-    html += rv2OverviewMiniCard('Top Countries',    'Country',   'Clicks', rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
+    html += rv2OverviewMiniCard('Top Offers',     'Offer',     rv2GroupWithSales(clicks, approvedConvs, function(c){return c.offerId;}, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    html += rv2OverviewMiniCard('Top Affiliates', 'Affiliate', rv2GroupWithSales(clicks, approvedConvs, function(c){return c.affiliateId;}, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    html += rv2OverviewMiniCard('Top Platforms',  'Platform',  rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2PlatformOf(c.referer);}, convClickAttr(function(c){return rv2PlatformOf(c.referer);}), function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
+    html += rv2OverviewMiniCard('Top Referrers',  'Referrer',  rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2HostOf(c.referer);}, convClickAttr(function(c){return rv2HostOf(c.referer);}), function(k){return '<span style="font-family:monospace;font-size:11.5px;">'+escHtml(k)+'</span>';}), 'referrer');
+    html += rv2OverviewMiniCard('Top Browsers',   'Browser',   rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2BrowserKey(c);}, convClickAttr(function(c){return rv2BrowserKey(c);}), function(k){return escHtml(k);}), 'browser');
+    html += rv2OverviewMiniCard('Top Devices',    'Device',    rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2DeviceKey(c);}, convClickAttr(function(c){return rv2DeviceKey(c);}), function(k){return escHtml(k);}), 'device');
+    html += rv2OverviewMiniCard('Top OS',         'OS',        rv2GroupWithSales(clicks, approvedConvs, function(c){return rv2OsKey(c);}, convClickAttr(function(c){return rv2OsKey(c);}), function(k){return escHtml(k);}), 'os');
+    html += rv2OverviewMiniCard('Top ISPs',       'ISP',       rv2GroupWithSales(clicks, approvedConvs, function(c){return c.isp||c.org||'Unknown';}, convClickAttr(function(c){return c.isp||c.org||'Unknown';}), function(k){return escHtml(k);}), 'isp');
+    html += rv2OverviewMiniCard('Top Countries',  'Country',   rv2GroupWithSales(clicks, approvedConvs, function(c){return c.countryName||c.country||'Unknown';}, convClickAttr(function(c){return c.countryName||c.country||'Unknown';}), function(k){return escHtml(k);}), 'country');
     html += '</div>';
     document.getElementById('rv2Content').innerHTML = html;
 }
@@ -9691,20 +9711,28 @@ function rv2BrowserKey(c) {
     if (/snapchat/.test(ua))  return 'Snapchat In-App';
     return c.browser || 'Unknown';
 }
+function rv2DeviceKey(c) {
+    var d = c.device || 'Unknown';
+    return d.charAt(0).toUpperCase() + d.slice(1);
+}
+function rv2OsKey(c) {
+    return (c.os || 'Unknown') + (c.osVer ? ' ' + c.osVer : '');
+}
 function rv2GroupClicks(clicks, keyFn, labelFn) {
     var m = {}; clicks.forEach(function(c){ var k = keyFn(c); if (!k) return; if (!m[k]) m[k] = {key:k, count:0}; m[k].count++; });
     var arr = Object.keys(m).map(function(k){ return {key:k, label:labelFn(k), count:m[k].count}; });
     arr.sort(function(a,b){ return b.count - a.count; });
     return arr.slice(0, 6);
 }
-function rv2GroupConvs(convs, keyFn, labelFn) {
-    var m = {}; convs.forEach(function(c){ var k = keyFn(c); if (!k) return; if (!m[k]) m[k] = {key:k, count:0}; m[k].count++; });
-    var arr = Object.keys(m).map(function(k){ return {key:k, label:labelFn(k), count:m[k].count}; });
-    arr.sort(function(a,b){ return b.count - a.count; });
+function rv2GroupWithSales(clicks, convs, clickKeyFn, convKeyFn, labelFn) {
+    var m = {};
+    clicks.forEach(function(c){ var k = clickKeyFn(c); if (k==null) return; if (!m[k]) m[k] = {key:k, clicks:0, sales:0}; m[k].clicks++; });
+    convs.forEach(function(c){ var k = convKeyFn(c); if (k==null) return; if (!m[k]) m[k] = {key:k, clicks:0, sales:0}; m[k].sales++; });
+    var arr = Object.keys(m).map(function(k){ return {key:m[k].key, label:labelFn(m[k].key), clicks:m[k].clicks, sales:m[k].sales}; });
+    arr.sort(function(a,b){ return b.clicks - a.clicks; });
     return arr.slice(0, 6);
 }
-function rv2OverviewMiniCard(title, colLabel, metricLabel, rows, tabKey) {
-    var total = rows.reduce(function(s,r){ return s + r.count; }, 0);
+function rv2OverviewMiniCard(title, colLabel, rows, tabKey) {
     var html = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:11px;overflow:hidden;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px 11px;border-bottom:1px solid #f1f5f9;">' +
         '<div style="font-size:13.5px;font-weight:700;color:#0f172a;">' + title + '</div>' +
@@ -9716,15 +9744,14 @@ function rv2OverviewMiniCard(title, colLabel, metricLabel, rows, tabKey) {
         html += '<table style="width:100%;border-collapse:collapse;font-size:12.5px;">' +
             '<thead><tr style="background:#f8fafc;">' +
             '<th style="text-align:left;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;">' + colLabel + '</th>' +
-            '<th style="text-align:right;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;">' + metricLabel + '</th>' +
-            '<th style="text-align:right;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;width:48px;">%</th>' +
+            '<th style="text-align:right;padding:7px 14px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;width:60px;">Clicks</th>' +
+            '<th style="text-align:right;padding:7px 16px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;width:54px;">Sales</th>' +
             '</tr></thead><tbody>';
         rows.forEach(function(r) {
-            var pct = total > 0 ? ((r.count/total)*100).toFixed(0) + '%' : '—';
             html += '<tr style="cursor:pointer;" onclick="rv2DrillTo(\'' + tabKey + '\',' + JSON.stringify(r.key).replace(/"/g,'&quot;') + ')" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">' +
-                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;color:#1e293b;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</td>' +
-                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;text-align:right;font-weight:700;color:#0f172a;">' + r.count + '</td>' +
-                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;text-align:right;color:#94a3b8;font-size:11px;">' + pct + '</td>' +
+                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;color:#1e293b;font-weight:500;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</td>' +
+                '<td style="padding:9px 14px;border-top:1px solid #f4f6f8;text-align:right;font-weight:700;color:#0f172a;">' + r.clicks + '</td>' +
+                '<td style="padding:9px 16px;border-top:1px solid #f4f6f8;text-align:right;font-weight:700;color:' + (r.sales>0?'#15803d':'#cbd5e1') + ';">' + r.sales + '</td>' +
                 '</tr>';
         });
         html += '</tbody></table>';
@@ -9911,11 +9938,20 @@ function rv2RenderBrowsers() {
 }
 function rv2RenderDevices() {
     rv2RenderGrouped({
-        title: 'Device / OS Report', sub: 'Mobile vs desktop, OS version breakdown',
+        title: 'Device Report', sub: 'Mobile vs desktop vs tablet',
         entityName: 'Device', drillKind: 'device', emptyIcon: 'fa-mobile-alt',
-        keyFn: function(c){ return (c.device || 'Unknown') + ' · ' + (c.os || 'Unknown') + (c.osVer ? ' ' + c.osVer : ''); },
+        keyFn: function(c){ return rv2DeviceKey(c); },
         convKeyFromClick: true,
-        labelFn: function(k){ return escHtml(k); }
+        labelFn: function(k){ return '<i class="fas fa-mobile-alt" style="color:#0a6c80;margin-right:6px;font-size:11px;"></i>' + escHtml(k); }
+    });
+}
+function rv2RenderOs() {
+    rv2RenderGrouped({
+        title: 'OS Report', sub: 'Operating system & version breakdown',
+        entityName: 'OS', drillKind: 'os', emptyIcon: 'fa-desktop',
+        keyFn: function(c){ return rv2OsKey(c); },
+        convKeyFromClick: true,
+        labelFn: function(k){ return '<i class="fas fa-desktop" style="color:#0a6c80;margin-right:6px;font-size:11px;"></i>' + escHtml(k); }
     });
 }
 function rv2RenderIsps() {
@@ -10117,7 +10153,8 @@ function rv2RenderDrill() {
         platform:  function(c){ return rv2PlatformOf(c.referer) === key; },
         referrer:  function(c){ return rv2HostOf(c.referer) === key; },
         browser:   function(c){ var ua=(c.userAgent||'').toLowerCase(); var b = /fban|fbav/.test(ua)?'Facebook In-App':(/instagram/.test(ua)?'Instagram In-App':(/tiktok/.test(ua)?'TikTok In-App':(/snapchat/.test(ua)?'Snapchat In-App':(c.browser||'Unknown')))); return b === key; },
-        device:    function(c){ return ((c.device||'Unknown')+' · '+(c.os||'Unknown')+(c.osVer?' '+c.osVer:'')) === key; },
+        device:    function(c){ return rv2DeviceKey(c) === key; },
+        os:        function(c){ return rv2OsKey(c) === key; },
         isp:       function(c){ return (c.isp || c.org || 'Unknown') === key; },
         country:   function(c){ return (c.countryName || c.country || 'Unknown') === key; }
     })[kind];
@@ -10129,7 +10166,7 @@ function rv2RenderDrill() {
     if (kind === 'click') return rv2RenderClickDetail(key);
     if (kind === 'conversion') return rv2RenderConvDetail(key);
 
-    var entityLabel = ({offer:'Offer',affiliate:'Affiliate',subid:'Sub ID',platform:'Platform',referrer:'Referrer',browser:'Browser',device:'Device',isp:'ISP',country:'Country'})[kind] || 'Detail';
+    var entityLabel = ({offer:'Offer',affiliate:'Affiliate',subid:'Sub ID',platform:'Platform',referrer:'Referrer',browser:'Browser',device:'Device',os:'OS',isp:'ISP',country:'Country'})[kind] || 'Detail';
     var displayKey = (kind === 'offer') ? getOfferName(key) : (kind === 'affiliate' ? getUserName(key) : (kind === 'platform' ? rv2PlatformLabel(key) : key));
 
     var rev = convs.filter(function(c){return c.status==='approved';}).reduce(function(s,c){return s+(parseFloat(c.revenue)||0);},0);
@@ -10155,14 +10192,16 @@ function rv2RenderDrill() {
         '<div class="rv2-metric"><div class="rv2-metric-lbl">Profit</div><div class="rv2-metric-val green">' + fmtMoney(rev-pay) + '</div></div>' +
         '</div>';
 
-    /* Sub-breakdowns */
-    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">';
-    if (kind !== 'platform') html += rv2OverviewMiniCard('By Platform',  'Platform', 'Clicks', rv2GroupClicks(clicks, function(c){return rv2PlatformOf(c.referer);}, function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
-    if (kind !== 'browser')  html += rv2OverviewMiniCard('By Browser',   'Browser', 'Clicks', rv2GroupClicks(clicks, function(c){return rv2BrowserKey(c);}, function(k){return escHtml(k);}), 'browser');
-    if (kind !== 'isp')      html += rv2OverviewMiniCard('By ISP',       'ISP', 'Clicks', rv2GroupClicks(clicks, function(c){return c.isp||c.org||'Unknown';}, function(k){return escHtml(k);}), 'isp');
-    if (kind !== 'country')  html += rv2OverviewMiniCard('By Country',   'Country', 'Clicks', rv2GroupClicks(clicks, function(c){return c.countryName||c.country||'Unknown';}, function(k){return escHtml(k);}), 'country');
-    if (kind !== 'offer')    html += rv2OverviewMiniCard('By Offer',     'Offer', 'Clicks', rv2GroupClicks(clicks, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
-    if (kind !== 'affiliate')html += rv2OverviewMiniCard('By Affiliate', 'Affiliate', 'Clicks', rv2GroupClicks(clicks, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
+    /* Sub-breakdowns (clicks + sales) */
+    var dApproved = convs.filter(function(c){ return c.status === 'approved'; });
+    var dConvAttr = function(attrFn) { return function(conv){ if (conv._origClick === undefined) conv._origClick = (allClicks||[]).filter(function(x){return x._id===conv.clickId;})[0]||null; return conv._origClick ? attrFn(conv._origClick) : null; }; };
+    html += '<div style="padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">';
+    if (kind !== 'platform') html += rv2OverviewMiniCard('By Platform',  'Platform', rv2GroupWithSales(clicks, dApproved, function(c){return rv2PlatformOf(c.referer);}, dConvAttr(function(c){return rv2PlatformOf(c.referer);}), function(k){return '<span class="rv2-pill '+rv2PlatformPillClass(k)+'">'+rv2PlatformIcon(k)+' '+rv2PlatformLabel(k)+'</span>';}), 'platform');
+    if (kind !== 'browser')  html += rv2OverviewMiniCard('By Browser',   'Browser', rv2GroupWithSales(clicks, dApproved, function(c){return rv2BrowserKey(c);}, dConvAttr(function(c){return rv2BrowserKey(c);}), function(k){return escHtml(k);}), 'browser');
+    if (kind !== 'isp')      html += rv2OverviewMiniCard('By ISP',       'ISP', rv2GroupWithSales(clicks, dApproved, function(c){return c.isp||c.org||'Unknown';}, dConvAttr(function(c){return c.isp||c.org||'Unknown';}), function(k){return escHtml(k);}), 'isp');
+    if (kind !== 'country')  html += rv2OverviewMiniCard('By Country',   'Country', rv2GroupWithSales(clicks, dApproved, function(c){return c.countryName||c.country||'Unknown';}, dConvAttr(function(c){return c.countryName||c.country||'Unknown';}), function(k){return escHtml(k);}), 'country');
+    if (kind !== 'offer')    html += rv2OverviewMiniCard('By Offer',     'Offer', rv2GroupWithSales(clicks, dApproved, function(c){return c.offerId;}, function(c){return c.offerId;}, function(k){return escHtml(getOfferName(k));}), 'offer');
+    if (kind !== 'affiliate')html += rv2OverviewMiniCard('By Affiliate', 'Affiliate', rv2GroupWithSales(clicks, dApproved, function(c){return c.affiliateId;}, function(c){return c.affiliateId;}, function(k){return escHtml(getUserName(k));}), 'affiliate');
     html += '</div>';
 
     /* Recent clicks */
