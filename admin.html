@@ -9728,7 +9728,8 @@ function rv2GroupWithSales(clicks, convs, clickKeyFn, convKeyFn, labelFn) {
     clicks.forEach(function(c){ var k = clickKeyFn(c); if (k==null) return; if (!m[k]) m[k] = {key:k, clicks:0, sales:0}; m[k].clicks++; });
     convs.forEach(function(c){ var k = convKeyFn(c); if (k==null) return; if (!m[k]) m[k] = {key:k, clicks:0, sales:0}; m[k].sales++; });
     var arr = Object.keys(m).map(function(k){ return {key:m[k].key, label:labelFn(m[k].key), clicks:m[k].clicks, sales:m[k].sales}; });
-    arr.sort(function(a,b){ return b.clicks - a.clicks; });
+    /* Sort: most sales first, then most clicks as tiebreaker */
+    arr.sort(function(a,b){ return (b.sales - a.sales) || (b.clicks - a.clicks); });
     return arr.slice(0, 6);
 }
 function rv2OverviewMiniCard(title, colLabel, rows, tabKey) {
