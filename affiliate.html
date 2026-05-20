@@ -3510,12 +3510,31 @@ function savePayment() {
     payData.payoneer = { email: document.getElementById('payPayoneerEmail').value.trim() };
     fbPut('users/' + myUid + '/payment', payData).then(function() { toast('Payment details saved!'); }).catch(function() { toast('Error saving payment', 'error'); });
 }
+/* Log a security event for the admin to see in their alerts panel */
+function logAdminAlert(type, message) {
+    var id = 'al' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+    var data = {
+        type: type,                       /* password_change | email_change */
+        affiliateId: myUid,
+        affiliateName: (currentUser && (currentUser.name || currentUser.email)) || myUid,
+        affiliateEmail: (currentUser && currentUser.email) || '',
+        message: message,
+        timestamp: Date.now(),
+        read: false
+    };
+    return fbPut('adminAlerts/' + id, data).catch(function(){});
+}
+
 function changePw() {
     var np = document.getElementById('setNewP').value, cp = document.getElementById('setConfP').value;
     if (!np || np.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
     if (np !== cp) { toast('Passwords do not match', 'error'); return; }
     firebase.auth().currentUser.updatePassword(np)
-        .then(function() { toast('Password updated!'); document.getElementById('setNewP').value = ''; document.getElementById('setConfP').value = ''; })
+        .then(function() {
+            toast('Password updated!');
+            document.getElementById('setNewP').value = ''; document.getElementById('setConfP').value = '';
+            logAdminAlert('password_change', 'changed their account password');
+        })
         .catch(function(err) { toast('Error: ' + (err.message || 'Failed'), 'error'); });
 }
 function switchSettingsTab(tab) {
@@ -3555,11 +3574,13 @@ function changeEmail() {
     }).then(function() {
         return fbPatch('users/' + myUid, { email: newEmail });
     }).then(function() {
+        var oldEmail = (currentUser && currentUser.email) || u.email;
         if (currentUser) currentUser.email = newEmail;
         document.getElementById('setEmail').value = newEmail;
         document.getElementById('emCurPw').value = '';
         document.getElementById('emNewEmail').value = '';
         toast('Verification sent to new email. Confirm to complete change.');
+        logAdminAlert('email_change', 'requested email change from ' + oldEmail + ' to ' + newEmail);
     }).catch(function(err) {
         var msg = err && err.code === 'auth/wrong-password' ? 'Wrong current password' : (err && err.message ? err.message : 'Update failed');
         toast(msg, 'error');
