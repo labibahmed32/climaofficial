@@ -440,6 +440,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-mini-name{color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .rv2-mini-pad td{padding:0 16px;height:38px;border-top:1px solid #f8fafc;}
 @media(max-width:1000px){.rv2-chart-card{}.rv2-content [style*="grid-template-columns:2fr 1fr"]{grid-template-columns:1fr !important;}}
+.rv2-pagebar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:10px;}
+.rv2-pagebar-left{font-size:12.5px;color:#64748b;display:flex;align-items:center;}
+.rv2-pagebar-left b{color:#0f172a;}
+.rv2-pagebar-right{display:flex;align-items:center;gap:8px;}
+.rv2-page-btn{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:7px;cursor:pointer;color:#64748b;font-size:12px;transition:all .12s;}
+.rv2-page-btn:hover:not([disabled]){border-color:#0a6c80;color:#0a6c80;}
+.rv2-page-btn[disabled]{opacity:.4;cursor:not-allowed;}
+.rv2-page-num{font-size:12.5px;color:#0f172a;font-weight:600;min-width:54px;text-align:center;}
 .rv2-table-wrap{overflow-x:auto;padding:0 6px 16px;}
 .rv2-table{width:100%;border-collapse:collapse;font-size:13px;}
 .rv2-table thead tr{background:#f8fafc;}
@@ -9513,8 +9521,33 @@ var rv2State = {
     search: '',
     sortBy: 'clicks',
     sortDir: 'desc',    /* asc | desc */
-    trendMetrics: ['clicks','conversions']  /* which series show on the trend chart */
+    trendMetrics: ['clicks','conversions'],  /* which series show on the trend chart */
+    ckPage: 1, ckPageSize: 10,   /* Click Logs pagination */
+    cvPage: 1, cvPageSize: 10    /* Conversion Logs pagination */
 };
+/* Pagination bar builder */
+function rv2PageBar(total, page, pageSize, pageFn, sizeFn) {
+    var pages = Math.max(1, Math.ceil(total / pageSize));
+    if (page > pages) page = pages;
+    var from = total ? (page-1)*pageSize + 1 : 0;
+    var to = Math.min(total, page*pageSize);
+    var html = '<div class="rv2-pagebar">' +
+        '<div class="rv2-pagebar-left">Showing <b>' + from + '–' + to + '</b> of <b>' + total + '</b>' +
+        ' &nbsp;·&nbsp; Rows: ' +
+        '<select onchange="' + sizeFn + '(this.value)" style="padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;margin-left:4px;">' +
+        [10,20,50].map(function(n){ return '<option value="'+n+'"'+(n===pageSize?' selected':'')+'>'+n+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="rv2-pagebar-right">' +
+        '<button class="rv2-page-btn" ' + (page<=1?'disabled':'') + ' onclick="' + pageFn + '(' + (page-1) + ')"><i class="fas fa-chevron-left"></i></button>' +
+        '<span class="rv2-page-num">' + page + ' / ' + pages + '</span>' +
+        '<button class="rv2-page-btn" ' + (page>=pages?'disabled':'') + ' onclick="' + pageFn + '(' + (page+1) + ')"><i class="fas fa-chevron-right"></i></button>' +
+        '</div></div>';
+    return html;
+}
+function rv2CkGoPage(p){ rv2State.ckPage = parseInt(p)||1; rv2Render(); }
+function rv2CkSetSize(s){ rv2State.ckPageSize = parseInt(s)||10; rv2State.ckPage = 1; rv2Render(); }
+function rv2CvGoPage(p){ rv2State.cvPage = parseInt(p)||1; rv2Render(); }
+function rv2CvSetSize(s){ rv2State.cvPageSize = parseInt(s)||10; rv2State.cvPage = 1; rv2Render(); }
 var RV2_TREND_METRICS = {
     clicks:      { label:'Clicks',       color:'#0a6c80', axis:'y',  fill:true  },
     conversions: { label:'Conversions',  color:'#16a34a', axis:'y1', fill:false },
@@ -10443,21 +10476,25 @@ function rv2RenderClickLogs() {
     var sortField = rv2State.sortBy === 'label' ? 'timestamp' : rv2State.sortBy;
     if (rv2State.sortBy === 'clicks') sortField = 'timestamp';
     rv2SortRows(clicks, sortField, rv2State.sortDir);
-    clicks = clicks.slice(0, 200);
+    var total = clicks.length;
+    var ps = rv2State.ckPageSize, pg = rv2State.ckPage;
+    var maxPg = Math.max(1, Math.ceil(total/ps)); if (pg > maxPg) { pg = maxPg; rv2State.ckPage = pg; }
+    var pageRows = clicks.slice((pg-1)*ps, pg*ps);
     var actions = '<button class="rv2-export-btn" onclick="rv2OpenCkColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
         '<button class="rv2-export-btn" onclick="rv2ExportClicks()"><i class="fas fa-download"></i> Export</button>';
-    var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), 'Raw click stream — most recent 200', actions);
-    if (!clicks.length) { html += rv2EmptyHtml('No clicks','Adjust filters','fa-mouse-pointer'); document.getElementById('rv2Content').innerHTML = html; return; }
+    var html = rv2HeaderHtml('Click Logs ' + rv2FilterChips(), total + ' total clicks', actions);
+    if (!total) { html += rv2EmptyHtml('No clicks','Adjust filters','fa-mouse-pointer'); document.getElementById('rv2Content').innerHTML = html; return; }
     var cols = rv2EnabledCkCols();
     html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>';
     cols.forEach(function(col){ html += rv2SortHeader(col.sort, col.label, col.align); });
     html += '</tr></thead><tbody>';
-    clicks.forEach(function(c){
+    pageRows.forEach(function(c){
         html += '<tr class="clickable" onclick="rv2DrillTo(\'click\',\''+c._id+'\')">';
         cols.forEach(function(col){ html += '<td' + (col.align==='num'?' class="num"':'') + '>' + col.render(c) + '</td>'; });
         html += '</tr>';
     });
     html += '</tbody></table></div>';
+    html += rv2PageBar(total, pg, ps, 'rv2CkGoPage', 'rv2CkSetSize');
     document.getElementById('rv2Content').innerHTML = html;
 }
 /* ── Generic column-customization modal (Click Logs + Conversion Logs) ── */
@@ -10533,20 +10570,25 @@ function rv2RenderConvLogs() {
     });
     var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
     rv2SortRows(convs, cSortField, rv2State.sortDir);
+    var total = convs.length;
+    var ps = rv2State.cvPageSize, pg = rv2State.cvPage;
+    var maxPg = Math.max(1, Math.ceil(total/ps)); if (pg > maxPg) { pg = maxPg; rv2State.cvPage = pg; }
+    var pageRows = convs.slice((pg-1)*ps, pg*ps);
     var actions = '<button class="rv2-export-btn" onclick="rv2OpenCvColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
         '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>';
-    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), 'All conversions in range — click row for full detail', actions);
-    if (!convs.length) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
+    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), total + ' total conversions', actions);
+    if (!total) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
     var cols = rv2EnabledCols(RV2_CV_COLS, 'rv2CvCols');
     html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>';
     cols.forEach(function(col){ html += rv2SortHeader(col.sort, col.label, col.align); });
     html += '</tr></thead><tbody>';
-    convs.forEach(function(c){
+    pageRows.forEach(function(c){
         html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">';
         cols.forEach(function(col){ html += '<td' + (col.align==='num'?' class="num"':'') + '>' + col.render(c) + '</td>'; });
         html += '</tr>';
     });
     html += '</tbody></table></div>';
+    html += rv2PageBar(total, pg, ps, 'rv2CvGoPage', 'rv2CvSetSize');
     document.getElementById('rv2Content').innerHTML = html;
 }
 
