@@ -10574,37 +10574,49 @@ function rv2OpenColModal(registry, storeKey) {
     m.style.display = 'flex';
     rv2RenderColModal();
 }
-function rv2ColMove(key, dir) {
-    var i = _rv2ColOrder.indexOf(key); if (i < 0) return;
-    var j = i + dir; if (j < 0 || j >= _rv2ColOrder.length) return;
-    var t = _rv2ColOrder[i]; _rv2ColOrder[i] = _rv2ColOrder[j]; _rv2ColOrder[j] = t;
-    rv2RenderColModal();
-}
+var _rv2DragKey = null;
 function rv2RenderColModal() {
+    /* Build the shell ONCE; subsequent updates only touch the list body (preserves scroll) */
     var m = document.getElementById('rv2ColModal'); if (!m || !_rv2ColRegistry) return;
+    m.innerHTML = '<div style="background:#fff;border-radius:12px;width:400px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
+        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Toggle on/off · drag to reorder</div></div><span onclick="rv2ResetColModal()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset</span></div>' +
+        '<div id="rv2ColListBody" style="overflow-y:auto;padding:10px 16px;flex:1;"></div>' +
+        '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyColModal()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
+        '</div>';
+    rv2RenderColRows();
+}
+function rv2RenderColRows() {
+    var body = document.getElementById('rv2ColListBody'); if (!body) return;
+    var prevScroll = body.scrollTop; /* preserve scroll across re-render */
     var byKey = {}; _rv2ColRegistry.forEach(function(c){ byKey[c.key] = c; });
-    var rows = _rv2ColOrder.map(function(key, idx){
+    body.innerHTML = _rv2ColOrder.map(function(key){
         var col = byKey[key]; if (!col) return '';
         var on = !!_rv2ColDraft[key];
-        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin:5px 0;border:1px solid ' + (on?'#bfe3ea':'#e5e7eb') + ';border-radius:8px;background:' + (on?'#f5fbfc':'#fff') + ';">' +
-            '<div style="display:flex;flex-direction:column;gap:1px;">' +
-                '<button onclick="rv2ColMove(\''+key+'\',-1)" '+(idx===0?'disabled':'')+' style="width:20px;height:15px;border:none;background:transparent;cursor:pointer;color:'+(idx===0?'#e2e8f0':'#94a3b8')+';font-size:10px;padding:0;line-height:1;"><i class="fas fa-chevron-up"></i></button>' +
-                '<button onclick="rv2ColMove(\''+key+'\',1)" '+(idx===_rv2ColOrder.length-1?'disabled':'')+' style="width:20px;height:15px;border:none;background:transparent;cursor:pointer;color:'+(idx===_rv2ColOrder.length-1?'#e2e8f0':'#94a3b8')+';font-size:10px;padding:0;line-height:1;"><i class="fas fa-chevron-down"></i></button>' +
-            '</div>' +
-            '<span style="flex:1;font-size:13px;color:#1e293b;font-weight:500;cursor:pointer;" onclick="_rv2ColDraft[\''+key+'\']=!_rv2ColDraft[\''+key+'\'];rv2RenderColModal();">'+escHtml(col.label)+'</span>' +
+        return '<div class="rv2-col-row" draggable="true" data-key="'+key+'" ' +
+            'ondragstart="rv2ColDragStart(event,\''+key+'\')" ondragover="rv2ColDragOver(event,\''+key+'\')" ondragend="rv2ColDragEnd(event)" ondrop="rv2ColDragOver(event,\''+key+'\')" ' +
+            'style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin:5px 0;border:1px solid ' + (on?'#bfe3ea':'#e5e7eb') + ';border-radius:8px;background:' + (on?'#f5fbfc':'#fff') + ';">' +
+            '<i class="fas fa-grip-vertical" style="color:#cbd5e1;font-size:13px;cursor:grab;"></i>' +
+            '<span style="flex:1;font-size:13px;color:#1e293b;font-weight:500;cursor:pointer;" onclick="_rv2ColDraft[\''+key+'\']=!_rv2ColDraft[\''+key+'\'];rv2RenderColRows();">'+escHtml(col.label)+'</span>' +
             '<label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;flex-shrink:0;">' +
-                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2ColDraft[\''+key+'\']=this.checked;rv2RenderColModal();" style="opacity:0;width:0;height:0;">' +
+                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2ColDraft[\''+key+'\']=this.checked;rv2RenderColRows();" style="opacity:0;width:0;height:0;">' +
                 '<span style="position:absolute;inset:0;background:'+(on?'#0a6c80':'#cbd5e1')+';border-radius:20px;transition:.2s;"></span>' +
                 '<span style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;"></span>' +
             '</label>' +
             '</div>';
     }).join('');
-    m.innerHTML = '<div style="background:#fff;border-radius:12px;width:400px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
-        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Toggle on/off · use arrows to reorder</div></div><span onclick="rv2ResetColModal()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset</span></div>' +
-        '<div style="overflow-y:auto;padding:10px 16px;flex:1;">'+rows+'</div>' +
-        '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyColModal()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
-        '</div>';
+    body.scrollTop = prevScroll;
 }
+function rv2ColDragStart(e, key){ _rv2DragKey = key; e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain', key); }catch(err){} }
+function rv2ColDragOver(e, overKey){
+    e.preventDefault();
+    if (!_rv2DragKey || _rv2DragKey === overKey) return;
+    var from = _rv2ColOrder.indexOf(_rv2DragKey), to = _rv2ColOrder.indexOf(overKey);
+    if (from < 0 || to < 0) return;
+    _rv2ColOrder.splice(from, 1);
+    _rv2ColOrder.splice(to, 0, _rv2DragKey);
+    rv2RenderColRows();
+}
+function rv2ColDragEnd(){ _rv2DragKey = null; }
 function rv2CloseColModal(){ var m=document.getElementById('rv2ColModal'); if(m) m.style.display='none'; }
 function rv2ApplyColModal(){
     var keys = _rv2ColOrder.filter(function(k){ return _rv2ColDraft[k]; });
