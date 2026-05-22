@@ -10793,7 +10793,8 @@ function rv2RenderConvLogs() {
     var ps = rv2State.cvPageSize, pg = rv2State.cvPage;
     var maxPg = Math.max(1, Math.ceil(total/ps)); if (pg > maxPg) { pg = maxPg; rv2State.cvPage = pg; }
     var pageRows = convs.slice((pg-1)*ps, pg*ps);
-    var actions = '<button class="rv2-export-btn" onclick="rv2OpenCvColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
+    var actions = '<button class="rv2-export-btn" style="background:#0a6c80;color:#fff;border-color:#0a6c80;" onclick="openConvModal()"><i class="fas fa-plus"></i> Add Manual</button>' +
+        '<button class="rv2-export-btn" onclick="rv2OpenCvColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
         '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>';
     var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), total + ' total conversions', actions);
     if (!total) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }

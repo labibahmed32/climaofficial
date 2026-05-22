@@ -1593,10 +1593,12 @@ function _invStatusBadge(status) {
 function loadInvoices() {
     var all = (myInvoices || []).slice().sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
 
-    /* Summary cards (always from full set, not filtered) */
-    var sumBilled  = all.reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
-    var sumPaid    = all.filter(function(i) { return i.status === 'paid'; }).reduce(function(s, i) { return s + parseFloat(i.paidAmount || i.billedAmount || i.amount || 0); }, 0);
-    var sumPending = all.filter(function(i) { return i.status !== 'paid'; }).reduce(function(s, i) { return s + parseFloat(i.billedAmount || i.amount || 0); }, 0);
+    /* Summary cards — partial-payment aware */
+    function _ib(i){ return parseFloat(i.billedAmount || i.amount || 0); }
+    function _ip(i){ return parseFloat(i.paidAmount || (i.status === 'paid' ? _ib(i) : 0) || 0); }
+    var sumBilled  = all.reduce(function(s, i) { return s + _ib(i); }, 0);
+    var sumPaid    = all.reduce(function(s, i) { return s + _ip(i); }, 0);
+    var sumPending = all.reduce(function(s, i) { return i.status === 'paid' ? s : s + Math.max(0, _ib(i) - _ip(i)); }, 0);
     function sumCard(icon, label, val, accent) {
         return '<div style="background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:16px 18px;">' +
             '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
@@ -2175,12 +2177,17 @@ function loadDashboard() {
     /* Available Balance = earnings not yet covered by any invoice */
     var availableBalance = Math.max(0, totalEarned - totalInvoiced);
 
-    /* Payment Pending = invoices that exist but aren't paid yet */
-    var unpaidInvoices = myInvoices.filter(function(inv) { return inv.status !== 'paid'; });
-    var paymentPendingAmt = unpaidInvoices.reduce(function(s, inv) { return s + parseFloat(inv.billedAmount || inv.amount || 0); }, 0);
-
-    /* Total Paid = paid invoices */
-    var totalPaid = myInvoices.filter(function(inv) { return inv.status === 'paid'; }).reduce(function(s, inv) { return s + parseFloat(inv.paidAmount || inv.billedAmount || inv.amount || 0); }, 0);
+    /* Partial-payment aware:
+       paid    = sum of paidAmount across ALL invoices (fully or partially paid)
+       pending = sum of REMAINING (billed - paid) on invoices not fully paid */
+    function invBilled(inv){ return parseFloat(inv.billedAmount || inv.amount || 0); }
+    function invPaid(inv){ return parseFloat(inv.paidAmount || (inv.status === 'paid' ? invBilled(inv) : 0) || 0); }
+    var unpaidInvoices = myInvoices.filter(function(inv) { return inv.status !== 'paid' && (invBilled(inv) - invPaid(inv)) > 0.005; });
+    var paymentPendingAmt = myInvoices.reduce(function(s, inv) {
+        if (inv.status === 'paid') return s;
+        return s + Math.max(0, invBilled(inv) - invPaid(inv));
+    }, 0);
+    var totalPaid = myInvoices.reduce(function(s, inv) { return s + invPaid(inv); }, 0);
 
     var payoutCard = '<div class="astat astat-payout">' +
         '<span class="astat-t">Payout</span>' +
