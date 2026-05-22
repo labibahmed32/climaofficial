@@ -2470,6 +2470,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="aff-prof-tab active" onclick="switchAffProfTab('profile')" id="apTab-profile"><i class="fas fa-user"></i> Profile</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('payment')" id="apTab-payment"><i class="fas fa-credit-card"></i> Payment Methods</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('activity')" id="apTab-activity"><i class="fas fa-chart-line"></i> Activity</button>
+            <button class="aff-prof-tab" onclick="switchAffProfTab('invoices')" id="apTab-invoices"><i class="fas fa-file-invoice-dollar"></i> Invoices</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('security')" id="apTab-security"><i class="fas fa-shield-alt"></i> Security &amp; Logins</button>
         </div>
         <!-- Tab: Profile -->
@@ -2483,6 +2484,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <!-- Tab: Activity -->
         <div class="aff-prof-panel" id="apPanel-activity" style="padding:20px;">
             <div id="apActivityContent">Loading...</div>
+        </div>
+        <!-- Tab: Invoices -->
+        <div class="aff-prof-panel" id="apPanel-invoices" style="padding:20px;">
+            <div id="apInvoicesContent">Loading...</div>
         </div>
         <!-- Tab: Security & Logins -->
         <div class="aff-prof-panel" id="apPanel-security" style="padding:20px;">
@@ -8478,7 +8483,7 @@ function loginAsAffiliate(uid) {
 
 /* ===== AFFILIATE PROFILE VIEW ===== */
 function switchAffProfTab(tab) {
-    ['profile','payment','activity','security'].forEach(function(t) {
+    ['profile','payment','activity','invoices','security'].forEach(function(t) {
         var tEl = document.getElementById('apTab-' + t), pEl = document.getElementById('apPanel-' + t);
         if (tEl) tEl.classList.toggle('active', t === tab);
         if (pEl) pEl.classList.toggle('active', t === tab);
@@ -8498,13 +8503,15 @@ function openAffProfile(uid) {
     document.getElementById('apLoginBtn').setAttribute('onclick', "loginAsAffiliate('" + uid + "')");
 
     document.getElementById('apSecurityContent').innerHTML = '';
-    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('clicks'), fbGet('conversions'), fbGet('loginLogs/' + uid), fbGet('adminAlerts')]).then(function(res) {
+    document.getElementById('apInvoicesContent').innerHTML = '';
+    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('clicks'), fbGet('conversions'), fbGet('loginLogs/' + uid), fbGet('adminAlerts'), fbGet('payments/invoices')]).then(function(res) {
         var u = res[0] || {};
         var pay = res[1] || {};
         var clicks = objToArr(res[2]).filter(function(c) { return c.affiliateId === uid; });
         var convs = objToArr(res[3]).filter(function(c) { return c.affiliateId === uid && c.status === 'approved'; });
         var loginLogs = objToArr(res[4] || {}).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
         var secAlerts = objToArr(res[5] || {}).filter(function(a){ return a.affiliateId === uid; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
+        var affInvoices = objToArr(res[6] || {}).filter(function(i){ return i.affiliateId === uid; }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
 
         /* Title */
         document.getElementById('affProfTitle').textContent = (u.name || 'Affiliate') + (u.affId ? ' (#' + u.affId + ')' : '');
@@ -8607,6 +8614,40 @@ function openAffProfile(uid) {
             sHtml += '</tbody></table></div>';
         }
         document.getElementById('apSecurityContent').innerHTML = sHtml;
+
+        /* Invoices Tab */
+        var iHtml = '';
+        var totBilled = affInvoices.reduce(function(s,i){ return s + parseFloat(i.billedAmount||i.amount||0); }, 0);
+        var totPaidInv = affInvoices.reduce(function(s,i){ return s + parseFloat(i.paidAmount || (i.status==='paid'?(i.billedAmount||i.amount||0):0) || 0); }, 0);
+        var totPendInv = affInvoices.reduce(function(s,i){ return i.status==='paid'?s:s + Math.max(0, parseFloat(i.billedAmount||i.amount||0) - parseFloat(i.paidAmount||0)); }, 0);
+        iHtml += '<div class="ap-stat-grid">';
+        iHtml += '<div class="ap-stat"><div class="ap-stat-val">' + affInvoices.length + '</div><div class="ap-stat-lbl">Total Invoices</div></div>';
+        iHtml += '<div class="ap-stat"><div class="ap-stat-val">' + fmtMoney(totBilled) + '</div><div class="ap-stat-lbl">Total Billed</div></div>';
+        iHtml += '<div class="ap-stat"><div class="ap-stat-val" style="color:var(--green);">' + fmtMoney(totPaidInv) + '</div><div class="ap-stat-lbl">Total Paid</div></div>';
+        iHtml += '<div class="ap-stat"><div class="ap-stat-val" style="color:var(--orange);">' + fmtMoney(totPendInv) + '</div><div class="ap-stat-lbl">Pending</div></div>';
+        iHtml += '</div>';
+        if (!affInvoices.length) {
+            iHtml += '<div style="font-size:12.5px;color:var(--text-mid);padding:16px;background:#f8fafc;border-radius:8px;text-align:center;">No invoices for this affiliate yet.</div>';
+        } else {
+            iHtml += '<div style="overflow-x:auto;"><table class="data-table" style="font-size:12px;"><thead><tr><th>Invoice #</th><th>Period</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>';
+            affInvoices.forEach(function(inv){
+                var b = parseFloat(inv.billedAmount||inv.amount||0);
+                var pd = parseFloat(inv.paidAmount || (inv.status==='paid'?b:0) || 0);
+                var bal = Math.max(0, b - pd);
+                iHtml += '<tr>' +
+                    '<td style="font-weight:600;color:var(--primary);">'+escHtml(inv.invoiceNumber||inv._id)+'</td>' +
+                    '<td style="white-space:nowrap;">'+escHtml(inv.period || ((inv.dateFrom||'-')+' → '+(inv.dateTo||'-')))+'</td>' +
+                    '<td style="font-weight:600;">'+fmtMoney(b)+'</td>' +
+                    '<td style="color:var(--green);">'+fmtMoney(pd)+'</td>' +
+                    '<td style="color:'+(bal>0.005?'#dc3545':'#16a34a')+';">'+fmtMoney(bal)+'</td>' +
+                    '<td>'+invStatusDot(inv.status||'unpaid')+'</td>' +
+                    '<td style="white-space:nowrap;">'+fmtDate(inv.createdAt)+'</td>' +
+                    '<td><button class="btn-sm" onclick="closeModal(\'affProfileModal\');openInvoiceDetail(\''+inv._id+'\')" title="Open invoice"><i class="fas fa-eye"></i></button></td>' +
+                    '</tr>';
+            });
+            iHtml += '</tbody></table></div>';
+        }
+        document.getElementById('apInvoicesContent').innerHTML = iHtml;
     });
 }
 
