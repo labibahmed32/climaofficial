@@ -10453,15 +10453,13 @@ var RV2_CK_COLS = [
     { key:'sub2',      label:'Sub2',    def:false, align:'left', sort:'sub2',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub2||'-')+'</span>'; } },
     { key:'sub3',      label:'Sub3',    def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } },
     { key:'fbclid',    label:'FB Click ID', def:false, align:'left', sort:'fbclid', render:function(c){ return c.fbclid ? '<span style="font-family:monospace;font-size:10.5px;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.fbclid)+'">'+escHtml(c.fbclid)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'deviceId',  label:'Device ID', def:false, align:'left', sort:'deviceId', render:function(c){ return c.deviceId ? '<span style="font-family:monospace;font-size:10.5px;max-width:150px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.deviceId)+'">'+escHtml(c.deviceId)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'fingerprint', label:'Fingerprint', def:false, align:'left', sort:'fingerprint', render:function(c){ return c.fingerprint ? '<span style="font-family:monospace;font-size:10.5px;max-width:140px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.fingerprint)+'">'+escHtml(c.fingerprint)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'clickid',   label:'Click ID', def:false, align:'left', sort:'_id',      render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;color:#0a6c80;">'+escHtml(c._id)+'</span>'; } },
     { key:'referer',   label:'Referrer',def:true,  align:'left', sort:'referer',   render:function(c){ return c.referer ? '<a href="'+escHtml(c.referer)+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="'+escHtml(c.referer)+'" style="font-size:11px;color:#0a6c80;text-decoration:none;display:inline-block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+escHtml(c.referer)+'</a>' : '<span class="muted">(direct)</span>'; } },
     { key:'converted', label:'Conv?',   def:true,  align:'num',  sort:'converted', render:function(c){ return c.converted?'<span style="color:#15803d;font-weight:700;">✓</span>':'<span class="muted">—</span>'; } }
 ];
-function rv2EnabledCkCols() {
-    var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('rv2CkCols')); } catch(e){}
-    if (Array.isArray(saved) && saved.length) return RV2_CK_COLS.filter(function(c){ return saved.indexOf(c.key) > -1; });
-    return RV2_CK_COLS.filter(function(c){ return c.def; });
-}
+function rv2EnabledCkCols() { return rv2EnabledCols(RV2_CK_COLS, 'rv2CkCols'); }
 function rv2RenderClickLogs() {
     var raw = rv2FilterClicks();
     var clicks = raw.map(function(c){
@@ -10470,6 +10468,7 @@ function rv2RenderClickLogs() {
             ip:c.ip||'', country:c.country||'', countryName:c.countryName||'', city:c.city||'', region:c.region||'',
             platform:rv2PlatformOf(c.referer), browser:c.browser||'', os:c.os||'', osVer:c.osVer||'', device:c.device||'',
             isp:c.isp||'', org:c.org||'', sub1:c.sub1||'', sub2:c.sub2||'', sub3:c.sub3||'', fbclid:c.fbclid||'',
+            deviceId:c.deviceId||'', fingerprint:c.fingerprint||'',
             converted:c.converted?1:0, referer:c.referer
         };
     });
@@ -10497,14 +10496,18 @@ function rv2RenderClickLogs() {
     html += rv2PageBar(total, pg, ps, 'rv2CkGoPage', 'rv2CkSetSize');
     document.getElementById('rv2Content').innerHTML = html;
 }
-/* ── Generic column-customization modal (Click Logs + Conversion Logs) ── */
-var _rv2ColDraft = null, _rv2ColRegistry = null, _rv2ColStoreKey = '';
+/* ── Generic column-customization modal — toggle + reorder (up/down) ── */
+var _rv2ColDraft = null, _rv2ColRegistry = null, _rv2ColStoreKey = '', _rv2ColOrder = null;
 function rv2OpenCkColModal(){ rv2OpenColModal(RV2_CK_COLS, 'rv2CkCols'); }
 function rv2OpenCvColModal(){ rv2OpenColModal(RV2_CV_COLS, 'rv2CvCols'); }
 function rv2OpenColModal(registry, storeKey) {
     _rv2ColRegistry = registry; _rv2ColStoreKey = storeKey;
     var saved = null; try { saved = JSON.parse(localStorage.getItem(storeKey)); } catch(e){}
-    var enabled = (Array.isArray(saved) && saved.length) ? saved : registry.filter(function(c){return c.def;}).map(function(c){return c.key;});
+    var enabled = (Array.isArray(saved) && saved.length) ? saved.slice() : registry.filter(function(c){return c.def;}).map(function(c){return c.key;});
+    /* order = enabled (in saved order) first, then remaining registry columns */
+    var order = enabled.slice();
+    registry.forEach(function(c){ if (order.indexOf(c.key) === -1) order.push(c.key); });
+    _rv2ColOrder = order;
     _rv2ColDraft = {}; registry.forEach(function(c){ _rv2ColDraft[c.key] = enabled.indexOf(c.key) > -1; });
     var m = document.getElementById('rv2ColModal');
     if (!m) {
@@ -10516,57 +10519,98 @@ function rv2OpenColModal(registry, storeKey) {
     m.style.display = 'flex';
     rv2RenderColModal();
 }
+function rv2ColMove(key, dir) {
+    var i = _rv2ColOrder.indexOf(key); if (i < 0) return;
+    var j = i + dir; if (j < 0 || j >= _rv2ColOrder.length) return;
+    var t = _rv2ColOrder[i]; _rv2ColOrder[i] = _rv2ColOrder[j]; _rv2ColOrder[j] = t;
+    rv2RenderColModal();
+}
 function rv2RenderColModal() {
     var m = document.getElementById('rv2ColModal'); if (!m || !_rv2ColRegistry) return;
-    var rows = _rv2ColRegistry.map(function(col){
-        var on = !!_rv2ColDraft[col.key];
-        return '<label style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin:5px 0;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:13px;color:#1e293b;font-weight:500;">' +
-            '<span><i class="fas fa-grip-vertical" style="color:#cbd5e1;font-size:11px;margin-right:8px;"></i>'+escHtml(col.label)+'</span>' +
-            '<span style="position:relative;display:inline-block;width:36px;height:20px;">' +
-                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2ColDraft[\''+col.key+'\']=this.checked;rv2RenderColModal();" style="opacity:0;width:0;height:0;">' +
+    var byKey = {}; _rv2ColRegistry.forEach(function(c){ byKey[c.key] = c; });
+    var rows = _rv2ColOrder.map(function(key, idx){
+        var col = byKey[key]; if (!col) return '';
+        var on = !!_rv2ColDraft[key];
+        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin:5px 0;border:1px solid ' + (on?'#bfe3ea':'#e5e7eb') + ';border-radius:8px;background:' + (on?'#f5fbfc':'#fff') + ';">' +
+            '<div style="display:flex;flex-direction:column;gap:1px;">' +
+                '<button onclick="rv2ColMove(\''+key+'\',-1)" '+(idx===0?'disabled':'')+' style="width:20px;height:15px;border:none;background:transparent;cursor:pointer;color:'+(idx===0?'#e2e8f0':'#94a3b8')+';font-size:10px;padding:0;line-height:1;"><i class="fas fa-chevron-up"></i></button>' +
+                '<button onclick="rv2ColMove(\''+key+'\',1)" '+(idx===_rv2ColOrder.length-1?'disabled':'')+' style="width:20px;height:15px;border:none;background:transparent;cursor:pointer;color:'+(idx===_rv2ColOrder.length-1?'#e2e8f0':'#94a3b8')+';font-size:10px;padding:0;line-height:1;"><i class="fas fa-chevron-down"></i></button>' +
+            '</div>' +
+            '<span style="flex:1;font-size:13px;color:#1e293b;font-weight:500;cursor:pointer;" onclick="_rv2ColDraft[\''+key+'\']=!_rv2ColDraft[\''+key+'\'];rv2RenderColModal();">'+escHtml(col.label)+'</span>' +
+            '<label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;flex-shrink:0;">' +
+                '<input type="checkbox" '+(on?'checked':'')+' onchange="_rv2ColDraft[\''+key+'\']=this.checked;rv2RenderColModal();" style="opacity:0;width:0;height:0;">' +
                 '<span style="position:absolute;inset:0;background:'+(on?'#0a6c80':'#cbd5e1')+';border-radius:20px;transition:.2s;"></span>' +
                 '<span style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;"></span>' +
-            '</span></label>';
+            '</label>' +
+            '</div>';
     }).join('');
-    m.innerHTML = '<div style="background:#fff;border-radius:12px;width:380px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
-        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</span><span onclick="rv2ResetColModal()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset to default</span></div>' +
+    m.innerHTML = '<div style="background:#fff;border-radius:12px;width:400px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">' +
+        '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:14px;font-weight:700;color:#0f172a;">Table Columns</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Toggle on/off · use arrows to reorder</div></div><span onclick="rv2ResetColModal()" style="font-size:12px;font-weight:600;color:#0a6c80;cursor:pointer;">Reset</span></div>' +
         '<div style="overflow-y:auto;padding:10px 16px;flex:1;">'+rows+'</div>' +
         '<div style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;"><button onclick="rv2CloseColModal()" style="background:#f1f5f9;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:#64748b;">Cancel</button><button onclick="rv2ApplyColModal()" style="background:#0a6c80;color:#fff;border:none;border-radius:7px;padding:8px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Apply</button></div>' +
         '</div>';
 }
 function rv2CloseColModal(){ var m=document.getElementById('rv2ColModal'); if(m) m.style.display='none'; }
 function rv2ApplyColModal(){
-    var keys = _rv2ColRegistry.filter(function(c){ return _rv2ColDraft[c.key]; }).map(function(c){ return c.key; });
+    var keys = _rv2ColOrder.filter(function(k){ return _rv2ColDraft[k]; });
     if (!keys.length) { toast('Select at least one column'); return; }
     try { localStorage.setItem(_rv2ColStoreKey, JSON.stringify(keys)); } catch(e){}
     rv2CloseColModal(); rv2Render();
 }
-function rv2ResetColModal(){ try{ localStorage.removeItem(_rv2ColStoreKey); }catch(e){} _rv2ColDraft={}; _rv2ColRegistry.forEach(function(c){ _rv2ColDraft[c.key]=c.def; }); rv2RenderColModal(); }
+function rv2ResetColModal(){
+    try{ localStorage.removeItem(_rv2ColStoreKey); }catch(e){}
+    _rv2ColOrder = _rv2ColRegistry.map(function(c){ return c.key; });
+    _rv2ColDraft = {}; _rv2ColRegistry.forEach(function(c){ _rv2ColDraft[c.key] = c.def; });
+    rv2RenderColModal();
+}
 function rv2EnabledCols(registry, storeKey) {
     var saved = null; try { saved = JSON.parse(localStorage.getItem(storeKey)); } catch(e){}
-    if (Array.isArray(saved) && saved.length) return registry.filter(function(c){ return saved.indexOf(c.key) > -1; });
+    if (Array.isArray(saved) && saved.length) {
+        var byKey = {}; registry.forEach(function(c){ byKey[c.key] = c; });
+        return saved.map(function(k){ return byKey[k]; }).filter(Boolean); /* respects saved ORDER */
+    }
     return registry.filter(function(c){ return c.def; });
 }
 
 /* Conversion Logs column registry */
 var RV2_CV_COLS = [
-    { key:'createdAt', label:'Date',      def:true,  align:'left', sort:'createdAt', render:function(c){ return '<span style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</span>'; } },
-    { key:'offer',     label:'Offer',     def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
-    { key:'affiliate', label:'Affiliate', def:true,  align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
-    { key:'revenue',   label:'Revenue',   def:true,  align:'num',  sort:'revenue',   render:function(c){ return '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</span>'; } },
-    { key:'payout',    label:'Payout',    def:true,  align:'num',  sort:'payout',    render:function(c){ return '<span style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</span>'; } },
-    { key:'status',    label:'Status',    def:true,  align:'left', sort:'status',    render:function(c){ return typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'); } },
-    { key:'source',    label:'Source',    def:true,  align:'left', sort:'source',    render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.source||'-')+'</span>'; } },
-    { key:'txnId',     label:'Txn ID',    def:false, align:'left', sort:'txnId',     render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;">'+escHtml(c.txnId||'-')+'</span>'; } },
-    { key:'ip',        label:'IP',        def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
-    { key:'sub1',      label:'Sub ID',    def:false, align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } }
+    { key:'createdAt', label:'Date',       def:true,  align:'left', sort:'createdAt', render:function(c){ return '<span style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</span>'; } },
+    { key:'offer',     label:'Offer',      def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
+    { key:'affiliate', label:'Affiliate',  def:true,  align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
+    { key:'revenue',   label:'Revenue',    def:true,  align:'num',  sort:'revenue',   render:function(c){ return '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</span>'; } },
+    { key:'payout',    label:'Payout',     def:true,  align:'num',  sort:'payout',    render:function(c){ return '<span style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</span>'; } },
+    { key:'status',    label:'Status',     def:true,  align:'left', sort:'status',    render:function(c){ return typeof statusBadge==='function'?statusBadge(c.status):escHtml(c.status||'-'); } },
+    { key:'source',    label:'Source',     def:true,  align:'left', sort:'source',    render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.source||'-')+'</span>'; } },
+    { key:'clickTime', label:'Click Time', def:false, align:'left', sort:'clickTime', render:function(c){ return c.clickTime ? '<span style="font-size:11px;">'+fmtDateTime(c.clickTime)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'delta',     label:'Delta',      def:false, align:'left', sort:'delta',     render:function(c){ return c.delta ? '<span style="font-size:11px;color:#0a6c80;font-weight:600;">'+escHtml(c.delta)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'platform',  label:'Platform',   def:false, align:'left', sort:'platform',  render:function(c){ var p=c.platform; return '<span class="rv2-pill '+rv2PlatformPillClass(p)+'">'+rv2PlatformIcon(p)+' '+rv2PlatformLabel(p)+'</span>'; } },
+    { key:'browser',   label:'Browser',    def:false, align:'left', sort:'browser',   render:function(c){ return escHtml(c.browser||'-'); } },
+    { key:'device',    label:'Device',     def:false, align:'left', sort:'device',    render:function(c){ return escHtml(c.device||'-'); } },
+    { key:'country',   label:'Country',    def:false, align:'left', sort:'country',   render:function(c){ return escHtml(c.country||'-'); } },
+    { key:'isp',       label:'ISP',        def:false, align:'left', sort:'isp',       render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.isp||'-')+'</span>'; } },
+    { key:'txnId',     label:'Txn ID',     def:false, align:'left', sort:'txnId',     render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;">'+escHtml(c.txnId||'-')+'</span>'; } },
+    { key:'convId',    label:'Conversion ID', def:false, align:'left', sort:'_id',    render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;color:#0a6c80;">'+escHtml(c._id)+'</span>'; } },
+    { key:'clickId',   label:'Click ID',   def:false, align:'left', sort:'clickId',   render:function(c){ return c.clickId ? '<span style="font-family:monospace;font-size:10.5px;">'+escHtml(c.clickId)+'</span>' : '<span class="muted">-</span>'; } },
+    { key:'ip',        label:'IP',         def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
+    { key:'sub1',      label:'Sub ID',     def:false, align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
+    { key:'sub2',      label:'Sub2',       def:false, align:'left', sort:'sub2',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub2||'-')+'</span>'; } },
+    { key:'sub3',      label:'Sub3',       def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } }
 ];
 function rv2RenderConvLogs() {
     var convs = rv2FilterConvs().map(function(c){
         var click = c.clickId ? (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0] : null;
         return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
             revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'',
-            txnId:c.txnId||'', ip:c.ip||(click?click.ip:'')||'', sub1:c.sub1||(click?click.sub1:'')||''};
+            txnId:c.txnId||'', clickId:c.clickId||'',
+            clickTime:click?click.timestamp:0,
+            delta:(click&&c.createdAt)?calcDelta(click.timestamp,c.createdAt):'',
+            ip:c.ip||(click?click.ip:'')||'',
+            country:(click?(click.countryName||click.country):'')||'',
+            platform:click?rv2PlatformOf(click.referer):'direct',
+            browser:click?(click.browser||''):'',
+            device:click?(click.device||''):'',
+            isp:click?(click.isp||click.org||''):'',
+            sub1:c.sub1||(click?click.sub1:'')||'', sub2:click?(click.sub2||''):'', sub3:click?(click.sub3||''):''};
     });
     var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
     rv2SortRows(convs, cSortField, rv2State.sortDir);
