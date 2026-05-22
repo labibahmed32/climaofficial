@@ -5900,6 +5900,7 @@ function openInvoiceDetail(invId) {
             actHtml += '<button class="btn-primary-sm" onclick="approveInvoicePayment(\'' + invId + '\')" style="background:#0A6C80;"><i class="fas fa-check"></i> Approve Payment</button>';
         }
         actHtml += '<button class="btn-primary-sm" onclick="markInvoicePaid(\'' + invId + '\')" style="background:#28a745;"><i class="fas fa-check-double"></i> Mark as Paid</button>';
+        actHtml += '<button class="btn-sm" onclick="recordPartialPayment(\'' + invId + '\')" style="background:#fffbeb;color:#a16207;border-color:#fcd34d;"><i class="fas fa-coins"></i> Record Partial</button>';
         if (invStatus !== 'hold') {
             actHtml += '<button class="btn-sm" onclick="promptInvoiceStatus(\'' + invId + '\',\'hold\')" style="background:#fde8e8;color:#c62828;border-color:#fca5a5;"><i class="fas fa-hand-paper"></i> On Hold</button>';
         }
@@ -6177,6 +6178,51 @@ function markInvoicePaid(invId) {
         payRecord.method = pmt.method || (inv.payment && inv.payment.method) || 'wire';
         sendPaymentPaidEmail(payRecord);
     }).catch(function() { toast('Error', 'error'); });
+}
+
+/* Record a PARTIAL payment — sets paidAmount but keeps invoice open so the
+   remaining balance stays pending in the affiliate's dashboard. */
+function recordPartialPayment(invId) {
+    var inv = allInvoices.find(function(i) { return i._id === invId; });
+    if (!inv) return;
+    var billed = parseFloat(inv.billedAmount || inv.amount || 0);
+    var alreadyPaid = parseFloat(inv.paidAmount || 0);
+    var remaining = Math.max(0, billed - alreadyPaid);
+    var input = prompt('Record a partial payment.\nBilled: ' + fmtMoney(billed) + '\nAlready paid: ' + fmtMoney(alreadyPaid) + '\nRemaining: ' + fmtMoney(remaining) + '\n\nEnter amount being paid now:', remaining.toFixed(2));
+    if (input === null) return;
+    var amt = parseFloat(input);
+    if (isNaN(amt) || amt <= 0) { toast('Enter a valid amount', 'error'); return; }
+    var newPaid = parseFloat((alreadyPaid + amt).toFixed(2));
+    var nowTs = Date.now();
+    var pmt = inv.payment || {};
+    pmt.amountPaid = newPaid;
+    var fullyPaid = newPaid >= billed - 0.005;
+    if (fullyPaid) { pmt.status = 'completed'; pmt.completedAt = nowTs; }
+    /* payment record for this installment */
+    var payRecordId = genId('pay_');
+    var payRecord = {
+        affiliateId: inv.affiliateId, invoiceId: invId, invoiceNumber: inv.invoiceNumber || invId,
+        amount: amt, currency: inv.currency || 'USD',
+        method: pmt.method || (inv.payment && inv.payment.method) || 'wire',
+        status: 'paid', paidAt: nowTs,
+        period: inv.period || ((inv.dateFrom||'') + ' to ' + (inv.dateTo||'')),
+        notes: 'Partial payment for ' + (inv.invoiceNumber || invId) + ' (' + fmtMoney(newPaid) + ' of ' + fmtMoney(billed) + ')',
+        items: inv.items || [], createdAt: nowTs
+    };
+    var patch = { payment: pmt, paidAmount: newPaid, updatedAt: nowTs };
+    if (fullyPaid) patch.status = 'paid';
+    Promise.all([
+        fbPatch('payments/invoices/' + invId, patch),
+        fbPut('payments/records/' + payRecordId, payRecord)
+    ]).then(function() {
+        toast(fullyPaid ? 'Invoice fully paid!' : 'Partial payment recorded — ' + fmtMoney(billed - newPaid) + ' still pending');
+        var idx = allInvoices.findIndex(function(i) { return i._id === invId; });
+        if (idx >= 0) { allInvoices[idx].payment = pmt; allInvoices[idx].paidAmount = newPaid; if (fullyPaid) allInvoices[idx].status = 'paid'; allInvoices[idx].updatedAt = nowTs; }
+        openInvoiceDetail(invId);
+        renderInvoices(allInvoices);
+        payRecord.method = pmt.method || 'wire';
+        sendPaymentPaidEmail(payRecord);
+    }).catch(function() { toast('Error recording payment', 'error'); });
 }
 
 /* ---- Invoice Status: Hold / Delayed / Revert ---- */
