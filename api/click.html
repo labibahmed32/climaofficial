@@ -83,7 +83,7 @@ function logBlockedClick(offerId, affId, geo, reason, allowed) {
         browser: uaInfo.browser, browserVer: uaInfo.browserVer,
         os: uaInfo.os, osVer: uaInfo.osVer,
         screenRes: clientInfo.screenRes, timezone: clientInfo.timezone,
-        referer: document.referrer || '', landingUrl: window.location.href,
+        referer: document.referrer || referrerParam || '', referrerParam: referrerParam, landingUrl: window.location.href,
         sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5,
         fbclid:fbclid, gclid:gclid, ttclid:ttclid,
         blocked: true, blockReason: reason, allowedCountries: allowed,
@@ -548,6 +548,12 @@ if (pathMatch) { offerId = offerId || decodeURIComponent(pathMatch[1]); affId = 
 var sub1 = params.get('sub1')||'', sub2 = params.get('sub2')||'', sub3 = params.get('sub3')||'';
 var sub4 = params.get('sub4')||'', sub5 = params.get('sub5')||'';
 var fbclid = params.get('fbclid')||'', gclid = params.get('gclid')||'', ttclid = params.get('ttclid')||'';
+/* referrer= URL param (explicit traffic source from the link). Stored on its own
+   as `referrerParam`, and also used as a FALLBACK for `referer` when the browser's
+   document.referrer is empty (e.g. Facebook/IG in-app browsers strip it). So the
+   automatic browser capture keeps working exactly as before, and the param only
+   fills in when there's nothing from the browser. */
+var referrerParam = params.get('referrer')||'';
 var isTest = params.get('test') === '1';
 
 if (!offerId || !affId) { showError('Missing required parameters.'); }
@@ -633,7 +639,7 @@ function processClick() {
                         offerId: offerId, affiliateId: affId, affId: originalAffId,
                         timestamp: Date.now(), converted: false, test: isTest || false,
                         /* Traffic source */
-                        referer: document.referrer || '', landingUrl: window.location.href,
+                        referer: document.referrer || referrerParam || '', referrerParam: referrerParam, landingUrl: window.location.href,
                         /* Network */
                         ip: geo.ip || '', country: geo.country || '', countryName: geo.countryName || '',
                         city: geo.city || '', region: geo.region || '',
@@ -689,7 +695,8 @@ function processClick() {
             test:           isTest || false,
 
             /* Traffic source */
-            referer:        document.referrer || '',
+            referer:        document.referrer || referrerParam || '',
+            referrerParam:  referrerParam,
             landingUrl:     window.location.href,
 
             /* Network */

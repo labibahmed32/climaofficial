@@ -1511,7 +1511,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                     <button class="btn-primary-sm" onclick="openInvoiceGenModal()"><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</button>
                 </div>
                 <div class="table-wrap"><div class="table-scroll">
-                    <table class="data-table"><thead><tr><th>Invoice ID</th><th>Status</th><th>Affiliate</th><th>Start Date</th><th>End Date</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Notes</th><th>Created</th><th>Modified</th></tr></thead><tbody id="invoiceTbody"></tbody></table>
+                    <table class="data-table"><thead><tr><th>Invoice ID</th><th>Status</th><th>Affiliate</th><th>Start Date</th><th>End Date</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Notes</th><th>Created</th><th>Modified</th><th></th></tr></thead><tbody id="invoiceTbody"></tbody></table>
                 </div></div>
                 <div id="invTableFooter" style="padding:8px 4px;font-size:12px;color:#666;"></div>
             </div>
@@ -2641,12 +2641,13 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
         <!-- Status Note Bar (hold/delayed) -->
         <div id="invStatusNoteBar" style="padding:0 24px 12px;display:none;"></div>
         <!-- Add Line Item section (unpaid only) -->
-        <div style="padding:0 24px 12px;" id="invAddLineSection" style="display:none;">
+        <div style="padding:0 24px 12px;display:none;" id="invAddLineSection">
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">
                 <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-plus-circle"></i> Add Line Item</div>
                 <!-- Advertiser quick-add: pull an advertiser's unbilled sales -->
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed #bbf7d0;">
-                    <div style="flex:2;min-width:180px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Add all unbilled sales of an Advertiser</label><select id="invAddAdvertiser" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">-- Select Advertiser --</option></select></div>
+                    <div style="flex:2;min-width:160px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Add all unbilled sales of an Advertiser</label><select id="invAddAdvertiser" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">-- Select Advertiser --</option></select></div>
+                    <div style="flex:1;min-width:150px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Week</label><select id="invAddAdvWeek" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">All unbilled</option></select></div>
                     <button class="btn-primary-sm" onclick="addAdvertiserSales()" style="background:#0a6c80;"><i class="fas fa-layer-group"></i> Add Advertiser Sales</button>
                 </div>
                 <!-- Single offer manual add -->
@@ -3049,8 +3050,9 @@ function toggleMobileSidebar() {
     document.getElementById('sidebarOverlay').classList.toggle('open');
 }
 function collapseSidebar() {
-    document.getElementById('appSidebar').classList.toggle('collapsed');
-    document.getElementById('contentWrap').classList.toggle('sb-collapsed');
+    var collapsed = document.getElementById('appSidebar').classList.toggle('collapsed');
+    document.getElementById('contentWrap').classList.toggle('sb-collapsed', collapsed);
+    document.body.classList.toggle('sb-collapsed', collapsed);
     var icon = document.getElementById('collapseIcon');
     if (document.getElementById('appSidebar').classList.contains('collapsed')) { icon.className = 'fas fa-chevron-right'; }
     else { icon.className = 'fas fa-chevron-left'; }
@@ -5136,6 +5138,7 @@ function openClickDetail(clickId) {
     h += cdItem('Lat / Lon', (c.lat && c.lon) ? escHtml(c.lat + ', ' + c.lon) : '-');
     h += cdItem('IP Timezone', escHtml(c.ipTimezone || '-'));
     h += cdItem('Referer', c.referer ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.referer) + '</span>' : '<em style="color:#94a3b8">Direct</em>');
+    h += cdItem('Referrer (param)', c.referrerParam ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.referrerParam) + '</span>' : '<em style="color:#94a3b8">-</em>');
     h += '</div>';
 
     /* Device & Browser */
@@ -5459,9 +5462,10 @@ function renderInvoices(invoices) {
         html += '<td style="font-size:11px;color:#666;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(inv.notes || '-') + '</td>';
         html += '<td style="font-size:12px;">' + fmtDate(inv.createdAt) + '</td>';
         html += '<td style="font-size:12px;">' + modified + '</td>';
+        html += '<td style="text-align:center;"><button onclick="deleteInvoice(\'' + inv._id + '\')" title="Delete invoice" style="width:28px;height:28px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#fee2e2\'" onmouseout="this.style.background=\'#fef2f2\'"><i class="fas fa-trash"></i></button></td>';
         html += '</tr>';
     });
-    document.getElementById('invoiceTbody').innerHTML = html || '<tr><td colspan="11" class="no-data"><i class="fas fa-file-invoice"></i>No invoices found</td></tr>';
+    document.getElementById('invoiceTbody').innerHTML = html || '<tr><td colspan="12" class="no-data"><i class="fas fa-file-invoice"></i>No invoices found</td></tr>';
     var footer = document.getElementById('invTableFooter');
     if (footer) footer.textContent = filtered.length + ' invoice' + (filtered.length !== 1 ? 's' : '') + ' total';
 }
@@ -5867,8 +5871,15 @@ function openInvoiceDetail(invId) {
 
     document.getElementById('invDetailNumber').textContent = inv.invoiceNumber || invId;
 
-    /* General section */
-    var billed = parseFloat(inv.billedAmount || inv.amount || 0);
+    /* General section.
+       Always derive the billed amount from each line's unitPrice × quantity so the
+       hero, the line-item rows, and the footer total can never disagree. A stored
+       billedAmount/it.amount can drift out of sync after edits — we trust the live
+       qty × unit math instead. Legacy invoices (no items) fall back to billedAmount. */
+    function invLineAmt(it) { return parseFloat((parseFloat(it.unitPrice || 0) * (parseInt(it.quantity, 10) || 0)).toFixed(2)); }
+    var itemsTotal = (inv.items || []).reduce(function(s, it) { return s + invLineAmt(it); }, 0);
+    itemsTotal = parseFloat(itemsTotal.toFixed(2));
+    var billed = (inv.items && inv.items.length) ? itemsTotal : parseFloat(inv.billedAmount || inv.amount || 0);
     var paid = parseFloat(inv.paidAmount || (inv.status === 'paid' ? billed : 0) || 0);
     var balance = billed - paid;
     var startD = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
@@ -5914,7 +5925,8 @@ function openInvoiceDetail(invId) {
     if (items && items.length) {
         var iTotal = 0;
         items.forEach(function(it, idx) {
-            iTotal += parseFloat(it.amount || 0);
+            var lineAmt = invLineAmt(it);
+            iTotal += lineAmt;
             var unitP = parseFloat(it.unitPrice || 0);
             var qtyCell = invEditable
                 ? '<input type="number" min="0" value="' + (it.quantity || 0) + '" data-unit="' + unitP + '" data-idx="' + idx + '" class="inv-qty-input" onchange="recalcInvDetailRow(this)" style="width:58px;border:1px solid #d6dee7;border-radius:7px;padding:5px 7px;text-align:center;font-size:12.5px;font-weight:600;">'
@@ -5927,7 +5939,7 @@ function openInvoiceDetail(invId) {
                 '<td style="padding:11px 14px;font-weight:500;color:#1e293b;">' + escHtml(it.offerName || it.offerId || '-') + '</td>' +
                 '<td style="padding:8px 14px;text-align:center;">' + qtyCell + '</td>' +
                 '<td style="padding:11px 14px;text-align:right;color:#64748b;">' + fmtMoney(unitP) + '</td>' +
-                '<td style="padding:11px 14px;text-align:right;font-weight:700;color:#0f172a;" id="invDetailAmt_' + idx + '">' + fmtMoney(it.amount || 0) + '</td>' +
+                '<td style="padding:11px 14px;text-align:right;font-weight:700;color:#0f172a;" id="invDetailAmt_' + idx + '">' + fmtMoney(lineAmt) + '</td>' +
                 removeCell +
                 '</tr>';
         });
@@ -5989,6 +6001,7 @@ function openInvoiceDetail(invId) {
         }
     }
     actHtml += '<button class="btn-sm" onclick="downloadInvoicePDF(\'' + invId + '\')"><i class="fas fa-file-pdf"></i> PDF</button>';
+    actHtml += '<button class="btn-sm" onclick="deleteInvoice(\'' + invId + '\')" style="margin-left:auto;background:#fef2f2;color:#dc2626;border-color:#fca5a5;"><i class="fas fa-trash"></i> Delete Invoice</button>';
     document.getElementById('invDetailActions').innerHTML = actHtml;
     /* Show status note if delayed/on hold */
     var noteBar = document.getElementById('invStatusNoteBar');
@@ -6030,6 +6043,7 @@ function openInvoiceDetail(invId) {
                     advSel.innerHTML += '<option value="' + a._id + '">' + escHtml(a.name || a.companyName || a._id) + '</option>';
                 });
             }
+            populateAdvWeekSelect();
         }
     }
 
@@ -6099,12 +6113,55 @@ function removeInvProof() {
     });
 }
 
+/* ── Recent Mon–Sun weeks (ET) for the advertiser-sales week filter ──
+   Returns [{fromTs, toTs, label}], newest first. Mirrors the ET/Monday-start
+   logic used by the auto-weekly invoice generator. */
+function getRecentWeeks(count) {
+    count = count || 12;
+    var etOffset = (function() {
+        var n = new Date();
+        var u = n.toLocaleString('en-US', { timeZone: 'UTC', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        var e = n.toLocaleString('en-US', { timeZone: 'America/New_York', hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        return new Date(u).getTime() - new Date(e).getTime();
+    })();
+    var nowET = new Date(new Date().getTime() - etOffset);
+    var dow = nowET.getDay(); /* 0=Sun..6=Sat */
+    /* Monday of the CURRENT week in ET */
+    var daysBackToMon = dow === 0 ? 6 : dow - 1;
+    var curMon = new Date(nowET); curMon.setHours(0,0,0,0); curMon.setDate(nowET.getDate() - daysBackToMon);
+    function key(d) { return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); }
+    function etTs(d, end) { var t = new Date(key(d) + 'T00:00:00Z').getTime() + etOffset; return end ? t + 86399999 : t; }
+    var mthNm = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function lbl(d) { return mthNm[d.getMonth()] + ' ' + d.getDate(); }
+    var weeks = [];
+    for (var i = 0; i < count; i++) {
+        var mon = new Date(curMon); mon.setDate(curMon.getDate() - i*7);
+        var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        weeks.push({ fromTs: etTs(mon, false), toTs: etTs(sun, true), label: lbl(mon) + ' – ' + lbl(sun) + (i===0 ? ' (this week)' : i===1 ? ' (last week)' : '') });
+    }
+    return weeks;
+}
+
+function populateAdvWeekSelect() {
+    var sel = document.getElementById('invAddAdvWeek');
+    if (!sel) return;
+    var html = '<option value="">All unbilled</option>';
+    getRecentWeeks(12).forEach(function(w) {
+        html += '<option value="' + w.fromTs + '|' + w.toTs + '">' + escHtml(w.label) + '</option>';
+    });
+    sel.innerHTML = html;
+}
+
 /* ── Add all unbilled sales of an advertiser as line items ── */
 function addAdvertiserSales() {
     var advId = document.getElementById('invAddAdvertiser').value;
     if (!advId) { toast('Select an advertiser', 'error'); return; }
     var inv = allInvoices.find(function(i){ return i._id === _currentInvDetail; });
     if (!inv) return;
+    /* Optional week filter — value is "fromTs|toTs" */
+    var weekVal = (document.getElementById('invAddAdvWeek') || {}).value || '';
+    var wFrom = null, wTo = null;
+    if (weekVal.indexOf('|') > -1) { var p = weekVal.split('|'); wFrom = parseInt(p[0]); wTo = parseInt(p[1]); }
     /* offers belonging to this advertiser */
     var advOfferIds = {}; (allOffers||[]).forEach(function(o){ if (o.advertiser === advId) advOfferIds[o._id] = true; });
     /* already-invoiced conv ids (excluding THIS invoice so its own stay) */
@@ -6117,11 +6174,12 @@ function addAdvertiserSales() {
         if (c.status !== 'approved' || c.affiliateId !== inv.affiliateId) return;
         if (!advOfferIds[c.offerId]) return;
         if (invoicedElsewhere[c._id] || onThis[c._id]) return;
+        if (wFrom !== null) { var ct = c.createdAt || 0; if (ct < wFrom || ct > wTo) return; }
         if (!byOffer[c.offerId]) byOffer[c.offerId] = { count:0, amount:0, ids:[] };
         byOffer[c.offerId].count++; byOffer[c.offerId].amount += parseFloat(c.payout)||0; byOffer[c.offerId].ids.push(c._id);
     });
     var oids = Object.keys(byOffer);
-    if (!oids.length) { toast('No unbilled sales for this advertiser', 'error'); return; }
+    if (!oids.length) { toast('No unbilled sales for this advertiser' + (wFrom !== null ? ' in the selected week' : ''), 'error'); return; }
     /* Append to invoice items + save */
     var items = (inv.items || []).slice();
     oids.forEach(function(oid){
@@ -6185,15 +6243,7 @@ function addInvLineItem() {
     tr.setAttribute('data-new-unit', unit);
     tbody.appendChild(tr);
 
-    /* Recalc total */
-    var total = 0;
-    document.querySelectorAll('#invDetailItems tr').forEach(function(r) {
-        if (r.style.display === 'none') return;
-        var a = r.querySelector('td[id^="invDetailAmt_"]');
-        if (a) total += parseMoney(a.textContent);
-    });
-    var tc = document.getElementById('invDetailTotalCell');
-    if (tc) tc.textContent = fmtMoney(total);
+    recalcInvDetailTotal();
 
     /* Reset add form */
     document.getElementById('invAddOffer').value = '';
@@ -6207,14 +6257,24 @@ function recalcInvDetailRow(input) {
     var idx = input.getAttribute('data-idx');
     var unit = parseFloat(input.getAttribute('data-unit')) || 0;
     var qty = parseInt(input.value) || 0;
-    var amt = unit * qty;
     var amtCell = document.getElementById('invDetailAmt_' + idx);
-    if (amtCell) amtCell.textContent = fmtMoney(amt);
-    /* recalc total */
+    if (amtCell) amtCell.textContent = fmtMoney(unit * qty);
+    recalcInvDetailTotal();
+}
+
+/* Sum the invoice total straight from each visible row's qty × unit price.
+   Computing from the inputs (not parsing displayed text) keeps it exact, and
+   the JS display check correctly skips removed rows — a CSS [style*="display:none"]
+   selector misses them because the browser stores "display: none" with a space. */
+function recalcInvDetailTotal() {
     var total = 0;
-    document.querySelectorAll('#invDetailItems tr:not([style*="display:none"])').forEach(function(row) {
-        var amtEl = row.querySelector('td[id^="invDetailAmt_"]');
-        if (amtEl) total += parseMoney(amtEl.textContent);
+    document.querySelectorAll('#invDetailItems tr').forEach(function(row) {
+        if (row.style.display === 'none') return;
+        var qIn = row.querySelector('.inv-qty-input');
+        if (!qIn) return;
+        var unit = parseFloat(qIn.getAttribute('data-unit')) || 0;
+        var qty = parseInt(qIn.value) || 0;
+        total += unit * qty;
     });
     var tc = document.getElementById('invDetailTotalCell');
     if (tc) tc.textContent = fmtMoney(total);
@@ -6227,15 +6287,7 @@ function parseMoney(s) {
 function removeInvDetailRow(btn) {
     var row = btn.closest('tr');
     if (row) { row.style.display = 'none'; }
-    /* recalc total */
-    var total = 0;
-    document.querySelectorAll('#invDetailItems tr').forEach(function(r) {
-        if (r.style.display === 'none') return;
-        var amtEl = r.querySelector('td[id^="invDetailAmt_"]');
-        if (amtEl) total += parseMoney(amtEl.textContent);
-    });
-    var tc = document.getElementById('invDetailTotalCell');
-    if (tc) tc.textContent = fmtMoney(total);
+    recalcInvDetailTotal();
 }
 
 function saveInvoiceDetailEdit() {
@@ -6367,6 +6419,29 @@ function markInvoicePaid(invId) {
         payRecord.method = pmt.method || (inv.payment && inv.payment.method) || 'wire';
         sendPaymentPaidEmail(payRecord);
     }).catch(function() { toast('Error', 'error'); });
+}
+
+/* Delete an invoice. Its conversions automatically become available for the
+   next invoice again (they're tracked via each invoice's item conversionIds),
+   and any linked payment record is removed too. */
+function deleteInvoice(invId) {
+    var inv = allInvoices.find(function(i) { return i._id === invId; });
+    if (!inv) return;
+    var num = inv.invoiceNumber || invId;
+    var convCount = (inv.items || []).reduce(function(s, i) { return s + (i.quantity || 0); }, 0);
+    var msg = 'Delete invoice ' + num + '?\n\nThe ' + convCount + ' conversion(s) on it will become available for invoicing again.';
+    if (inv.status === 'paid') msg += '\n\n⚠ This invoice is PAID — its payment record will also be removed.';
+    if (!confirm(msg)) return;
+
+    var ops = [fbDelete('payments/invoices/' + invId)];
+    (allPayments || []).forEach(function(p) { if (p.invoiceId === invId) ops.push(fbDelete('payments/records/' + p._id)); });
+    Promise.all(ops).then(function() {
+        toast('Invoice ' + num + ' deleted');
+        allInvoices = allInvoices.filter(function(i) { return i._id !== invId; });
+        allPayments = (allPayments || []).filter(function(p) { return p.invoiceId !== invId; });
+        closeModal('invoiceDetailModal');
+        loadPayments();
+    }).catch(function() { toast('Failed to delete invoice', 'error'); });
 }
 
 /* Record a PARTIAL payment — sets paidAmount but keeps invoice open so the
@@ -11227,6 +11302,7 @@ function rv2RenderClickDetail(clickId) {
         '</div>';
     html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Traffic Source</div>'+
         row('Referrer', c.referer ? '<span style="font-size:11px;">'+escHtml(c.referer)+'</span>' : '(direct)')+
+        row('Referrer (param)', c.referrerParam ? '<span style="font-size:11px;">'+escHtml(c.referrerParam)+'</span>' : '-')+
         row('Sub1', escHtml(c.sub1||'-'))+
         row('Sub2', escHtml(c.sub2||'-'))+
         row('Sub3', escHtml(c.sub3||'-'))+
