@@ -3190,9 +3190,10 @@ function checkAutoWeeklyInvoices() {
             }
         }
 
+        var autoInvoiced = getInvoicedConvIds();
         affiliates.forEach(function(aff) {
             var convs = (typeof allConversions !== 'undefined' ? allConversions : []).filter(function(c) {
-                return c.status === 'approved' && c.affiliateId === aff._id && c.createdAt >= fromTs && c.createdAt <= toTs;
+                return c.status === 'approved' && c.affiliateId === aff._id && c.createdAt >= fromTs && c.createdAt <= toTs && !autoInvoiced[c._id];
             });
             if (!convs.length) { tick(); return; }
 
@@ -5650,6 +5651,18 @@ function setInvDatePreset(preset) {
 
 }
 
+/* Set of conversion IDs already present in any invoice (optionally excluding one) */
+function getInvoicedConvIds(excludeInvId) {
+    var set = {};
+    (allInvoices || []).forEach(function(inv) {
+        if (excludeInvId && inv._id === excludeInvId) return;
+        (inv.items || []).forEach(function(it) {
+            (it.conversionIds || []).forEach(function(cid) { set[cid] = true; });
+        });
+    });
+    return set;
+}
+
 function previewInvoiceGen() {
     var affId = document.getElementById('invAffiliate').value;
     if (!affId) { toast('Select an affiliate first', 'error'); return; }
@@ -5668,10 +5681,13 @@ function previewInvoiceGen() {
         allOffers.forEach(function(o) { if (o.advertiser === advF) advOfferIds[o._id] = true; });
     }
 
-    /* Group conversions by offer for this affiliate */
+    /* Conversions already present in ANY invoice are not available again */
+    var alreadyInvoiced = getInvoicedConvIds();
+
+    /* Group conversions by offer for this affiliate (skip already-invoiced) */
     var offerMap = {};
     allConversions.filter(function(c) {
-        return c.status === 'approved' && c.affiliateId === affId && c.createdAt >= fromTs && c.createdAt <= toTs && (!advOfferIds || advOfferIds[c.offerId]);
+        return c.status === 'approved' && c.affiliateId === affId && c.createdAt >= fromTs && c.createdAt <= toTs && (!advOfferIds || advOfferIds[c.offerId]) && !alreadyInvoiced[c._id];
     }).forEach(function(c) {
         var oid = c.offerId || 'unknown';
         if (!offerMap[oid]) offerMap[oid] = { count: 0, amount: 0, payout: parseFloat(c.payout) || 0, ids: [] };
@@ -6128,13 +6144,17 @@ function saveInvoiceDetailEdit() {
         var orig = inv.items[idx];
         var unit = parseFloat(orig.unitPrice || 0);
         var amt = parseFloat((unit * qty).toFixed(2));
+        /* If qty reduced, trim conversionIds to match — the freed ones become
+           available again for the next invoice. */
+        var cids = orig.conversionIds || [];
+        if (cids.length > qty) cids = cids.slice(0, qty);
         newItems.push({
             offerId: orig.offerId,
             offerName: orig.offerName || orig.offerId,
             quantity: qty,
             unitPrice: unit,
             amount: amt,
-            conversionIds: orig.conversionIds || []
+            conversionIds: cids
         });
         newTotal += amt;
     });
