@@ -4499,8 +4499,9 @@ function approveApplication(appId, offerId, affId) {
 }
 
 function rejectApplication(appId) {
-    if (!confirm('Reject this application?')) return;
-    fbPatch('offer_applications/' + appId, { status: 'rejected', reviewedAt: Date.now() }).then(function() {
+    var note = prompt('Reason for rejection (shown to the affiliate):', '');
+    if (note === null) return; /* cancelled */
+    fbPatch('offer_applications/' + appId, { status: 'rejected', reviewedAt: Date.now(), reviewNote: (note || '').trim() }).then(function() {
         toast('Application rejected');
         loadAssignments();
     });

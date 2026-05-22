@@ -1144,6 +1144,7 @@ body.impersonating .impersonate-banner{display:block;}
                         <button onclick="filterNotifPage('pending')"  class="notif-filt-btn" id="nfb-pending">Pending</button>
                         <button onclick="filterNotifPage('rejected')" class="notif-filt-btn" id="nfb-rejected">Rejected</button>
                         <button onclick="filterNotifPage('payment')"  class="notif-filt-btn" id="nfb-payment">Payments</button>
+                        <button onclick="filterNotifPage('offer')"    class="notif-filt-btn" id="nfb-offer">Offers</button>
                     </div>
                     <button onclick="loadNotifPage()" style="background:#f1f5f9;border:none;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:12px;color:#64748b;font-weight:600;"><i class="fas fa-sync"></i> Refresh</button>
                 </div>
@@ -3753,12 +3754,14 @@ function filterNotifPage(f) {
 function loadNotifPage() {
     var list = document.getElementById('notifPageList');
     list.innerHTML = '<div style="padding:50px;text-align:center;color:var(--tl);"><i class="fas fa-spinner fa-spin" style="font-size:24px;"></i></div>';
-    Promise.all([fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices')]).then(function(r) {
+    Promise.all([fbGet('conversions'), fbGet('payments/invoices'), fbGet('offer_applications'), fbGet('offers')]).then(function(r) {
         var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
-        var recIds = {}, recs = objToArr(r[1]).filter(function(p) { recIds[p._id] = 1; return p.affiliateId === myUid; });
-        var invs = objToArr(r[2]).filter(function(p) { return p.affiliateId === myUid && !recIds[p._id]; });
-        var pays = recs.concat(invs);
+        var invs  = objToArr(r[1]).filter(function(p) { return p.affiliateId === myUid; });
+        var apps  = objToArr(r[2]).filter(function(a) { return a.affiliateId === myUid; });
+        var offersById = {}; objToArr(r[3]).forEach(function(o){ offersById[o._id] = o; });
         var notifs = [];
+
+        /* Conversions */
         convs.forEach(function(c) {
             var cfg = { approved: { icon:'fa-check-circle', color:'#16a34a', bg:'#dcfce7', label:'Conversion Approved' },
                         rejected: { icon:'fa-times-circle', color:'#dc2626', bg:'#fee2e2', label:'Conversion Rejected' },
@@ -3766,10 +3769,43 @@ function loadNotifPage() {
             var k = c.status || 'pending'; var x = cfg[k] || cfg.pending;
             notifs.push({ kind:'conv', subkind:k, ts:c.createdAt||0, icon:x.icon, color:x.color, bg:x.bg, title:x.label, desc:offerName(c.offerId)+' — '+fmtM(c.payout||0), meta:'Click ID: '+(c.clickId||'-') });
         });
-        pays.forEach(function(p) {
-            var isPaid = p.status === 'paid';
-            notifs.push({ kind:'payment', subkind:'payment', ts:p.createdAt||0, icon:isPaid?'fa-wallet':'fa-hourglass-half', color:isPaid?'#16a34a':'#f59e0b', bg:isPaid?'#dcfce7':'#fef3c7', title:isPaid?'Payment Sent':'Payment Pending', desc:fmtM(p.amount||p.billedAmount||0)+(p.period?' — '+p.period:''), meta:(p.method?'Method: '+p.method:'')+(p.invoiceNumber?' · '+p.invoiceNumber:'') });
+
+        /* Invoices — created + status (paid/delayed/hold) */
+        invs.forEach(function(inv) {
+            var amt = fmtM(inv.billedAmount || inv.amount || 0);
+            var num = inv.invoiceNumber || inv._id;
+            notifs.push({ kind:'payment', subkind:'invoice', ts:inv.createdAt||0, icon:'fa-file-invoice-dollar', color:'#0A6C80', bg:'#e8f4f7', title:'Invoice Created', desc:num+' — '+amt, meta:inv.period?('Period: '+inv.period):'' });
+            var st = inv.status || 'unpaid';
+            if (st === 'paid') {
+                notifs.push({ kind:'payment', subkind:'paid', ts:(inv.payment&&inv.payment.completedAt)||inv.updatedAt||inv.createdAt||0, icon:'fa-check-circle', color:'#16a34a', bg:'#dcfce7', title:'Invoice Paid', desc:num+' — '+fmtM(inv.paidAmount||inv.billedAmount||0), meta:(inv.payment&&inv.payment.method?'Method: '+inv.payment.method:'') });
+            } else if (st === 'delayed') {
+                notifs.push({ kind:'payment', subkind:'delayed', ts:inv.updatedAt||inv.createdAt||0, icon:'fa-hourglass-half', color:'#2563eb', bg:'#dbeafe', title:'Invoice Payment Delayed', desc:num+' — '+amt, meta:inv.statusNote?('Reason: '+inv.statusNote):'' });
+            } else if (st === 'hold') {
+                notifs.push({ kind:'payment', subkind:'hold', ts:inv.updatedAt||inv.createdAt||0, icon:'fa-pause-circle', color:'#c62828', bg:'#fee2e2', title:'Invoice On Hold', desc:num+' — '+amt, meta:inv.statusNote?('Reason: '+inv.statusNote):'' });
+            }
         });
+
+        /* Offer applications — approved / rejected (with admin note) / pending */
+        apps.forEach(function(a) {
+            var oName = (offersById[a.offerId] && offersById[a.offerId].name) || a.offerName || a.offerId;
+            var st = a.status || 'pending';
+            if (st === 'approved') {
+                notifs.push({ kind:'offer', subkind:'approved', ts:a.reviewedAt||a.updatedAt||a.createdAt||0, icon:'fa-bullhorn', color:'#16a34a', bg:'#dcfce7', title:'Offer Approved', desc:escNotif(oName), meta:'You can now promote this offer' });
+            } else if (st === 'rejected') {
+                notifs.push({ kind:'offer', subkind:'rejected', ts:a.reviewedAt||a.updatedAt||a.createdAt||0, icon:'fa-times-circle', color:'#dc2626', bg:'#fee2e2', title:'Offer Application Rejected', desc:escNotif(oName), meta:a.reviewNote?('Reason: '+a.reviewNote):'No reason provided' });
+            } else {
+                notifs.push({ kind:'offer', subkind:'pending', ts:a.createdAt||0, icon:'fa-clock', color:'#f59e0b', bg:'#fef3c7', title:'Offer Application Pending', desc:escNotif(oName), meta:'Awaiting admin review' });
+            }
+        });
+
+        /* Paused offers the affiliate is assigned/approved to */
+        apps.filter(function(a){ return a.status === 'approved'; }).forEach(function(a) {
+            var o = offersById[a.offerId];
+            if (o && (o.status === 'paused' || o.status === 'inactive')) {
+                notifs.push({ kind:'offer', subkind:'paused', ts:o.updatedAt||Date.now(), icon:'fa-pause-circle', color:'#d97706', bg:'#fef3c7', title:'Offer Paused', desc:escNotif(o.name||a.offerId), meta:'This offer is currently '+(o.status) });
+            }
+        });
+
         notifs.sort(function(a, b) { return (b.ts||0) - (a.ts||0); });
         _notifPageData = notifs;
         _renderNotifPage();
@@ -3777,12 +3813,14 @@ function loadNotifPage() {
         list.innerHTML = '<div style="padding:50px;text-align:center;color:var(--red);">Failed to load notifications</div>';
     });
 }
+function escNotif(s){ return (typeof esc === 'function') ? esc(s) : String(s||''); }
 function _renderNotifPage() {
     var list = document.getElementById('notifPageList');
     var f = _notifPageFilter;
     var fil = _notifPageData.filter(function(n) {
         if (f === 'all') return true;
         if (f === 'payment') return n.kind === 'payment';
+        if (f === 'offer') return n.kind === 'offer';
         return n.kind === 'conv' && n.subkind === f;
     });
     var countEl = document.getElementById('notifPageCount');
