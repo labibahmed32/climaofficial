@@ -2621,6 +2621,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
             <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:12px;">Payment</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px 20px;margin-bottom:16px;" id="invDetailPayment"></div>
+            <!-- Payment proof screenshot -->
+            <div id="invProofSection" style="margin-bottom:14px;"></div>
+            <input type="file" id="invProofFile" accept="image/*" style="display:none;" onchange="uploadInvProof(this)">
             <!-- Admin action buttons -->
             <div id="invDetailActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;"></div>
         </div>
@@ -2630,6 +2633,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div style="padding:0 24px 12px;" id="invAddLineSection" style="display:none;">
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;">
                 <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-plus-circle"></i> Add Line Item</div>
+                <!-- Advertiser quick-add: pull an advertiser's unbilled sales -->
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed #bbf7d0;">
+                    <div style="flex:2;min-width:180px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Add all unbilled sales of an Advertiser</label><select id="invAddAdvertiser" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">-- Select Advertiser --</option></select></div>
+                    <button class="btn-primary-sm" onclick="addAdvertiserSales()" style="background:#0a6c80;"><i class="fas fa-layer-group"></i> Add Advertiser Sales</button>
+                </div>
+                <!-- Single offer manual add -->
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="flex:2;min-width:160px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Offer</label><select id="invAddOffer" onchange="onInvAddOfferChange()" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;"><option value="">-- Select Offer --</option></select></div>
                     <div style="width:80px;"><label style="font-size:11px;color:#555;display:block;margin-bottom:3px;">Qty</label><input type="number" id="invAddQty" min="1" value="1" style="width:100%;padding:7px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;" onchange="onInvAddOfferChange()"></div>
@@ -6002,10 +6011,119 @@ function openInvoiceDetail(invId) {
             document.getElementById('invAddQty').value = 1;
             document.getElementById('invAddUnit').value = '';
             document.getElementById('invAddAmt').textContent = '$0.00';
+            /* Populate advertiser quick-add dropdown */
+            var advSel = document.getElementById('invAddAdvertiser');
+            if (advSel) {
+                advSel.innerHTML = '<option value="">-- Select Advertiser --</option>';
+                (allAdvertisers || []).forEach(function(a) {
+                    advSel.innerHTML += '<option value="' + a._id + '">' + escHtml(a.name || a.companyName || a._id) + '</option>';
+                });
+            }
         }
     }
 
+    /* Payment proof screenshot */
+    renderInvProof(inv);
+
     openModal('invoiceDetailModal');
+}
+
+/* ── Payment proof screenshot ── */
+function renderInvProof(inv) {
+    var el = document.getElementById('invProofSection');
+    if (!el) return;
+    var pmt = inv.payment || {};
+    var editable = (inv.status !== 'paid') || pmt.proofImage; /* allow upload while open; show if exists */
+    var proof = pmt.proofImage || '';
+    var html = '<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#888;margin-bottom:8px;">Payment Proof</div>';
+    if (proof) {
+        html += '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">' +
+            '<a href="' + proof + '" target="_blank" rel="noopener"><img src="' + proof + '" style="max-width:180px;max-height:130px;border-radius:8px;border:1px solid #e2e8f0;object-fit:cover;cursor:zoom-in;"></a>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;">' +
+            '<span style="font-size:11.5px;color:#16a34a;font-weight:600;"><i class="fas fa-check-circle"></i> Proof attached</span>' +
+            '<button class="btn-sm" onclick="document.getElementById(\'invProofFile\').click()"><i class="fas fa-sync"></i> Replace</button>' +
+            '<button class="btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="removeInvProof()"><i class="fas fa-trash"></i> Remove</button>' +
+            '</div></div>';
+    } else {
+        html += '<button class="btn-sm" onclick="document.getElementById(\'invProofFile\').click()" style="border-color:#0a6c80;color:#0a6c80;"><i class="fas fa-camera"></i> Upload Payment Screenshot</button>' +
+            '<div style="font-size:11px;color:#94a3b8;margin-top:5px;">Attach a proof image — the affiliate will see it on their invoice.</div>';
+    }
+    el.innerHTML = html;
+}
+function uploadInvProof(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    if (!_currentInvDetail) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+            /* Resize to max 900px wide, JPEG 0.8 for storage */
+            var maxW = 900, scale = Math.min(1, maxW / img.width);
+            var cv = document.createElement('canvas');
+            cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+            cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+            var dataUrl = cv.toDataURL('image/jpeg', 0.8);
+            var inv = allInvoices.find(function(i){ return i._id === _currentInvDetail; });
+            if (!inv) return;
+            var pmt = inv.payment || {}; pmt.proofImage = dataUrl; pmt.proofUploadedAt = Date.now();
+            fbPatch('payments/invoices/' + _currentInvDetail, { payment: pmt, updatedAt: Date.now() }).then(function() {
+                inv.payment = pmt; inv.updatedAt = Date.now();
+                toast('Payment proof uploaded');
+                renderInvProof(inv);
+            }).catch(function(){ toast('Upload failed', 'error'); });
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+function removeInvProof() {
+    if (!_currentInvDetail) return;
+    var inv = allInvoices.find(function(i){ return i._id === _currentInvDetail; });
+    if (!inv) return;
+    var pmt = inv.payment || {}; delete pmt.proofImage; delete pmt.proofUploadedAt;
+    fbPatch('payments/invoices/' + _currentInvDetail, { payment: pmt, updatedAt: Date.now() }).then(function() {
+        inv.payment = pmt; renderInvProof(inv); toast('Proof removed');
+    });
+}
+
+/* ── Add all unbilled sales of an advertiser as line items ── */
+function addAdvertiserSales() {
+    var advId = document.getElementById('invAddAdvertiser').value;
+    if (!advId) { toast('Select an advertiser', 'error'); return; }
+    var inv = allInvoices.find(function(i){ return i._id === _currentInvDetail; });
+    if (!inv) return;
+    /* offers belonging to this advertiser */
+    var advOfferIds = {}; (allOffers||[]).forEach(function(o){ if (o.advertiser === advId) advOfferIds[o._id] = true; });
+    /* already-invoiced conv ids (excluding THIS invoice so its own stay) */
+    var invoicedElsewhere = getInvoicedConvIds(_currentInvDetail);
+    /* also exclude conv ids already on the current (in-DOM) invoice items */
+    var onThis = {}; (inv.items||[]).forEach(function(it){ (it.conversionIds||[]).forEach(function(c){ onThis[c]=true; }); });
+    /* gather this affiliate's approved, unbilled conversions for the advertiser's offers */
+    var byOffer = {};
+    (allConversions||[]).forEach(function(c){
+        if (c.status !== 'approved' || c.affiliateId !== inv.affiliateId) return;
+        if (!advOfferIds[c.offerId]) return;
+        if (invoicedElsewhere[c._id] || onThis[c._id]) return;
+        if (!byOffer[c.offerId]) byOffer[c.offerId] = { count:0, amount:0, ids:[] };
+        byOffer[c.offerId].count++; byOffer[c.offerId].amount += parseFloat(c.payout)||0; byOffer[c.offerId].ids.push(c._id);
+    });
+    var oids = Object.keys(byOffer);
+    if (!oids.length) { toast('No unbilled sales for this advertiser', 'error'); return; }
+    /* Append to invoice items + save */
+    var items = (inv.items || []).slice();
+    oids.forEach(function(oid){
+        var d = byOffer[oid];
+        var unit = d.count ? parseFloat((d.amount/d.count).toFixed(4)) : 0;
+        items.push({ offerId: oid, offerName: getUserOfferName(oid), quantity: d.count, unitPrice: unit, amount: parseFloat(d.amount.toFixed(2)), conversionIds: d.ids });
+    });
+    var newTotal = parseFloat(items.reduce(function(s,i){ return s + parseFloat(i.amount||0); }, 0).toFixed(2));
+    fbPatch('payments/invoices/' + _currentInvDetail, { items: items, billedAmount: newTotal, amount: newTotal, convCount: items.reduce(function(s,i){return s+(i.quantity||0);},0), updatedAt: Date.now() }).then(function() {
+        inv.items = items; inv.billedAmount = newTotal; inv.amount = newTotal; inv.updatedAt = Date.now();
+        toast('Added ' + oids.length + ' offer(s) from advertiser');
+        openInvoiceDetail(_currentInvDetail);
+    }).catch(function(){ toast('Failed to add', 'error'); });
 }
 
 function onInvAddOfferChange() {
@@ -8491,8 +8609,7 @@ function switchAffProfTab(tab) {
 }
 
 function openAffProfile(uid) {
-    var modal = document.getElementById('affProfileModal');
-    modal.style.display = 'flex';
+    openModal('affProfileModal'); /* adds .open — .modal-overlay is opacity:0 without it */
     document.getElementById('apProfileContent').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-mid);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     document.getElementById('apPaymentContent').innerHTML = '';
     document.getElementById('apActivityContent').innerHTML = '';
