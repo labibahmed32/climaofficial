@@ -556,12 +556,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* === MODALS === */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
-/* Full-page invoice view — not a floating popup */
-.modal-overlay.inv-fullpage{background:#eef1f5;backdrop-filter:none;align-items:stretch;justify-content:stretch;padding:0;}
-.inv-fullpage-panel{width:100% !important;max-width:none !important;height:100vh;max-height:100vh !important;border-radius:0 !important;display:flex;flex-direction:column;box-shadow:none !important;transform:translateY(12px);transition:transform .25s cubic-bezier(.32,.72,0,1);}
+/* Invoice page — opens in the content area, sidebar stays visible */
+.modal-overlay.inv-fullpage{background:#eef1f5;backdrop-filter:none;align-items:stretch;justify-content:stretch;padding:0;left:268px;transition:left .25s;}
+.content-wrap.sb-collapsed ~ .modal-overlay.inv-fullpage,
+body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
+.inv-fullpage-panel{width:100% !important;max-width:none !important;height:100vh;max-height:100vh !important;border-radius:0 !important;display:flex;flex-direction:column;box-shadow:none !important;transform:translateY(10px);transition:transform .22s cubic-bezier(.32,.72,0,1);}
 .modal-overlay.inv-fullpage.open .inv-fullpage-panel{transform:translateY(0);}
 .inv-fullpage-panel > .modal-body{flex:1;overflow-y:auto;}
-.inv-fullpage-inner{max-width:1000px;margin:0 auto;width:100%;}
+.inv-fullpage-inner{max-width:980px;margin:0 auto;width:100%;}
+@media(max-width:768px){.modal-overlay.inv-fullpage{left:48px;}}
 .modal-panel{background:#fff;border-radius:12px;width:90%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);}
 .modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--card-border);position:sticky;top:0;background:#fff;z-index:1;border-radius:12px 12px 0 0;}
 .modal-header h3{font-size:17px;font-weight:700;color:var(--primary);}
