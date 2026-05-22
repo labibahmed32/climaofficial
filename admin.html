@@ -441,7 +441,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rv2-mini-pad td{padding:0 16px;height:38px;border-top:1px solid #f8fafc;}
 @media(max-width:1000px){.rv2-chart-card{}.rv2-content [style*="grid-template-columns:2fr 1fr"]{grid-template-columns:1fr !important;}}
 .rv2-pagebar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:10px;}
-.rv2-pagebar-left{font-size:12.5px;color:#64748b;display:flex;align-items:center;}
+.rv2-pagebar-left{font-size:12.5px;color:#64748b;display:flex;align-items:center;gap:8px;}
 .rv2-pagebar-left b{color:#0f172a;}
 .rv2-pagebar-right{display:flex;align-items:center;gap:8px;}
 .rv2-page-btn{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:7px;cursor:pointer;color:#64748b;font-size:12px;transition:all .12s;}
@@ -9532,9 +9532,10 @@ function rv2PageBar(total, page, pageSize, pageFn, sizeFn) {
     var from = total ? (page-1)*pageSize + 1 : 0;
     var to = Math.min(total, page*pageSize);
     var html = '<div class="rv2-pagebar">' +
-        '<div class="rv2-pagebar-left">Showing <b>' + from + '–' + to + '</b> of <b>' + total + '</b>' +
-        ' &nbsp;·&nbsp; Rows: ' +
-        '<select onchange="' + sizeFn + '(this.value)" style="padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;margin-left:4px;">' +
+        '<div class="rv2-pagebar-left"><span>Showing <b>' + from + '–' + to + '</b> of <b>' + total + '</b></span>' +
+        '<span style="color:#cbd5e1;">·</span>' +
+        '<span>Rows</span>' +
+        '<select onchange="' + sizeFn + '(this.value)" style="padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;">' +
         [10,20,50].map(function(n){ return '<option value="'+n+'"'+(n===pageSize?' selected':'')+'>'+n+'</option>'; }).join('') +
         '</select></div>' +
         '<div class="rv2-pagebar-right">' +
@@ -10449,9 +10450,11 @@ var RV2_CK_COLS = [
     { key:'os',        label:'OS',      def:false, align:'left', sort:'os',        render:function(c){ return escHtml((c.os||'')+(c.osVer?' '+c.osVer:'')||'-'); } },
     { key:'device',    label:'Device',  def:true,  align:'left', sort:'device',    render:function(c){ return escHtml(c.device||'-'); } },
     { key:'isp',       label:'ISP',     def:false, align:'left', sort:'isp',       render:function(c){ return '<span style="font-size:11px;">'+escHtml(c.isp||c.org||'-')+'</span>'; } },
-    { key:'sub1',      label:'Sub ID',  def:true,  align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
+    { key:'sub1',      label:'Sub1',    def:true,  align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
     { key:'sub2',      label:'Sub2',    def:false, align:'left', sort:'sub2',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub2||'-')+'</span>'; } },
     { key:'sub3',      label:'Sub3',    def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } },
+    { key:'sub4',      label:'Sub4',    def:false, align:'left', sort:'sub4',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub4||'-')+'</span>'; } },
+    { key:'sub5',      label:'Sub5',    def:false, align:'left', sort:'sub5',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub5||'-')+'</span>'; } },
     { key:'fbclid',    label:'FB Click ID', def:false, align:'left', sort:'fbclid', render:function(c){ return c.fbclid ? '<span style="font-family:monospace;font-size:10.5px;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.fbclid)+'">'+escHtml(c.fbclid)+'</span>' : '<span class="muted">-</span>'; } },
     { key:'deviceId',  label:'Device ID', def:false, align:'left', sort:'deviceId', render:function(c){ return c.deviceId ? '<span style="font-family:monospace;font-size:10.5px;max-width:150px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.deviceId)+'">'+escHtml(c.deviceId)+'</span>' : '<span class="muted">-</span>'; } },
     { key:'fingerprint', label:'Fingerprint', def:false, align:'left', sort:'fingerprint', render:function(c){ return c.fingerprint ? '<span style="font-family:monospace;font-size:10.5px;max-width:140px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;" title="'+escHtml(c.fingerprint)+'">'+escHtml(c.fingerprint)+'</span>' : '<span class="muted">-</span>'; } },
@@ -10467,7 +10470,7 @@ function rv2RenderClickLogs() {
             _id:c._id, timestamp:c.timestamp||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
             ip:c.ip||'', country:c.country||'', countryName:c.countryName||'', city:c.city||'', region:c.region||'',
             platform:rv2PlatformOf(c.referer), browser:c.browser||'', os:c.os||'', osVer:c.osVer||'', device:c.device||'',
-            isp:c.isp||'', org:c.org||'', sub1:c.sub1||'', sub2:c.sub2||'', sub3:c.sub3||'', fbclid:c.fbclid||'',
+            isp:c.isp||'', org:c.org||'', sub1:c.sub1||'', sub2:c.sub2||'', sub3:c.sub3||'', sub4:c.sub4||'', sub5:c.sub5||'', fbclid:c.fbclid||'',
             deviceId:c.deviceId||'', fingerprint:c.fingerprint||'',
             converted:c.converted?1:0, referer:c.referer
         };
@@ -10592,9 +10595,11 @@ var RV2_CV_COLS = [
     { key:'convId',    label:'Conversion ID', def:false, align:'left', sort:'_id',    render:function(c){ return '<span style="font-family:monospace;font-size:10.5px;color:#0a6c80;">'+escHtml(c._id)+'</span>'; } },
     { key:'clickId',   label:'Click ID',   def:false, align:'left', sort:'clickId',   render:function(c){ return c.clickId ? '<span style="font-family:monospace;font-size:10.5px;">'+escHtml(c.clickId)+'</span>' : '<span class="muted">-</span>'; } },
     { key:'ip',        label:'IP',         def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
-    { key:'sub1',      label:'Sub ID',     def:false, align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
+    { key:'sub1',      label:'Sub1',       def:false, align:'left', sort:'sub1',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub1||'-')+'</span>'; } },
     { key:'sub2',      label:'Sub2',       def:false, align:'left', sort:'sub2',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub2||'-')+'</span>'; } },
-    { key:'sub3',      label:'Sub3',       def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } }
+    { key:'sub3',      label:'Sub3',       def:false, align:'left', sort:'sub3',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub3||'-')+'</span>'; } },
+    { key:'sub4',      label:'Sub4',       def:false, align:'left', sort:'sub4',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub4||'-')+'</span>'; } },
+    { key:'sub5',      label:'Sub5',       def:false, align:'left', sort:'sub5',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub5||'-')+'</span>'; } }
 ];
 function rv2RenderConvLogs() {
     var convs = rv2FilterConvs().map(function(c){
@@ -10610,7 +10615,7 @@ function rv2RenderConvLogs() {
             browser:click?(click.browser||''):'',
             device:click?(click.device||''):'',
             isp:click?(click.isp||click.org||''):'',
-            sub1:c.sub1||(click?click.sub1:'')||'', sub2:click?(click.sub2||''):'', sub3:click?(click.sub3||''):''};
+            sub1:c.sub1||(click?click.sub1:'')||'', sub2:click?(click.sub2||''):'', sub3:click?(click.sub3||''):'', sub4:click?(click.sub4||''):'', sub5:click?(click.sub5||''):''};
     });
     var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
     rv2SortRows(convs, cSortField, rv2State.sortDir);
