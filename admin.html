@@ -2574,8 +2574,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div></div>
 
 <!-- Invoice Detail Modal (Admin) -->
-<div class="modal-overlay" id="invoiceDetailModal"><div class="modal-panel" style="max-width:820px;">
-    <div class="modal-header"><h3><i class="fas fa-file-invoice"></i> Invoice Detail — <span id="invDetailNumber"></span></h3><button class="modal-close" onclick="closeModal('invoiceDetailModal')">&times;</button></div>
+<div class="modal-overlay" id="invoiceDetailModal"><div class="modal-panel" style="max-width:860px;padding:0;overflow:hidden;">
+    <!-- Gradient hero header -->
+    <div style="background:linear-gradient(135deg,#0a6c80 0%,#085a6b 55%,#0d4f5c 100%);padding:22px 26px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);"></div>
+        <button class="modal-close" onclick="closeModal('invoiceDetailModal')" style="position:absolute;top:16px;right:18px;color:#fff;opacity:.85;z-index:2;">&times;</button>
+        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;position:relative;z-index:1;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i> Invoice</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:5px;position:relative;z-index:1;flex-wrap:wrap;">
+            <span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.3px;" id="invDetailNumber"></span>
+            <span id="invDetailStatusPill"></span>
+        </div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:4px;position:relative;z-index:1;" id="invDetailHeroSub"></div>
+        <!-- Stat strip -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;position:relative;z-index:1;" id="invDetailHeroStats"></div>
+    </div>
     <div class="modal-body" style="padding:0;">
         <!-- General Section -->
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
@@ -5820,6 +5832,25 @@ function openInvoiceDetail(invId) {
     var balance = billed - paid;
     var startD = inv.startDate ? fmtDate(inv.startDate) : (inv.dateFrom || '-');
     var endD = inv.endDate ? fmtDate(inv.endDate) : (inv.dateTo || '-');
+
+    /* Hero header: status pill + sub + stat strip */
+    var stCfg = {
+        paid:    { bg:'#dcfce7', fg:'#15803d', label:'Paid' },
+        unpaid:  { bg:'rgba(255,255,255,.18)', fg:'#fff', label:'Unpaid' },
+        delayed: { bg:'#dbeafe', fg:'#1d4ed8', label:'Delayed' },
+        hold:    { bg:'#fee2e2', fg:'#b91c1c', label:'On Hold' }
+    }[inv.status || 'unpaid'] || { bg:'rgba(255,255,255,.18)', fg:'#fff', label:(inv.status||'Unpaid') };
+    document.getElementById('invDetailStatusPill').innerHTML = '<span style="background:' + stCfg.bg + ';color:' + stCfg.fg + ';font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;">' + stCfg.label.toUpperCase() + '</span>';
+    document.getElementById('invDetailHeroSub').textContent = getUserName(inv.affiliateId) + ' · ' + startD + ' → ' + endD;
+    function heroStat(lbl, val, color) {
+        return '<div style="background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:11px;padding:11px 14px;">' +
+            '<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">' + lbl + '</div>' +
+            '<div style="font-size:19px;font-weight:800;color:' + (color||'#fff') + ';letter-spacing:-.3px;">' + val + '</div></div>';
+    }
+    document.getElementById('invDetailHeroStats').innerHTML =
+        heroStat('Billed', fmtMoney(billed), '#fff') +
+        heroStat('Paid', fmtMoney(paid), '#86efac') +
+        heroStat('Balance', fmtMoney(balance), balance > 0.005 ? '#fca5a5' : '#86efac');
     function detailCell(label, val) {
         return '<div><div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#999;margin-bottom:3px;">' + label + '</div><div style="font-size:13px;font-weight:600;color:#222;">' + val + '</div></div>';
     }
