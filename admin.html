@@ -5880,11 +5880,19 @@ function openInvoiceDetail(invId) {
         var l = s ? (s.charAt(0).toUpperCase() + s.slice(1)) : 'Pending';
         return '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:' + c + ';display:inline-block;"></span><span style="font-size:12px;font-weight:600;color:' + c + ';">' + l + '</span></span>';
     };
-    var methodLabel = { paypal:'PayPal', wire:'Wire Transfer', ach:'ACH', usdt:'USDT', payoneer:'Payoneer' }[pmt.method] || (pmt.method || '-');
+    /* For UNPAID invoices, resolve the affiliate's CURRENT primary payout live
+       (so updates the affiliate makes reflect immediately). For paid invoices,
+       keep the stored snapshot as the historical record. */
+    var payMethod = pmt.method, paySummary = pmt.methodSummary;
+    if ((inv.status || 'unpaid') !== 'paid') {
+        var affRec = (allUsers||[]).filter(function(u){ return u._id === inv.affiliateId; })[0];
+        if (affRec) { var live = getAffPrimaryPayout(affRec); payMethod = live.method; paySummary = live.methodSummary; }
+    }
+    var methodLabel = { paypal:'PayPal', wire:'Wire Transfer', ach:'ACH', usdt:'USDT', payoneer:'Payoneer' }[payMethod] || (payMethod || '-');
     document.getElementById('invDetailPayment').innerHTML =
         detailCell('Payment Status', pmtStatusDot(pmt.status || 'pending')) +
         detailCell('Payout Method', '<span style="font-weight:700;color:#0A6C80;">' + escHtml(methodLabel) + '</span>') +
-        detailCell('Pay To', pmt.methodSummary ? '<span style="font-family:monospace;font-size:11px;">' + escHtml(pmt.methodSummary) + '</span>' : '<span style="color:#f59e0b;">Affiliate has not set details</span>') +
+        detailCell('Pay To', paySummary ? '<span style="font-family:monospace;font-size:11px;">' + escHtml(paySummary) + '</span>' : '<span style="color:#f59e0b;">Affiliate has not set details</span>') +
         detailCell('Approved At', pmt.approvedAt ? fmtDate(pmt.approvedAt) : '-') +
         detailCell('Completed At', pmt.completedAt ? fmtDate(pmt.completedAt) : '-') +
         detailCell('Amount Invoiced', fmtMoney(billed)) +
