@@ -2945,7 +2945,7 @@ function dayEnd(d) { var dt = new Date(d); dt.setHours(23,59,59,999); return dt.
 function calcPct(today, yesterday) { if (yesterday === 0 && today === 0) return 0; if (yesterday === 0) return today > 0 ? 100 : 0; return ((today - yesterday) / yesterday * 100); }
 function toast(msg, type) { var t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + (type || 'success') + ' show'; setTimeout(function() { t.className = 'toast'; }, 3000); }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) { var el = document.getElementById(id); if (!el) return; el.classList.remove('open'); el.style.opacity = ''; el.style.pointerEvents = ''; el.style.display = ''; }
 function getOfferName(id) { for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === id) return allOffers[i].name || id; } return id || '-'; }
 function getUserName(uid) { for (var i = 0; i < allUsers.length; i++) { if (allUsers[i]._id === uid) return allUsers[i].name || allUsers[i].email || uid; } return uid || '-'; }
 function getUserEmail(uid) { for (var i = 0; i < allUsers.length; i++) { if (allUsers[i]._id === uid) return allUsers[i].email || ''; } return ''; }
@@ -8622,14 +8622,17 @@ function openAffProfile(uid) {
 
     document.getElementById('apSecurityContent').innerHTML = '';
     document.getElementById('apInvoicesContent').innerHTML = '';
-    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('clicks'), fbGet('conversions'), fbGet('loginLogs/' + uid), fbGet('adminAlerts'), fbGet('payments/invoices')]).then(function(res) {
+    /* Use in-memory globals for the heavy collections (already loaded); only
+       fetch the small/fresh per-affiliate data. Avoids re-downloading
+       thousands of clicks which could hang the modal on "Loading...". */
+    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('loginLogs/' + uid), fbGet('adminAlerts')]).then(function(res) {
         var u = res[0] || {};
         var pay = res[1] || {};
-        var clicks = objToArr(res[2]).filter(function(c) { return c.affiliateId === uid; });
-        var convs = objToArr(res[3]).filter(function(c) { return c.affiliateId === uid && c.status === 'approved'; });
-        var loginLogs = objToArr(res[4] || {}).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
-        var secAlerts = objToArr(res[5] || {}).filter(function(a){ return a.affiliateId === uid; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
-        var affInvoices = objToArr(res[6] || {}).filter(function(i){ return i.affiliateId === uid; }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+        var clicks = (allClicks || []).filter(function(c) { return c.affiliateId === uid; });
+        var convs = (allConversions || []).filter(function(c) { return c.affiliateId === uid && c.status === 'approved'; });
+        var loginLogs = objToArr(res[2] || {}).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
+        var secAlerts = objToArr(res[3] || {}).filter(function(a){ return a.affiliateId === uid; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
+        var affInvoices = (allInvoices || []).filter(function(i){ return i.affiliateId === uid; }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
 
         /* Title */
         document.getElementById('affProfTitle').textContent = (u.name || 'Affiliate') + (u.affId ? ' (#' + u.affId + ')' : '');
@@ -8766,6 +8769,8 @@ function openAffProfile(uid) {
             iHtml += '</tbody></table></div>';
         }
         document.getElementById('apInvoicesContent').innerHTML = iHtml;
+    }).catch(function(err) {
+        document.getElementById('apProfileContent').innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;font-size:13px;"><i class="fas fa-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:10px;"></i>Could not load profile data.<div style="font-size:11px;color:#94a3b8;margin-top:6px;">' + escHtml(err && err.message ? err.message : String(err)) + '</div></div>';
     });
 }
 
