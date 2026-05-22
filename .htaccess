@@ -9,3 +9,12 @@ RewriteRule ^api/click$ /api/click.html [L,QSA]
 # Postback: PHP handler for server-to-server (S2S) postbacks
 RewriteCond %{REQUEST_URI} ^/api/postback$ [NC]
 RewriteRule ^api/postback$ /api/postback.php [L,QSA]
+
+# Never cache HTML — always serve the freshest admin/affiliate panels
+<FilesMatch "\.(html|htm)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </IfModule>
+</FilesMatch>
