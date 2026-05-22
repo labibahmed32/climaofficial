@@ -25,6 +25,14 @@
       ".read": true,
       ".write": true
     },
+    "loginLogs": {
+      ".read": true,
+      ".write": true
+    },
+    "adminAlerts": {
+      ".read": true,
+      ".write": true
+    },
     "clickDedup": {
       ".read": true,
       ".write": true

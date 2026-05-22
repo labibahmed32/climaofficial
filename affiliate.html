@@ -3535,10 +3535,12 @@ function _payMethodSummary(pay, method) {
     return '';
 }
 function setPrimaryMethod(method) {
+    var labels = { paypal:'PayPal', wire:'Wire Transfer', ach:'ACH', usdt:'USDT', payoneer:'Payoneer' };
     fbPatch('users/' + myUid + '/payment', { primaryMethod: method }).then(function() {
         if (currentUser && currentUser.payment) currentUser.payment.primaryMethod = method;
         toast('Primary payment method updated');
         renderSavedPayMethods();
+        logAdminAlert('payment_change', 'set primary payout method to ' + (labels[method] || method));
     }).catch(function() { toast('Failed to update', 'error'); });
 }
 function renderSavedPayMethods() {

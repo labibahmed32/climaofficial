@@ -2470,6 +2470,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="aff-prof-tab active" onclick="switchAffProfTab('profile')" id="apTab-profile"><i class="fas fa-user"></i> Profile</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('payment')" id="apTab-payment"><i class="fas fa-credit-card"></i> Payment Methods</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('activity')" id="apTab-activity"><i class="fas fa-chart-line"></i> Activity</button>
+            <button class="aff-prof-tab" onclick="switchAffProfTab('security')" id="apTab-security"><i class="fas fa-shield-alt"></i> Security &amp; Logins</button>
         </div>
         <!-- Tab: Profile -->
         <div class="aff-prof-panel active" id="apPanel-profile" style="padding:20px;">
@@ -2482,6 +2483,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <!-- Tab: Activity -->
         <div class="aff-prof-panel" id="apPanel-activity" style="padding:20px;">
             <div id="apActivityContent">Loading...</div>
+        </div>
+        <!-- Tab: Security & Logins -->
+        <div class="aff-prof-panel" id="apPanel-security" style="padding:20px;">
+            <div id="apSecurityContent">Loading...</div>
         </div>
     </div>
     <div class="modal-footer">
@@ -8366,9 +8371,10 @@ function loginAsAffiliate(uid) {
 
 /* ===== AFFILIATE PROFILE VIEW ===== */
 function switchAffProfTab(tab) {
-    ['profile','payment','activity'].forEach(function(t) {
-        document.getElementById('apTab-' + t).classList.toggle('active', t === tab);
-        document.getElementById('apPanel-' + t).classList.toggle('active', t === tab);
+    ['profile','payment','activity','security'].forEach(function(t) {
+        var tEl = document.getElementById('apTab-' + t), pEl = document.getElementById('apPanel-' + t);
+        if (tEl) tEl.classList.toggle('active', t === tab);
+        if (pEl) pEl.classList.toggle('active', t === tab);
     });
 }
 
@@ -8384,11 +8390,14 @@ function openAffProfile(uid) {
     document.getElementById('apEditBtn').setAttribute('onclick', "closeModal('affProfileModal');openAffModal('" + uid + "')");
     document.getElementById('apLoginBtn').setAttribute('onclick', "loginAsAffiliate('" + uid + "')");
 
-    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('clicks'), fbGet('conversions')]).then(function(res) {
+    document.getElementById('apSecurityContent').innerHTML = '';
+    Promise.all([fbGet('users/' + uid), fbGet('users/' + uid + '/payment'), fbGet('clicks'), fbGet('conversions'), fbGet('loginLogs/' + uid), fbGet('adminAlerts')]).then(function(res) {
         var u = res[0] || {};
         var pay = res[1] || {};
         var clicks = objToArr(res[2]).filter(function(c) { return c.affiliateId === uid; });
         var convs = objToArr(res[3]).filter(function(c) { return c.affiliateId === uid && c.status === 'approved'; });
+        var loginLogs = objToArr(res[4] || {}).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
+        var secAlerts = objToArr(res[5] || {}).filter(function(a){ return a.affiliateId === uid; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
 
         /* Title */
         document.getElementById('affProfTitle').textContent = (u.name || 'Affiliate') + (u.affId ? ' (#' + u.affId + ')' : '');
@@ -8417,9 +8426,9 @@ function openAffProfile(uid) {
         pHtml += '</div>';
         document.getElementById('apProfileContent').innerHTML = pHtml;
 
-        /* Payment Tab */
-        var activeMethod = pay.method || 'none';
-        var payHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-mid);">Active method: <strong style="color:var(--primary);">' + escHtml(activeMethod.toUpperCase()) + '</strong></div>';
+        /* Payment Tab — highlight the PRIMARY method */
+        var activeMethod = pay.primaryMethod || pay.method || 'none';
+        var payHtml = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-mid);">Primary payout method: <strong style="color:var(--primary);">' + escHtml(activeMethod.toUpperCase()) + '</strong></div>';
         /* PayPal */
         var pp = pay.paypal || {};
         payHtml += apPayCard('PayPal', 'fab fa-paypal', activeMethod === 'paypal', [['Email', pp.email]]);
@@ -8455,6 +8464,42 @@ function openAffProfile(uid) {
         aHtml += apField('Conversion Rate', clicks.length > 0 ? ((convs.length / clicks.length) * 100).toFixed(1) + '%' : '0%');
         aHtml += '</div>';
         document.getElementById('apActivityContent').innerHTML = aHtml;
+
+        /* Security & Logins Tab */
+        var sHtml = '';
+        /* Account security events */
+        sHtml += '<div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:10px;"><i class="fas fa-key" style="color:var(--primary);margin-right:6px;"></i> Account Security Events</div>';
+        if (!secAlerts.length) {
+            sHtml += '<div style="font-size:12.5px;color:var(--text-mid);padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:22px;">No password or email changes recorded.</div>';
+        } else {
+            sHtml += '<div style="border:1px solid #e2e8f0;border-radius:9px;overflow:hidden;margin-bottom:22px;">';
+            secAlerts.slice(0,10).forEach(function(a){
+                var ic = a.type==='password_change'?{i:'fa-key',c:'#d97706'}:(a.type==='email_change'?{i:'fa-envelope',c:'#2563eb'}:{i:'fa-shield-alt',c:'#64748b'});
+                sHtml += '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid #f1f5f9;">' +
+                    '<div style="width:32px;height:32px;border-radius:8px;background:'+ic.c+'18;color:'+ic.c+';display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;"><i class="fas '+ic.i+'"></i></div>' +
+                    '<div style="flex:1;"><div style="font-size:12.5px;color:var(--text-dark);font-weight:500;">'+escHtml(a.message||a.type||'security event')+'</div>' +
+                    '<div style="font-size:11px;color:var(--text-mid);margin-top:2px;">'+fmtDateTime(a.timestamp)+'</div></div></div>';
+            });
+            sHtml += '</div>';
+        }
+        /* Login activity */
+        sHtml += '<div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:4px;"><i class="fas fa-history" style="color:var(--primary);margin-right:6px;"></i> Login Activity</div>';
+        sHtml += '<div style="font-size:11.5px;color:var(--text-mid);margin-bottom:10px;">Last 20 logins · IP, location, device</div>';
+        if (!loginLogs.length) {
+            sHtml += '<div style="font-size:12.5px;color:var(--text-mid);padding:14px;background:#f8fafc;border-radius:8px;">No login activity recorded yet.</div>';
+        } else {
+            sHtml += '<div style="overflow-x:auto;"><table class="data-table" style="font-size:12px;"><thead><tr><th>Date &amp; Time</th><th>IP</th><th>Location</th><th>Device / Browser</th><th>ISP</th></tr></thead><tbody>';
+            loginLogs.slice(0,20).forEach(function(log){
+                var loc = [log.city, log.region, log.countryName||log.country].filter(Boolean).join(', ') || '-';
+                var dev = ((log.device||'')+(log.browser?' · '+log.browser:'')+(log.os?' · '+log.os:'')).replace(/^ · /,'') || '-';
+                sHtml += '<tr><td style="white-space:nowrap;">'+fmtDateTime(log.timestamp)+'</td>' +
+                    '<td style="font-family:monospace;font-size:11px;">'+escHtml(log.ip||'-')+'</td>' +
+                    '<td>'+escHtml(loc)+'</td><td>'+escHtml(dev)+'</td>' +
+                    '<td>'+escHtml(log.isp||'-')+'</td></tr>';
+            });
+            sHtml += '</tbody></table></div>';
+        }
+        document.getElementById('apSecurityContent').innerHTML = sHtml;
     });
 }
 
@@ -9503,7 +9548,8 @@ function rv2BuildAdmFeed() {
     _admAlerts.forEach(function(a){
         var cfg = {
             password_change: { icon:'fa-key',     bg:'#fef3c7', fg:'#d97706' },
-            email_change:    { icon:'fa-envelope', bg:'#dbeafe', fg:'#2563eb' }
+            email_change:    { icon:'fa-envelope', bg:'#dbeafe', fg:'#2563eb' },
+            payment_change:  { icon:'fa-credit-card', bg:'#dcfce7', fg:'#16a34a' }
         }[a.type] || { icon:'fa-shield-alt', bg:'#f1f5f9', fg:'#64748b' };
         feed.push({ ts:a.timestamp||0, icon:cfg.icon, bg:cfg.bg, fg:cfg.fg,
             title:'<b>'+escHtml(a.affiliateName||'Affiliate')+'</b> '+escHtml(a.message||'security event'),
@@ -9557,7 +9603,9 @@ function rv2ShowAlertDetail(alertId) {
         password_change: { icon:'fa-key', color:'#d97706', label:'Password Changed',
             action:'The affiliate updated their account password. No action needed unless this looks suspicious — if the affiliate did not make this change, reset their access and contact them.' },
         email_change: { icon:'fa-envelope', color:'#2563eb', label:'Email Change Requested',
-            action:'The affiliate requested an email change. A verification link was sent to the new address; the change completes only after they confirm. Verify the affiliate initiated this if unsure.' }
+            action:'The affiliate requested an email change. A verification link was sent to the new address; the change completes only after they confirm. Verify the affiliate initiated this if unsure.' },
+        payment_change: { icon:'fa-credit-card', color:'#16a34a', label:'Payout Method Changed',
+            action:'The affiliate changed their primary payout method. Open their profile → Payment Methods to confirm the new details before processing any pending invoice.' }
     }[a.type] || { icon:'fa-shield-alt', color:'#64748b', label:'Security Event', action:'Review this account activity.' };
     var m = document.getElementById('admAlertDetailModal');
     if (!m) {
@@ -9578,7 +9626,7 @@ function rv2ShowAlertDetail(alertId) {
         '<div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;font-size:12.5px;color:#475569;line-height:1.6;"><b style="color:#0f172a;">Recommended action:</b><br>'+typeCfg.action+'</div>' +
         '</div>' +
         '<div style="padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:8px;">' +
-        '<button onclick="goPage(\'affiliates\');document.getElementById(\'admAlertDetailModal\').style.display=\'none\';document.getElementById(\'admNotifPanel\').classList.remove(\'open\');" style="background:#f1f5f9;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:12.5px;font-weight:600;color:#475569;"><i class="fas fa-user"></i> View Affiliate</button>' +
+        '<button onclick="document.getElementById(\'admAlertDetailModal\').style.display=\'none\';document.getElementById(\'admNotifPanel\').classList.remove(\'open\');' + (a.affiliateId ? 'openAffProfile(\''+a.affiliateId+'\');' : 'goPage(\'affiliates\');') + '" style="background:#f1f5f9;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:12.5px;font-weight:600;color:#475569;"><i class="fas fa-user"></i> View Profile</button>' +
         '<button onclick="document.getElementById(\'admAlertDetailModal\').style.display=\'none\'" style="background:#0a6c80;color:#fff;border:none;border-radius:8px;padding:9px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Close</button>' +
         '</div></div>';
     m.style.display = 'flex';
