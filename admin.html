@@ -8609,7 +8609,8 @@ function switchAffProfTab(tab) {
 }
 
 function openAffProfile(uid) {
-    openModal('affProfileModal'); /* adds .open — .modal-overlay is opacity:0 without it */
+    var m = document.getElementById('affProfileModal');
+    if (m) { m.classList.add('open'); m.style.opacity = '1'; m.style.pointerEvents = 'auto'; m.style.display = 'flex'; }
     document.getElementById('apProfileContent').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-mid);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     document.getElementById('apPaymentContent').innerHTML = '';
     document.getElementById('apActivityContent').innerHTML = '';
