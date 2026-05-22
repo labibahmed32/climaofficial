@@ -556,6 +556,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* === MODALS === */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
+/* Full-page invoice view — not a floating popup */
+.modal-overlay.inv-fullpage{background:#eef1f5;backdrop-filter:none;align-items:stretch;justify-content:stretch;padding:0;}
+.inv-fullpage-panel{width:100% !important;max-width:none !important;height:100vh;max-height:100vh !important;border-radius:0 !important;display:flex;flex-direction:column;box-shadow:none !important;transform:translateY(12px);transition:transform .25s cubic-bezier(.32,.72,0,1);}
+.modal-overlay.inv-fullpage.open .inv-fullpage-panel{transform:translateY(0);}
+.inv-fullpage-panel > .modal-body{flex:1;overflow-y:auto;}
+.inv-fullpage-inner{max-width:1000px;margin:0 auto;width:100%;}
 .modal-panel{background:#fff;border-radius:12px;width:90%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);}
 .modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--card-border);position:sticky;top:0;background:#fff;z-index:1;border-radius:12px 12px 0 0;}
 .modal-header h3{font-size:17px;font-weight:700;color:var(--primary);}
@@ -2579,21 +2585,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div></div>
 
 <!-- Invoice Detail Modal (Admin) -->
-<div class="modal-overlay" id="invoiceDetailModal"><div class="modal-panel" style="max-width:860px;padding:0;overflow:hidden;">
+<div class="modal-overlay inv-fullpage" id="invoiceDetailModal"><div class="modal-panel inv-fullpage-panel" style="padding:0;overflow:hidden;">
     <!-- Gradient hero header -->
-    <div style="background:linear-gradient(135deg,#0a6c80 0%,#085a6b 55%,#0d4f5c 100%);padding:22px 26px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-40px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);"></div>
-        <button class="modal-close" onclick="closeModal('invoiceDetailModal')" style="position:absolute;top:16px;right:18px;color:#fff;opacity:.85;z-index:2;">&times;</button>
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;position:relative;z-index:1;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i> Invoice</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:5px;position:relative;z-index:1;flex-wrap:wrap;">
-            <span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.3px;" id="invDetailNumber"></span>
-            <span id="invDetailStatusPill"></span>
+    <div style="background:linear-gradient(135deg,#0a6c80 0%,#085a6b 55%,#0d4f5c 100%);padding:18px 0 22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:8%;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
+        <div class="inv-fullpage-inner" style="padding:0 26px;position:relative;z-index:1;">
+            <button onclick="closeModal('invoiceDetailModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'"><i class="fas fa-arrow-left"></i> Back to Payments</button>
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i> Invoice</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:5px;flex-wrap:wrap;">
+                <span style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px;" id="invDetailNumber"></span>
+                <span id="invDetailStatusPill"></span>
+            </div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:4px;" id="invDetailHeroSub"></div>
+            <!-- Stat strip -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px;max-width:560px;" id="invDetailHeroStats"></div>
         </div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:4px;position:relative;z-index:1;" id="invDetailHeroSub"></div>
-        <!-- Stat strip -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;position:relative;z-index:1;" id="invDetailHeroStats"></div>
     </div>
-    <div class="modal-body" style="padding:0;">
+    <div class="modal-body" style="padding:0;"><div class="inv-fullpage-inner">
         <!-- General Section -->
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
             <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:12px;">General</div>
@@ -2602,15 +2610,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <!-- Details Section (line items) -->
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
             <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:12px;">Line Items</div>
-            <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="invDetailTable">
+            <div style="overflow-x:auto;border:1px solid #eef2f6;border-radius:10px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="invDetailTable" class="inv-li-table">
                     <thead><tr style="background:#f8fafc;">
-                        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Offer ID</th>
-                        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Item</th>
-                        <th style="padding:8px 10px;text-align:center;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Qty</th>
-                        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Unit Price</th>
-                        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;">Amount</th>
-                        <th id="invDetailRemoveHdr" style="padding:8px 10px;text-align:center;font-weight:700;color:#555;border-bottom:2px solid #e2e8f0;display:none;">Remove</th>
+                        <th style="padding:10px 14px;text-align:left;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">Offer ID</th>
+                        <th style="padding:10px 14px;text-align:left;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">Item</th>
+                        <th style="padding:10px 14px;text-align:center;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">Qty</th>
+                        <th style="padding:10px 14px;text-align:right;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">Unit Price</th>
+                        <th style="padding:10px 14px;text-align:right;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;">Amount</th>
+                        <th id="invDetailRemoveHdr" style="padding:10px 14px;text-align:center;font-weight:700;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;display:none;"></th>
                     </tr></thead>
                     <tbody id="invDetailItems"></tbody>
                     <tfoot id="invDetailItemsFoot"></tfoot>
@@ -2659,7 +2667,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                 <button class="btn-sm" onclick="downloadInvoicePDF(_currentInvDetail)"><i class="fas fa-file-pdf"></i> Download PDF</button>
             </div>
         </div>
-    </div>
+    </div></div>
 </div></div>
 
 <div class="modal-overlay" id="payStatusModal"><div class="modal-panel" style="max-width:480px;">
@@ -5906,23 +5914,23 @@ function openInvoiceDetail(invId) {
             iTotal += parseFloat(it.amount || 0);
             var unitP = parseFloat(it.unitPrice || 0);
             var qtyCell = invEditable
-                ? '<input type="number" min="0" value="' + (it.quantity || 0) + '" data-unit="' + unitP + '" data-idx="' + idx + '" class="inv-qty-input" onchange="recalcInvDetailRow(this)" style="width:60px;border:1px solid #e2e8f0;border-radius:4px;padding:3px 6px;text-align:center;font-size:12px;">'
-                : (it.quantity || 0);
+                ? '<input type="number" min="0" value="' + (it.quantity || 0) + '" data-unit="' + unitP + '" data-idx="' + idx + '" class="inv-qty-input" onchange="recalcInvDetailRow(this)" style="width:58px;border:1px solid #d6dee7;border-radius:7px;padding:5px 7px;text-align:center;font-size:12.5px;font-weight:600;">'
+                : '<span style="font-weight:600;">' + (it.quantity || 0) + '</span>';
             var removeCell = invEditable
-                ? '<td style="padding:4px 8px;text-align:center;"><button onclick="removeInvDetailRow(this)" data-idx="' + idx + '" style="background:#fef2f2;border:1px solid #fecaca;color:#dc3545;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">&#10005;</button></td>'
+                ? '<td style="padding:8px 14px;text-align:center;"><button onclick="removeInvDetailRow(this)" data-idx="' + idx + '" title="Remove" style="width:26px;height:26px;background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:7px;cursor:pointer;font-size:11px;transition:all .12s;" onmouseover="this.style.background=\'#fee2e2\'" onmouseout="this.style.background=\'#fff\'">&#10005;</button></td>'
                 : '';
-            itemsHtml += '<tr style="border-bottom:1px solid #f0f0f0;" data-idx="' + idx + '" id="invDetailRow_' + idx + '">' +
-                '<td style="padding:8px 10px;font-size:11px;color:#888;">' + escHtml(it.offerId || '-') + '</td>' +
-                '<td style="padding:8px 10px;">' + escHtml(it.offerName || it.offerId || '-') + '</td>' +
-                '<td style="padding:6px 10px;text-align:center;">' + qtyCell + '</td>' +
-                '<td style="padding:8px 10px;text-align:right;">' + fmtMoney(unitP) + '</td>' +
-                '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="invDetailAmt_' + idx + '">' + fmtMoney(it.amount || 0) + '</td>' +
+            itemsHtml += '<tr class="inv-li-row" data-idx="' + idx + '" id="invDetailRow_' + idx + '">' +
+                '<td style="padding:11px 14px;font-family:monospace;font-size:11px;color:#94a3b8;">' + escHtml(it.offerId || '-') + '</td>' +
+                '<td style="padding:11px 14px;font-weight:500;color:#1e293b;">' + escHtml(it.offerName || it.offerId || '-') + '</td>' +
+                '<td style="padding:8px 14px;text-align:center;">' + qtyCell + '</td>' +
+                '<td style="padding:11px 14px;text-align:right;color:#64748b;">' + fmtMoney(unitP) + '</td>' +
+                '<td style="padding:11px 14px;text-align:right;font-weight:700;color:#0f172a;" id="invDetailAmt_' + idx + '">' + fmtMoney(it.amount || 0) + '</td>' +
                 removeCell +
                 '</tr>';
         });
         var colSpan = invEditable ? 5 : 4;
         document.getElementById('invDetailItemsFoot').innerHTML =
-            '<tr style="background:#f8fafc;font-weight:700;"><td colspan="' + colSpan + '" style="padding:8px 10px;text-align:right;">Total Billed:</td><td style="padding:8px 10px;text-align:right;color:var(--primary);" id="invDetailTotalCell">' + fmtMoney(iTotal) + '</td>' + (invEditable ? '<td></td>' : '') + '</tr>';
+            '<tr style="background:#f8fafc;"><td colspan="' + colSpan + '" style="padding:12px 14px;text-align:right;font-weight:700;color:#475569;text-transform:uppercase;font-size:11px;letter-spacing:.5px;">Total Billed</td><td style="padding:12px 14px;text-align:right;color:#0A6C80;font-weight:800;font-size:14px;" id="invDetailTotalCell">' + fmtMoney(iTotal) + '</td>' + (invEditable ? '<td></td>' : '') + '</tr>';
     } else {
         /* Legacy: no items array */
         itemsHtml = '<tr><td colspan="6" style="padding:16px;text-align:center;color:#888;">Legacy invoice — ' + (inv.convCount || 0) + ' conversions — ' + fmtMoney(billed) + '</td></tr>';
