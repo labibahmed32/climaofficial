@@ -5330,8 +5330,13 @@ function saveConversion() {
     var offerId = document.getElementById('cvOffer').value; var affId = document.getElementById('cvAffiliate').value;
     if (!offerId || !affId) { toast('Offer and Affiliate are required', 'error'); return; }
     var convId = genId('conv_');
-    var data = { clickId: document.getElementById('cvClickId').value.trim(), transactionId: document.getElementById('cvTxnId').value.trim(), offerId: offerId, affiliateId: affId, revenue: parseFloat(document.getElementById('cvRevenue').value) || 0, payout: parseFloat(document.getElementById('cvPayout').value) || 0, status: document.getElementById('cvStatus').value, source: 'manual', createdAt: Date.now() };
-    fbPut('conversions/' + convId, data).then(function() { toast('Conversion added!'); closeModal('convModal'); loadConversionsPage(); }).catch(function() { toast('Error saving conversion', 'error'); });
+    var txn = document.getElementById('cvTxnId').value.trim();
+    var data = { clickId: document.getElementById('cvClickId').value.trim(), transactionId: txn, txnId: txn, offerId: offerId, affiliateId: affId, revenue: parseFloat(document.getElementById('cvRevenue').value) || 0, payout: parseFloat(document.getElementById('cvPayout').value) || 0, status: document.getElementById('cvStatus').value, source: 'manual', createdAt: Date.now() };
+    fbPut('conversions/' + convId, data).then(function() {
+        toast('Conversion added! It will appear in the affiliate\'s account and future invoices.');
+        closeModal('convModal');
+        if (typeof loadConversionsPage === 'function') loadConversionsPage();
+    }).catch(function() { toast('Error saving conversion', 'error'); });
 }
 
 /* ===== PAYMENTS ===== */
