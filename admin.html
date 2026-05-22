@@ -6159,8 +6159,7 @@ function saveInvoiceDetailEdit() {
             if (patch.items) { allInvoices[idx2].items = patch.items; allInvoices[idx2].billedAmount = newTotal; allInvoices[idx2].amount = newTotal; }
         }
         openInvoiceDetail(invId);
-        /* Send edit notification email */
-        sendInvoiceEditedEmail(inv, newItems, newTotal);
+        /* Per policy: emails only on invoice created / paid / delayed — no edit email */
     }).catch(function() { toast('Error saving', 'error'); });
 }
 
