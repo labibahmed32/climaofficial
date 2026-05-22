@@ -9492,7 +9492,7 @@ function rv2BuildAdmFeed() {
         }[a.type] || { icon:'fa-shield-alt', bg:'#f1f5f9', fg:'#64748b' };
         feed.push({ ts:a.timestamp||0, icon:cfg.icon, bg:cfg.bg, fg:cfg.fg,
             title:'<b>'+escHtml(a.affiliateName||'Affiliate')+'</b> '+escHtml(a.message||'security event'),
-            read:!!a.read, kind:'security', goto:null });
+            read:!!a.read, kind:'security', alertId:a._id, goto:null });
     });
     /* Pending signups */
     (typeof allSignups !== 'undefined' ? allSignups : []).filter(function(s){ return s.status === 'pending'; }).forEach(function(s){
@@ -9522,14 +9522,51 @@ function renderAdmAlerts() {
     var markAll = document.getElementById('admNotifMarkAll'); if (markAll) markAll.style.display = unread > 0 ? '' : 'none';
     if (!feed.length) { list.innerHTML = '<div class="adm-notif-empty"><i class="fas fa-bell-slash" style="font-size:24px;opacity:.3;display:block;margin-bottom:8px;"></i>No notifications</div>'; return; }
     list.innerHTML = feed.slice(0, 50).map(function(f) {
-        var clickAttr = f.goto ? ' style="cursor:pointer;" onclick="goPage(\''+f.goto+'\');document.getElementById(\'admNotifPanel\').classList.remove(\'open\');"' : '';
+        var clickAttr = '';
+        if (f.kind === 'security' && f.alertId) clickAttr = ' style="cursor:pointer;" onclick="rv2ShowAlertDetail(\''+f.alertId+'\')"';
+        else if (f.goto) clickAttr = ' style="cursor:pointer;" onclick="goPage(\''+f.goto+'\');document.getElementById(\'admNotifPanel\').classList.remove(\'open\');"';
         return '<div class="adm-notif-item' + (f.read?'':' unread') + '"' + clickAttr + '>' +
             '<div class="adm-notif-ic" style="background:'+f.bg+';color:'+f.fg+';"><i class="fas '+f.icon+'"></i></div>' +
             '<div class="adm-notif-body">' +
                 '<div class="adm-notif-title">'+f.title+'</div>' +
-                '<div class="adm-notif-time">'+fmtDateTime(f.ts)+'</div>' +
+                '<div class="adm-notif-time">'+fmtDateTime(f.ts)+(f.kind==='security'?' · <span style="color:#0a6c80;">View details</span>':'')+'</div>' +
             '</div></div>';
     }).join('');
+}
+function rv2ShowAlertDetail(alertId) {
+    var a = _admAlerts.filter(function(x){ return x._id === alertId; })[0];
+    if (!a) return;
+    /* mark this one read */
+    if (!a.read) { a.read = true; fbPatch('adminAlerts/' + alertId, { read: true }); renderAdmAlerts(); }
+    var typeCfg = {
+        password_change: { icon:'fa-key', color:'#d97706', label:'Password Changed',
+            action:'The affiliate updated their account password. No action needed unless this looks suspicious — if the affiliate did not make this change, reset their access and contact them.' },
+        email_change: { icon:'fa-envelope', color:'#2563eb', label:'Email Change Requested',
+            action:'The affiliate requested an email change. A verification link was sent to the new address; the change completes only after they confirm. Verify the affiliate initiated this if unsure.' }
+    }[a.type] || { icon:'fa-shield-alt', color:'#64748b', label:'Security Event', action:'Review this account activity.' };
+    var m = document.getElementById('admAlertDetailModal');
+    if (!m) {
+        m = document.createElement('div'); m.id = 'admAlertDetailModal';
+        m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        m.onclick = function(e){ if (e.target===m) m.style.display='none'; };
+        document.body.appendChild(m);
+    }
+    function r(lbl,val){ return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#64748b;">'+lbl+'</span><span style="color:#0f172a;font-weight:600;text-align:right;word-break:break-all;max-width:60%;">'+val+'</span></div>'; }
+    m.innerHTML = '<div style="background:#fff;border-radius:14px;width:440px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;">' +
+        '<div style="padding:18px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:42px;height:42px;border-radius:11px;background:'+typeCfg.color+'18;color:'+typeCfg.color+';display:flex;align-items:center;justify-content:center;font-size:17px;"><i class="fas '+typeCfg.icon+'"></i></div>' +
+        '<div><div style="font-size:15px;font-weight:800;color:#0f172a;">'+typeCfg.label+'</div><div style="font-size:11.5px;color:#94a3b8;">'+fmtDateTime(a.timestamp)+'</div></div></div>' +
+        '<div style="padding:18px 22px;">' +
+        r('Affiliate', escHtml(a.affiliateName||'-')) +
+        r('Email', escHtml(a.affiliateEmail||'-')) +
+        r('Event', escHtml(a.message||typeCfg.label)) +
+        '<div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;font-size:12.5px;color:#475569;line-height:1.6;"><b style="color:#0f172a;">Recommended action:</b><br>'+typeCfg.action+'</div>' +
+        '</div>' +
+        '<div style="padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:8px;">' +
+        '<button onclick="goPage(\'affiliates\');document.getElementById(\'admAlertDetailModal\').style.display=\'none\';document.getElementById(\'admNotifPanel\').classList.remove(\'open\');" style="background:#f1f5f9;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:12.5px;font-weight:600;color:#475569;"><i class="fas fa-user"></i> View Affiliate</button>' +
+        '<button onclick="document.getElementById(\'admAlertDetailModal\').style.display=\'none\'" style="background:#0a6c80;color:#fff;border:none;border-radius:8px;padding:9px 22px;cursor:pointer;font-size:12.5px;font-weight:600;">Close</button>' +
+        '</div></div>';
+    m.style.display = 'flex';
 }
 function admMarkAllRead() {
     _admAlerts.forEach(function(a){ if (!a.read && a._id) { a.read = true; fbPatch('adminAlerts/' + a._id, { read: true }); } });
