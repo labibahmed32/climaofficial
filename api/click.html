@@ -534,6 +534,10 @@ function buildRedirectUrl(template, clickId, affId, subs) {
     url = url.replace(/\{fbclid\}/g, encodeURIComponent(subs.fbclid||''));
     url = url.replace(/\{gclid\}/g,  encodeURIComponent(subs.gclid||''));
     url = url.replace(/\{ttclid\}/g, encodeURIComponent(subs.ttclid||''));
+    /* {referrer} → the captured traffic source (browser document.referrer, or the
+       ?referrer= URL param as fallback). URL-encoded so it's safe inside a query
+       string, e.g. advertiser Everflow link: ...&source_id={referrer} */
+    url = url.replace(/\{referrer\}/g, encodeURIComponent(subs.referrer||''));
     return url;
 }
 
@@ -683,7 +687,7 @@ function processClick() {
         }
 
         var clickId = genClickId();
-        var subs = { sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5, fbclid:fbclid, gclid:gclid, ttclid:ttclid };
+        var subs = { sub1:sub1, sub2:sub2, sub3:sub3, sub4:sub4, sub5:sub5, fbclid:fbclid, gclid:gclid, ttclid:ttclid, referrer: (document.referrer || referrerParam || '') };
 
         var clickData = {
             /* Core */

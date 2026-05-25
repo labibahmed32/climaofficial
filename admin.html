@@ -1542,6 +1542,33 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 <p style="font-size:13px;color:var(--text-mid);margin-bottom:10px;">Share this URL with advertisers to fire on conversion:</p>
                 <div class="link-output" id="postbackDisplay"><button class="copy-btn" onclick="copyPostback()"><i class="fas fa-copy"></i> Copy</button><span id="postbackText"></span></div>
             </div>
+
+            <!-- ===== TRACKING LINK MACROS REFERENCE ===== -->
+            <div class="settings-card">
+                <h5><i class="fas fa-code"></i> Tracking Link Macros</h5>
+                <p style="font-size:13px;color:var(--text-mid);margin-bottom:6px;">Use these macros inside an offer's <strong>Destination / Final URL</strong>. When a visitor clicks, our tracker replaces each macro with the real value (URL-encoded) before redirecting to the advertiser. Click any macro to copy it.</p>
+                <table class="pb-macro-table">
+                    <thead><tr><th style="width:130px;">Macro</th><th>What it passes</th></tr></thead>
+                    <tbody>
+                        <tr><td onclick="copyPbMacro('{click_id}')" title="Click to copy" style="cursor:pointer;">{click_id}</td><td>Unique click ID our tracker generates. Pass it to the advertiser so the conversion can be tied back via S2S postback. <em>Most important — almost always required.</em></td></tr>
+                        <tr><td onclick="copyPbMacro('{aff_id}')" title="Click to copy" style="cursor:pointer;">{aff_id}</td><td>ID of the affiliate who sent the traffic.</td></tr>
+                        <tr><td onclick="copyPbMacro('{referrer}')" title="Click to copy" style="cursor:pointer;">{referrer}</td><td>Captured traffic source — the browser's referrer, or the link's <code>?referrer=</code> value as fallback. <strong>For Everflow advertisers, map it to Source ID:</strong> <code>&amp;source_id={referrer}</code></td></tr>
+                        <tr><td onclick="copyPbMacro('{sub1}')" title="Click to copy" style="cursor:pointer;">{sub1}</td><td>Custom sub-parameter 1 passed through the tracking link (e.g. campaign).</td></tr>
+                        <tr><td onclick="copyPbMacro('{sub2}')" title="Click to copy" style="cursor:pointer;">{sub2}</td><td>Custom sub-parameter 2 (e.g. ad set).</td></tr>
+                        <tr><td onclick="copyPbMacro('{sub3}')" title="Click to copy" style="cursor:pointer;">{sub3}</td><td>Custom sub-parameter 3 (e.g. creative / ad name).</td></tr>
+                        <tr><td onclick="copyPbMacro('{sub4}')" title="Click to copy" style="cursor:pointer;">{sub4}</td><td>Custom sub-parameter 4 (e.g. placement / ad id).</td></tr>
+                        <tr><td onclick="copyPbMacro('{sub5}')" title="Click to copy" style="cursor:pointer;">{sub5}</td><td>Custom sub-parameter 5 (e.g. site / publisher).</td></tr>
+                        <tr><td onclick="copyPbMacro('{fbclid}')" title="Click to copy" style="cursor:pointer;">{fbclid}</td><td>Facebook Click ID captured from the landing URL.</td></tr>
+                        <tr><td onclick="copyPbMacro('{gclid}')" title="Click to copy" style="cursor:pointer;">{gclid}</td><td>Google Click ID captured from the landing URL.</td></tr>
+                        <tr><td onclick="copyPbMacro('{ttclid}')" title="Click to copy" style="cursor:pointer;">{ttclid}</td><td>TikTok Click ID captured from the landing URL.</td></tr>
+                    </tbody>
+                </table>
+                <div style="margin-top:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#0c4a6e;line-height:1.6;">
+                    <strong><i class="fas fa-lightbulb"></i> Example (Everflow advertiser):</strong><br>
+                    <code style="font-family:monospace;font-size:11.5px;word-break:break-all;color:#7c3aed;">https://trk.advertiser.com/?offer_id=123&amp;affiliate_id=456&amp;sub1={click_id}&amp;source_id={referrer}</code><br>
+                    <span style="color:#475569;">Yahan <code>{click_id}</code> conversion track karne ke liye, aur <code>{referrer}</code> traffic source Everflow ke <strong>Source ID</strong> column mein bhejne ke liye hai.</span>
+                </div>
+            </div>
         </div>
 
         <!-- ===== POSTBACKS ===== -->
