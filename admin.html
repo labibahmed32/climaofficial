@@ -1580,7 +1580,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 <div style="margin-top:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#0c4a6e;line-height:1.6;">
                     <strong><i class="fas fa-lightbulb"></i> Example (Everflow advertiser):</strong><br>
                     <code style="font-family:monospace;font-size:11.5px;word-break:break-all;color:#7c3aed;">https://trk.advertiser.com/?offer_id=123&amp;affiliate_id=456&amp;sub1={click_id}&amp;source_id={referrer}</code><br>
-                    <span style="color:#475569;">Yahan <code>{click_id}</code> conversion track karne ke liye, aur <code>{referrer}</code> traffic source Everflow ke <strong>Source ID</strong> column mein bhejne ke liye hai.</span>
+                    <span style="color:#475569;">Here <code>{click_id}</code> ties back the conversion, and <code>{referrer}</code> sends the traffic source into Everflow's <strong>Source ID</strong> column.</span>
                 </div>
             </div>
             </div><!-- /right column -->
@@ -1589,7 +1589,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
           <!-- ===== GLOBAL POSTBACK BUILDER ===== -->
           <div class="settings-card" style="max-width:none;">
             <h5><i class="fas fa-bullseye"></i> Global Postback Builder</h5>
-            <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;">Advertiser platform chuno, Conversion ya Event select karo, aur jo parameters chahiye unhe toggle karo. Har platform ke sahi macro tokens khud bhar jate hain — zaroorat ho to edit kar lo. Final URL copy karke platform ki postback settings mein daal do.</p>
+            <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;">Choose the advertiser platform, select Conversion or Event, and toggle the parameters you need. The correct macro tokens are filled in per platform — edit any if required. Copy the final URL into the platform's postback settings.</p>
             <div class="pb-build-grid">
               <div class="form-group"><label>Advertiser Platform</label>
                 <select id="pbPlatform" onchange="onPbPlatformChange()">
@@ -7160,8 +7160,8 @@ function buildGlobalPostback() {
     var hint = document.getElementById('pbBuilderHint');
     if (hint) {
         hint.innerHTML = isEvent
-            ? '<strong><i class="fas fa-bolt"></i> Event postback:</strong> ' + escHtml(plat.label) + ' jab koi event fire kare tab ye URL use karo. <code>event_id</code> non-zero hone par humare paas <strong>Event</strong> banega (sale nahi).'
-            : '<strong><i class="fas fa-check-circle"></i> Conversion postback:</strong> ' + escHtml(plat.label) + ' sale par ye URL fire karega → humare paas <strong>CV (sale)</strong> banegi. Event ke liye type "Event" karo.';
+            ? '<strong><i class="fas fa-bolt"></i> Event postback:</strong> use this URL when ' + escHtml(plat.label) + ' fires an event. A non-zero <code>event_id</code> is recorded as an <strong>Event</strong> (not a sale).'
+            : '<strong><i class="fas fa-check-circle"></i> Conversion postback:</strong> ' + escHtml(plat.label) + ' fires this on a sale → recorded as a <strong>CV (sale)</strong>. For events, switch the type to "Event".';
     }
 }
 function copyPbBuilder() { navigator.clipboard.writeText(document.getElementById('pbBuilderText').textContent).then(function() { toast('Postback URL copied!'); }); }
