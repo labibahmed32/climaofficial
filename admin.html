@@ -624,6 +624,10 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 .settings-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:24px;margin-bottom:20px;max-width:700px;}
+/* Link Generator — 2-column layout that fills the page width */
+.linkgen-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
+.linkgen-layout .settings-card{max-width:none;}
+@media(max-width:1100px){.linkgen-layout{grid-template-columns:1fr;}}
 .settings-card h5{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text-dark);padding-bottom:10px;border-bottom:2px solid #F0F2F4;}
 .settings-card h5 i{color:var(--primary);margin-right:8px;}
 /* Settings Accent Strip Cards */
@@ -1520,6 +1524,8 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 
         <!-- ===== LINK GENERATOR ===== -->
         <div class="page-section" id="page-linkgen">
+          <div class="linkgen-layout">
+            <div>
             <div class="settings-card">
                 <h5><i class="fas fa-link"></i> Generate Tracking Link</h5>
                 <div class="form-row">
@@ -1543,8 +1549,10 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 <p style="font-size:13px;color:var(--text-mid);margin-bottom:10px;">Share this URL with advertisers to fire on conversion:</p>
                 <div class="link-output" id="postbackDisplay"><button class="copy-btn" onclick="copyPostback()"><i class="fas fa-copy"></i> Copy</button><span id="postbackText"></span></div>
             </div>
+            </div>
 
-            <!-- ===== TRACKING LINK MACROS REFERENCE ===== -->
+            <!-- ===== RIGHT COLUMN: TRACKING LINK MACROS REFERENCE ===== -->
+            <div>
             <div class="settings-card">
                 <h5><i class="fas fa-code"></i> Tracking Link Macros</h5>
                 <p style="font-size:13px;color:var(--text-mid);margin-bottom:6px;">Use these macros inside an offer's <strong>Destination / Final URL</strong>. When a visitor clicks, our tracker replaces each macro with the real value (URL-encoded) before redirecting to the advertiser. Click any macro to copy it.</p>
@@ -1570,6 +1578,8 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                     <span style="color:#475569;">Yahan <code>{click_id}</code> conversion track karne ke liye, aur <code>{referrer}</code> traffic source Everflow ke <strong>Source ID</strong> column mein bhejne ke liye hai.</span>
                 </div>
             </div>
+            </div><!-- /right column -->
+          </div><!-- /linkgen-layout -->
         </div>
 
         <!-- ===== POSTBACKS ===== -->
