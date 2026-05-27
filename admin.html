@@ -628,6 +628,16 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .linkgen-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
 .linkgen-layout .settings-card{max-width:none;}
 @media(max-width:1100px){.linkgen-layout{grid-template-columns:1fr;}}
+/* Global Postback Builder */
+.pb-build-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.pb-build-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.pb-build-tbl th{background:#f1f5f9;padding:8px 10px;text-align:left;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+.pb-build-tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle;}
+.pb-build-tbl td:nth-child(2){font-family:monospace;font-weight:600;color:var(--primary);}
+.pb-build-tbl input[type="checkbox"]{width:16px;height:16px;cursor:pointer;}
+.pb-mac-inp{width:100%;padding:7px 9px;border:1px solid var(--card-border);border-radius:6px;font-size:12.5px;font-family:monospace;color:#7c3aed;outline:none;}
+.pb-mac-inp:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(10,108,128,.08);}
+@media(max-width:700px){.pb-build-grid{grid-template-columns:1fr;}}
 .settings-card h5{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text-dark);padding-bottom:10px;border-bottom:2px solid #F0F2F4;}
 .settings-card h5 i{color:var(--primary);margin-right:8px;}
 /* Settings Accent Strip Cards */
@@ -1580,6 +1590,44 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
             </div>
             </div><!-- /right column -->
           </div><!-- /linkgen-layout -->
+
+          <!-- ===== GLOBAL POSTBACK BUILDER ===== -->
+          <div class="settings-card" style="max-width:none;">
+            <h5><i class="fas fa-bullseye"></i> Global Postback Builder</h5>
+            <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;">Advertiser platform chuno, Conversion ya Event select karo, aur jo parameters chahiye unhe toggle karo. Har platform ke sahi macro tokens khud bhar jate hain — zaroorat ho to edit kar lo. Final URL copy karke platform ki postback settings mein daal do.</p>
+            <div class="pb-build-grid">
+              <div class="form-group"><label>Advertiser Platform</label>
+                <select id="pbPlatform" onchange="onPbPlatformChange()">
+                  <option value="everflow">Everflow</option>
+                  <option value="oasis">Oasis Ads</option>
+                  <option value="buygoods">BuyGoods</option>
+                  <option value="digistore">Digistore24</option>
+                  <option value="clickbank">ClickBank</option>
+                  <option value="custom">Custom / Other</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Postback Type</label>
+                <select id="pbType" onchange="onPbTypeChange()">
+                  <option value="cv">Conversion (Sale / CV)</option>
+                  <option value="event">Event / Partial</option>
+                </select>
+              </div>
+            </div>
+            <table class="pb-build-tbl">
+              <thead><tr><th style="width:42px;"></th><th style="width:130px;">Parameter</th><th>Platform macro (value sent back)</th></tr></thead>
+              <tbody>
+                <tr><td><input type="checkbox" checked disabled title="Always required"></td><td>click_id <span style="color:#dc3545">*</span></td><td><input type="text" id="pbmClick" class="pb-mac-inp" oninput="buildGlobalPostback()"></td></tr>
+                <tr><td><input type="checkbox" checked disabled title="Always required"></td><td>secret <span style="color:#dc3545">*</span></td><td><input type="text" id="pbmSecret" class="pb-mac-inp" oninput="buildGlobalPostback()" placeholder="YOUR_SECRET"></td></tr>
+                <tr id="pbRowEvent"><td><input type="checkbox" id="pbeEvent" onchange="buildGlobalPostback()"></td><td>event_id</td><td><input type="text" id="pbmEvent" class="pb-mac-inp" oninput="buildGlobalPostback()"></td></tr>
+                <tr><td><input type="checkbox" id="pbeTxn" checked onchange="buildGlobalPostback()"></td><td>txn_id</td><td><input type="text" id="pbmTxn" class="pb-mac-inp" oninput="buildGlobalPostback()"></td></tr>
+                <tr><td><input type="checkbox" id="pbePayout" checked onchange="buildGlobalPostback()"></td><td>payout</td><td><input type="text" id="pbmPayout" class="pb-mac-inp" oninput="buildGlobalPostback()"></td></tr>
+                <tr><td><input type="checkbox" id="pbeRevenue" onchange="buildGlobalPostback()"></td><td>revenue</td><td><input type="text" id="pbmRevenue" class="pb-mac-inp" oninput="buildGlobalPostback()"></td></tr>
+                <tr><td><input type="checkbox" id="pbeStatus" onchange="buildGlobalPostback()"></td><td>status</td><td><input type="text" id="pbmStatus" class="pb-mac-inp" oninput="buildGlobalPostback()" placeholder="approved"></td></tr>
+              </tbody>
+            </table>
+            <div class="link-output" id="pbBuilderOut" style="margin-top:16px;"><button class="copy-btn" onclick="copyPbBuilder()"><i class="fas fa-copy"></i> Copy</button><span id="pbBuilderText"></span></div>
+            <div id="pbBuilderHint" style="margin-top:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:11px 14px;font-size:12.5px;color:#0c4a6e;line-height:1.6;"></div>
+          </div>
         </div>
 
         <!-- ===== POSTBACKS ===== -->
@@ -7022,8 +7070,9 @@ function sendPaymentHoldEmail(payRec) {
 
 /* ===== LINK GENERATOR ===== */
 function loadLinkGen() {
-    Promise.all([fbGet('offers'), fbGet('users'), fbGet('settings/domains')]).then(function(res) {
+    Promise.all([fbGet('offers'), fbGet('users'), fbGet('settings/domains'), fbGet('settings/postback')]).then(function(res) {
         allOffers = objToArr(res[0]); allUsers = objToArr(res[1]); var domains = res[2] || [];
+        if (res[3] && res[3].secretKey) window._cachedPostbackSecret = res[3].secretKey;
         var ofHtml = '<option value="">Select Offer</option>'; allOffers.filter(function(o) { return o.status === 'active'; }).forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('lgOffer').innerHTML = ofHtml;
         var afHtml = '<option value="">Select Affiliate</option>'; allUsers.filter(function(u) { return u.role === 'affiliate' && u.status === 'active'; }).forEach(function(a) { afHtml += '<option value="' + a._id + '">' + escHtml(a.name || a.email) + '</option>'; }); document.getElementById('lgAffiliate').innerHTML = afHtml;
         /* Populate domain dropdown */
@@ -7035,8 +7084,10 @@ function loadLinkGen() {
         if (Array.isArray(domains)) { var def = domains.find(function(d) { return d && d.isDefault; }); if (def) defDomain = def.domain; }
         window._cachedDefaultDomain = defDomain;
         var defDomainUrl = (defDomain && defDomain.indexOf('://') === -1) ? 'https://' + defDomain : defDomain;
-        document.getElementById('postbackText').textContent = defDomainUrl + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&secret=YOUR_SECRET';
+        document.getElementById('postbackText').textContent = defDomainUrl + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&secret=' + (window._cachedPostbackSecret || 'YOUR_SECRET');
         updateLinkPreview();
+        /* Init the Global Postback Builder with the selected platform's macros */
+        if (document.getElementById('pbPlatform')) onPbPlatformChange();
     });
 }
 function updateLinkPreview() {
@@ -7060,6 +7111,66 @@ function updateLinkPreview() {
 }
 function copyLink() { navigator.clipboard.writeText(document.getElementById('linkText').textContent).then(function() { toast('Link copied!'); }); }
 function copyPostback() { navigator.clipboard.writeText(document.getElementById('postbackText').textContent).then(function() { toast('Postback URL copied!'); }); }
+
+/* ── Global Postback Builder ──
+   Per-platform macro tokens. Left = what our /api/postback reads (fixed),
+   right = the platform's macro that fills the value when it fires. */
+var PB_PRESETS = {
+    everflow:  { label:'Everflow',     click:'{sub2}',        payout:'{payout}',           revenue:'{revenue}',       txn:'{transaction_id}', event:'{event_id}' },
+    oasis:     { label:'Oasis Ads',    click:'{s2}',          payout:'{payout}',           revenue:'{revenue}',       txn:'{tid}',            event:'{event_id}' },
+    buygoods:  { label:'BuyGoods',     click:'{subid}',       payout:'{commission}',       revenue:'{amount}',        txn:'{transaction_id}', event:'' },
+    digistore: { label:'Digistore24',  click:'{trackingkey}', payout:'{amount_affiliate}', revenue:'{amount_brutto}', txn:'{order_id}',       event:'' },
+    clickbank: { label:'ClickBank',    click:'{TID}',         payout:'{COMMISSION}',       revenue:'{AMOUNT}',        txn:'{RECEIPT}',        event:'' },
+    custom:    { label:'Custom',       click:'{click_id}',    payout:'{payout}',           revenue:'{revenue}',       txn:'{txn_id}',         event:'{event_id}' }
+};
+function onPbPlatformChange() {
+    var p = PB_PRESETS[document.getElementById('pbPlatform').value] || PB_PRESETS.custom;
+    document.getElementById('pbmClick').value   = p.click;
+    document.getElementById('pbmPayout').value  = p.payout;
+    document.getElementById('pbmRevenue').value = p.revenue;
+    document.getElementById('pbmTxn').value     = p.txn;
+    document.getElementById('pbmEvent').value   = p.event || '{event_id}';
+    if (!document.getElementById('pbmSecret').value) document.getElementById('pbmSecret').value = window._cachedPostbackSecret || 'YOUR_SECRET';
+    if (!document.getElementById('pbmStatus').value) document.getElementById('pbmStatus').value = '{status}';
+    buildGlobalPostback();
+}
+function onPbTypeChange() {
+    var isEvent = document.getElementById('pbType').value === 'event';
+    /* Event type forces event_id on; CV turns it off */
+    document.getElementById('pbeEvent').checked = isEvent;
+    var row = document.getElementById('pbRowEvent');
+    if (row) row.style.background = isEvent ? '#fffdf5' : '';
+    buildGlobalPostback();
+}
+function buildGlobalPostback() {
+    var domain = window._cachedDefaultDomain || window.location.origin;
+    if (domain && domain.indexOf('://') === -1) domain = 'https://' + domain;
+    var click = document.getElementById('pbmClick').value.trim() || '{click_id}';
+    var secret = document.getElementById('pbmSecret').value.trim() || 'YOUR_SECRET';
+    var url = domain + '/api/postback?click_id=' + click + '&secret=' + secret;
+    function add(checkId, key, macroId) {
+        if (document.getElementById(checkId).checked) {
+            var v = document.getElementById(macroId).value.trim();
+            if (v) url += '&' + key + '=' + v;
+        }
+    }
+    add('pbeEvent',   'event_id', 'pbmEvent');
+    add('pbeTxn',     'txn_id',   'pbmTxn');
+    add('pbePayout',  'payout',   'pbmPayout');
+    add('pbeRevenue', 'revenue',  'pbmRevenue');
+    add('pbeStatus',  'status',   'pbmStatus');
+    document.getElementById('pbBuilderText').textContent = url;
+    /* Hint */
+    var isEvent = document.getElementById('pbType').value === 'event';
+    var plat = PB_PRESETS[document.getElementById('pbPlatform').value] || PB_PRESETS.custom;
+    var hint = document.getElementById('pbBuilderHint');
+    if (hint) {
+        hint.innerHTML = isEvent
+            ? '<strong><i class="fas fa-bolt"></i> Event postback:</strong> ' + escHtml(plat.label) + ' jab koi event fire kare tab ye URL use karo. <code>event_id</code> non-zero hone par humare paas <strong>Event</strong> banega (sale nahi).'
+            : '<strong><i class="fas fa-check-circle"></i> Conversion postback:</strong> ' + escHtml(plat.label) + ' sale par ye URL fire karega → humare paas <strong>CV (sale)</strong> banegi. Event ke liye type "Event" karo.';
+    }
+}
+function copyPbBuilder() { navigator.clipboard.writeText(document.getElementById('pbBuilderText').textContent).then(function() { toast('Postback URL copied!'); }); }
 
 /* ── Send New Offer Email to All Active Affiliates ── */
 function sendNewOfferEmails(offer) {
