@@ -106,6 +106,75 @@ if (!$click) {
     exit;
 }
 
+// ===== EVENT / PARTIAL handling =====
+// If event_id is present and not the base (0), this is a post/pre-conversion
+// EVENT — not a sale. Stored in a separate `events` node so the conversion,
+// earnings, cap and invoice logic stays untouched. A click can have many events
+// plus one CV, so events bypass the "already converted" gate.
+$eventId   = isset($_GET['event_id'])   ? trim($_GET['event_id'])   : '';
+$eventName = isset($_GET['event_name']) ? trim($_GET['event_name']) : '';
+$isEvent   = ($eventId !== '' && $eventId !== '0');
+
+if ($isEvent) {
+    $offerId       = $click['offerId'] ?? '';
+    $affiliateId   = $click['affiliateId'] ?? '';
+    $friendlyAffId = $click['affId'] ?? '';
+
+    // Dedup: same click + event_id + transaction_id already recorded
+    if ($txnId !== '') {
+        $allEvents = fbGet('events') ?? [];
+        if (is_array($allEvents)) {
+            foreach ($allEvents as $e) {
+                if (is_array($e)
+                    && ($e['clickId'] ?? '') === $clickId
+                    && (string)($e['eventId'] ?? '') === (string)$eventId
+                    && ($e['transactionId'] ?? '') === $txnId) {
+                    echo 'SUCCESS: Duplicate event ignored (' . $eventId . ')';
+                    exit;
+                }
+            }
+        }
+    }
+
+    $evId  = 'evt_' . genId();
+    $event = [
+        'clickId'       => $clickId,
+        'offerId'       => $offerId,
+        'affiliateId'   => $affiliateId,
+        'affId'         => $friendlyAffId,
+        'eventId'       => $eventId,
+        'eventName'     => $eventName,
+        'type'          => 'event',
+        'revenue'       => $customRevenue ? floatval($customRevenue) : 0,
+        'payout'        => $customPayout ? floatval($customPayout) : 0,
+        'status'        => $status ?: 'approved',
+        'source'        => 'postback',
+        'transactionId' => $txnId,
+        'sub1'          => $click['sub1'] ?? '',
+        'sub2'          => $click['sub2'] ?? '',
+        'ip'            => $click['ip'] ?? '',
+        'isTest'        => $isTest,
+        'createdAt'     => round(microtime(true) * 1000)
+    ];
+    fbPut('events/' . $evId, $event);
+
+    $logId = genId();
+    fbPut('postback-log/' . $logId, [
+        'timestamp'   => round(microtime(true) * 1000),
+        'clickId'     => $clickId,
+        'offerId'     => $offerId,
+        'affiliateId' => $affiliateId,
+        'revenue'     => $event['revenue'],
+        'payout'      => $event['payout'],
+        'processed'   => true,
+        'detail'      => 'EVENT ' . $eventId . ($eventName ? ' (' . $eventName . ')' : '') . ' -> ' . $evId,
+        'rawQuery'    => $_SERVER['QUERY_STRING']
+    ]);
+
+    echo 'SUCCESS: Event recorded (' . $eventId . ')';
+    exit;
+}
+
 // Check if already converted
 if (!empty($click['converted'])) {
     $logId = genId();

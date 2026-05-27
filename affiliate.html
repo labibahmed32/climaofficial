@@ -800,6 +800,7 @@ body.impersonating .impersonate-banner{display:block;}
                     <input type="date" id="cvTo" class="f-inp" onchange="renderAffConv()">
                     <select id="cvOfferF" class="f-sel" onchange="renderAffConv()"><option value="">All Offers</option></select>
                     <select id="cvStatusF" class="f-sel" onchange="renderAffConv()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+                    <select id="cvTypeF" class="f-sel" onchange="renderAffConv()"><option value="cv">Sales (CV)</option><option value="event">Events</option><option value="all">CV + Events</option></select>
                     <button onclick="setAffPreset('today','cv');renderAffConv()" class="f-preset-btn">Today</button>
                     <button onclick="setAffPreset('7d','cv');renderAffConv()" class="f-preset-btn">Last 7 Days</button>
                     <button onclick="setAffPreset('mtd','cv');renderAffConv()" class="f-preset-btn">This Month</button>
@@ -811,7 +812,7 @@ body.impersonating .impersonate-banner{display:block;}
                 <div class="tbl-wrap">
                     <div class="tbl-scroll">
                         <table class="dtbl">
-                            <thead><tr><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Payout</th><th>Status</th><th>Sub1</th><th>Date</th></tr></thead>
+                            <thead><tr><th>Type</th><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Payout</th><th>Status</th><th>Sub1</th><th>Date</th></tr></thead>
                             <tbody id="cvTb"></tbody>
                         </table>
                     </div>
@@ -1363,7 +1364,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var FB = firebaseConfig.databaseURL;
 var currentUser = null, myUid = '', myAffId = '';
-var allOffers = [], myClicks = [], myConversions = [], myPayments = [], myInvoices = [];
+var allOffers = [], myClicks = [], myConversions = [], myPayments = [], myInvoices = [], myEvents = [];
 var dashChart = null, chartType = 'line';
 var PAGE_SIZE = 20;
 var allApplications = {};
@@ -1971,7 +1972,7 @@ function saveAffCache() {
     try {
         localStorage.setItem(_affCacheKey(), JSON.stringify({
             t: Date.now(),
-            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments, invoices: myInvoices
+            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments, invoices: myInvoices, events: myEvents
         }));
     } catch(e) {}
 }
@@ -1984,6 +1985,7 @@ function loadAffCache() {
         if (!p || !p.t || (Date.now() - p.t) > _AFF_CACHE_TTL) return false;
         allOffers = p.offers || []; myClicks = p.clicks || [];
         myConversions = p.conversions || []; myPayments = p.payments || []; myInvoices = p.invoices || [];
+        myEvents = p.events || [];
         return true;
     } catch(e) { return false; }
 }
@@ -1992,13 +1994,14 @@ function loadAllData(onDone, silent) {
     var myVer = ++_affFetchVer;
     _affRefreshing = true;
     if (!silent) { var l = document.getElementById('affDataLoader'); if (l) l.style.display = 'block'; }
-    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices')]).then(function(r) {
+    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices'), fbGet('events')]).then(function(r) {
         if (myVer !== _affFetchVer) return; /* newer fetch superseded this one */
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
         myConversions = objToArr(r[2]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
         myInvoices  = objToArr(r[4]).filter(function(p) { return p.affiliateId === myUid; });
+        myEvents = objToArr(r[5]).filter(function(e) { return e.affiliateId === myUid && !e.isTest; });
         _affRefreshing = false;
         var l2 = document.getElementById('affDataLoader'); if (l2) l2.style.display = 'none';
         if (typeof onDone === 'function') onDone();
@@ -3043,38 +3046,60 @@ var cvPage = 1;
 function renderAffConv() {
     var fD = document.getElementById('cvFrom').value, tD = document.getElementById('cvTo').value;
     var oF = document.getElementById('cvOfferF').value, sF = document.getElementById('cvStatusF').value;
+    var tF = (document.getElementById('cvTypeF') || {}).value || 'cv';
     var fTs = fD ? dayS(new Date(fD)) : 0, tTs = tD ? dayE(new Date(tD)) : Infinity;
-    var fil = myConversions.filter(function(c) {
+    function passes(c) {
         if ((c.createdAt||0) < fTs || (c.createdAt||0) > tTs) return false;
         if (oF && c.offerId !== oF) return false;
         if (sF && c.status !== sF) return false;
         return true;
-    }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
-    /* metrics */
-    var appr = fil.filter(function(c){return c.status==='approved';}), pend = fil.filter(function(c){return c.status==='pending';});
+    }
+    var cvAll = myConversions.filter(passes);
+    var evAll = (myEvents || []).filter(passes);
+    var cvRows = (tF === 'event') ? [] : cvAll.map(function(c){ c._kind='cv'; return c; });
+    var evRows = (tF === 'cv') ? [] : evAll.map(function(e){ e._kind='event'; return e; });
+    var fil = cvRows.concat(evRows).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+    /* metrics — money from CV only, events counted separately */
+    var appr = cvAll.filter(function(c){return c.status==='approved';}), pend = cvAll.filter(function(c){return c.status==='pending';});
     var totEarn = appr.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
     var pendEarn = pend.reduce(function(s,c){return s+(parseFloat(c.payout)||0);},0);
     document.getElementById('cvMetrics').innerHTML =
-        '<div class="ofp-metric"><div class="om-val">'+fil.length+'</div><div class="om-lbl">Total</div></div>' +
+        '<div class="ofp-metric"><div class="om-val">'+cvAll.length+'</div><div class="om-lbl">Sales (CV)</div></div>' +
         '<div class="ofp-metric" style="border-left:3px solid var(--green)"><div class="om-val" style="color:var(--green)">'+appr.length+'</div><div class="om-lbl">Approved</div></div>' +
         '<div class="ofp-metric" style="border-left:3px solid #f59e0b"><div class="om-val" style="color:#f59e0b">'+pend.length+'</div><div class="om-lbl">Pending</div></div>' +
+        '<div class="ofp-metric" style="border-left:3px solid #f9a825"><div class="om-val" style="color:#f9a825">'+evAll.length+'</div><div class="om-lbl">Events</div></div>' +
         '<div class="ofp-metric" style="border-left:3px solid var(--green)"><div class="om-val" style="color:var(--green)">$'+totEarn.toFixed(2)+'</div><div class="om-lbl">Earned</div></div>' +
         '<div class="ofp-metric" style="border-left:3px solid #f59e0b"><div class="om-val" style="color:#f59e0b">$'+pendEarn.toFixed(2)+'</div><div class="om-lbl">Pending Pay</div></div>';
     var st = (cvPage-1)*PAGE_SIZE, pg = fil.slice(st, st+PAGE_SIZE);
     var h = '';
     pg.forEach(function(c) {
-        var st_col = c.status==='approved'?'var(--green)':c.status==='rejected'?'var(--red)':'#f59e0b';
-        h += '<tr>' +
-            '<td style="font-family:monospace;font-size:10px">'+esc(c._id)+'</td>' +
-            '<td style="font-family:monospace;font-size:10px">'+esc(c.clickId||'-')+'</td>' +
-            '<td>'+esc(offerName(c.offerId))+'</td>' +
-            '<td style="font-weight:800;color:var(--green)">$'+parseFloat(c.payout||0).toFixed(2)+'</td>' +
-            '<td><span style="font-size:11px;font-weight:700;color:'+st_col+'">'+esc(c.status||'-')+'</span></td>' +
-            '<td style="font-size:11px">'+esc(c.sub1||'-')+'</td>' +
-            '<td style="white-space:nowrap;font-size:11px">'+fmtDT(c.createdAt)+'</td>' +
-            '</tr>';
+        if (c._kind === 'event') {
+            var evLabel = esc(c.eventName || ('Event ' + (c.eventId || '')));
+            h += '<tr style="background:#fffdf5;">' +
+                '<td><span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;">EVENT</span></td>' +
+                '<td style="font-family:monospace;font-size:10px">'+esc(c._id)+'</td>' +
+                '<td style="font-family:monospace;font-size:10px">'+esc(c.clickId||'-')+'</td>' +
+                '<td>'+esc(offerName(c.offerId))+'<div style="font-size:10px;color:#999;">'+evLabel+'</div></td>' +
+                '<td style="color:#999">$'+parseFloat(c.payout||0).toFixed(2)+'</td>' +
+                '<td><span style="font-size:11px;font-weight:700;color:#999">'+esc(c.status||'-')+'</span></td>' +
+                '<td style="font-size:11px">'+esc(c.sub1||'-')+'</td>' +
+                '<td style="white-space:nowrap;font-size:11px">'+fmtDT(c.createdAt)+'</td>' +
+                '</tr>';
+        } else {
+            var st_col = c.status==='approved'?'var(--green)':c.status==='rejected'?'var(--red)':'#f59e0b';
+            h += '<tr>' +
+                '<td><span style="background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;">CV</span></td>' +
+                '<td style="font-family:monospace;font-size:10px">'+esc(c._id)+'</td>' +
+                '<td style="font-family:monospace;font-size:10px">'+esc(c.clickId||'-')+'</td>' +
+                '<td>'+esc(offerName(c.offerId))+'</td>' +
+                '<td style="font-weight:800;color:var(--green)">$'+parseFloat(c.payout||0).toFixed(2)+'</td>' +
+                '<td><span style="font-size:11px;font-weight:700;color:'+st_col+'">'+esc(c.status||'-')+'</span></td>' +
+                '<td style="font-size:11px">'+esc(c.sub1||'-')+'</td>' +
+                '<td style="white-space:nowrap;font-size:11px">'+fmtDT(c.createdAt)+'</td>' +
+                '</tr>';
+        }
     });
-    document.getElementById('cvTb').innerHTML = h || '<tr><td colspan="7" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions for selected filters</td></tr>';
+    document.getElementById('cvTb').innerHTML = h || '<tr><td colspan="8" class="no-data"><i class="fas fa-exchange-alt"></i>No '+(tF==='event'?'events':'records')+' for selected filters</td></tr>';
     renderPag('cvPag','cvPgInfo',fil.length,cvPage,PAGE_SIZE,'goAffCvPg');
 }
 function goAffCvPg(p) { cvPage = p; renderAffConv(); }

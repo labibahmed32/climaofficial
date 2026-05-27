@@ -42,6 +42,11 @@
       ".write": true,
       ".indexOn": ["affiliateId", "offerId", "createdAt", "clickId"]
     },
+    "events": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["affiliateId", "offerId", "createdAt", "clickId", "eventId"]
+    },
     "signups": {
       ".read": true,
       ".write": true

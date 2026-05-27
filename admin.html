@@ -1191,6 +1191,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <input type="date" id="convDateFrom" class="form-input-sm" onchange="renderConversions()">
                         <input type="date" id="convDateTo" class="form-input-sm" onchange="renderConversions()">
+                        <select id="convTypeFilter" class="form-select-sm" onchange="renderConversions()"><option value="cv">Sales (CV)</option><option value="event">Events</option><option value="all">CV + Events</option></select>
                         <select id="convStatusFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
                         <select id="convOfferFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Offers</option></select>
                         <select id="convAffFilter" class="form-select-sm" onchange="renderConversions()"><option value="">All Affiliates</option></select>
@@ -1203,7 +1204,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 </div>
             </div>
             <div class="table-wrap"><div class="table-scroll">
-                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Conv ID</th><th>Date</th><th>Click Date</th><th>Delta</th><th>Offer</th><th>Affiliate</th><th>Sub ID</th><th>Revenue</th><th>Payout</th><th>Conv IP</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
+                <table class="data-table"><thead><tr><th><input type="checkbox" id="convSelectAll" onchange="toggleConvSelectAll()"></th><th>Type</th><th>Conv ID</th><th>Click ID</th><th>Offer</th><th>Affiliate</th><th>Revenue</th><th>Payout</th><th>Status</th><th>Source</th><th>TTC</th><th>Date</th><th>Actions</th></tr></thead><tbody id="convTbody"></tbody></table>
             </div><div class="pagination-bar"><span class="page-info" id="convPageInfo"></span><div class="pagination-controls" id="convPagination"></div></div></div>
         </div>
 
@@ -2810,7 +2811,7 @@ var secondaryApp;
 try { secondaryApp = firebase.app('Secondary'); } catch(e) { secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary'); }
 
 var currentAdmin = null;
-var allOffers = [], allUsers = [], allClicks = [], allConversions = [], allSignups = [], allPayments = [], allAssignments = [], allApplications = [], allAdvertisers = [];
+var allOffers = [], allUsers = [], allClicks = [], allConversions = [], allSignups = [], allPayments = [], allAssignments = [], allApplications = [], allAdvertisers = [], allEvents = [];
 var dashChart = null;
 var PAGE_SIZE = 20;
 
@@ -3111,12 +3112,13 @@ function loadAllData(onDone, silent) {
     var myVersion = ++_dataFetchVersion;
     if (!silent) showDataLoader(true);
     _isRefreshing = true;
-    Promise.all([fbGet('offers'), fbGet('users'), fbGet('clicks'), fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers')]).then(function(res) {
+    Promise.all([fbGet('offers'), fbGet('users'), fbGet('clicks'), fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers'), fbGet('events')]).then(function(res) {
         /* Discard result if a newer fetch has started */
         if (myVersion !== _dataFetchVersion) return;
         allOffers = objToArr(res[0]); allUsers = objToArr(res[1]); allClicks = objToArr(res[2]); allConversions = objToArr(res[3]).filter(function(c) { return !c.isTest; }); allSignups = objToArr(res[4]); allPayments = objToArr(res[5]);
         allApplications = objToArr(res[6]);
         allAdvertisers = objToArr(res[8]);
+        allEvents = objToArr(res[9]).filter(function(e) { return !e.isTest; });
         /* Flatten nested offerAssignments: {offerId: {affId: data}} */
         allAssignments = [];
         var asgRaw = res[7] || {};
@@ -3152,9 +3154,10 @@ function refreshIncremental(onDone) {
     var myVersion = ++_dataFetchVersion;
     _isRefreshing = true;
     var clicksQ = fbGetQ('clicks', 'orderBy=%22timestamp%22&startAt=' + _maxClickTs);
-    Promise.all([fbGet('offers'), fbGet('users'), clicksQ, fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers')]).then(function(res) {
+    Promise.all([fbGet('offers'), fbGet('users'), clicksQ, fbGet('conversions'), fbGet('signups'), fbGet('payments/records'), fbGet('offer_applications'), fbGet('offerAssignments'), fbGet('advertisers'), fbGet('events')]).then(function(res) {
         if (myVersion !== _dataFetchVersion) return;
         allOffers = objToArr(res[0]); allUsers = objToArr(res[1]);
+        allEvents = objToArr(res[9]).filter(function(e) { return !e.isTest; });
         /* Merge new/updated clicks into the in-memory history (dedupe by _id) */
         var fresh = objToArr(res[2]);
         if (fresh.length) {
@@ -3200,7 +3203,7 @@ function saveDataCache() {
             t: Date.now(),
             offers: allOffers, users: allUsers, clicks: clicks, conversions: allConversions,
             signups: allSignups, payments: allPayments, applications: allApplications,
-            assignments: allAssignments, advertisers: allAdvertisers
+            assignments: allAssignments, advertisers: allAdvertisers, events: allEvents
         });
     }
     var caps = [0, 5000, 2000, 500]; /* 0 = everything; shrink on quota errors */
@@ -3221,6 +3224,7 @@ function loadDataCache() {
         allSignups = p.signups || []; allPayments = p.payments || [];
         allApplications = p.applications || []; allAssignments = p.assignments || [];
         allAdvertisers = p.advertisers || [];
+        allEvents = (p.events || []).filter(function(e){ return !e.isTest; });
         recomputeMaxClickTs();
         return true;
     } catch(e) { return false; }
@@ -5417,39 +5421,99 @@ function cdItem(label, val) { return '<div style="background:#f8fafc;padding:8px
 /* ===== CONVERSIONS ===== */
 var convPage = 1;
 function loadConversionsPage() {
-    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('users')]).then(function(res) {
+    Promise.all([fbGet('conversions'), fbGet('offers'), fbGet('users'), fbGet('events')]).then(function(res) {
         allConversions = objToArr(res[0]); allOffers = objToArr(res[1]); allUsers = objToArr(res[2]);
+        allEvents = objToArr(res[3]).filter(function(e) { return !e.isTest; });
         var ofHtml = '<option value="">All Offers</option>'; allOffers.forEach(function(o) { ofHtml += '<option value="' + o._id + '">' + escHtml(o.name) + '</option>'; }); document.getElementById('convOfferFilter').innerHTML = ofHtml;
         convPage = 1; renderConversions();
     });
 }
+/* Time-to-conversion label for a conversion/event row */
+function convTTC(c) {
+    if (!c.clickId) return '-';
+    var click = allClicks.find(function(x) { return x._id === c.clickId; });
+    if (!click || !click.timestamp || !c.createdAt) return '-';
+    var diff = c.createdAt - click.timestamp;
+    if (diff < 60000) return '< 1m';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm';
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h ' + Math.floor((diff%3600000)/60000) + 'm';
+    return Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
+}
 function renderConversions() {
     var fromDate = document.getElementById('convDateFrom').value; var toDate = document.getElementById('convDateTo').value;
     var statusF = document.getElementById('convStatusFilter').value; var offerF = document.getElementById('convOfferFilter').value;
+    var typeF = (document.getElementById('convTypeFilter') || {}).value || 'cv';
+    var affF = (document.getElementById('convAffFilter') || {}).value || '';
     var fromTs = fromDate ? dayStart(new Date(fromDate)) : 0; var toTs = toDate ? dayEnd(new Date(toDate)) : Infinity;
-    var filtered = allConversions.filter(function(c) { if ((c.createdAt||0) < fromTs || (c.createdAt||0) > toTs) return false; if (statusF && c.status !== statusF) return false; if (offerF && c.offerId !== offerF) return false; return true; }).sort(function(a, b) { return (b.createdAt||0) - (a.createdAt||0); });
-    var totalRev = filtered.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
-    var totalPay = filtered.reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
-    var approved = filtered.filter(function(c) { return c.status === 'approved'; }).length;
-    var pending = filtered.filter(function(c) { return c.status === 'pending'; }).length;
-    document.getElementById('convStats').innerHTML = statCardSm('fa-exchange-alt', '#e3f2fd', '#1565c0', filtered.length, 'Total Conversions') + statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', approved, 'Approved') + statCardSm('fa-clock', '#fff3e0', '#e65100', pending, 'Pending') + statCardSm('fa-dollar-sign', '#f3e5f5', '#7b1fa2', fmtMoney(totalRev), 'Revenue') + statCardSm('fa-hand-holding-usd', '#e8f5e9', '#2e7d32', fmtMoney(totalPay), 'Payout');
+    function passes(c) {
+        if ((c.createdAt||0) < fromTs || (c.createdAt||0) > toTs) return false;
+        if (statusF && c.status !== statusF) return false;
+        if (offerF && c.offerId !== offerF) return false;
+        if (affF && c.affiliateId !== affF) return false;
+        return true;
+    }
+    /* CV rows (sales) and/or Event rows depending on the Type filter */
+    var cvAll = allConversions.filter(passes);
+    var evAll = (allEvents || []).filter(passes);
+    var cvRows = (typeF === 'event') ? [] : cvAll.map(function(c){ c._kind = 'cv'; return c; });
+    var evRows = (typeF === 'cv') ? [] : evAll.map(function(e){ e._kind = 'event'; return e; });
+    var filtered = cvRows.concat(evRows).sort(function(a, b) { return (b.createdAt||0) - (a.createdAt||0); });
+
+    /* Money stats stay CV-only; events are counted separately */
+    var totalRev = cvAll.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
+    var totalPay = cvAll.reduce(function(s, c) { return s + (parseFloat(c.payout) || 0); }, 0);
+    var approved = cvAll.filter(function(c) { return c.status === 'approved'; }).length;
+    var pending = cvAll.filter(function(c) { return c.status === 'pending'; }).length;
+    document.getElementById('convStats').innerHTML = statCardSm('fa-exchange-alt', '#e3f2fd', '#1565c0', cvAll.length, 'Conversions (CV)') + statCardSm('fa-check-circle', '#e8f5e9', '#2e7d32', approved, 'Approved') + statCardSm('fa-clock', '#fff3e0', '#e65100', pending, 'Pending') + statCardSm('fa-bolt', '#fff8e1', '#f9a825', evAll.length, 'Events') + statCardSm('fa-dollar-sign', '#f3e5f5', '#7b1fa2', fmtMoney(totalRev), 'Revenue') + statCardSm('fa-hand-holding-usd', '#e8f5e9', '#2e7d32', fmtMoney(totalPay), 'Payout');
+
     var start = (convPage - 1) * PAGE_SIZE, end = start + PAGE_SIZE; var page = filtered.slice(start, end); var html = '';
     page.forEach(function(c) {
-        var ttc = '-';
-        if (c.clickId) {
-            var click = allClicks.find(function(x) { return x._id === c.clickId; });
-            if (click && click.timestamp && c.createdAt) {
-                var diff = c.createdAt - click.timestamp;
-                if (diff < 60000) ttc = '< 1m';
-                else if (diff < 3600000) ttc = Math.floor(diff/60000) + 'm';
-                else if (diff < 86400000) ttc = Math.floor(diff/3600000) + 'h ' + Math.floor((diff%3600000)/60000) + 'm';
-                else ttc = Math.floor(diff/86400000) + 'd ' + Math.floor((diff%86400000)/3600000) + 'h';
-            }
+        var ttc = convTTC(c);
+        if (c._kind === 'event') {
+            var evLabel = escHtml(c.eventName || ('Event ' + (c.eventId || '')));
+            html += '<tr style="background:#fffdf5;">' +
+                '<td></td>' +
+                '<td><span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">EVENT</span></td>' +
+                '<td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td>' +
+                '<td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td>' +
+                '<td>' + escHtml(getOfferName(c.offerId)) + '<div style="font-size:10px;color:#999;">' + evLabel + (c.transactionId ? ' · txn ' + escHtml(String(c.transactionId).substring(0,12)) : '') + '</div></td>' +
+                '<td>' + escHtml(getUserName(c.affiliateId)) + '</td>' +
+                '<td style="color:#999">' + fmtMoney(c.revenue) + '</td>' +
+                '<td style="color:#999">' + fmtMoney(c.payout) + '</td>' +
+                '<td>' + statusBadge(c.status) + '</td>' +
+                '<td>' + escHtml(c.source || '-') + '</td>' +
+                '<td style="font-size:11px;color:var(--primary);font-weight:600">' + ttc + '</td>' +
+                '<td>' + fmtDateTime(c.createdAt) + '</td>' +
+                '<td><button class="btn-sm" title="Delete event" onclick="deleteEvent(\'' + c._id + '\')"><i class="fas fa-trash"></i></button></td>' +
+                '</tr>';
+        } else {
+            html += '<tr>' +
+                '<td><input type="checkbox" class="conv-check" value="' + c._id + '"></td>' +
+                '<td><span style="background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">CV</span></td>' +
+                '<td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td>' +
+                '<td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td>' +
+                '<td>' + escHtml(getOfferName(c.offerId)) + '</td>' +
+                '<td>' + escHtml(getUserName(c.affiliateId)) + '</td>' +
+                '<td style="font-weight:700;color:var(--primary)">' + fmtMoney(c.revenue) + '</td>' +
+                '<td style="font-weight:700;color:var(--green)">' + fmtMoney(c.payout) + '</td>' +
+                '<td>' + statusBadge(c.status) + '</td>' +
+                '<td>' + escHtml(c.source || '-') + '</td>' +
+                '<td style="font-size:11px;color:var(--primary);font-weight:600">' + ttc + '</td>' +
+                '<td>' + fmtDateTime(c.createdAt) + '</td>' +
+                '<td><button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'approved\')"><i class="fas fa-check"></i></button> <button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'rejected\')"><i class="fas fa-times"></i></button></td>' +
+                '</tr>';
         }
-        html += '<tr><td><input type="checkbox" class="conv-check" value="' + c._id + '"></td><td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td><td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td><td>' + escHtml(getOfferName(c.offerId)) + '</td><td>' + escHtml(getUserName(c.affiliateId)) + '</td><td style="font-weight:700;color:var(--primary)">' + fmtMoney(c.revenue) + '</td><td style="font-weight:700;color:var(--green)">' + fmtMoney(c.payout) + '</td><td>' + statusBadge(c.status) + '</td><td>' + escHtml(c.source || '-') + '</td><td style="font-size:11px;color:var(--primary);font-weight:600">' + ttc + '</td><td>' + fmtDateTime(c.createdAt) + '</td><td><button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'approved\')"><i class="fas fa-check"></i></button> <button class="btn-sm" onclick="changeConvStatus(\'' + c._id + '\',\'rejected\')"><i class="fas fa-times"></i></button></td></tr>';
     });
-    document.getElementById('convTbody').innerHTML = html || '<tr><td colspan="12" class="no-data"><i class="fas fa-exchange-alt"></i>No conversions found</td></tr>';
+    document.getElementById('convTbody').innerHTML = html || '<tr><td colspan="13" class="no-data"><i class="fas fa-exchange-alt"></i>No ' + (typeF === 'event' ? 'events' : 'records') + ' found</td></tr>';
     renderPagination('convPagination', 'convPageInfo', filtered.length, convPage, PAGE_SIZE, 'goConvPage');
+}
+function deleteEvent(id) {
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+    fetch(FB + '/events/' + id + '.json', { method: 'DELETE' }).then(function() {
+        allEvents = allEvents.filter(function(e){ return e._id !== id; });
+        toast('Event deleted');
+        renderConversions();
+    }).catch(function(){ toast('Error deleting event', 'error'); });
 }
 function goConvPage(p) { convPage = p; renderConversions(); }
 function toggleConvSelectAll() { var checked = document.getElementById('convSelectAll').checked; document.querySelectorAll('.conv-check').forEach(function(cb) { cb.checked = checked; }); }
