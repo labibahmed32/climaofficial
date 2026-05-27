@@ -1554,11 +1554,6 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 <div class="form-group"><label>Sub5</label><input type="text" id="lgSub5" placeholder="Optional" oninput="updateLinkPreview()"></div>
                 <div class="link-output" id="linkOutput" style="display:none;"><button class="copy-btn" onclick="copyLink()"><i class="fas fa-copy"></i> Copy</button><span id="linkText"></span></div>
             </div>
-            <div class="settings-card">
-                <h5><i class="fas fa-info-circle"></i> Postback URL for Advertisers</h5>
-                <p style="font-size:13px;color:var(--text-mid);margin-bottom:10px;">Share this URL with advertisers to fire on conversion:</p>
-                <div class="link-output" id="postbackDisplay"><button class="copy-btn" onclick="copyPostback()"><i class="fas fa-copy"></i> Copy</button><span id="postbackText"></span></div>
-            </div>
             </div>
 
             <!-- ===== RIGHT COLUMN: TRACKING LINK MACROS REFERENCE ===== -->
@@ -7084,7 +7079,6 @@ function loadLinkGen() {
         if (Array.isArray(domains)) { var def = domains.find(function(d) { return d && d.isDefault; }); if (def) defDomain = def.domain; }
         window._cachedDefaultDomain = defDomain;
         var defDomainUrl = (defDomain && defDomain.indexOf('://') === -1) ? 'https://' + defDomain : defDomain;
-        document.getElementById('postbackText').textContent = defDomainUrl + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&secret=' + (window._cachedPostbackSecret || 'YOUR_SECRET');
         updateLinkPreview();
         /* Init the Global Postback Builder with the selected platform's macros */
         if (document.getElementById('pbPlatform')) onPbPlatformChange();
