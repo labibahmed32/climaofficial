@@ -10342,6 +10342,24 @@ function rv2FilterConvs() {
     });
 }
 
+/* Same filters as rv2FilterConvs, but over the events node */
+function rv2FilterEvents() {
+    return (allEvents || []).filter(function(c) {
+        var t = c.createdAt || 0;
+        if (t < rv2State.fromTs || t > rv2State.toTs) return false;
+        if (rv2State.advertiser && rv2OfferAdvertiser(c.offerId) !== rv2State.advertiser) return false;
+        if (rv2State.offer && c.offerId !== rv2State.offer) return false;
+        if (rv2State.affiliate && c.affiliateId !== rv2State.affiliate) return false;
+        if (rv2State.platform) {
+            var click = c.clickId ? (allClicks || []).filter(function(x){return x._id===c.clickId;})[0] : null;
+            var ref = click ? click.referer : c.referer;
+            var p = rv2PlatformOf(ref);
+            if (rv2State.platform === 'direct' ? p !== 'direct' : p !== rv2State.platform) return false;
+        }
+        return true;
+    });
+}
+
 /* ── Init: called when entering the reports page ── */
 function rv2Init() {
     /* Populate offer/affiliate dropdowns */
@@ -11257,6 +11275,7 @@ function rv2EnabledCols(registry, storeKey) {
 
 /* Conversion Logs column registry */
 var RV2_CV_COLS = [
+    { key:'cvtype',    label:'Type',       def:true,  align:'left', sort:'_type',     render:function(c){ return c._type==='event' ? '<span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">EVENT</span>' + (c.eventLabel?'<div style="font-size:10px;color:#999;margin-top:2px;">'+escHtml(c.eventLabel)+'</div>':'') : '<span style="background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">CV</span>'; } },
     { key:'createdAt', label:'Date',       def:true,  align:'left', sort:'createdAt', render:function(c){ return '<span style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</span>'; } },
     { key:'offer',     label:'Offer',      def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
     { key:'affiliate', label:'Affiliate',  def:true,  align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
@@ -11282,11 +11301,12 @@ var RV2_CV_COLS = [
     { key:'sub5',      label:'Sub5',       def:false, align:'left', sort:'sub5',      render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.sub5||'-')+'</span>'; } }
 ];
 function rv2RenderConvLogs() {
-    var convs = rv2FilterConvs().map(function(c){
+    function mapRow(c, kind) {
         var click = c.clickId ? (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0] : null;
-        return {_id:c._id, createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
+        return {_id:c._id, _type:kind, eventLabel:(kind==='event'?(c.eventName||('Event '+(c.eventId||''))):''),
+            createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
             revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'',
-            txnId:c.txnId||'', clickId:c.clickId||'',
+            txnId:c.txnId||c.transactionId||'', clickId:c.clickId||'',
             clickTime:click?click.timestamp:0,
             delta:(click&&c.createdAt)?calcDelta(click.timestamp,c.createdAt):'',
             ip:c.ip||(click?click.ip:'')||'',
@@ -11296,24 +11316,29 @@ function rv2RenderConvLogs() {
             device:click?(click.device||''):'',
             isp:click?(click.isp||click.org||''):'',
             sub1:c.sub1||(click?click.sub1:'')||'', sub2:click?(click.sub2||''):'', sub3:click?(click.sub3||''):'', sub4:click?(click.sub4||''):'', sub5:click?(click.sub5||''):''};
-    });
+    }
+    var convs = rv2FilterConvs().map(function(c){ return mapRow(c, 'cv'); })
+        .concat(rv2FilterEvents().map(function(e){ return mapRow(e, 'event'); }));
     var cSortField = rv2State.sortBy === 'label' ? 'createdAt' : (rv2State.sortBy === 'clicks' ? 'createdAt' : (rv2State.sortBy === 'rev' ? 'revenue' : (rv2State.sortBy === 'pay' ? 'payout' : rv2State.sortBy)));
     rv2SortRows(convs, cSortField, rv2State.sortDir);
     var total = convs.length;
+    var cvCount = convs.filter(function(c){ return c._type !== 'event'; }).length;
+    var evCount = total - cvCount;
     var ps = rv2State.cvPageSize, pg = rv2State.cvPage;
     var maxPg = Math.max(1, Math.ceil(total/ps)); if (pg > maxPg) { pg = maxPg; rv2State.cvPage = pg; }
     var pageRows = convs.slice((pg-1)*ps, pg*ps);
     var actions = '<button class="rv2-export-btn" style="background:#0a6c80;color:#fff;border-color:#0a6c80;" onclick="openConvModal()"><i class="fas fa-plus"></i> Add Manual</button>' +
         '<button class="rv2-export-btn" onclick="rv2OpenCvColModal()"><i class="fas fa-sliders-h"></i> Columns</button>' +
         '<button class="rv2-export-btn" onclick="rv2ExportConvs()"><i class="fas fa-download"></i> Export</button>';
-    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), total + ' total conversions', actions);
+    var html = rv2HeaderHtml('Conversion Logs ' + rv2FilterChips(), cvCount + ' conversions · ' + evCount + ' events', actions);
     if (!total) { html += rv2EmptyHtml('No conversions','Try a wider date range','fa-exchange-alt'); document.getElementById('rv2Content').innerHTML = html; return; }
     var cols = rv2EnabledCols(RV2_CV_COLS, 'rv2CvCols');
     html += '<div class="rv2-table-wrap"><table class="rv2-table"><thead><tr>';
     cols.forEach(function(col){ html += rv2SortHeader(col.sort, col.label, col.align); });
     html += '</tr></thead><tbody>';
     pageRows.forEach(function(c){
-        html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">';
+        if (c._type === 'event') { html += '<tr style="background:#fffdf5;">'; }
+        else { html += '<tr class="clickable" onclick="rv2DrillTo(\'conversion\',\''+c._id+'\')">'; }
         cols.forEach(function(col){ html += '<td' + (col.align==='num'?' class="num"':'') + '>' + col.render(c) + '</td>'; });
         html += '</tr>';
     });
