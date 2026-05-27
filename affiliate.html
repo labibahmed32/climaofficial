@@ -2619,6 +2619,9 @@ function renderOffers() {
         else if (app && app.status === 'pending') statusH = '<div class="aff-offer-card-status st-pending"><i class="fas fa-clock"></i> Pending</div>';
         else if (app && app.status === 'rejected') statusH = '<div class="aff-offer-card-status st-rejected"><i class="fas fa-times"></i> Rejected</div>';
 
+        /* Preview button (if a preview/landing URL is set) */
+        var previewH = o.previewUrl ? '<button class="aff-offer-card-btn" style="background:#f1f5f9;color:#475569;flex:0 0 auto;padding-left:12px;padding-right:12px" onclick="event.stopPropagation();previewOfferUrl(\'' + o._id + '\')" title="Preview landing page"><i class="fas fa-eye"></i></button>' : '';
+
         /* Action button */
         var btnH = '';
         if (isPublic || (app && app.status === 'approved')) {
@@ -2639,7 +2642,7 @@ function renderOffers() {
             '<div class="aff-offer-card-tags"><span class="aff-offer-card-tag cat">' + esc(catLabel) + '</span><span class="aff-offer-card-tag model">' + esc(payType) + '</span>' + countryTag + '</div>' +
             '<div class="aff-offer-card-foot">' +
             '<span class="aff-offer-card-rev">Today: <b>' + fmtM(todayRev) + '</b></span>' +
-            btnH + '</div></div></div>';
+            '<span style="display:inline-flex;gap:6px;">' + previewH + btnH + '</span></div></div></div>';
 
         /* List row */
         var thumbH = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" style="width:36px;height:36px;border-radius:8px;object-fit:contain;border:1px solid #e2e8f0;background:#f8fafc" onerror="this.style.display=\'none\'">' : '<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#0a6c80,#14b8a6);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:14px"><i class="fas fa-bullhorn"></i></div>';
@@ -2656,13 +2659,20 @@ function renderOffers() {
             '<td style="font-size:11px;color:#555">' + (countries.length ? esc(countries.slice(0,2).join(', ')) + (countries.length>2?' +' + (countries.length-2):'') : '<span style="color:#94a3b8">Global</span>') + '</td>' +
             '<td style="font-weight:800;color:#0a6c80">' + fmtM(o.payout) + '</td>' +
             '<td>' + statusPill + '</td>' +
-            '<td onclick="event.stopPropagation()">' + btnH + '</td></tr>';
+            '<td onclick="event.stopPropagation()"><span style="display:inline-flex;gap:6px;">' + previewH + btnH + '</span></td></tr>';
     });
     document.getElementById('affOffersGrid').innerHTML = gridH || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-bullhorn" style="font-size:32px;opacity:.2;display:block;margin-bottom:10px"></i><p>No offers found</p></div>';
     document.getElementById('affOffersTbody').innerHTML = listH || '<tr><td colspan="8" class="no-data"><i class="fas fa-bullhorn"></i> No offers found</td></tr>';
     renderPag('offerPag', 'offerPgInfo', f.length, offerPage, PAGE_SIZE, 'goOfferPg');
 }
 function goOfferPg(p) { offerPage = p; renderOffers(); }
+
+/* Open an offer's preview/landing URL in a new tab */
+function previewOfferUrl(oid) {
+    var o = (allOffers || []).filter(function(x){ return x._id === oid; })[0];
+    if (o && o.previewUrl) window.open(o.previewUrl, '_blank', 'noopener');
+    else toast('No preview link set for this offer', 'error');
+}
 
 /* ── Offer Detail View ── */
 function viewOffer(oid) {
@@ -2675,8 +2685,8 @@ function viewOffer(oid) {
     var isApproved = isPublic || (app && app.status === 'approved');
     /* Breadcrumb */
     document.getElementById('odBreadName').textContent = offer.name || 'Untitled';
-    /* Alert */
-    document.getElementById('odAlert').style.display = !app ? 'flex' : 'none';
+    /* Alert — only when the offer actually requires an application (not public) */
+    document.getElementById('odAlert').style.display = (!isPublic && !app) ? 'flex' : 'none';
     /* Hero Banner */
     document.getElementById('odTitle').textContent = offer.name || 'Untitled';
     var thumbWrap = document.getElementById('odThumbWrap');
@@ -2687,20 +2697,25 @@ function viewOffer(oid) {
     document.getElementById('odCurrency').innerHTML = '<i class="fas fa-coins"></i> ' + cur;
     /* Application status pill */
     var statusPill = document.getElementById('odAppStatus');
-    if (!app) statusPill.innerHTML = '<i class="fas fa-circle" style="font-size:6px"></i> Not Applied';
+    if (isPublic && !(app && app.status === 'approved')) statusPill.innerHTML = '<i class="fas fa-globe" style="color:#4ade80"></i> Public';
     else if (isApproved) statusPill.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80"></i> Approved';
+    else if (!app) statusPill.innerHTML = '<i class="fas fa-circle" style="font-size:6px"></i> Not Applied';
     else if (app.status === 'pending') statusPill.innerHTML = '<i class="fas fa-clock"></i> Pending';
     else statusPill.innerHTML = '<i class="fas fa-times-circle" style="color:#f87171"></i> Rejected';
     /* Payout in hero */
     var payType = (offer.payoutModel || 'cpa').toUpperCase();
     document.getElementById('odPayType').textContent = payType;
     document.getElementById('odPayAmt').textContent = fmtM(offer.payout);
-    /* Action button */
+    /* Action button — check isApproved (covers public) FIRST so public offers
+       never show an Apply button, they're open-access. */
     var btnWrap = document.getElementById('odApplyBtnWrap');
-    if (!app) btnWrap.innerHTML = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
-    else if (isApproved) btnWrap.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(74,222,128,.2);color:#4ade80;border:1px solid rgba(74,222,128,.3)"><i class="fas fa-check-circle"></i> Approved</span>';
-    else if (app.status === 'rejected') btnWrap.innerHTML = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(251,146,60,.3);border:1.5px solid rgba(251,146,60,.4)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-redo"></i> Reapply</button>';
-    else btnWrap.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(96,165,250,.2);color:#93c5fd;border:1px solid rgba(96,165,250,.3)"><i class="fas fa-clock"></i> Pending</span>';
+    var previewBtn = offer.previewUrl ? '<a class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;margin-right:8px" href="' + esc(offer.previewUrl) + '" target="_blank" rel="noopener"><i class="fas fa-eye"></i> Preview</a>' : '';
+    var actBtn;
+    if (isApproved) actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(74,222,128,.2);color:#4ade80;border:1px solid rgba(74,222,128,.3)"><i class="fas fa-' + (isPublic && !(app && app.status === 'approved') ? 'globe"></i> Public' : 'check-circle"></i> Approved') + '</span>';
+    else if (!app) actBtn = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
+    else if (app.status === 'rejected') actBtn = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(251,146,60,.3);border:1.5px solid rgba(251,146,60,.4)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-redo"></i> Reapply</button>';
+    else actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(96,165,250,.2);color:#93c5fd;border:1px solid rgba(96,165,250,.3)"><i class="fas fa-clock"></i> Pending</span>';
+    btnWrap.innerHTML = previewBtn + actBtn;
     /* Stats Bar */
     var offerClicks = myClicks.filter(function(c) { return c.offerId === oid; });
     var offerConvsAll = myConversions.filter(function(c) { return c.offerId === oid; });
