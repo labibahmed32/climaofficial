@@ -2865,6 +2865,8 @@ try { secondaryApp = firebase.app('Secondary'); } catch(e) { secondaryApp = fire
 
 var currentAdmin = null;
 var allOffers = [], allUsers = [], allClicks = [], allConversions = [], allSignups = [], allPayments = [], allAssignments = [], allApplications = [], allAdvertisers = [], allEvents = [];
+var allBlocks = {}; /* offerBlocks: { offerId: { affId: {reason, blockedAt} } } */
+function isOfferBlocked(offerId, affId) { return !!(allBlocks[offerId] && allBlocks[offerId][affId]); }
 var dashChart = null;
 var PAGE_SIZE = 20;
 
@@ -4585,7 +4587,7 @@ function getPacificDayBounds() {
 
 /* ===== ASSIGNMENTS CRUD ===== */
 function loadAssignments() {
-    Promise.all([fbGet('offerAssignments'), fbGet('offers'), fbGet('users'), fbGet('offer_applications'), fbGet('conversions')]).then(function(res) {
+    Promise.all([fbGet('offerAssignments'), fbGet('offers'), fbGet('users'), fbGet('offer_applications'), fbGet('conversions'), fbGet('offerBlocks')]).then(function(res) {
         /* Flatten assignments */
         allAssignments = [];
         var asgRaw = res[0] || {};
@@ -4601,6 +4603,7 @@ function loadAssignments() {
         allUsers = objToArr(res[2]);
         allApplications = objToArr(res[3]);
         allConversions = objToArr(res[4]);
+        allBlocks = res[5] || {};
         renderAssignments();
         renderRequests();
         updateAppBadge();
@@ -4636,16 +4639,22 @@ function renderAssignments() {
         var capDisplay = a.dailyCap > 0 ? a.dailyCap : 'Unlimited';
         var todayDisplay = a.dailyCap > 0 ? todayCount + ' / ' + a.dailyCap : todayCount;
         var capClass = a.dailyCap > 0 && todayCount >= a.dailyCap ? 'color:var(--red);font-weight:700' : 'color:var(--green);font-weight:600';
-        html += '<tr>' +
+        var blocked = isOfferBlocked(a._offerId, a._affId);
+        var statusCell = blocked ? '<span class="badge" style="background:#fde8e8;color:#c62828;">Paused</span>' : statusBadge(a.status);
+        var pauseBtn = blocked
+            ? '<button class="btn-sm" style="background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;" title="Resume offer" onclick="resumeOfferForAff(\'' + a._offerId + '\',\'' + a._affId + '\')"><i class="fas fa-play"></i></button> '
+            : '<button class="btn-sm" style="background:#fff3e0;color:#e65100;border-color:#ffcc80;" title="Pause/Block this offer for this affiliate" onclick="pauseOfferForAff(\'' + a._offerId + '\',\'' + a._affId + '\')"><i class="fas fa-pause"></i></button> ';
+        html += '<tr' + (blocked ? ' style="background:#fff8f8;"' : '') + '>' +
             '<td><strong>' + escHtml(getOfferName(a._offerId)) + '</strong></td>' +
             '<td>' + escHtml(getUserName(a._affId)) + '</td>' +
             '<td style="font-weight:600;">' + capDisplay + '</td>' +
             '<td style="' + capClass + '">' + todayDisplay + '</td>' +
             '<td>' + (a.payoutOverride ? fmtMoney(a.payoutOverride) : '<span style="color:var(--text-muted)">Default</span>') + '</td>' +
             '<td>' + (a.revenueOverride ? fmtMoney(a.revenueOverride) : '<span style="color:var(--text-muted)">Default</span>') + '</td>' +
-            '<td>' + statusBadge(a.status) + '</td>' +
+            '<td>' + statusCell + '</td>' +
             '<td>' + fmtDate(a.assignedAt) + '</td>' +
-            '<td>' +
+            '<td style="white-space:nowrap;">' +
+            pauseBtn +
             '<button class="btn-sm" onclick="openAssignModal(\'' + a._offerId + '\',\'' + a._affId + '\')"><i class="fas fa-edit"></i></button> ' +
             '<button class="btn-danger-sm" onclick="deleteAssignment(\'' + a._offerId + '\',\'' + a._affId + '\')"><i class="fas fa-trash"></i></button>' +
             '</td></tr>';
@@ -4765,6 +4774,44 @@ function deleteAssignment(offerId, affId) {
         toast('Assignment removed');
         loadAssignments();
     });
+}
+
+/* ── Pause / block an offer for a specific affiliate ──
+   Writes offerBlocks/{offerId}/{affId} (disables the tracking link instantly),
+   marks the application 'paused' with the reason (shows in the affiliate's
+   notifications), and flips the assignment status to 'paused'. */
+function pauseOfferForAff(offerId, affId) {
+    var reason = prompt('Reason for pausing this offer for ' + getUserName(affId) + ':', '');
+    if (reason === null) return;
+    reason = (reason || '').trim();
+    var block = { reason: reason, blockedAt: Date.now(), blockedBy: 'admin' };
+    var updates = {};
+    var app = (allApplications || []).filter(function(a){ return a.offerId === offerId && a.affiliateId === affId; })[0];
+    var tasks = [
+        fbPut('offerBlocks/' + offerId + '/' + affId, block),
+        fbPatch('offerAssignments/' + offerId + '/' + affId, { status: 'paused' })
+    ];
+    if (app) tasks.push(fbPatch('offer_applications/' + app._id + '', { status: 'paused', pausedAt: Date.now(), pauseReason: reason }));
+    Promise.all(tasks).then(function() {
+        if (!allBlocks[offerId]) allBlocks[offerId] = {};
+        allBlocks[offerId][affId] = block;
+        toast('Offer paused for ' + getUserName(affId) + ' — their link is now disabled');
+        loadAssignments();
+    }).catch(function(){ toast('Error pausing offer', 'error'); });
+}
+function resumeOfferForAff(offerId, affId) {
+    if (!confirm('Resume this offer for ' + getUserName(affId) + '? Their tracking link will work again.')) return;
+    var app = (allApplications || []).filter(function(a){ return a.offerId === offerId && a.affiliateId === affId; })[0];
+    var tasks = [
+        fbDelete('offerBlocks/' + offerId + '/' + affId),
+        fbPatch('offerAssignments/' + offerId + '/' + affId, { status: 'active' })
+    ];
+    if (app) tasks.push(fbPatch('offer_applications/' + app._id + '', { status: 'approved', pauseReason: null }));
+    Promise.all(tasks).then(function() {
+        if (allBlocks[offerId]) delete allBlocks[offerId][affId];
+        toast('Offer resumed for ' + getUserName(affId));
+        loadAssignments();
+    }).catch(function(){ toast('Error resuming offer', 'error'); });
 }
 
 /* ===== OVER-CAP REPORT ===== */

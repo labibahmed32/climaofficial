@@ -1373,7 +1373,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var FB = firebaseConfig.databaseURL;
 var currentUser = null, myUid = '', myAffId = '';
-var allOffers = [], myClicks = [], myConversions = [], myPayments = [], myInvoices = [], myEvents = [];
+var allOffers = [], myClicks = [], myConversions = [], myPayments = [], myInvoices = [], myEvents = [], myBlocks = {};
 var dashChart = null, chartType = 'line';
 var PAGE_SIZE = 20;
 var allApplications = {};
@@ -1981,7 +1981,7 @@ function saveAffCache() {
     try {
         localStorage.setItem(_affCacheKey(), JSON.stringify({
             t: Date.now(),
-            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments, invoices: myInvoices, events: myEvents
+            offers: allOffers, clicks: myClicks, conversions: myConversions, payments: myPayments, invoices: myInvoices, events: myEvents, blocks: myBlocks
         }));
     } catch(e) {}
 }
@@ -1995,6 +1995,7 @@ function loadAffCache() {
         allOffers = p.offers || []; myClicks = p.clicks || [];
         myConversions = p.conversions || []; myPayments = p.payments || []; myInvoices = p.invoices || [];
         myEvents = p.events || [];
+        myBlocks = p.blocks || {};
         return true;
     } catch(e) { return false; }
 }
@@ -2003,7 +2004,7 @@ function loadAllData(onDone, silent) {
     var myVer = ++_affFetchVer;
     _affRefreshing = true;
     if (!silent) { var l = document.getElementById('affDataLoader'); if (l) l.style.display = 'block'; }
-    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices'), fbGet('events')]).then(function(r) {
+    Promise.all([fbGet('offers'), fbGet('clicks'), fbGet('conversions'), fbGet('payments/records'), fbGet('payments/invoices'), fbGet('events'), fbGet('offerBlocks')]).then(function(r) {
         if (myVer !== _affFetchVer) return; /* newer fetch superseded this one */
         allOffers = objToArr(r[0]).filter(function(o) { return o.status === 'active'; });
         myClicks = objToArr(r[1]).filter(function(c) { return c.affiliateId === myUid; });
@@ -2011,6 +2012,7 @@ function loadAllData(onDone, silent) {
         myPayments = objToArr(r[3]).filter(function(p) { return p.affiliateId === myUid; });
         myInvoices  = objToArr(r[4]).filter(function(p) { return p.affiliateId === myUid; });
         myEvents = objToArr(r[5]).filter(function(e) { return e.affiliateId === myUid && !e.isTest; });
+        myBlocks = {}; var blkRaw = r[6] || {}; Object.keys(blkRaw).forEach(function(oid){ if (blkRaw[oid] && blkRaw[oid][myUid]) myBlocks[oid] = blkRaw[oid][myUid]; });
         _affRefreshing = false;
         var l2 = document.getElementById('affDataLoader'); if (l2) l2.style.display = 'none';
         if (typeof onDone === 'function') onDone();
@@ -2621,16 +2623,21 @@ function renderOffers() {
         var imgInner = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" onerror="this.parentElement.querySelector(\'.aff-offer-card-img-ph\').style.display=\'flex\';this.style.display=\'none\'"><div class="aff-offer-card-img-ph" style="display:none;position:absolute;inset:0"><i class="fas fa-bullhorn"></i></div>' : '<div class="aff-offer-card-img-ph"><i class="fas fa-bullhorn"></i></div>';
         var imgH = '<div class="aff-offer-card-img">' + imgInner + payoutPill + '</div>';
 
+        var blocked = !!myBlocks[o._id];
+
         /* Status badge */
         var statusH = '';
-        if (isPublic) statusH = '<div class="aff-offer-card-status st-public"><i class="fas fa-globe"></i> Public</div>';
+        if (blocked) statusH = '<div class="aff-offer-card-status st-rejected"><i class="fas fa-pause"></i> Paused</div>';
+        else if (isPublic) statusH = '<div class="aff-offer-card-status st-public"><i class="fas fa-globe"></i> Public</div>';
         else if (app && app.status === 'approved') statusH = '<div class="aff-offer-card-status st-approved"><i class="fas fa-check"></i> Approved</div>';
         else if (app && app.status === 'pending') statusH = '<div class="aff-offer-card-status st-pending"><i class="fas fa-clock"></i> Pending</div>';
         else if (app && app.status === 'rejected') statusH = '<div class="aff-offer-card-status st-rejected"><i class="fas fa-times"></i> Rejected</div>';
 
         /* Action button */
         var btnH = '';
-        if (isPublic || (app && app.status === 'approved')) {
+        if (blocked) {
+            btnH = '<button class="aff-offer-card-btn" style="background:#fde8e8;color:#c62828;cursor:not-allowed" onclick="event.stopPropagation();viewOffer(\'' + o._id + '\')"><i class="fas fa-pause"></i> Paused</button>';
+        } else if (isPublic || (app && app.status === 'approved')) {
             btnH = '<button class="aff-offer-card-btn get-link" onclick="event.stopPropagation();viewOffer(\'' + o._id + '\');setTimeout(function(){switchOdTab(\'tracklink\')},100)"><i class="fas fa-link"></i> Get Link</button>';
         } else if (!app) {
             btnH = '<button class="aff-offer-card-btn apply" onclick="event.stopPropagation();openApply(\'' + o._id + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
@@ -2652,7 +2659,8 @@ function renderOffers() {
 
         /* List row */
         var thumbH = o.thumbnail ? '<img src="' + esc(o.thumbnail) + '" style="width:36px;height:36px;border-radius:8px;object-fit:contain;border:1px solid #e2e8f0;background:#f8fafc" onerror="this.style.display=\'none\'">' : '<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#0a6c80,#14b8a6);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:14px"><i class="fas fa-bullhorn"></i></div>';
-        var statusPill = isPublic ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Public</span>' :
+        var statusPill = blocked ? '<span style="background:#fde8e8;color:#c62828;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Paused</span>' :
+            isPublic ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Public</span>' :
             (app && app.status === 'approved') ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Approved</span>' :
             (app && app.status === 'pending') ? '<span style="background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Pending</span>' :
             (app && app.status === 'rejected') ? '<span style="background:#fce4ec;color:#c62828;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700">Rejected</span>' :
@@ -2693,7 +2701,8 @@ function viewOffer(oid) {
     viewingOffer = offer;
     var app = allApplications[oid];
     var isPublic = offer.visibility === 'public';
-    var isApproved = isPublic || (app && app.status === 'approved');
+    var blocked = !!myBlocks[oid];
+    var isApproved = !blocked && (isPublic || (app && app.status === 'approved'));
     /* Preview / landing page row (only if a preview URL is set) */
     var prevRow = document.getElementById('odPreviewRow');
     if (prevRow) {
@@ -2702,8 +2711,15 @@ function viewOffer(oid) {
     }
     /* Breadcrumb */
     document.getElementById('odBreadName').textContent = offer.name || 'Untitled';
-    /* Alert — only when the offer actually requires an application (not public) */
-    document.getElementById('odAlert').style.display = (!isPublic && !app) ? 'flex' : 'none';
+    /* Alert — paused notice, or "must apply" for non-public unapplied offers */
+    var odAlertEl = document.getElementById('odAlert');
+    if (blocked) {
+        odAlertEl.style.display = 'flex';
+        odAlertEl.innerHTML = '<i class="fas fa-pause-circle"></i> This offer has been paused for your account' + (myBlocks[oid].reason ? ': ' + esc(myBlocks[oid].reason) : '') + '. Your tracking link is disabled.';
+    } else {
+        odAlertEl.style.display = (!isPublic && !app) ? 'flex' : 'none';
+        odAlertEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> You must apply for access before you can promote this offer.';
+    }
     /* Hero Banner */
     document.getElementById('odTitle').textContent = offer.name || 'Untitled';
     var thumbWrap = document.getElementById('odThumbWrap');
@@ -2714,7 +2730,8 @@ function viewOffer(oid) {
     document.getElementById('odCurrency').innerHTML = '<i class="fas fa-coins"></i> ' + cur;
     /* Application status pill */
     var statusPill = document.getElementById('odAppStatus');
-    if (isPublic && !(app && app.status === 'approved')) statusPill.innerHTML = '<i class="fas fa-globe" style="color:#4ade80"></i> Public';
+    if (blocked) statusPill.innerHTML = '<i class="fas fa-pause-circle" style="color:#f87171"></i> Paused';
+    else if (isPublic && !(app && app.status === 'approved')) statusPill.innerHTML = '<i class="fas fa-globe" style="color:#4ade80"></i> Public';
     else if (isApproved) statusPill.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80"></i> Approved';
     else if (!app) statusPill.innerHTML = '<i class="fas fa-circle" style="font-size:6px"></i> Not Applied';
     else if (app.status === 'pending') statusPill.innerHTML = '<i class="fas fa-clock"></i> Pending';
@@ -2727,7 +2744,8 @@ function viewOffer(oid) {
        never show an Apply button, they're open-access. */
     var btnWrap = document.getElementById('odApplyBtnWrap');
     var actBtn;
-    if (isApproved) actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(74,222,128,.2);color:#4ade80;border:1px solid rgba(74,222,128,.3)"><i class="fas fa-' + (isPublic && !(app && app.status === 'approved') ? 'globe"></i> Public' : 'check-circle"></i> Approved') + '</span>';
+    if (blocked) actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(248,113,113,.2);color:#fca5a5;border:1px solid rgba(248,113,113,.3)"><i class="fas fa-pause-circle"></i> Paused</span>';
+    else if (isApproved) actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(74,222,128,.2);color:#4ade80;border:1px solid rgba(74,222,128,.3)"><i class="fas fa-' + (isPublic && !(app && app.status === 'approved') ? 'globe"></i> Public' : 'check-circle"></i> Approved') + '</span>';
     else if (!app) actBtn = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-paper-plane"></i> Apply</button>';
     else if (app.status === 'rejected') actBtn = '<button class="btn-p" style="padding:7px 18px;font-size:11px;background:rgba(251,146,60,.3);border:1.5px solid rgba(251,146,60,.4)" onclick="openApply(\'' + oid + '\')"><i class="fas fa-redo"></i> Reapply</button>';
     else actBtn = '<span style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:10.5px;font-weight:700;background:rgba(96,165,250,.2);color:#93c5fd;border:1px solid rgba(96,165,250,.3)"><i class="fas fa-clock"></i> Pending</span>';
@@ -3830,11 +3848,12 @@ function filterNotifPage(f) {
 function loadNotifPage() {
     var list = document.getElementById('notifPageList');
     list.innerHTML = '<div style="padding:50px;text-align:center;color:var(--tl);"><i class="fas fa-spinner fa-spin" style="font-size:24px;"></i></div>';
-    Promise.all([fbGet('conversions'), fbGet('payments/invoices'), fbGet('offer_applications'), fbGet('offers')]).then(function(r) {
+    Promise.all([fbGet('conversions'), fbGet('payments/invoices'), fbGet('offer_applications'), fbGet('offers'), fbGet('offerBlocks')]).then(function(r) {
         var convs = objToArr(r[0]).filter(function(c) { return c.affiliateId === myUid && !c.overCap && !c.isTest; });
         var invs  = objToArr(r[1]).filter(function(p) { return p.affiliateId === myUid; });
         var apps  = objToArr(r[2]).filter(function(a) { return a.affiliateId === myUid; });
         var offersById = {}; objToArr(r[3]).forEach(function(o){ offersById[o._id] = o; });
+        var blkRaw = r[4] || {};
         var notifs = [];
 
         /* Conversions */
@@ -3869,6 +3888,8 @@ function loadNotifPage() {
                 notifs.push({ kind:'offer', subkind:'approved', ts:a.reviewedAt||a.updatedAt||a.createdAt||0, icon:'fa-bullhorn', color:'#16a34a', bg:'#dcfce7', title:'Offer Approved', desc:escNotif(oName), meta:'You can now promote this offer' });
             } else if (st === 'rejected') {
                 notifs.push({ kind:'offer', subkind:'rejected', ts:a.reviewedAt||a.updatedAt||a.createdAt||0, icon:'fa-times-circle', color:'#dc2626', bg:'#fee2e2', title:'Offer Application Rejected', desc:escNotif(oName), meta:a.reviewNote?('Reason: '+a.reviewNote):'No reason provided' });
+            } else if (st === 'paused') {
+                /* shown via the offerBlocks notification below */
             } else {
                 notifs.push({ kind:'offer', subkind:'pending', ts:a.createdAt||0, icon:'fa-clock', color:'#f59e0b', bg:'#fef3c7', title:'Offer Application Pending', desc:escNotif(oName), meta:'Awaiting admin review' });
             }
@@ -3880,6 +3901,14 @@ function loadNotifPage() {
             if (o && (o.status === 'paused' || o.status === 'inactive')) {
                 notifs.push({ kind:'offer', subkind:'paused', ts:o.updatedAt||Date.now(), icon:'fa-pause-circle', color:'#d97706', bg:'#fef3c7', title:'Offer Paused', desc:escNotif(o.name||a.offerId), meta:'This offer is currently '+(o.status) });
             }
+        });
+
+        /* Offers paused specifically for THIS affiliate by admin (with reason) */
+        Object.keys(blkRaw).forEach(function(oid) {
+            var b = blkRaw[oid] && blkRaw[oid][myUid];
+            if (!b) return;
+            var oName = (offersById[oid] && offersById[oid].name) || oid;
+            notifs.push({ kind:'offer', subkind:'paused', ts:b.blockedAt||Date.now(), icon:'fa-pause-circle', color:'#dc2626', bg:'#fee2e2', title:'Offer Paused For You', desc:escNotif(oName), meta:b.reason?('Reason: '+escNotif(b.reason)):'Your link for this offer is disabled' });
         });
 
         notifs.sort(function(a, b) { return (b.ts||0) - (a.ts||0); });

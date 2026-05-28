@@ -584,13 +584,15 @@ function processClick() {
             fbGet('offers/' + offerId),
             fbGet('users/' + affId),
             getGeoData(),
-            fbGet('settings/fraud')   /* IPQS key stored here */
+            fbGet('settings/fraud'),  /* IPQS key stored here */
+            fbGet('offerBlocks/' + offerId + '/' + affId)  /* admin pause/block for this aff+offer */
         ]);
     }).then(function(results) {
         var offer       = results[0];
         var user        = results[1];
         var geo         = results[2] || {};
         var fraudSettings = results[3] || {};
+        var block       = results[4];
 
         if (!offer)                    { showError('Offer not found.'); return; }
         if (offer.status !== 'active') { showError('Offer is not active.'); return; }
@@ -598,6 +600,8 @@ function processClick() {
         if (!user)                     { showError('Affiliate not found.'); return; }
         if (user.role !== 'affiliate') { showError('Invalid affiliate.'); return; }
         if (user.status !== 'active')  { showError('Affiliate account is not active.'); return; }
+        /* Admin has paused this offer for this affiliate — link is disabled */
+        if (block) { showError('This offer has been paused for your account.' + (block.reason ? ' Reason: ' + block.reason : '')); return; }
 
         /* ── GEO ENFORCEMENT (strict multi-provider consensus) ── */
         var geoCheckPromise;
