@@ -847,7 +847,8 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .aff-prof-tab:hover{color:var(--primary-dark);}
 .aff-prof-panel{display:none;}
 .aff-prof-panel.active{display:block;}
-.ap-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;}
+.ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px 28px;}
+.ap-field .ap-val{word-break:break-word;}
 .ap-field{margin-bottom:0;}
 .ap-field label{font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;}
 .ap-field .ap-val{font-size:14px;color:#1e293b;font-weight:500;}
@@ -2552,11 +2553,31 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 </div></div>
 
 <!-- Affiliate Profile View Modal -->
-<div class="modal-overlay" id="affProfileModal"><div class="modal-panel" style="max-width:750px;">
-    <div class="modal-header"><h3 id="affProfTitle">Affiliate Profile</h3><button class="modal-close" onclick="closeModal('affProfileModal')">&times;</button></div>
-    <div class="modal-body" style="padding:0;">
+<div class="modal-overlay inv-fullpage" id="affProfileModal"><div class="modal-panel inv-fullpage-panel" style="padding:0;overflow:hidden;">
+    <!-- Gradient hero header -->
+    <div style="background:linear-gradient(135deg,#0a6c80 0%,#085a6b 55%,#0d4f5c 100%);padding:18px 0 22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:8%;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
+        <div class="inv-fullpage-inner" style="padding:0 26px;position:relative;z-index:1;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <button onclick="closeModal('affProfileModal')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'"><i class="fas fa-arrow-left"></i> Back to Affiliates</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-sm" id="apEditBtn" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);" onclick=""><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn-sm" id="apLoginBtn" style="background:#e67e22;color:#fff;border:none;" onclick=""><i class="fas fa-sign-in-alt"></i> Login As</button>
+                </div>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;margin-top:14px;"><i class="fas fa-user-circle" style="margin-right:6px;"></i> Affiliate Profile</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:5px;flex-wrap:wrap;">
+                <span style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px;" id="affProfTitle">Affiliate</span>
+                <span id="apHeroStatus"></span>
+            </div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:4px;" id="apHeroSub"></div>
+            <!-- Stat strip -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px;max-width:680px;" id="apHeroStats"></div>
+        </div>
+    </div>
+    <div class="modal-body" style="padding:0;"><div class="inv-fullpage-inner">
         <!-- Tabs -->
-        <div style="display:flex;border-bottom:2px solid #e2e8f0;padding:0 20px;">
+        <div style="display:flex;border-bottom:2px solid #e2e8f0;padding:0 24px;flex-wrap:wrap;">
             <button class="aff-prof-tab active" onclick="switchAffProfTab('profile')" id="apTab-profile"><i class="fas fa-user"></i> Profile</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('payment')" id="apTab-payment"><i class="fas fa-credit-card"></i> Payment Methods</button>
             <button class="aff-prof-tab" onclick="switchAffProfTab('activity')" id="apTab-activity"><i class="fas fa-chart-line"></i> Activity</button>
@@ -2564,31 +2585,26 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
             <button class="aff-prof-tab" onclick="switchAffProfTab('security')" id="apTab-security"><i class="fas fa-shield-alt"></i> Security &amp; Logins</button>
         </div>
         <!-- Tab: Profile -->
-        <div class="aff-prof-panel active" id="apPanel-profile" style="padding:20px;">
+        <div class="aff-prof-panel active" id="apPanel-profile" style="padding:24px;">
             <div id="apProfileContent">Loading...</div>
         </div>
         <!-- Tab: Payment -->
-        <div class="aff-prof-panel" id="apPanel-payment" style="padding:20px;">
+        <div class="aff-prof-panel" id="apPanel-payment" style="padding:24px;">
             <div id="apPaymentContent">Loading...</div>
         </div>
         <!-- Tab: Activity -->
-        <div class="aff-prof-panel" id="apPanel-activity" style="padding:20px;">
+        <div class="aff-prof-panel" id="apPanel-activity" style="padding:24px;">
             <div id="apActivityContent">Loading...</div>
         </div>
         <!-- Tab: Invoices -->
-        <div class="aff-prof-panel" id="apPanel-invoices" style="padding:20px;">
+        <div class="aff-prof-panel" id="apPanel-invoices" style="padding:24px;">
             <div id="apInvoicesContent">Loading...</div>
         </div>
         <!-- Tab: Security & Logins -->
-        <div class="aff-prof-panel" id="apPanel-security" style="padding:20px;">
+        <div class="aff-prof-panel" id="apPanel-security" style="padding:24px;">
             <div id="apSecurityContent">Loading...</div>
         </div>
-    </div>
-    <div class="modal-footer">
-        <button class="btn-secondary" onclick="closeModal('affProfileModal')">Close</button>
-        <button class="btn-primary-sm" id="apEditBtn" onclick=""><i class="fas fa-edit"></i> Edit</button>
-        <button class="btn-primary-sm" style="background:var(--orange);border-color:var(--orange);" id="apLoginBtn" onclick=""><i class="fas fa-sign-in-alt"></i> Login As</button>
-    </div>
+    </div></div>
 </div></div>
 
 <div class="modal-overlay" id="mgrModal"><div class="modal-panel">
@@ -9041,8 +9057,24 @@ function openAffProfile(uid) {
         var secAlerts = objToArr(res[3] || {}).filter(function(a){ return a.affiliateId === uid; }).sort(function(a,b){ return (b.timestamp||0)-(a.timestamp||0); });
         var affInvoices = (allInvoices || []).filter(function(i){ return i.affiliateId === uid; }).sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
 
-        /* Title */
+        /* Title + hero */
         document.getElementById('affProfTitle').textContent = (u.name || 'Affiliate') + (u.affId ? ' (#' + u.affId + ')' : '');
+        var stCfg = { active:{bg:'#dcfce7',fg:'#15803d',l:'Active'}, inactive:{bg:'#fee2e2',fg:'#b91c1c',l:'Inactive'}, suspended:{bg:'#fee2e2',fg:'#b91c1c',l:'Suspended'} }[u.status] || {bg:'rgba(255,255,255,.18)',fg:'#fff',l:(u.status||'-')};
+        document.getElementById('apHeroStatus').innerHTML = '<span style="background:' + stCfg.bg + ';color:' + stCfg.fg + ';font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;">' + stCfg.l.toUpperCase() + '</span>';
+        document.getElementById('apHeroSub').textContent = (u.email || '') + (u.country ? ' · ' + u.country : '');
+        var allConvsAff = (allConversions || []).filter(function(c){ return c.affiliateId === uid; });
+        var pendCount = allConvsAff.filter(function(c){ return c.status === 'pending'; }).length;
+        var earnings = convs.reduce(function(s,c){ return s + (parseFloat(c.payout)||0); }, 0);
+        function heroStat(lbl, val, color) {
+            return '<div style="background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:11px;padding:11px 14px;">' +
+                '<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">' + lbl + '</div>' +
+                '<div style="font-size:19px;font-weight:800;color:' + (color||'#fff') + ';letter-spacing:-.3px;">' + val + '</div></div>';
+        }
+        document.getElementById('apHeroStats').innerHTML =
+            heroStat('Clicks', clicks.length, '#fff') +
+            heroStat('Conversions', convs.length, '#86efac') +
+            heroStat('Pending', pendCount, '#fde68a') +
+            heroStat('Earnings', fmtMoney(earnings), '#86efac');
 
         /* Profile Tab */
         var joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
