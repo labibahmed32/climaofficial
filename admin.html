@@ -670,6 +670,12 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .offer-tab i{display:none;}
 .offer-tab-pane{display:none;animation:fadeIn .2s ease;}
 .offer-tab-pane.active{display:block;}
+/* ── One-page modern offer form (no wizard stepper) ── */
+.ofx-onepage .offer-tab-pane{display:block !important;animation:none;margin-bottom:6px;padding:18px 0 22px;border-bottom:1px solid #eef2f6;}
+.ofx-onepage .offer-tab-pane:last-of-type{border-bottom:none;}
+.ofx-onepage #ofTab-activity,.ofx-onepage #ofTab-complete{display:none !important;}
+#offerModal.ofx-mode #offerStepsBar{display:none;}
+.ofx-foot{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:14px 28px;border-top:1px solid var(--card-border);position:sticky;bottom:0;background:#fff;border-radius:0 0 16px 16px;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .country-search{width:100%;padding:7px 12px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:13px;outline:none;margin-bottom:0;}
 .country-search:focus{border-color:var(--primary);}
@@ -2225,7 +2231,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
             <span id="offerIdBadge" class="offer-id-badge" style="display:none;margin-left:12px;background:rgba(255,255,255,.15);color:#fff;"></span>
             <button class="modal-close" onclick="closeModal('offerModal')" style="color:rgba(255,255,255,.7)">&times;</button>
         </div>
-        <div style="background:#fff;padding:14px 20px 10px;border-bottom:1px solid #e2e8f0;" id="offerStepsBar">
+        <div style="background:#fff;padding:14px 20px 10px;border-bottom:1px solid #e2e8f0;display:none;" id="offerStepsBar">
         <div class="offer-tabs">
             <button class="offer-tab active" onclick="switchOfferTab('general')"><span class="step-num">1</span><span class="step-label">General</span></button>
             <button class="offer-tab" onclick="switchOfferTab('revenue')"><span class="step-num">2</span><span class="step-label">Revenue</span></button>
@@ -2237,7 +2243,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
         </div>
         </div>
     </div>
-    <div class="modal-body" style="padding:24px 28px;">
+    <div class="modal-body ofx-onepage" style="padding:8px 28px;">
         <input type="hidden" id="offerEditId">
 
         <!-- Tab 1: General -->
@@ -2522,18 +2528,9 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
             </div>
         </div>
     </div>
-    <div class="wz-footer" id="offerWzFooter">
-        <div class="wz-footer-left">
-            <button class="btn-secondary" id="wzBackBtn" onclick="wzBack()" style="display:none;"><i class="fas fa-arrow-left"></i> Back</button>
-            <button class="btn-secondary" onclick="closeModal('offerModal')">Cancel</button>
-        </div>
-        <span class="wz-step-indicator" id="wzStepText">Step 1 of 5</span>
-        <div class="wz-footer-right">
-            <button class="btn-primary-sm" id="wzSaveBtn" onclick="saveOffer()" style="display:none;"><i class="fas fa-save"></i> Save</button>
-            <button class="btn-primary-sm" id="wzNextBtn" onclick="wzNext()"><i class="fas fa-save"></i> Save & Next <i class="fas fa-arrow-right"></i></button>
-            <button class="btn-primary-sm" id="wzFinishBtn" onclick="wzFinish()" style="display:none;"><i class="fas fa-save"></i> Save & Finish</button>
-            <button class="btn-primary-sm" id="wzDoneBtn" onclick="closeModal('offerModal');loadOffers();" style="display:none;"><i class="fas fa-check"></i> Done</button>
-        </div>
+    <div class="ofx-foot">
+        <button class="btn-secondary" onclick="closeModal('offerModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="saveOffer()"><i class="fas fa-save"></i> Save Offer</button>
     </div>
 </div></div>
 
@@ -4148,41 +4145,45 @@ function migrateAffiliateIds() {
 }
 
 /* ===== OPEN OFFER MODAL ===== */
+/* Null-safe field helpers — a missing/renamed element can never crash the form */
+function ofSet(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
+function ofChk(id, val) { var el = document.getElementById(id); if (el) el.checked = val; }
+function ofShow(id, disp) { var el = document.getElementById(id); if (el) el.style.display = disp; }
+function ofHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+
 function openOfferModal(id) {
-    /* Reset all fields */
-    document.getElementById('offerEditId').value = '';
-    document.getElementById('offerModalTitle').textContent = 'New Offer';
-    document.getElementById('offerIdBadge').style.display = 'none';
-    document.getElementById('ofName').value = '';
+    /* Reset all fields (null-safe) */
+    ofSet('offerEditId', '');
+    var titleEl = document.getElementById('offerModalTitle'); if (titleEl) titleEl.textContent = 'New Offer';
+    ofShow('offerIdBadge', 'none');
+    ofSet('ofName', '');
     populateAdvDropdown('ofAdvertiser');
-    document.getElementById('ofAdvertiser').value = '';
-    document.getElementById('ofDescription').innerHTML = '';
-    document.getElementById('ofCategory').value = 'health';
-    document.getElementById('ofStatus').value = 'active';
-    document.getElementById('ofVisibility').value = 'approval';
-    document.getElementById('ofThumbnail').value = '';
-    document.getElementById('ofImgPreview').style.display = 'none';
-    document.getElementById('ofPreviewUrl').value = '';
-    document.getElementById('ofPayoutModel').value = 'cpa';
-    document.getElementById('ofLockPayout').checked = true;
-    document.getElementById('ofRevenue').value = '0';
-    document.getElementById('ofPayout').value = '0';
-    document.getElementById('ofCurrency').value = 'USD';
-    document.getElementById('ofDailyCap').value = '0';
-    document.getElementById('ofHourlyCap').value = '0';
-    document.getElementById('ofUpsell1Price').value = '0';
-    document.getElementById('ofUpsell2Price').value = '0';
-    document.getElementById('ofUpsell3Price').value = '0';
-    document.getElementById('ofUpsell4Price').value = '0';
-    document.getElementById('ofUpsell5Price').value = '0';
-    document.getElementById('ofFinalUrl').value = '';
-    document.getElementById('ofTrackerType').value = '';
-    document.getElementById('trackerMacroRef').style.display = 'none';
-    document.getElementById('trackerPostbackPanel').style.display = 'none';
+    ofSet('ofAdvertiser', '');
+    ofHtml('ofDescription', '');
+    ofSet('ofCategory', 'health');
+    ofSet('ofStatus', 'active');
+    ofSet('ofVisibility', 'approval');
+    ofChk('ofNotifyAffiliates', true);
+    ofChk('ofNotifyManagers', true);
+    ofSet('ofThumbnail', '');
+    ofShow('ofImgPreview', 'none');
+    ofSet('ofPreviewUrl', '');
+    ofSet('ofPayoutModel', 'cpa');
+    ofChk('ofLockPayout', true);
+    ofSet('ofRevenue', '0');
+    ofSet('ofPayout', '0');
+    ofSet('ofCurrency', 'USD');
+    ofSet('ofDailyCap', '0');
+    ofSet('ofHourlyCap', '0');
+    ofSet('ofUpsell1Price', '0'); ofSet('ofUpsell2Price', '0'); ofSet('ofUpsell3Price', '0'); ofSet('ofUpsell4Price', '0'); ofSet('ofUpsell5Price', '0');
+    ofSet('ofFinalUrl', '');
+    ofSet('ofTrackerType', '');
+    ofShow('trackerMacroRef', 'none');
+    ofShow('trackerPostbackPanel', 'none');
     window._detectedTracker = null;
-    document.getElementById('ofDevice').value = 'all';
-    document.getElementById('ofCountryMode').value = 'all';
-    document.getElementById('countryPanel').style.display = 'none';
+    ofSet('ofDevice', 'all');
+    ofSet('ofCountryMode', 'all');
+    ofShow('countryPanel', 'none');
     selectedCountries = [];
     offerCreatives = [];
 
@@ -4197,125 +4198,109 @@ function openOfferModal(id) {
             var defD = domains.find(function(d) { return d && d.isDefault; });
             window._cachedDefaultDomain = defD ? defD.domain : window.location.origin;
         }
-        document.getElementById('ofTrackingDomain').innerHTML = domHtml;
-        /* If editing, set the offer's saved domain */
+        ofHtml('ofTrackingDomain', domHtml);
         if (id) {
             var o = allOffers.find(function(x) { return x._id === id; });
-            if (o && o.trackingDomain) document.getElementById('ofTrackingDomain').value = o.trackingDomain;
+            if (o && o.trackingDomain) ofSet('ofTrackingDomain', o.trackingDomain);
         }
     });
-
-    /* Switch to first tab */
-    switchOfferTab('general');
 
     if (id) {
         var o = allOffers.find(function(x) { return x._id === id; });
         if (o) {
-            document.getElementById('offerEditId').value = id;
-            document.getElementById('offerModalTitle').textContent = 'Edit Offer';
-            document.getElementById('offerIdBadge').textContent = id;
-            document.getElementById('offerIdBadge').style.display = 'inline-block';
-            document.getElementById('ofName').value = o.name || '';
-            document.getElementById('ofAdvertiser').value = o.advertiser || '';
-            document.getElementById('ofDescription').innerHTML = o.description || '';
-            document.getElementById('ofCategory').value = o.category || 'health';
-            document.getElementById('ofStatus').value = o.status || 'active';
-            document.getElementById('ofVisibility').value = o.visibility || 'approval';
-            document.getElementById('ofNotifyAffiliates').checked = o.notifyAffiliates !== false;
-            document.getElementById('ofNotifyManagers').checked = o.notifyManagers !== false;
-            document.getElementById('ofThumbnail').value = o.thumbnail || '';
-            document.getElementById('ofPreviewUrl').value = o.previewUrl || '';
-            document.getElementById('ofPayoutModel').value = o.payoutModel || 'cpa';
-            document.getElementById('ofRevenue').value = o.revenue || '0';
-            document.getElementById('ofPayout').value = o.payout || '0';
-            document.getElementById('ofLockPayout').checked = o.lockPayout !== false;
-            document.getElementById('ofCurrency').value = o.currency || 'USD';
-            document.getElementById('ofDailyCap').value = o.dailyCap || '0';
-            document.getElementById('ofHourlyCap').value = o.hourlyCap || '0';
-            document.getElementById('ofUpsell1Price').value = o.upsell1Price || '0';
-            document.getElementById('ofUpsell2Price').value = o.upsell2Price || '0';
-            document.getElementById('ofUpsell3Price').value = o.upsell3Price || '0';
-            document.getElementById('ofUpsell4Price').value = o.upsell4Price || '0';
-            document.getElementById('ofUpsell5Price').value = o.upsell5Price || '0';
-            document.getElementById('ofFinalUrl').value = o.finalUrl || '';
-            /* Restore tracker type */
-            document.getElementById('ofTrackerType').value = o.detectedTracker || '';
-            if (o.detectedTracker) onTrackerTypeChange();
-            document.getElementById('ofDevice').value = o.deviceTargeting || 'all';
-            document.getElementById('ofCountryMode').value = o.countryMode || 'all';
-            /* Countries */
+            ofSet('offerEditId', id);
+            if (titleEl) titleEl.textContent = 'Edit Offer';
+            var badge = document.getElementById('offerIdBadge'); if (badge) { badge.textContent = id; badge.style.display = 'inline-block'; }
+            ofSet('ofName', o.name || '');
+            ofSet('ofAdvertiser', o.advertiser || '');
+            ofHtml('ofDescription', o.description || '');
+            ofSet('ofCategory', o.category || 'health');
+            ofSet('ofStatus', o.status || 'active');
+            ofSet('ofVisibility', o.visibility || 'approval');
+            ofChk('ofNotifyAffiliates', o.notifyAffiliates !== false);
+            ofChk('ofNotifyManagers', o.notifyManagers !== false);
+            ofSet('ofThumbnail', o.thumbnail || '');
+            ofSet('ofPreviewUrl', o.previewUrl || '');
+            ofSet('ofPayoutModel', o.payoutModel || 'cpa');
+            ofSet('ofRevenue', o.revenue || '0');
+            ofSet('ofPayout', o.payout || '0');
+            ofChk('ofLockPayout', o.lockPayout !== false);
+            ofSet('ofCurrency', o.currency || 'USD');
+            ofSet('ofDailyCap', o.dailyCap || '0');
+            ofSet('ofHourlyCap', o.hourlyCap || '0');
+            ofSet('ofUpsell1Price', o.upsell1Price || '0'); ofSet('ofUpsell2Price', o.upsell2Price || '0'); ofSet('ofUpsell3Price', o.upsell3Price || '0'); ofSet('ofUpsell4Price', o.upsell4Price || '0'); ofSet('ofUpsell5Price', o.upsell5Price || '0');
+            ofSet('ofFinalUrl', o.finalUrl || '');
+            ofSet('ofTrackerType', o.detectedTracker || '');
+            if (o.detectedTracker && typeof onTrackerTypeChange === 'function') onTrackerTypeChange();
+            ofSet('ofDevice', o.deviceTargeting || 'all');
+            ofSet('ofCountryMode', o.countryMode || 'all');
             if (o.countryMode === 'specific' && o.allowedCountries) {
                 selectedCountries = o.allowedCountries.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                document.getElementById('countryPanel').style.display = 'block';
-                buildCountryGrid();
+                ofShow('countryPanel', 'block');
+                if (typeof buildCountryGrid === 'function') buildCountryGrid();
             }
-            /* Creatives */
             if (o.creatives && Array.isArray(o.creatives)) {
                 offerCreatives = o.creatives.map(function(c) { return { name: c.name || '', url: c.url || '', size: c.size || '300x250' }; });
             }
-            /* Preview image */
-            previewOfferImage();
-            /* Tracking preview */
-            updateOfferLinkPreview();
-            var domain = window.location.origin;
-            document.getElementById('ofPostbackPreview').textContent = domain + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&offer_id=' + id;
+            if (typeof previewOfferImage === 'function') previewOfferImage();
+            if (typeof updateOfferLinkPreview === 'function') updateOfferLinkPreview();
+            var pbEl = document.getElementById('ofPostbackPreview');
+            if (pbEl) pbEl.textContent = window.location.origin + '/api/postback?click_id={click_id}&payout={payout}&txn_id={txn_id}&offer_id=' + id;
         }
     }
 
-    renderCreatives();
-    calcOfferProfit();
-
-    /* Initialize wizard state */
-    wzCurrentStep = 0;
-    wzSavedOfferId = id || null;
-    document.getElementById('ofTabBtn-complete').style.display = 'none';
-    var actTab = document.getElementById('ofTabBtn-activity');
-    if (actTab) actTab.style.display = id ? '' : 'none';
-    wzUpdateFooter();
+    if (typeof renderCreatives === 'function') renderCreatives();
+    if (typeof calcOfferProfit === 'function') calcOfferProfit();
 
     openModal('offerModal');
+    var body = document.querySelector('#offerModal .modal-body'); if (body) body.scrollTop = 0;
 }
 
 /* ===== SAVE OFFER ===== */
-function saveOffer() {
-    var name = document.getElementById('ofName').value.trim();
-    var finalUrl = document.getElementById('ofFinalUrl').value.trim();
-    if (!name) { toast('Offer name is required', 'error'); switchOfferTab('general'); return; }
-    if (!finalUrl) { toast('Final URL is required', 'error'); switchOfferTab('tracking'); return; }
+function ofVal(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function ofChkVal(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+function ofFocus(id) { var el = document.getElementById(id); if (el) { try { el.scrollIntoView({ behavior:'smooth', block:'center' }); el.focus(); } catch(e){} } }
 
-    var editId = document.getElementById('offerEditId').value;
-    var countryMode = document.getElementById('ofCountryMode').value;
+function saveOffer() {
+    var name = ofVal('ofName').trim();
+    var finalUrl = ofVal('ofFinalUrl').trim();
+    if (!name) { toast('Offer name is required', 'error'); ofFocus('ofName'); return; }
+    if (!finalUrl) { toast('Final URL is required', 'error'); ofFocus('ofFinalUrl'); return; }
+
+    var editId = ofVal('offerEditId');
+    var countryMode = ofVal('ofCountryMode');
+    var descEl = document.getElementById('ofDescription');
 
     var data = {
         name: name,
-        description: document.getElementById('ofDescription').innerHTML.trim(),
-        advertiser: document.getElementById('ofAdvertiser').value.trim(),
-        category: document.getElementById('ofCategory').value,
-        status: document.getElementById('ofStatus').value,
-        thumbnail: document.getElementById('ofThumbnail').value.trim(),
-        previewUrl: document.getElementById('ofPreviewUrl').value.trim(),
+        description: descEl ? descEl.innerHTML.trim() : '',
+        advertiser: ofVal('ofAdvertiser').trim(),
+        category: ofVal('ofCategory'),
+        status: ofVal('ofStatus'),
+        thumbnail: ofVal('ofThumbnail').trim(),
+        previewUrl: ofVal('ofPreviewUrl').trim(),
         finalUrl: finalUrl,
-        payoutModel: document.getElementById('ofPayoutModel').value,
-        payout: parseFloat(document.getElementById('ofPayout').value) || 0,
-        lockPayout: document.getElementById('ofLockPayout').checked,
-        revenue: parseFloat(document.getElementById('ofRevenue').value) || 0,
-        currency: document.getElementById('ofCurrency').value,
-        deviceTargeting: document.getElementById('ofDevice').value,
-        dailyCap: parseInt(document.getElementById('ofDailyCap').value) || 0,
-        hourlyCap: parseInt(document.getElementById('ofHourlyCap').value) || 0,
+        payoutModel: ofVal('ofPayoutModel'),
+        payout: parseFloat(ofVal('ofPayout')) || 0,
+        lockPayout: ofChkVal('ofLockPayout'),
+        revenue: parseFloat(ofVal('ofRevenue')) || 0,
+        currency: ofVal('ofCurrency'),
+        deviceTargeting: ofVal('ofDevice'),
+        dailyCap: parseInt(ofVal('ofDailyCap')) || 0,
+        hourlyCap: parseInt(ofVal('ofHourlyCap')) || 0,
         countryMode: countryMode,
         allowedCountries: countryMode === 'specific' ? selectedCountries.join(',') : '',
         creatives: offerCreatives.filter(function(c) { return c.url; }),
-        detectedTracker: document.getElementById('ofTrackerType').value || '',
-        trackingDomain: document.getElementById('ofTrackingDomain').value.trim() || '',
-        visibility: document.getElementById('ofVisibility').value || 'approval',
-        notifyAffiliates: document.getElementById('ofNotifyAffiliates').checked,
-        notifyManagers: document.getElementById('ofNotifyManagers').checked,
-        upsell1Price: parseFloat(document.getElementById('ofUpsell1Price').value) || 0,
-        upsell2Price: parseFloat(document.getElementById('ofUpsell2Price').value) || 0,
-        upsell3Price: parseFloat(document.getElementById('ofUpsell3Price').value) || 0,
-        upsell4Price: parseFloat(document.getElementById('ofUpsell4Price').value) || 0,
-        upsell5Price: parseFloat(document.getElementById('ofUpsell5Price').value) || 0
+        detectedTracker: ofVal('ofTrackerType') || '',
+        trackingDomain: ofVal('ofTrackingDomain').trim() || '',
+        visibility: ofVal('ofVisibility') || 'approval',
+        notifyAffiliates: ofChkVal('ofNotifyAffiliates'),
+        notifyManagers: ofChkVal('ofNotifyManagers'),
+        upsell1Price: parseFloat(ofVal('ofUpsell1Price')) || 0,
+        upsell2Price: parseFloat(ofVal('ofUpsell2Price')) || 0,
+        upsell3Price: parseFloat(ofVal('ofUpsell3Price')) || 0,
+        upsell4Price: parseFloat(ofVal('ofUpsell4Price')) || 0,
+        upsell5Price: parseFloat(ofVal('ofUpsell5Price')) || 0
     };
 
     if (editId) {
