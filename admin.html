@@ -670,12 +670,28 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .offer-tab i{display:none;}
 .offer-tab-pane{display:none;animation:fadeIn .2s ease;}
 .offer-tab-pane.active{display:block;}
-/* ── One-page modern offer form (no wizard stepper) ── */
-.ofx-onepage .offer-tab-pane{display:block !important;animation:none;margin-bottom:6px;padding:18px 0 22px;border-bottom:1px solid #eef2f6;}
-.ofx-onepage .offer-tab-pane:last-of-type{border-bottom:none;}
-.ofx-onepage #ofTab-activity,.ofx-onepage #ofTab-complete{display:none !important;}
-#offerModal.ofx-mode #offerStepsBar{display:none;}
+/* ── Modern offer form: sidebar nav + scrollable content ── */
+.ofx-onepage{display:grid !important;grid-template-columns:210px minmax(0,1fr);padding:0 !important;gap:0;background:#fff;}
+.ofx-sidebar{background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-right:1px solid #e2e8f0;padding:22px 14px;position:sticky;top:0;align-self:start;height:100%;min-height:520px;}
+.ofx-sidebar-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:12px;}
+.ofx-snav-item{padding:11px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center;gap:11px;transition:all .15s;margin-bottom:3px;border:none;background:transparent;width:100%;text-align:left;}
+.ofx-snav-item:hover{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ofx-snav-item.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(10,108,128,.25);}
+.ofx-snav-item i{font-size:13px;width:16px;text-align:center;}
+.ofx-main{padding:28px 32px 16px;min-width:0;}
+.ofx-main .offer-tab-pane{display:block !important;animation:none;margin-bottom:8px;padding:0 0 28px;border-bottom:1px solid #eef2f6;scroll-margin-top:20px;}
+.ofx-main .offer-tab-pane:last-of-type{border-bottom:none;padding-bottom:8px;}
+.ofx-main #ofTab-activity,.ofx-main #ofTab-complete{display:none !important;}
+#offerStepsBar{display:none !important;}
 .ofx-foot{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:14px 28px;border-top:1px solid var(--card-border);position:sticky;bottom:0;background:#fff;border-radius:0 0 16px 16px;}
+@media(max-width:880px){.ofx-onepage{grid-template-columns:1fr;}.ofx-sidebar{position:relative;display:flex;flex-wrap:wrap;gap:4px;padding:12px;}.ofx-sidebar-label{display:none;}.ofx-snav-item{flex:1;min-width:120px;}}
+/* ── Multi-URL landing pages component ── */
+.ofx-lp-row{display:grid;grid-template-columns:160px 1fr 40px;gap:8px;align-items:center;margin-bottom:8px;}
+.ofx-lp-row input{padding:8px 10px;border:1px solid var(--card-border);border-radius:7px;font-size:12.5px;outline:none;}
+.ofx-lp-row input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(10,108,128,.08);}
+.ofx-lp-empty{color:#94a3b8;font-size:12px;padding:10px 12px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:8px;}
+.ofx-add-lp{background:#e8f4f7;color:var(--primary);border:1px dashed var(--primary);border-radius:8px;padding:9px 14px;cursor:pointer;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:all .15s;margin-top:8px;}
+.ofx-add-lp:hover{background:var(--primary);color:#fff;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .country-search{width:100%;padding:7px 12px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:13px;outline:none;margin-bottom:0;}
 .country-search:focus{border-color:var(--primary);}
@@ -2243,8 +2259,17 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
         </div>
         </div>
     </div>
-    <div class="modal-body ofx-onepage" style="padding:8px 28px;">
+    <div class="modal-body ofx-onepage" style="padding:0;">
         <input type="hidden" id="offerEditId">
+        <aside class="ofx-sidebar">
+            <div class="ofx-sidebar-label">Sections</div>
+            <button type="button" class="ofx-snav-item active" data-target="ofTab-general" onclick="ofxNavTo('ofTab-general',this)"><i class="fas fa-info-circle"></i> Basic Info</button>
+            <button type="button" class="ofx-snav-item" data-target="ofTab-revenue" onclick="ofxNavTo('ofTab-revenue',this)"><i class="fas fa-dollar-sign"></i> Payout &amp; Revenue</button>
+            <button type="button" class="ofx-snav-item" data-target="ofTab-tracking" onclick="ofxNavTo('ofTab-tracking',this)"><i class="fas fa-link"></i> Tracking &amp; URLs</button>
+            <button type="button" class="ofx-snav-item" data-target="ofTab-targeting" onclick="ofxNavTo('ofTab-targeting',this)"><i class="fas fa-crosshairs"></i> Targeting</button>
+            <button type="button" class="ofx-snav-item" data-target="ofTab-creatives" onclick="ofxNavTo('ofTab-creatives',this)"><i class="fas fa-image"></i> Creatives</button>
+        </aside>
+        <div class="ofx-main">
 
         <!-- Tab 1: General -->
         <div class="offer-tab-pane active" id="ofTab-general">
@@ -2402,7 +2427,14 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
             <div class="form-group">
                 <label>Final URL (Destination) *</label>
                 <input type="text" id="ofFinalUrl" oninput="updateOfferLinkPreview()">
-                <div class="form-help">Advertiser's tracking link with macros</div>
+                <div class="form-help">Advertiser's tracking link with macros — used as the <strong>default</strong> landing page</div>
+            </div>
+            <!-- Additional Landing Pages (TSL, DTC, Rotate etc.) -->
+            <div class="form-group">
+                <label>Additional Landing Pages <span style="font-weight:400;color:#64748b;">(optional)</span></label>
+                <div id="ofLPList"></div>
+                <button type="button" class="ofx-add-lp" onclick="addLandingPage()"><i class="fas fa-plus"></i> Add Landing Page</button>
+                <div class="form-help">Add named alternative URLs (DTC, Rotate, TSL etc.). Affiliates will see a <strong>Landing Page dropdown</strong> and can choose which page to send traffic to.</div>
             </div>
             <div class="form-group">
                 <label>Clima Internal Macros <span style="font-weight:400;color:var(--text-muted)">(click to insert into Final URL)</span></label>
@@ -2527,6 +2559,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
                 </div>
             </div>
         </div>
+        </div><!-- /ofx-main -->
     </div>
     <div class="ofx-foot">
         <button class="btn-secondary" onclick="closeModal('offerModal')">Cancel</button>
@@ -4151,6 +4184,43 @@ function ofChk(id, val) { var el = document.getElementById(id); if (el) el.check
 function ofShow(id, disp) { var el = document.getElementById(id); if (el) el.style.display = disp; }
 function ofHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
+/* Sidebar nav: scroll the main panel to the section + highlight the active item */
+function ofxNavTo(targetId, btn) {
+    var el = document.getElementById(targetId);
+    var main = document.querySelector('#offerModal .ofx-main');
+    if (el && main) {
+        var top = el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 8;
+        main.scrollTo({ top: top, behavior: 'smooth' });
+    }
+    document.querySelectorAll('#offerModal .ofx-snav-item').forEach(function(b){ b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+}
+
+/* ── Landing Pages: extra named URLs the affiliate can pick (Default = the offer's Final URL) ── */
+var ofLPs = []; /* [{ id, name, url }] */
+function lpSlug(name, idx) {
+    var s = (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return s || ('lp' + (idx + 1));
+}
+function addLandingPage(name, url) {
+    ofLPs.push({ id: lpSlug(name || '', ofLPs.length), name: name || '', url: url || '' });
+    renderLandingPages();
+}
+function removeLandingPage(idx) { ofLPs.splice(idx, 1); renderLandingPages(); }
+function renderLandingPages() {
+    var html = '';
+    ofLPs.forEach(function(lp, i) {
+        html += '<div class="ofx-lp-row">' +
+            '<input type="text" placeholder="Name (e.g., DTC, Rotate)" value="' + escHtml(lp.name) + '" oninput="ofLPs[' + i + '].name=this.value;ofLPs[' + i + '].id=lpSlug(this.value,' + i + ')">' +
+            '<input type="text" placeholder="Landing URL with macros (e.g., https://...?lp=dtc&click_id={click_id})" value="' + escHtml(lp.url) + '" oninput="ofLPs[' + i + '].url=this.value">' +
+            '<button type="button" class="btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5;" onclick="removeLandingPage(' + i + ')" title="Remove"><i class="fas fa-trash"></i></button>' +
+            '</div>';
+    });
+    if (!ofLPs.length) html = '<div class="ofx-lp-empty">No additional landing pages — the Final URL above is used by default.</div>';
+    var el = document.getElementById('ofLPList');
+    if (el) el.innerHTML = html;
+}
+
 function openOfferModal(id) {
     /* Reset all fields (null-safe) */
     ofSet('offerEditId', '');
@@ -4186,6 +4256,12 @@ function openOfferModal(id) {
     ofShow('countryPanel', 'none');
     selectedCountries = [];
     offerCreatives = [];
+    ofLPs = [];
+    renderLandingPages();
+    /* Reset sidebar nav to first item */
+    var firstNav = document.querySelector('#offerModal .ofx-snav-item');
+    document.querySelectorAll('#offerModal .ofx-snav-item').forEach(function(b){ b.classList.remove('active'); });
+    if (firstNav) firstNav.classList.add('active');
 
     /* Load tracking domains and populate dropdown */
     fbGet('settings/domains').then(function(domains) {
@@ -4241,6 +4317,11 @@ function openOfferModal(id) {
             }
             if (o.creatives && Array.isArray(o.creatives)) {
                 offerCreatives = o.creatives.map(function(c) { return { name: c.name || '', url: c.url || '', size: c.size || '300x250' }; });
+            }
+            /* Additional landing pages */
+            if (o.landingPages && Array.isArray(o.landingPages)) {
+                ofLPs = o.landingPages.map(function(lp, i) { return { id: lp.id || lpSlug(lp.name||'', i), name: lp.name||'', url: lp.url||'' }; });
+                renderLandingPages();
             }
             if (typeof previewOfferImage === 'function') previewOfferImage();
             if (typeof updateOfferLinkPreview === 'function') updateOfferLinkPreview();
@@ -4300,7 +4381,9 @@ function saveOffer() {
         upsell2Price: parseFloat(ofVal('ofUpsell2Price')) || 0,
         upsell3Price: parseFloat(ofVal('ofUpsell3Price')) || 0,
         upsell4Price: parseFloat(ofVal('ofUpsell4Price')) || 0,
-        upsell5Price: parseFloat(ofVal('ofUpsell5Price')) || 0
+        upsell5Price: parseFloat(ofVal('ofUpsell5Price')) || 0,
+        /* Multi-URL: additional named landing pages. Default = the Final URL above. */
+        landingPages: (ofLPs || []).filter(function(lp){ return lp.url && lp.url.trim(); }).map(function(lp, i){ return { id: lp.id || lpSlug(lp.name||'', i), name: (lp.name||'').trim(), url: lp.url.trim() }; })
     };
 
     if (editId) {

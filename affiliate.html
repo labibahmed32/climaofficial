@@ -647,6 +647,12 @@ body.impersonating .impersonate-banner{display:block;}
                 <!-- Tab: Tracking Link (approved only) -->
                 <div class="od-tab-panel" id="odPanelTracklink">
                     <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:20px">
+                        <!-- Landing Page picker (only shown when offer has multiple landing pages) -->
+                        <div id="odLpPicker" style="display:none;margin-bottom:14px;">
+                            <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;"><i class="fas fa-map-marker-alt" style="color:#0a6c80;margin-right:4px;"></i> Landing Page</label>
+                            <select id="odLpSelect" class="f-sel" onchange="updateOdLink()" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;font-weight:600;color:#0f172a;"></select>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Choose which landing page your traffic goes to. Default goes to the offer's main page.</div>
+                        </div>
                         <div class="od-lg-grid">
                             <div class="f-grp"><label>Sub ID 1</label><input type="text" class="f-inp" id="odSub1" oninput="updateOdLink()" style="width:100%"></div>
                             <div class="f-grp"><label>Sub ID 2</label><input type="text" class="f-inp" id="odSub2" oninput="updateOdLink()" style="width:100%"></div>
@@ -2801,7 +2807,20 @@ function viewOffer(oid) {
     var tabLink = document.getElementById('odTabLink');
     if (isApproved) {
         tabLink.style.display = 'flex';
-        ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id) { document.getElementById(id).value = ''; });
+        ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+        /* Landing Page picker — Default + any additional pages */
+        var lps = (offer.landingPages || []).filter(function(lp){ return lp && lp.url; });
+        var lpPicker = document.getElementById('odLpPicker');
+        var lpSel    = document.getElementById('odLpSelect');
+        if (lps.length && lpPicker && lpSel) {
+            var html = '<option value="">Default Landing Page</option>';
+            lps.forEach(function(lp) { html += '<option value="' + esc(lp.id) + '">' + esc(lp.name || lp.id) + '</option>'; });
+            lpSel.innerHTML = html;
+            lpSel.value = '';
+            lpPicker.style.display = 'block';
+        } else if (lpPicker) {
+            lpPicker.style.display = 'none';
+        }
         updateOdLink();
     } else { tabLink.style.display = 'none'; }
     /* Reset to overview tab */
@@ -2832,13 +2851,16 @@ function updateOdLink() {
     if (!viewingOffer) return;
     var domain = getOfferTrackingDomain(viewingOffer);
     var url = domain + '/go/' + encodeURIComponent(viewingOffer._id) + '/' + encodeURIComponent(myAffId || myUid);
-    var subParams = [];
+    var params = [];
+    /* Landing page picker — append &lp=<id> when a non-default page is chosen */
+    var lpSel = document.getElementById('odLpSelect');
+    if (lpSel && lpSel.value) params.push('lp=' + encodeURIComponent(lpSel.value));
     ['odSub1','odSub2','odSub3','odSub4','odSub5'].forEach(function(id, i) {
-        var v = document.getElementById(id).value.trim();
-        if (v) subParams.push('sub' + (i + 1) + '=' + encodeURIComponent(v));
+        var el = document.getElementById(id); var v = el ? el.value.trim() : '';
+        if (v) params.push('sub' + (i + 1) + '=' + encodeURIComponent(v));
     });
-    if (subParams.length) url += '?' + subParams.join('&');
-    document.getElementById('odLinkTxt').textContent = url;
+    if (params.length) url += '?' + params.join('&');
+    var out = document.getElementById('odLinkTxt'); if (out) out.textContent = url;
 }
 function copyOdLink() {
     var txt = document.getElementById('odLinkTxt').textContent;

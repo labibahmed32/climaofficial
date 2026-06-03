@@ -558,6 +558,9 @@ var fbclid = params.get('fbclid')||'', gclid = params.get('gclid')||'', ttclid =
    automatic browser capture keeps working exactly as before, and the param only
    fills in when there's nothing from the browser. */
 var referrerParam = params.get('referrer')||'';
+/* lp = landing page id. Picks an alternative URL from offer.landingPages[].
+   Empty/missing = use offer.finalUrl (the default page). */
+var lpParam = params.get('lp')||'';
 var isTest = params.get('test') === '1';
 
 if (!offerId || !affId) { showError('Missing required parameters.'); }
@@ -757,7 +760,17 @@ function processClick() {
         };
 
         /* Save click → fire fraud check in background → redirect IMMEDIATELY */
-        var redirectUrl = buildRedirectUrl(offer.finalUrl, clickId, affId, subs);
+        /* Pick the landing URL: if ?lp= matches one of offer.landingPages, use that;
+           otherwise fall back to the default offer.finalUrl. */
+        var targetFinalUrl = offer.finalUrl;
+        if (lpParam && offer.landingPages && offer.landingPages.length) {
+            for (var _li = 0; _li < offer.landingPages.length; _li++) {
+                if (offer.landingPages[_li] && offer.landingPages[_li].id === lpParam && offer.landingPages[_li].url) {
+                    targetFinalUrl = offer.landingPages[_li].url; break;
+                }
+            }
+        }
+        var redirectUrl = buildRedirectUrl(targetFinalUrl, clickId, affId, subs);
 
         function fireAndRedirect() {
             /* sendBeacon survives page navigation — PHP closes connection instantly,
