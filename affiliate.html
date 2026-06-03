@@ -3198,6 +3198,7 @@ var CK_COLS = [
         return '<div style="font-weight:600;color:var(--td);font-size:12px;">'+dd+'</div><div style="font-size:11px;color:var(--tl);">'+tt+'</div>';
     } },
     { key:'offer',    label:'Offer',    def:true,  align:'left',   render:function(c){ return '<span style="color:#0A6C80;font-weight:600;">'+esc(offerName(c.offerId))+'</span>'; } },
+    { key:'lander',   label:'Landing Page', def:false, align:'left', render:function(c){ var n = c.landingPageName || 'Default'; var color = n === 'Default' ? '#94a3b8' : '#0a6c80'; return '<span style="font-size:11.5px;color:'+color+';font-weight:600;">'+esc(n)+'</span>'; } },
     { key:'conv',     label:'Conv',     def:true,  align:'center', render:function(c,cv){ return cv ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;font-weight:700;"><i class="fas fa-check-circle" style="font-size:11px;"></i>Yes</span>' : (c.converted ? '<span style="color:#16a34a;font-weight:600;">Yes</span>' : _dash()); } },
     { key:'payout',   label:'Payout',   def:true,  align:'right',  render:function(c,cv){ return cv ? '<span style="color:#16a34a;font-weight:700;">'+fmtM(cv.payout||0)+'</span>' : _dash(); } },
     { key:'sub1',     label:'Sub1',     def:true,  align:'left',   render:function(c){ return _subTd(c.sub1); } },

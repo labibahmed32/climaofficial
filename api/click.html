@@ -767,15 +767,24 @@ function processClick() {
 
         /* Save click → fire fraud check in background → redirect IMMEDIATELY */
         /* Pick the landing URL: if ?lp= matches one of offer.landingPages, use that;
-           otherwise fall back to the default offer.finalUrl. */
+           otherwise fall back to the default offer.finalUrl. Capture the picked
+           landing page's id + name on the click so admin/affiliate reports can
+           show which page received the traffic (Default / DTC / Rotate / etc.). */
         var targetFinalUrl = offer.finalUrl;
+        var pickedLpId = '';
+        var pickedLpName = 'Default';
         if (lpParam && offer.landingPages && offer.landingPages.length) {
             for (var _li = 0; _li < offer.landingPages.length; _li++) {
                 if (offer.landingPages[_li] && offer.landingPages[_li].id === lpParam && offer.landingPages[_li].url) {
-                    targetFinalUrl = offer.landingPages[_li].url; break;
+                    targetFinalUrl = offer.landingPages[_li].url;
+                    pickedLpId   = offer.landingPages[_li].id;
+                    pickedLpName = offer.landingPages[_li].name || offer.landingPages[_li].id;
+                    break;
                 }
             }
         }
+        clickData.landingPageId   = pickedLpId;     /* '' = default, else the lp slug */
+        clickData.landingPageName = pickedLpName;   /* 'Default' or the display name */
         var redirectUrl = buildRedirectUrl(targetFinalUrl, clickId, affId, subs);
 
         function fireAndRedirect() {

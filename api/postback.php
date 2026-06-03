@@ -153,6 +153,8 @@ if ($isEvent) {
         'sub1'          => $click['sub1'] ?? '',
         'sub2'          => $click['sub2'] ?? '',
         'ip'            => $click['ip'] ?? '',
+        'landingPageId'   => $click['landingPageId'] ?? '',
+        'landingPageName' => $click['landingPageName'] ?? 'Default',
         'isTest'        => $isTest,
         'createdAt'     => round(microtime(true) * 1000)
     ];
@@ -279,6 +281,8 @@ $conv = [
     'sub1' => $click['sub1'] ?? '',
     'sub2' => $click['sub2'] ?? '',
     'ip' => $click['ip'] ?? '',
+    'landingPageId'   => $click['landingPageId'] ?? '',
+    'landingPageName' => $click['landingPageName'] ?? 'Default',
     'overCap' => $isOverCap,
     'capNote' => $capNote,
     'isTest' => $isTest,

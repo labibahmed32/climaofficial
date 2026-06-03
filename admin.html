@@ -5472,6 +5472,7 @@ function openClickDetail(clickId) {
     h += cdItem('IP Timezone', escHtml(c.ipTimezone || '-'));
     h += cdItem('Referer', c.referer ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.referer) + '</span>' : '<em style="color:#94a3b8">Direct</em>');
     h += cdItem('Referrer (param)', c.referrerParam ? '<span style="word-break:break-all;font-size:10px">' + escHtml(c.referrerParam) + '</span>' : '<em style="color:#94a3b8">-</em>');
+    h += cdItem('Landing Page', '<span style="color:' + (c.landingPageName && c.landingPageName !== 'Default' ? '#0a6c80' : '#94a3b8') + ';font-weight:600;"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ' + escHtml(c.landingPageName || 'Default') + '</span>');
     h += '</div>';
 
     /* Device & Browser */
@@ -5710,7 +5711,7 @@ function renderConversions() {
                 '<td><span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">EVENT</span></td>' +
                 '<td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td>' +
                 '<td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td>' +
-                '<td>' + escHtml(getOfferName(c.offerId)) + '<div style="font-size:10px;color:#999;">' + evLabel + (c.transactionId ? ' · txn ' + escHtml(String(c.transactionId).substring(0,12)) : '') + '</div></td>' +
+                '<td>' + escHtml(getOfferName(c.offerId)) + '<div style="font-size:10px;color:#999;">' + evLabel + (c.transactionId ? ' · txn ' + escHtml(String(c.transactionId).substring(0,12)) : '') + (c.landingPageName && c.landingPageName !== 'Default' ? ' · <span style="color:#0a6c80;"><i class="fas fa-map-marker-alt" style="font-size:9px;"></i> ' + escHtml(c.landingPageName) + '</span>' : '') + '</div></td>' +
                 '<td>' + escHtml(getUserName(c.affiliateId)) + '</td>' +
                 '<td style="color:#999">' + fmtMoney(c.revenue) + '</td>' +
                 '<td style="color:#999">' + fmtMoney(c.payout) + '</td>' +
@@ -5726,7 +5727,7 @@ function renderConversions() {
                 '<td><span style="background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">CV</span></td>' +
                 '<td style="font-family:monospace;font-size:10px">' + escHtml(c._id) + '</td>' +
                 '<td style="font-family:monospace;font-size:10px">' + escHtml(c.clickId || '-') + '</td>' +
-                '<td>' + escHtml(getOfferName(c.offerId)) + '</td>' +
+                '<td>' + escHtml(getOfferName(c.offerId)) + (c.landingPageName && c.landingPageName !== 'Default' ? '<div style="font-size:10px;color:#0a6c80;margin-top:2px;"><i class="fas fa-map-marker-alt" style="font-size:9px;"></i> ' + escHtml(c.landingPageName) + '</div>' : '') + '</td>' +
                 '<td>' + escHtml(getUserName(c.affiliateId)) + '</td>' +
                 '<td style="font-weight:700;color:var(--primary)">' + fmtMoney(c.revenue) + '</td>' +
                 '<td style="font-weight:700;color:var(--green)">' + fmtMoney(c.payout) + '</td>' +
@@ -11438,6 +11439,7 @@ function rv2RenderHourly() {
 var RV2_CK_COLS = [
     { key:'timestamp', label:'Time',    def:true,  align:'left', sort:'timestamp', render:function(c){ return '<span style="font-size:11px;">'+fmtDateTime(c.timestamp)+'</span>'; } },
     { key:'offer',     label:'Offer',   def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
+    { key:'lander',    label:'Landing Page', def:false, align:'left', sort:'landingPageName', render:function(c){ var n = c.landingPageName || 'Default'; var color = n === 'Default' ? '#94a3b8' : '#0a6c80'; return '<span style="font-size:11.5px;color:'+color+';font-weight:600;">'+escHtml(n)+'</span>'; } },
     { key:'affiliate', label:'Affiliate',def:true, align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
     { key:'ip',        label:'IP',      def:true,  align:'left', sort:'ip',        render:function(c){ return '<span style="font-family:monospace;font-size:11px;">'+escHtml(c.ip||'-')+'</span>'; } },
     { key:'country',   label:'Country', def:true,  align:'left', sort:'country',   render:function(c){ return escHtml(c.countryName||c.country||'-'); } },
@@ -11466,6 +11468,7 @@ function rv2RenderClickLogs() {
     var clicks = raw.map(function(c){
         return {
             _id:c._id, timestamp:c.timestamp||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
+            landingPageName: c.landingPageName || '',
             ip:c.ip||'', country:c.country||'', countryName:c.countryName||'', city:c.city||'', region:c.region||'',
             platform:rv2PlatformOf(c.referer), browser:c.browser||'', os:c.os||'', osVer:c.osVer||'', device:c.device||'',
             isp:c.isp||'', org:c.org||'', sub1:c.sub1||'', sub2:c.sub2||'', sub3:c.sub3||'', sub4:c.sub4||'', sub5:c.sub5||'', fbclid:c.fbclid||'',
@@ -11589,7 +11592,8 @@ function rv2EnabledCols(registry, storeKey) {
 var RV2_CV_COLS = [
     { key:'cvtype',    label:'Type',       def:true,  align:'left', sort:'_type',     render:function(c){ return c._type==='event' ? '<span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">EVENT</span>' + (c.eventLabel?'<div style="font-size:10px;color:#999;margin-top:2px;">'+escHtml(c.eventLabel)+'</div>':'') : '<span style="background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">CV</span>'; } },
     { key:'createdAt', label:'Date',       def:true,  align:'left', sort:'createdAt', render:function(c){ return '<span style="font-size:11.5px;">'+fmtDateTime(c.createdAt)+'</span>'; } },
-    { key:'offer',     label:'Offer',      def:true,  align:'left', sort:'offer',     render:function(c){ return escHtml(c.offer); } },
+    { key:'offer',     label:'Offer',      def:true,  align:'left', sort:'offer',     render:function(c){ var lp = c.landingPageName && c.landingPageName !== 'Default' ? '<div style="font-size:10px;color:#0a6c80;margin-top:2px;"><i class="fas fa-map-marker-alt" style="font-size:9px;"></i> '+escHtml(c.landingPageName)+'</div>' : ''; return escHtml(c.offer) + lp; } },
+    { key:'lander',    label:'Landing Page', def:false, align:'left', sort:'landingPageName', render:function(c){ var n = c.landingPageName || 'Default'; var color = n === 'Default' ? '#94a3b8' : '#0a6c80'; return '<span style="font-size:11.5px;color:'+color+';font-weight:600;">'+escHtml(n)+'</span>'; } },
     { key:'affiliate', label:'Affiliate',  def:true,  align:'left', sort:'affiliate', render:function(c){ return escHtml(c.affiliate); } },
     { key:'revenue',   label:'Revenue',    def:true,  align:'num',  sort:'revenue',   render:function(c){ return '<span style="color:#1e40af;font-weight:700;">'+fmtMoney(c.revenue)+'</span>'; } },
     { key:'payout',    label:'Payout',     def:true,  align:'num',  sort:'payout',    render:function(c){ return '<span style="color:#15803d;font-weight:700;">'+fmtMoney(c.payout)+'</span>'; } },
@@ -11617,6 +11621,7 @@ function rv2RenderConvLogs() {
         var click = c.clickId ? (allClicks||[]).filter(function(x){return x._id===c.clickId;})[0] : null;
         return {_id:c._id, _type:kind, eventLabel:(kind==='event'?(c.eventName||('Event '+(c.eventId||''))):''),
             createdAt:c.createdAt||0, offer:getOfferName(c.offerId), affiliate:getUserName(c.affiliateId),
+            landingPageName: c.landingPageName || (click ? click.landingPageName : '') || '',
             revenue:parseFloat(c.revenue)||0, payout:parseFloat(c.payout)||0, status:c.status||'', source:c.source||'',
             txnId:c.txnId||c.transactionId||'', clickId:c.clickId||'',
             clickTime:click?click.timestamp:0,
@@ -11800,6 +11805,7 @@ function rv2RenderClickDetail(clickId) {
     html += '<div style="background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;overflow:hidden;"><div style="padding:11px 16px;background:#fff;border-bottom:1px solid #eef2f6;font-size:12px;font-weight:700;color:#0a6c80;text-transform:uppercase;letter-spacing:.5px;">Traffic Source</div>'+
         row('Referrer', c.referer ? '<span style="font-size:11px;">'+escHtml(c.referer)+'</span>' : '(direct)')+
         row('Referrer (param)', c.referrerParam ? '<span style="font-size:11px;">'+escHtml(c.referrerParam)+'</span>' : '-')+
+        row('Landing Page', '<span style="color:' + (c.landingPageName && c.landingPageName !== 'Default' ? '#0a6c80' : '#94a3b8') + ';font-weight:600;"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ' + escHtml(c.landingPageName || 'Default') + '</span>')+
         row('Sub1', escHtml(c.sub1||'-'))+
         row('Sub2', escHtml(c.sub2||'-'))+
         row('Sub3', escHtml(c.sub3||'-'))+
