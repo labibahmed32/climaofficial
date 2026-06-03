@@ -638,6 +638,9 @@ function processClick() {
                Block same IP from clicking same offer twice — regardless of which affiliate's link. */
             var ipForCheck = geo.ip || '';
             if (!ipForCheck || ipForCheck === 'unknown') { _processClick(); return; }
+            /* Test clicks (?test=1) skip duplicate-IP dedup so the same person
+               can re-test the link many times without waiting 24 hours. */
+            if (isTest) { _processClick(); return; }
             var ipKey = ipForCheck.replace(/[.:]/g, '_');
             fbGet('clickDedup/' + offerId + '/' + ipKey).then(function(existing) {
                 /* 24-hour TTL: only block if dedup entry is less than 24 hours old */
