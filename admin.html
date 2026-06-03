@@ -4226,13 +4226,14 @@ function ofChk(id, val) { var el = document.getElementById(id); if (el) el.check
 function ofShow(id, disp) { var el = document.getElementById(id); if (el) el.style.display = disp; }
 function ofHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
-/* Sidebar nav: scroll the main panel to the section + highlight the active item */
+/* Sidebar nav: scroll the modal-panel (the actual scroll container) to the
+   section and highlight the active item. */
 function ofxNavTo(targetId, btn) {
     var el = document.getElementById(targetId);
-    var main = document.querySelector('#offerModal .ofx-main');
-    if (el && main) {
-        var top = el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 8;
-        main.scrollTo({ top: top, behavior: 'smooth' });
+    var panel = document.querySelector('#offerModal .modal-panel');
+    if (el && panel) {
+        var top = el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - 12;
+        panel.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
     }
     document.querySelectorAll('#offerModal .ofx-snav-item').forEach(function(b){ b.classList.remove('active'); });
     if (btn) btn.classList.add('active');
@@ -4300,7 +4301,13 @@ function openOfferModal(id) {
     offerCreatives = [];
     ofLPs = [];
     renderLandingPages();
-    /* Reset sidebar nav to first item */
+    /* Also clear the visual preview elements that don't get cleared by ofSet/ofHtml
+       alone — these were leaking the previous offer's data into a fresh New Offer form. */
+    var imgPrev = document.getElementById('ofImgPreview'); if (imgPrev) imgPrev.src = '';
+    var linkPrev = document.getElementById('ofLinkPreview'); if (linkPrev) linkPrev.textContent = 'Select an offer and save to generate tracking link';
+    var pbPrev   = document.getElementById('ofPostbackPreview'); if (pbPrev) pbPrev.textContent = 'Available after saving';
+    var creContainer = document.getElementById('creativesContainer'); if (creContainer) creContainer.innerHTML = '';
+    /* Reset sidebar nav to first item + scroll the form back to the top */
     var firstNav = document.querySelector('#offerModal .ofx-snav-item');
     document.querySelectorAll('#offerModal .ofx-snav-item').forEach(function(b){ b.classList.remove('active'); });
     if (firstNav) firstNav.classList.add('active');
@@ -4376,7 +4383,8 @@ function openOfferModal(id) {
     if (typeof calcOfferProfit === 'function') calcOfferProfit();
 
     openModal('offerModal');
-    var body = document.querySelector('#offerModal .modal-body'); if (body) body.scrollTop = 0;
+    /* The modal-panel is the actual scroll container — scroll IT to top, not modal-body */
+    var panel = document.querySelector('#offerModal .modal-panel'); if (panel) panel.scrollTop = 0;
 }
 
 /* ===== SAVE OFFER ===== */
