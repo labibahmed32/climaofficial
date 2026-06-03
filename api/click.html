@@ -603,8 +603,11 @@ function processClick() {
         if (!user)                     { showError('Affiliate not found.'); return; }
         if (user.role !== 'affiliate') { showError('Invalid affiliate.'); return; }
         if (user.status !== 'active')  { showError('Affiliate account is not active.'); return; }
-        /* Admin has paused this offer for this affiliate — link is disabled */
-        if (block) { showError('This offer has been paused for your account.' + (block.reason ? ' Reason: ' + block.reason : '')); return; }
+        /* Admin has paused this offer for this affiliate — link is disabled.
+           Only treat as a real block when the record has a blockedAt timestamp.
+           A Firebase permission/error response would lack this field and must
+           never falsely block a click. */
+        if (block && block.blockedAt) { showError('This offer has been paused for your account.' + (block.reason ? ' Reason: ' + block.reason : '')); return; }
 
         /* ── GEO ENFORCEMENT (strict multi-provider consensus) ── */
         var geoCheckPromise;
