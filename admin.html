@@ -694,11 +694,15 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .ofx-add-lp:hover{background:var(--primary);color:#fff;}
 
 /* ── Modernize the offer form content (scoped to .ofx-main so other forms stay untouched) ── */
-.ofx-main .offer-tab-pane{padding-top:6px;}
-/* Section header row inside each pane — bigger, with icon badge */
-.ofx-main .offer-tab-pane > div:first-child{border-bottom:none !important;padding:0 0 18px !important;margin-bottom:18px !important;background:linear-gradient(135deg,rgba(10,108,128,.04),rgba(10,108,128,0));border-radius:10px;}
-.ofx-main .offer-tab-pane > div:first-child > i:first-child{width:36px;height:36px;background:rgba(10,108,128,.1);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px !important;margin-right:4px;}
-.ofx-main .offer-tab-pane > div:first-child > span{font-size:17px !important;font-weight:800 !important;letter-spacing:-.2px;color:#0f172a !important;}
+.ofx-main{background:#f8fafc;}
+.ofx-main .offer-tab-pane{padding:22px 24px !important;background:#fff;border:1px solid #eef2f6;border-radius:14px;margin-bottom:18px !important;box-shadow:0 1px 3px rgba(15,23,42,.04);transition:box-shadow .18s, transform .18s;}
+.ofx-main .offer-tab-pane:hover{box-shadow:0 4px 14px rgba(15,23,42,.06);}
+.ofx-main .offer-tab-pane:last-of-type{margin-bottom:0 !important;}
+/* Section header row inside each pane — bigger, with icon badge + gradient bar */
+.ofx-main .offer-tab-pane > div:first-child{border-bottom:1px solid #f1f5f9 !important;padding:0 0 16px !important;margin-bottom:20px !important;background:transparent;border-radius:0;position:relative;}
+.ofx-main .offer-tab-pane > div:first-child::before{content:'';position:absolute;left:-24px;top:2px;bottom:14px;width:3px;background:linear-gradient(180deg,var(--primary),#14b8a6);border-radius:0 3px 3px 0;}
+.ofx-main .offer-tab-pane > div:first-child > i:first-child{width:38px;height:38px;background:linear-gradient(135deg,rgba(10,108,128,.12),rgba(20,184,166,.12));border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:15px !important;margin-right:6px;border:1px solid rgba(10,108,128,.15);}
+.ofx-main .offer-tab-pane > div:first-child > span{font-size:18px !important;font-weight:800 !important;letter-spacing:-.3px;color:#0f172a !important;}
 /* Modern inputs/selects/textarea in the offer form */
 .ofx-main .form-group input[type="text"],
 .ofx-main .form-group input[type="number"],
