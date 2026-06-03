@@ -1473,13 +1473,8 @@ function toast(msg, type) {
     setTimeout(function() { t.className = 'toast'; }, 3000);
 }
 function offerName(id) {
-    for (var i = 0; i < allOffers.length; i++) {
-        if (allOffers[i]._id === id) {
-            var n = (allOffers[i].name || '').trim();
-            return n || 'Unnamed Offer #' + id;
-        }
-    }
-    return id ? 'Offer #' + id : '-';
+    for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === id) return allOffers[i].name || id; }
+    return id || '-';
 }
 function renderPag(cId, iId, total, cur, ps, fn) {
     var tp = Math.ceil(total / ps) || 1;

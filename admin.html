@@ -3135,15 +3135,7 @@ function calcPct(today, yesterday) { if (yesterday === 0 && today === 0) return 
 function toast(msg, type) { var t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + (type || 'success') + ' show'; setTimeout(function() { t.className = 'toast'; }, 3000); }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { var el = document.getElementById(id); if (!el) return; el.classList.remove('open'); el.style.opacity = ''; el.style.pointerEvents = ''; el.style.display = ''; }
-function getOfferName(id) {
-    for (var i = 0; i < allOffers.length; i++) {
-        if (allOffers[i]._id === id) {
-            var n = (allOffers[i].name || '').trim();
-            return n || 'Unnamed Offer #' + id;
-        }
-    }
-    return id ? 'Offer #' + id : '-';
-}
+function getOfferName(id) { for (var i = 0; i < allOffers.length; i++) { if (allOffers[i]._id === id) return allOffers[i].name || id; } return id || '-'; }
 function getUserName(uid) { for (var i = 0; i < allUsers.length; i++) { if (allUsers[i]._id === uid) return allUsers[i].name || allUsers[i].email || uid; } return uid || '-'; }
 function getUserEmail(uid) { for (var i = 0; i < allUsers.length; i++) { if (allUsers[i]._id === uid) return allUsers[i].email || ''; } return ''; }
 function renderPagination(containerId, infoId, totalItems, currentPage, pageSize, onPageChange) {
@@ -3861,7 +3853,7 @@ function renderOffers() {
         cards += '<div class="offer-card"><div class="offer-card-img">' + imgInner + heroPayout + '</div>' +
             '<div class="offer-card-badge s-' + (o.status || 'inactive') + '">' + escHtml(o.status || '-') + '</div>' +
             '<div class="offer-card-body">' +
-            '<div class="offer-card-head"><div class="offer-card-name" title="' + escHtml(o.name || 'Unnamed Offer') + '">' + (o.name && o.name.trim() ? escHtml(o.name) : '<em style="color:#dc2626;">Unnamed Offer</em>') + '</div><span class="offer-card-id">#' + escHtml(o._id) + '</span></div>' +
+            '<div class="offer-card-head"><div class="offer-card-name" title="' + escHtml(o.name) + '">' + escHtml(o.name) + '</div><span class="offer-card-id">#' + escHtml(o._id) + '</span></div>' +
             '<div class="offer-card-tags"><span class="offer-card-tag cat">' + escHtml(catLabel) + '</span><span class="offer-card-tag model">' + escHtml((o.payoutModel||'cpa').toUpperCase()) + '</span>' + (o.countryMode==='specific' && o.allowedCountries ? '<span class="offer-card-tag" style="background:#fff7e6;color:#b45309"><i class="fas fa-map-marker-alt" style="font-size:9px"></i> ' + escHtml(o.allowedCountries.split(',').slice(0,2).map(function(c){return c.trim();}).join(', ')) + (o.allowedCountries.split(',').length>2?' +'+(o.allowedCountries.split(',').length-2):'') + '</span>' : '<span class="offer-card-tag" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-globe" style="font-size:9px"></i> Global</span>') + '</div>' +
             '<div class="offer-card-adv"><i class="fas fa-building"></i> ' + escHtml(getAdvName(o.advertiser)) + '</div>' +
             '<div class="offer-card-stats">' +
