@@ -672,7 +672,7 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .offer-tab-pane.active{display:block;}
 /* ── Modern offer form: sidebar nav + scrollable content ── */
 .ofx-onepage{display:grid !important;grid-template-columns:210px minmax(0,1fr);padding:0 !important;gap:0;background:#fff;}
-.ofx-sidebar{background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-right:1px solid #e2e8f0;padding:22px 14px;position:sticky;top:0;align-self:start;height:100%;min-height:520px;}
+.ofx-sidebar{background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-right:1px solid #e2e8f0;padding:22px 14px;position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;}
 .ofx-sidebar-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:12px;}
 .ofx-snav-item{padding:11px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center;gap:11px;transition:all .15s;margin-bottom:3px;border:none;background:transparent;width:100%;text-align:left;}
 .ofx-snav-item:hover{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.04);}
@@ -692,6 +692,48 @@ body.sb-collapsed .modal-overlay.inv-fullpage{left:48px;}
 .ofx-lp-empty{color:#94a3b8;font-size:12px;padding:10px 12px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:8px;}
 .ofx-add-lp{background:#e8f4f7;color:var(--primary);border:1px dashed var(--primary);border-radius:8px;padding:9px 14px;cursor:pointer;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:all .15s;margin-top:8px;}
 .ofx-add-lp:hover{background:var(--primary);color:#fff;}
+
+/* ── Modernize the offer form content (scoped to .ofx-main so other forms stay untouched) ── */
+.ofx-main .offer-tab-pane{padding-top:6px;}
+/* Section header row inside each pane — bigger, with icon badge */
+.ofx-main .offer-tab-pane > div:first-child{border-bottom:none !important;padding:0 0 18px !important;margin-bottom:18px !important;background:linear-gradient(135deg,rgba(10,108,128,.04),rgba(10,108,128,0));border-radius:10px;}
+.ofx-main .offer-tab-pane > div:first-child > i:first-child{width:36px;height:36px;background:rgba(10,108,128,.1);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px !important;margin-right:4px;}
+.ofx-main .offer-tab-pane > div:first-child > span{font-size:17px !important;font-weight:800 !important;letter-spacing:-.2px;color:#0f172a !important;}
+/* Modern inputs/selects/textarea in the offer form */
+.ofx-main .form-group input[type="text"],
+.ofx-main .form-group input[type="number"],
+.ofx-main .form-group input[type="email"],
+.ofx-main .form-group select,
+.ofx-main .form-group textarea{padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;background:#fff;transition:border-color .15s, box-shadow .15s;}
+.ofx-main .form-group input:focus,
+.ofx-main .form-group select:focus,
+.ofx-main .form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,108,128,.1);}
+.ofx-main .form-group label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.ofx-main .form-help{font-size:11.5px;color:#94a3b8;margin-top:5px;line-height:1.45;}
+.ofx-main .form-row{gap:18px;margin-bottom:16px;}
+.ofx-main .form-group{margin-bottom:14px;}
+/* Sub-sections inside Revenue (Upsell, Caps) and Notifications block — soft card look */
+.ofx-main .offer-tab-pane > div[style*="border-top"]{background:#f8fafc;border:1px solid #eef2f6 !important;border-radius:12px;padding:18px 18px 6px !important;margin-top:18px !important;}
+.ofx-main .offer-tab-pane > div[style*="border-top"] > h4{font-size:13px !important;color:#0f172a !important;margin-bottom:14px !important;}
+/* Profit display modernization */
+.ofx-main .profit-display{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:12px;padding:16px;border:1px solid #bbf7d0;}
+/* Lock payout notice card */
+.ofx-main .offer-tab-pane > .form-group[style*="fef9e7"]{border-radius:12px !important;border-width:1.5px !important;}
+/* Image preview wrap */
+.ofx-main #ofImgPreview{border-radius:12px !important;border:1px solid #e2e8f0 !important;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+/* Rich editor surface */
+.ofx-main .rich-editor-wrap{border-radius:10px;border:1.5px solid #e2e8f0;overflow:hidden;}
+.ofx-main .rich-editor-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,108,128,.1);}
+/* Country / panel containers softer */
+.ofx-main #countryPanel{background:#f8fafc;border:1px solid #eef2f6;border-radius:12px;padding:14px;margin-top:10px;}
+/* Tracker macro reference / postback panel pill cards */
+.ofx-main #trackerMacroRef,.ofx-main .tracker-detect-panel{border-radius:12px !important;border:1px solid #eef2f6 !important;background:#f8fafc !important;}
+/* Link preview boxes */
+.ofx-main .link-preview-box{background:#0f172a !important;color:#7dd3fc !important;border-radius:10px !important;padding:12px 14px !important;font-family:monospace;font-size:12px;word-break:break-all;}
+/* Save Offer footer button — bigger, gradient */
+.ofx-foot .btn-primary-sm{background:linear-gradient(135deg,var(--primary),#0d4f5c);border:none;padding:10px 24px;font-weight:700;letter-spacing:.2px;box-shadow:0 2px 10px rgba(10,108,128,.25);transition:transform .12s, box-shadow .15s;}
+.ofx-foot .btn-primary-sm:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(10,108,128,.35);}
+.ofx-foot .btn-secondary{padding:10px 20px;font-weight:600;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .country-search{width:100%;padding:7px 12px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:13px;outline:none;margin-bottom:0;}
 .country-search:focus{border-color:var(--primary);}
